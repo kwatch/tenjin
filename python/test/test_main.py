@@ -29,6 +29,10 @@ def to_list(value):
     return [value]
 
 
+import sys
+python_version = sys.version.split(' ')[0]
+
+
 INPUT = r"""<ul>
 <?py for item in ['<a&b>', '["c",'+"'d']"]: ?>
   <li>#{item}
