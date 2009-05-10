@@ -6,7 +6,6 @@
 ###
 
 import unittest
-from test import test_support
 import os, traceback
 
 from testcase_helper import *
@@ -18,9 +17,10 @@ for filename in ['../bin/pytenjin', 'bin/pytenjin']:
     if os.path.exists(filename):
         break
 
+_name_orig = __name__
 __name__ = 'dummy'
 execfile(filename)
-__name__ = '__main__'
+__name__ = _name_orig
 
 
 def to_list(value):
@@ -128,6 +128,10 @@ class MainTest(unittest.TestCase, TestCaseHelper):
         context_file = getattr(self, 'context_file', None)
         context_data = getattr(self, 'context_data', None)
         encoding  = getattr(self, 'encoding', None)
+        #
+        if python_version < '2.5':
+            if expected:
+                expected = expected.replace(': unexpected indent', ': invalid syntax')
         #
         if filename is not False:
             if filename is None:
@@ -812,9 +816,5 @@ if name:
             delattr(MainTest, m)
 
 
-def test_main():
-    test_support.run_unittest(MainTest)
-
-
 if __name__ == '__main__':
-    test_main()
+    unittest.main()

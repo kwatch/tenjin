@@ -5,7 +5,8 @@
 ###
 
 #import unittest
-import os, difflib, re, traceback, yaml
+import os, difflib, re, traceback
+import yaml
 
 
 class TestCaseHelper:
