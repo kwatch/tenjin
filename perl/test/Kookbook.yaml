@@ -1,0 +1,10 @@
+
+parameters:
+  - datadir:	../../../rbtenjin/trunk/test
+
+
+recipes:
+
+  - product:	:copy
+    method*: |
+	k_mcopy(".", "$(datadir)/test_engine.yaml");

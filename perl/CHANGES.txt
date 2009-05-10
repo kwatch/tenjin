@@ -1,0 +1,39 @@
+=======
+CHANGES
+=======
+
+Release 0.0.2 (2008-02-26)
+--------------------------
+
+* [Changes]
+
+  * Add 'examples' directory.
+
+  * Changed to convert texts before expressions into spaces and
+    print them when command-line option '-S' specified.
+  
+    ex. hoge.plhtml
+      <?pl for $item (@$list) { ?>
+        <p>[=$item=]</p>
+      <?pl } ?>
+    
+    ex. result of '-S'
+      ## 0.0.1
+      $ pltenjin -S hoge.plhtml
+      my @_buf = (); for $item (@$list) {
+      escape($item); 
+      }
+      join('', @_buf);
+    
+      ## 0.0.2
+      $ pltenjin -S hoge.plhtml
+      my @_buf = (); for $item (@$list) {
+           escape($item); 
+      }
+      join('', @_buf);
+
+
+Release 0.0.1 (2007-08-04)
+--------------------------
+
+* first release

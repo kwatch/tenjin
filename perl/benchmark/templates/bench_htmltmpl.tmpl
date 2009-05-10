@@ -1,0 +1,23 @@
+   <tbody>
+<TMPL_LOOP NAME="list">
+    <tr class="<TMPL_VAR NAME="class">">
+     <td style="text-align: center"><TMPL_VAR NAME="n"></td>
+     <td>
+      <a href="/stocks/<TMPL_VAR NAME="symbol">"><TMPL_VAR NAME="symbol"></a>
+     </td>
+     <td>
+      <a href="<TMPL_VAR NAME="url">"><TMPL_VAR NAME="name"></a>
+     </td>
+     <td>
+      <strong><TMPL_VAR NAME="price"></strong>
+     </td>
+    <TMPL_IF NAME="minus">
+     <td class="minus"><TMPL_VAR NAME="change"></td>
+     <td class="minus"><TMPL_VAR NAME="ratio"></td>
+    <TMPL_ELSE>
+     <td><TMPL_VAR NAME="change"></td>
+     <td><TMPL_VAR NAME="ratio"></td>
+    </TMPL_IF>
+    </tr>
+</TMPL_LOOP>
+   </tbody>

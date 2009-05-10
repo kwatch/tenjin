@@ -1,0 +1,428 @@
+#!/usr/bin/env perl
+
+#use strict;
+use Data::Dumper;
+#use File::Slurp;
+
+package Tenjin::NoTextTemplate;
+
+@ISA = ('Tenjin::Template');
+
+sub new {
+    my $class = shift;
+    my $this  = $class->SUPER::new(@_);
+    my ($filename, $opts) = @_;
+    if (defined($opts) && exists($opts->{noexpr})) {
+        $this->{noexpr} = $opts->{noexpr};
+    }
+    return $this;
+}
+
+sub start_text_part {
+    my ($this) = shift;
+    my ($bufref) = @_;
+    #push(@$bufref, "push(\@_buf, ");
+}
+
+sub stop_text_part {
+    my ($this) = shift;
+    my ($bufref) = @_;
+    #push(@$bufref, "); ");
+}
+
+sub add_text {
+    my $this = shift;
+    my ($bufref, $text) = @_;
+    #$text =~ s/[`\\]/\\$&/g;
+    #push(@$bufref, "q`$text`, ");
+    $_ = $text;
+    s/[^\n]//g;
+    push(@$bufref, $_) if $_;
+    $_ = $text;
+    $_ = $1 if (m/\n(.*?)\z/);
+    if ($_) {
+        s/[^\t]/ /g;
+        push(@$bufref, $_);
+    }
+}
+
+#sub add_stmt {
+#    my $this = shift;
+#    my ($bufref, $stmt) = @_;
+#    push(@$bufref, $stmt);
+#}
+
+sub add_expr {
+    my $this = shift;
+    my ($bufref, $expr, $flag_escape) = @_;
+    return if $this->{'noexpr'};
+    if ($flag_escape) {
+        my $funcname = $this->{'escapefunc'};
+        #push(@$bufref, " push(\@_buf, $funcname($expr)); ");
+        push(@$bufref, "$funcname($expr); ");
+    }
+    else {
+        #push(@$bufref, " push(\@_buf, $expr); ");
+        push(@$bufref, "$expr; ");
+    }
+}
+
+
+
+package Tenjin::Main;
+
+use strict;
+use Data::Dumper;
+use File::Basename;
+#use PadWalker;   # inspect local variables via stack-frame
+use Tenjin;
+#require File::Temp;
+#require IPC::Open3;
+
+
+sub execute {
+    ## parse @ARGV
+    my ($argvref, $script) = @_;
+    my ($optionsref, $propertiesref, $filenamesref) = &parse_argv($argvref);
+    my %options = %$optionsref;
+    my %properties = %$propertiesref;
+    my @filenames = @$filenamesref;
+    my $dbg = $options{'D'};
+    $dbg and eval 'require Data::Dumper; import Data::Dumper';
+    $dbg and print STDERR "*** debug: properties=", Data::Dumper(\%properties);
+
+    ## help
+    if ($options{'h'} || $properties{help}) {
+        my $command = basename($script);
+        print help_message($command);
+        exit(0);
+    }
+
+    ## version
+    if ($options{'v'} || $properties{version}) {
+        my $version = ('$Release: 0.0.0 $' =~ /[.\d]+/) && $&;
+        print $version, "\n";
+        exit(0);
+    }
+
+    ## action
+    my $action = $options{'a'};
+    my @actions = qw(render convert retrieve statements syntax preprocess);
+    if ($action) {
+        unless (grep { $_ eq $action } @actions) {
+            die("-a $action: unknown action.");
+        }
+    }
+    else {
+        $action =  $options{'s'} && 'convert'
+                || $options{'X'} && 'statements'
+                || $options{'S'} && 'retrieve'
+                || $options{'z'} && 'syntax'
+                || $options{'P'} && 'preprocess'
+                || 'render';
+    }
+
+    ## quiet mode
+    my $flag_quiet = 0;
+    if ($options{'q'}) {
+        $flag_quiet = 1;
+    }
+
+    ## context data file
+    my $context = {};
+    if ($options{'f'}) {
+        $context = load_context_file($options{'f'}, ! $options{'T'});
+    }
+
+    ## context string
+    if ($options{'c'}) {
+        my $val = &load_context_str($options{'c'});
+        while (my ($k, $v) = each %$val) {
+            $context->{$k} = $v;
+        }
+    }
+    $dbg and eval 'require Data::Dumper; import Data::Dumper';
+    $dbg and print STDERR "*** debug: context=", Data::Dumper($context);
+
+    ## use strict
+    if ($options{'w'}) {
+        $Tenjin::USE_STRICT = 1;
+    }
+
+    ## init opts for engine class
+    if (defined($properties{path})) {
+        my @path = split(/\,/, $properties{path});
+        $properties{path} = \@path;
+    }
+    if (! defined($properties{cache})) {
+        $properties{cache} = 0;
+    }
+    if ($action eq 'preprocess' || $options{'P'}) {
+        $properties{templateclass} = 'Tenjin::Preprocessor';
+        $properties{preprocess} = 0;
+    }
+    elsif ($action eq 'retrieve') {
+        $properties{templateclass} = 'Tenjin::NoTextTemplate';
+    }
+    elsif ($action eq 'statements') {
+        $properties{templateclass} = 'Tenjin::NoTextTemplate';
+        $properties{noexpr} = 1;
+    }
+
+    ## create template engine
+    my $engine = new Tenjin::Engine(\%properties);
+
+    ## read stdin when no flenames
+    my $input;
+    if (! @filenames) {
+        @filenames = (undef);
+        my (@list, $data);
+        push(@list, $data) while (read(STDIN, $data, 4096));
+        my $template = new Tenjin::Template(undef, \%properties);
+        $input = join('', @list);
+        $template->convert($input);
+        $engine->register_template(undef, $template);
+    }
+
+    ## main loop
+    my $ntimes = $options{'n'} + 0;
+    my $flag_source = $options{'s'} || $options{'S'};
+    my @template_names = @filenames;
+    for my $template_name (@template_names) {
+        my $script;
+        if ($action eq 'convert' || $action eq 'retrieve' || $action eq 'statements') {
+            my $template = $engine->get_template($template_name);
+            my $output = &manipulate_output($template->{script}, \%options);
+            print $output;
+        }
+        elsif ($action eq 'syntax') {
+            my $template = $engine->get_template($template_name);
+            my $filename = $template->{filename};
+            my ($out, $err) = &check_syntax($filename, $template->{script}, $options{'w'});
+            #print "*** $template_name\n";
+            #print $out, $err, "\n";
+            $_ = $out || $err;
+            my $syntax_ok = ($_ =~ /syntax OK$/);
+            print "*** $filename - ok\n"   if $syntax_ok && !$flag_quiet;
+            print "*** $filename - NG\n$_" unless $syntax_ok;
+        }
+        elsif ($ntimes) {   # for benchmark
+            my $n = $ntimes;
+            print "*** n=$n\n";
+            $engine->render($template_name, $context) while --$n >= 0;
+        }
+        elsif ($action eq 'render' || $action eq 'preprocess') {
+            my $output = $engine->render($template_name, $context);
+            $@ and die("*** ERROR: $output\n$@");
+            print $output;
+        }
+        else {
+            die "*** unreachable";
+        }
+    }
+}
+
+
+sub parse_argv {
+    my ($argvref) = @_;
+    my @argv = @$argvref;
+    my (%options, %properties);
+    while ($argv[0] =~ /^-/) {
+        my $opt = shift @argv;
+        if ($opt =~ /--([-\w]+)(=(.*))?/) {
+            my ($key, $val) = ($1, $3);
+            if    (! defined($val))        { $val = 1==1; }
+            elsif ($val =~ /^true|yes$/)   { $val = 1==1; }
+            elsif ($val =~ /^fasle|no$/)   { $val = 1==0; }
+            elsif ($val =~ /^null|undef$/) { $val = undef; }
+            elsif ($val =~ /^\d+$/)        { $val = int($val); }
+            $properties{$key} = $val;
+        }
+        else {
+            my $optch;
+            my $optval;
+            $opt =~ s/^-//;
+            while ($opt) {
+                if ($opt =~ s/^([hvswDTzqbSXNCUP])//) {
+                    $optch = $1;
+                    $optval = 1;
+                }
+                elsif ($opt =~ s/^([fcna])//) {
+                    $optch = $1;
+                    $optval = $opt || shift @argv or die "-$optch: argument required.\n";
+                    $opt = '';
+                }
+                else {
+                    $optch = substr($opt, 0, 1);
+                    die "-$opt: unknown option.\n";
+                }
+                $options{$optch} = $optval;
+            }
+        }
+    }
+    return \%options, \%properties, \@argv;
+}
+
+
+sub help_message {
+    my ($command) = @_;
+    my $s = <<END;
+$command - fast and full-featured template engine
+Usage: $command [..options..] [file1 [file2...]]
+  -h, --help          :  help
+  -v, --version       :  version
+  -a action           :  action (default 'render')
+     -a render        :  render template
+     -a convert       :  convert template into script
+     -a retrieve      :  retrieve statements and expressions
+     -a statements    :  retrieve only statements
+     -a syntax        :  syntax check of template
+#    -a dump          :  show scripts in cache file
+     -a preprocess    :  show preprocessed template
+  -s                  :  alias of '-a convert'
+  -S                  :  alias of '-a retrieve'
+  -X                  :  alias of '-a statements'
+  -z                  :  alias of '-a syntax'
+  -d                  :  alias of '-a dump'
+  -P                  :  alias of '-a preprocess'
+  -N                  :  add line number
+  -C                  :  compact: remove empty lines
+  -U                  :  uniq: compress empty lines into a line
+  -b                  :  remove "my \@_buf=();" and "\@_buf.join('')"
+  -q                  :  quet mode (for '-a syntax')
+  -w                  :  use strict package
+  -c string           :  context data string (yaml or perl)
+  -f file             :  context data file (*.yaml or *.pl)
+  -T                  :  unexpand tab chars in datafile
+# -r mod1,mod2,..     :  import modules
+# -k encoding         :  encoding name, without cnverting into unicode
+# --indent=N          :  indent width (default 4)
+# --encoding=encoding :  encoding name, with converting into unicode
+  --escapefunc=name   :  'escape' function name
+# --tostrfunc=name    :  'to_str' function name
+  --preamble=text     :  preamble which is insreted into perl script
+  --postamble=text    :  postamble which is insreted into perl script
+# --smarttrim         :  trim "\\n{expr}\\n" into "\\n{expr}".
+  --prefix=str        :  prefix string for template shortname
+  --postfix=str       :  postfix string for template shortname
+  --layout=filename   :  layout template name
+  --path=dir1,dir2,.. :  template lookup path
+  --preprocess        :  activate preprocessing
+  --templateclass=name:  template class (default: tenjin.Template)
+Examples:
+ ex1. render template
+   \$ $command file.plhtml
+ ex2. convert template into perl script
+   \$ $command -a convert file.plhtml
+   \$ $command -a retrieve -UN file.plhtml   # for debug
+ ex3. render with context data file (*.yaml or *.pl)
+   \$ $command -f datafile.yaml file.plhtml
+ ex4. render with context data string
+   \$ $command -c '{title: tenjin example, items: [1, 2, 3]}' file.plhtml # yaml
+   \$ $command -c 'title=>"tenjin example", items=>[1,2,3]' file.plhtml   # perl
+ ex5. syntax check
+   \$ $command -a syntax *.plhtml     # or '-z'
+END
+    #'
+    $s =~ s/^\#.*\n//gm;
+    return $s;
+}
+
+
+sub load_context_file {
+    my ($datafile, $flag_expand_tabs) = @_;
+    my $context;
+    if ($datafile =~ /\.ya?ml$/) {
+        eval 'require YAML::Syck; import YAML::Syck';
+        #$@ and eval 'require YAML; import YAML;';
+        $@ and die($@);
+        #my $s = read_file($datafile);
+        my $s = Tenjin::Util::read_file($datafile);
+        $s = Tenjin::Util::expand_tabs($s) if $flag_expand_tabs;
+        ($context) = Load($s);
+        ref($context) == 'HASH' or die("$datafile: not a mapping.");
+    }
+    else {
+        #my $script = read_file($datafile);
+        my $script = Tenjin::Util::read_file($datafile);
+        $context = eval($script);
+        $@ and die("*** ERROR: $datafile: eval error\n$@");
+        ref($context) == 'HASH' or die("$datafile: not a HASH reference.");
+    }
+    return $context;
+}
+
+
+sub load_context_str {
+    my ($context_str) = @_;
+    my $val;
+    if ($context_str =~ /^\{/) {  # YAML style (ex. "{x: 10, y: [a, b, c]}")
+        eval 'require YAML::Syck; import YAML::Syck;';
+        #$@ and eval 'require YAML; import YAML;';
+        $@ and die($@);
+        ($val) = Load($context_str . "\n");
+        ref($val) == 'HASH' or die("-e: mapping required.");
+    }
+    else {                        # Perl style (ex. "x=>10, y=>['a','b','c']")
+        eval "\$val = { $context_str };";
+        $@ and die("*** ERROR: -e:\n$@");
+        ref($val) == 'HASH' or die("-c: hash reference required.");
+    }
+    return $val;
+}
+
+
+sub manipulate_output {
+    my ($output, $optionsref) = @_;
+    my $flag_linenum  = $optionsref->{'N'};    # add line numbers
+    my $flag_compact  = $optionsref->{'C'};    # remove empty lines
+    my $flag_uniq     = $optionsref->{'U'};    # compress empty lines to a line
+    my $flag_bodyonly = $optionsref->{'b'};    # remove '@_buf=();' and 'join("",@_buf)'
+    if ($flag_bodyonly) {
+        $output =~ s/\Amy \@_buf = \(\); //;
+        $output =~ s/(\r?\n)?join\('', \@_buf\);\s*?(\r?\n)?\Z/$2/;
+    }
+    if ($flag_linenum) {
+        my $n = 0;
+        $output =~ s/^/sprintf("%5d:  ", ++$n)/gme;
+        $output =~ s/^\s*\d+:\s*\n//gm          if $flag_compact;
+        $output =~ s/\n(\s*\d+:\s*\n)+/\n\n/gm  if $flag_uniq;
+    }
+    else {
+        $output =~ s/^\s*\n//gm         if $flag_compact;
+        $output =~ s/\n(\s*\n)+/\n\n/gm if $flag_uniq;
+    }
+    return $output;
+}
+
+
+sub check_syntax {
+    my ($filename, $script, $flag_strict) = @_;
+    eval 'require File::Temp; import File::Temp;';
+    eval 'require IPC::Open3; import IPC::Open3;';
+    my ($f, $tmpfilename) = File::Temp::tempfile();
+    print $f "use strict; " if $flag_strict;
+    print $f $script;
+    close($f);
+    #my $result = exec "$^X -wc $tmpfilename 2>&1";
+    open3('IN', 'OUT', 'ERR', "$^X -c $tmpfilename");
+    close(IN);
+    my $size = 4096;
+    my ($out, $err, $data);
+    $out .= $data while (read(OUT, $data, $size));
+    $err .= $data while (read(ERR, $data, $size));
+    close(OUT);
+    close(ERR);
+    unlink($tmpfilename);
+    $out =~ s/$tmpfilename/$filename/ge;
+    $err =~ s/$tmpfilename/$filename/ge;
+    return ($out, $err);
+}
+
+
+if (__FILE__ eq $0) {
+    &execute(\@ARGV, $0);
+}
+
+
+1;

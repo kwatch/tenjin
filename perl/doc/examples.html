@@ -1,0 +1,328 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html">
+  <title>plTenjin Examples</title>
+  <meta name="generator" content="kwaser">
+  <meta http-equiv="Content-Style-Type" content="text/css">
+  <link rel="stylesheet" href="docstyle.css" type="text/css">
+ </head>
+ <body>
+
+  <blockquote>
+   <div class="mainbody">
+
+    <div align="left"><h1>plTenjin Examples</h1></div>
+    <div align="left">
+      last update: $Date$<br>
+    </div>
+
+<p>Release: $Release$
+</p>
+<p>Table of Contents:
+<ul>
+  <li><a href="#bordered-table">Bordered Table</a>
+  </li>
+  <li><a href="#form">Form</a>
+  </li>
+  <li><a href="#preprocessing">Preprocessing</a>
+  </li>
+</ul>
+</p>
+<a name="bordered-table"></a>
+<h2 class="section1">Bordered Table</h2>
+<a name="table/table.plhtml"></a>
+<div class="program_caption">
+Template: 'table.plhtml'</div>
+<pre class="program">&lt;html&gt;
+  &lt;body&gt;
+    &lt;h1&gt;<strong>[=$title=]</strong>&lt;/h1&gt;
+    &lt;table&gt;
+<strong>&lt;?pl my $i = 0; ?&gt;</strong>
+<strong>&lt;?pl for my $item (@$items) { ?&gt;</strong>
+<strong>&lt;?pl     my $color = ++$i % 2 == 0 ? '#FFCCCC' : '#CCCCFF'; ?&gt;</strong>
+      &lt;tr bgcolor="<strong>[==$color=]</strong>"&gt;
+        &lt;td&gt;<strong>[==$i=]</strong>&lt;/td&gt;
+        &lt;td&gt;<strong>[=$item=]</strong>&lt;/td&gt;
+      &lt;/tr&gt;
+<strong>&lt;?pl } ?&gt;</strong>
+    &lt;/table&gt;
+  &lt;/body&gt;
+&lt;/html&gt;
+</pre>
+<a name="table/table_s.result"></a>
+<div class="terminal_caption">
+Convert into Python script:</div>
+<pre class="terminal">$ pltenjin -a convert table.plhtml
+my @_buf = (); push(@_buf, q`&lt;html&gt;
+  &lt;body&gt;
+    &lt;h1&gt;`, escape($title), q`&lt;/h1&gt;
+    &lt;table&gt;
+`, ); my $i = 0;
+for my $item (@$items) {
+    my $color = ++$i % 2 == 0 ? '#FFCCCC' : '#CCCCFF';
+push(@_buf, q`      &lt;tr bgcolor="`, $color, q`"&gt;
+        &lt;td&gt;`, $i, q`&lt;/td&gt;
+        &lt;td&gt;`, escape($item), q`&lt;/td&gt;
+      &lt;/tr&gt;
+`, ); }
+push(@_buf, q`    &lt;/table&gt;
+  &lt;/body&gt;
+&lt;/html&gt;
+`, ); join('', @_buf);
+</pre>
+<a name="table/table.pl"></a>
+<div class="program_caption">
+Main program: 'table.pl'</div>
+<pre class="program">## create Engine object
+use strict;
+use Tenjin;
+$Tenjin::USE_STRICT = 1;  # optional
+<strong>my $engine = new Tenjin::Engine();</strong>
+
+## render template with context data
+my $context = { title=&gt;'Bordered Table Example',
+                items=&gt;[ '&lt;AAA&gt;', 'B&amp;B', '"CCC"' ] };
+<strong>my $output = $engine-&gt;render('table.plhtml', $context);</strong>
+print $output;
+</pre>
+<a name="table/table.result"></a>
+<div class="terminal_caption">
+Result:</div>
+<pre class="terminal">$ perl table.pl
+&lt;html&gt;
+  &lt;body&gt;
+    &lt;h1&gt;Bordered Table Example&lt;/h1&gt;
+    &lt;table&gt;
+      &lt;tr bgcolor="<strong>#CCCCFF</strong>"&gt;
+        &lt;td&gt;<strong>1</strong>&lt;/td&gt;
+        &lt;td&gt;<strong>&amp;lt;AAA&amp;gt;</strong>&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr bgcolor="<strong>#FFCCCC</strong>"&gt;
+        &lt;td&gt;<strong>2</strong>&lt;/td&gt;
+        &lt;td&gt;<strong>B&amp;amp;B</strong>&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr bgcolor="<strong>#CCCCFF</strong>"&gt;
+        &lt;td&gt;<strong>3</strong>&lt;/td&gt;
+        &lt;td&gt;<strong>&amp;quot;CCC&amp;quot;</strong>&lt;/td&gt;
+      &lt;/tr&gt;
+    &lt;/table&gt;
+  &lt;/body&gt;
+&lt;/html&gt;
+</pre>
+<br>
+
+
+<a name="form"></a>
+<h2 class="section1">Form</h2>
+<a name="form/form.plhtml"></a>
+<div class="program_caption">
+Template: 'form.plhtml':</div>
+<pre class="program"><strong>&lt;?pl #@ARGS action, params, label ?&gt;</strong>
+&lt;form action="<strong>[=$action=]</strong>" method="post"&gt;
+  &lt;p&gt;
+    &lt;label&gt;Name:&lt;/label&gt;
+    &lt;input type="text" name="name" value="<strong>[=$params-&gt;{name}=]</strong>" /&gt;
+  &lt;/p&gt;
+  &lt;p&gt;
+    &lt;label&gt;Gender:&lt;/label&gt;
+<strong>&lt;?pl my $gender = $params-&gt;{gender}; ?&gt;</strong>
+    &lt;input type="radio" name="gender" value="M" <strong>[==checked($gender eq 'M')=]</strong> /&gt;Man
+    &lt;input type="radio" name="gender" value="W" <strong>[==checked($gender eq 'W')=]</strong> /&gt;Woman
+  &lt;/p&gt;
+  &lt;input type="submit" value="<strong>[=$label=]</strong>" /&gt;
+&lt;/form&gt;
+</pre>
+<a name="form/create.plhtml"></a>
+<div class="program_caption">
+Template: 'create.plhtml':</div>
+<pre class="program">&lt;?pl $_context-&gt;{title} = 'Create user'; ?&gt;
+&lt;?pl $_context-&gt;{label} = 'Create'; ?&gt;
+&lt;?pl $_context-&gt;{action} = 'action.cgi'; ?&gt;
+<strong>&lt;?pl include(':form'); ?&gt;</strong>
+</pre>
+<a name="form/update.plhtml"></a>
+<div class="program_caption">
+Template: 'update.plhtml':</div>
+<pre class="program">&lt;?pl $_context-&gt;{title} = 'Update user'; ?&gt;
+&lt;?pl $_context-&gt;{label} = 'Update'; ?&gt;
+&lt;?pl $_context-&gt;{action} = 'update.cgi'; ?&gt;
+<strong>&lt;?pl include(':form'); ?&gt;</strong>
+</pre>
+<a name="form/layout.plhtml"></a>
+<div class="program_caption">
+Layout template: 'layout.plhtml'</div>
+<pre class="program">&lt;html&gt;
+ &lt;body&gt;
+  &lt;h1&gt;[=$title=]&lt;/h1&gt;
+  &lt;div class="main-content"&gt;
+<strong>[==$_content==]</strong>
+  &lt;/div&gt;
+ &lt;/body&gt;
+&lt;/html&gt;
+</pre>
+<a name="form/main.pl"></a>
+<div class="program_caption">
+Main program: 'main.pl':</div>
+<pre class="program">use strict;
+
+## create Engine object
+use Tenjin;
+$Tenjin::USE_STRICT = 1;   # optional
+<strong>my $engine = new Tenjin::Engine({postfix=&gt;'.plhtml', layout=&gt;'layout.plhtml'});</strong>
+
+## render template with context data
+my $params = { name=&gt;'Foo', gender=&gt;'M' };
+my $context = { params =&gt; $params };
+<strong>my $output = $engine-&gt;render(':update', $context);</strong>   # ':update' == 'update'+postfix
+print $output;
+</pre>
+<a name="form/main.result"></a>
+<div class="terminal_caption">
+Result:</div>
+<pre class="terminal">$ perl main.pl
+&lt;html&gt;
+ &lt;body&gt;
+  &lt;h1&gt;<strong>Update user</strong>&lt;/h1&gt;
+  &lt;div class="main-content"&gt;
+&lt;form action="<strong>update.cgi</strong>" method="post"&gt;
+  &lt;p&gt;
+    &lt;label&gt;Name:&lt;/label&gt;
+    &lt;input type="text" name="name" value="<strong>Foo</strong>" /&gt;
+  &lt;/p&gt;
+  &lt;p&gt;
+    &lt;label&gt;Gender:&lt;/label&gt;
+    &lt;input type="radio" name="gender" value="M" <strong> checked="checked"</strong> /&gt;Man
+    &lt;input type="radio" name="gender" value="W"  /&gt;Woman
+  &lt;/p&gt;
+  &lt;input type="submit" value="<strong>Update</strong>" /&gt;
+&lt;/form&gt;
+  &lt;/div&gt;
+ &lt;/body&gt;
+&lt;/html&gt;
+</pre>
+<br>
+
+
+<a name="preprocessing"></a>
+<h2 class="section1">Preprocessing</h2>
+<a name="preprocessing/Helper.pm"></a>
+<div class="program_caption">
+Library: 'Helper.pm'</div>
+<pre class="program">package Helper;
+use Exporter;
+@ISA = ('Exporter');
+@EXPORT = ('link_to');
+
+$languages = [
+    ['en', 'Engilish'],
+    ['fr', 'French'],
+    ['de', 'German'],
+    ['es', 'Spanish'],
+    ['ch', 'Chinese'],
+    ['ja', 'Japanese'],
+];
+
+sub link_to {
+    my ($label, $args) = @_;
+    my ($action, $id);
+    if (defined($args)) {
+        $action = $args-&gt;{action};
+	$id     = $args-&gt;{id};
+    }
+    my @buf = ('/app');
+    if ($action) { push(@buf, '/', $action); }
+    if ($id) { push(@buf, '/', $id); }
+    my $url = join('', @buf);
+    return "&lt;a href=\"$url\"&gt;$label&lt;/a&gt;";
+}
+
+1;
+</pre>
+<a name="preprocessing/select.plhtml"></a>
+<div class="program_caption">
+Template: 'select.plhtml'</div>
+<pre class="program"><strong>&lt;?PL use Helper; ?&gt;</strong>
+&lt;form&gt;
+  &lt;label&gt;Select your language:&lt;/label&gt;
+  &lt;select name="lang"&gt;
+<strong>&lt;?pl my $table = { $params-&gt;{lang} =&gt; ' selected="selected"' }; ?&gt;</strong>
+<strong>&lt;?PL for my $t (@$Helper::languages) { ?&gt;</strong>
+<strong>&lt;?PL    my ($val, $name) = ($t-&gt;[0], $t-&gt;[1]); ?&gt;</strong>
+    &lt;option value="[*=$val=*]" [==$table-&gt;{[*=$val=*]}=]&gt;[*=$name=*]&lt;/option&gt;
+<strong>&lt;?PL } ?&gt;</strong>
+  &lt;/select&gt;
+  &lt;input type="submit" value="OK" /&gt;
+&lt;/form&gt;
+&lt;p&gt;
+  <strong>[*==</strong>link_to('Back', {action=&gt;'index'})<strong>=*]</strong> |
+  <strong>[*==</strong>link_to('Show '.<strong>_P('$params-&gt;{name}')</strong>, {action=&gt;'show', id=&gt;<strong>_p('$params-&gt;{id}')</strong>})<strong>=*]</strong>
+&lt;/p&gt;
+</pre>
+<a name="preprocessing/select_P.result"></a>
+<div class="terminal_caption">
+Preprocessed code:</div>
+<pre class="terminal">$ pltenjin -a preprocess select.plhtml
+&lt;form&gt;
+  &lt;label&gt;Select your language:&lt;/label&gt;
+  &lt;select name="lang"&gt;
+&lt;?pl my $table = { $params-&gt;{lang} =&gt; ' selected="selected"' }; ?&gt;
+    &lt;option value="en" [==$table-&gt;{en}=]&gt;Engilish&lt;/option&gt;
+    &lt;option value="fr" [==$table-&gt;{fr}=]&gt;French&lt;/option&gt;
+    &lt;option value="de" [==$table-&gt;{de}=]&gt;German&lt;/option&gt;
+    &lt;option value="es" [==$table-&gt;{es}=]&gt;Spanish&lt;/option&gt;
+    &lt;option value="ch" [==$table-&gt;{ch}=]&gt;Chinese&lt;/option&gt;
+    &lt;option value="ja" [==$table-&gt;{ja}=]&gt;Japanese&lt;/option&gt;
+  &lt;/select&gt;
+  &lt;input type="submit" value="OK" /&gt;
+&lt;/form&gt;
+&lt;p&gt;
+  &lt;a href="/app/index"&gt;Back&lt;/a&gt; |
+  &lt;a href="/app/show/<strong>[==$params-&gt;{id}=]</strong>"&gt;Show <strong>[=$params-&gt;{name}=]</strong>&lt;/a&gt;
+&lt;/p&gt;
+</pre>
+<a name="preprocessing/main.pl"></a>
+<div class="program_caption">
+Main program: 'main.pl'</div>
+<pre class="program">use strict;
+
+## create engine
+use Tenjin;
+<strong>my $engine = new Tenjin::Engine({postfix=&gt;'.plhtml', preprocess=&gt;1});</strong>
+
+## render template with context data
+my $params = { id=&gt;1234, name=&gt;'Foo', lang=&gt;'ch' };
+my $context = { params =&gt; $params };
+<strong>my $output = $engine-&gt;render(':select', $context);</strong>
+print $output;
+</pre>
+<a name="preprocessing/main.result"></a>
+<div class="terminal_caption">
+Result:</div>
+<pre class="terminal">$ perl main.pl
+&lt;form&gt;
+  &lt;label&gt;Select your language:&lt;/label&gt;
+  &lt;select name="lang"&gt;
+    &lt;option value="en" &gt;Engilish&lt;/option&gt;
+    &lt;option value="fr" &gt;French&lt;/option&gt;
+    &lt;option value="de" &gt;German&lt;/option&gt;
+    &lt;option value="es" &gt;Spanish&lt;/option&gt;
+    &lt;option value="ch"  selected="selected"&gt;Chinese&lt;/option&gt;
+    &lt;option value="ja" &gt;Japanese&lt;/option&gt;
+  &lt;/select&gt;
+  &lt;input type="submit" value="OK" /&gt;
+&lt;/form&gt;
+&lt;p&gt;
+  &lt;a href="/app/index"&gt;Back&lt;/a&gt; |
+  &lt;a href="/app/show/1234"&gt;Show Foo&lt;/a&gt;
+&lt;/p&gt;
+</pre>
+<br>
+
+
+
+   </div>
+  </blockquote>
+
+ </body>
+</html>
