@@ -1,0 +1,321 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html">
+  <title>phpTenjin Examples</title>
+  <meta name="generator" content="kwaser">
+  <meta http-equiv="Content-Style-Type" content="text/css">
+  <link rel="stylesheet" href="docstyle.css" type="text/css">
+ </head>
+ <body>
+
+  <blockquote>
+   <div class="mainbody">
+
+    <div align="left"><h1>phpTenjin Examples</h1></div>
+    <div align="left">
+      last update: $Date$<br>
+    </div>
+
+<p>Release: $Release$
+</p>
+<p>Table of Contents:
+<ul>
+  <li><a href="#bordered-table">Bordered Table</a>
+  </li>
+  <li><a href="#form">Form</a>
+  </li>
+  <li><a href="#preprocessing">Preprocessing</a>
+  </li>
+</ul>
+</p>
+<a name="bordered-table"></a>
+<h2 class="section1">Bordered Table</h2>
+<a name="table/table.phtml"></a>
+<div class="program_caption">
+Template: 'table.phtml'</div>
+<pre class="program">&lt;html&gt;
+  &lt;body&gt;
+    &lt;h1&gt;<strong>{=$title=}</strong>&lt;/h1&gt;
+    &lt;table&gt;
+<strong>&lt;?php $i = 0; ?&gt;</strong>
+<strong>&lt;?php foreach ($items as $item) { ?&gt;</strong>
+<strong>&lt;?php     $color = ++$i % 2 == 0 ? '#FFCCCC' : '#CCCCFF'; ?&gt;</strong>
+      &lt;tr bgcolor="<strong>{==$color=}</strong>"&gt;
+        &lt;td&gt;<strong>{==$i=}</strong>&lt;/td&gt;
+        &lt;td&gt;<strong>{=$item=}</strong>&lt;/td&gt;
+      &lt;/tr&gt;
+<strong>&lt;?php } ?&gt;</strong>
+    &lt;/table&gt;
+  &lt;/body&gt;
+&lt;/html&gt;
+</pre>
+<a name="table/table_s.result"></a>
+<div class="terminal_caption">
+Convert into PHP script:</div>
+<pre class="terminal">$ phptenjin -a convert table.phtml
+&lt;?php echo '&lt;html&gt;
+  &lt;body&gt;
+    &lt;h1&gt;', <strong>htmlspecialchars($title)</strong>, '&lt;/h1&gt;
+    &lt;table&gt;
+'; $i = 0; 
+ <strong>foreach ($items as $item) {</strong> 
+     <strong>$color = ++$i % 2 == 0 ? '#FFCCCC' : '#CCCCFF';</strong> 
+echo '      &lt;tr bgcolor="', <strong>$color</strong>, '"&gt;
+        &lt;td&gt;', <strong>$i</strong>, '&lt;/td&gt;
+        &lt;td&gt;', <strong>htmlspecialchars($item)</strong>, '&lt;/td&gt;
+      &lt;/tr&gt;
+'; <strong>}</strong> 
+echo '    &lt;/table&gt;
+  &lt;/body&gt;
+&lt;/html&gt;
+';
+?&gt;
+</pre>
+<a name="table/table.php"></a>
+<div class="program_caption">
+Main program: 'table.php'</div>
+<pre class="program">&lt;?php
+// create Engine object
+require_once('Tenjin.php');
+<strong>$engine = new Tenjin_Engine();</strong>
+
+// render template with context data
+$context = array('title'=&gt;'Bordered Table Example',
+                 'items'=&gt;array('&lt;AAA&gt;', 'B&amp;B', '"CCC"'));
+<strong>$output = $engine-&gt;render('table.phtml', $context);</strong>
+echo $output;
+?&gt;
+</pre>
+<a name="table/table.result"></a>
+<div class="terminal_caption">
+Result:</div>
+<pre class="terminal">$ php table.php
+&lt;html&gt;
+  &lt;body&gt;
+    &lt;h1&gt;Bordered Table Example&lt;/h1&gt;
+    &lt;table&gt;
+      &lt;tr bgcolor="<strong>#CCCCFF</strong>"&gt;
+        &lt;td&gt;<strong>1</strong>&lt;/td&gt;
+        &lt;td&gt;<strong>&amp;lt;AAA&amp;gt;</strong>&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr bgcolor="<strong>#FFCCCC</strong>"&gt;
+        &lt;td&gt;<strong>2</strong>&lt;/td&gt;
+        &lt;td&gt;<strong>B&amp;amp;B</strong>&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr bgcolor="<strong>#CCCCFF</strong>"&gt;
+        &lt;td&gt;<strong>3</strong>&lt;/td&gt;
+        &lt;td&gt;<strong>&amp;quot;CCC&amp;quot;</strong>&lt;/td&gt;
+      &lt;/tr&gt;
+    &lt;/table&gt;
+  &lt;/body&gt;
+&lt;/html&gt;
+</pre>
+<br>
+
+
+<a name="form"></a>
+<h2 class="section1">Form</h2>
+<a name="form/form.phtml"></a>
+<div class="program_caption">
+Template: 'form.phtml':</div>
+<pre class="program"><strong>&lt;?php #@ARGS action, params, label ?&gt;</strong>
+&lt;form action="<strong>{=$action=}</strong>" method="post"&gt;
+  &lt;p&gt;
+    &lt;label&gt;Name:&lt;/label&gt;
+    &lt;input type="text" name="name" value="<strong>{=$params['name']=}</strong>" /&gt;
+  &lt;/p&gt;
+  &lt;p&gt;
+    &lt;label&gt;Gender:&lt;/label&gt;
+    <strong>&lt;?php $gender = $params['gender']; ?&gt;</strong>
+    &lt;input type="radio" name="gender" value="M" <strong>{==checked($gender=='M')=}</strong> /&gt;Man
+    &lt;input type="radio" name="gender" value="W" <strong>{==checked($gender=='W')=}</strong> /&gt;Woman
+  &lt;/p&gt;
+  &lt;input type="submit" value="<strong>{=$label=}</strong>" /&gt;
+&lt;/form&gt;
+</pre>
+<a name="form/create.phtml"></a>
+<div class="program_caption">
+Template: 'create.phtml':</div>
+<pre class="program">&lt;?php $_context['title'] = 'Create user'; ?&gt;
+&lt;?php $_context['label'] = 'Create'; ?&gt;
+&lt;?php $_context['action'] = 'action.cgi'; ?&gt;
+<strong>&lt;?php import(':form'); ?&gt;</strong>
+</pre>
+<a name="form/update.phtml"></a>
+<div class="program_caption">
+Template: 'update.phtml':</div>
+<pre class="program">&lt;?php $_context['title'] = 'Update user'; ?&gt;
+&lt;?php $_context['label'] = 'Update'; ?&gt;
+&lt;?php $_context['action'] = 'update.cgi'; ?&gt;
+<strong>&lt;?php import(':form'); ?&gt;</strong>
+</pre>
+<a name="form/layout.phtml"></a>
+<div class="program_caption">
+Layout template: 'layout.phtml'</div>
+<pre class="program">&lt;html&gt;
+ &lt;body&gt;
+  &lt;h1&gt;{=$title=}&lt;/h1&gt;
+  &lt;div class="main-content"&gt;
+<strong>{==$_content=}</strong>
+  &lt;/div&gt;
+ &lt;/body&gt;
+&lt;/html&gt;
+</pre>
+<a name="form/main.php"></a>
+<div class="program_caption">
+Main program: 'main.php':</div>
+<pre class="program">&lt;?php
+// create Engine object
+require_once('Tenjin.php');
+<strong>$properties = array('postfix'=&gt;'.phtml', 'layout'=&gt;'layout.phtml');</strong>
+<strong>$engine = new Tenjin_Engine($properties);</strong>
+
+// render template with context data
+$params = array('name'=&gt;'Foo', 'gender'=&gt;'M');
+$context = array('params'=&gt;$params);
+<strong>$output = $engine-&gt;render(':update', $context);</strong>   # ':update' == 'update'+postfix
+echo $output;
+?&gt;
+</pre>
+<a name="form/main.result"></a>
+<div class="terminal_caption">
+Result:</div>
+<pre class="terminal">$ php main.php
+&lt;html&gt;
+ &lt;body&gt;
+  &lt;h1&gt;<strong>Update user</strong>&lt;/h1&gt;
+  &lt;div class="main-content"&gt;
+&lt;form action="<strong>update.cgi</strong>" method="post"&gt;
+  &lt;p&gt;
+    &lt;label&gt;Name:&lt;/label&gt;
+    &lt;input type="text" name="name" value="<strong>Foo</strong>" /&gt;
+  &lt;/p&gt;
+  &lt;p&gt;
+    &lt;label&gt;Gender:&lt;/label&gt;
+    &lt;input type="radio" name="gender" value="M" <strong> checked="checked"</strong> /&gt;Man
+    &lt;input type="radio" name="gender" value="W"  /&gt;Woman
+  &lt;/p&gt;
+  &lt;input type="submit" value="<strong>Update</strong>" /&gt;
+&lt;/form&gt;
+
+  &lt;/div&gt;
+ &lt;/body&gt;
+&lt;/html&gt;
+</pre>
+<br>
+
+
+<a name="preprocessing"></a>
+<h2 class="section1">Preprocessing</h2>
+<a name="preprocessing/helper.php"></a>
+<div class="program_caption">
+Library: 'helper.php'</div>
+<pre class="program">&lt;?php
+$languages = array(
+    'en' =&gt; 'Engilish',
+    'fr' =&gt; 'French',
+    'de' =&gt; 'German',
+    'es' =&gt; 'Spanish',
+    'ch' =&gt; 'Chinese',
+    'ja' =&gt; 'Japanese',
+);
+
+function link_to($label, $action=null, $id=null) {
+    $url = '/app';
+    if ($action) $url .= '/'.$action;
+    if ($id)     $url .= '/'.$id;
+    $url = preg_replace('/%2F/', '/', urlencode($url));
+    return "&lt;a href=\"".$url."\"&gt;$label&lt;/a&gt;";
+}
+?&gt;
+</pre>
+<a name="preprocessing/select.phtml"></a>
+<div class="program_caption">
+Template: 'select.phtml'</div>
+<pre class="program">&lt;?PHP require('helper.php'); ?&gt;
+&lt;form&gt;
+  &lt;label&gt;Select your language:&lt;/label&gt;
+  &lt;select name="lang"&gt;
+  &lt;?php $lang = $params['lang']; ?&gt;
+  &lt;?php $table = array(true=&gt;' selected="selected"', false=&gt;''); ?&gt;
+<strong>&lt;?PHP foreach ($languages as $val=&gt;$name) { ?&gt;</strong>
+    &lt;option value="{*==$val=*}" {==$table[$lang=='{*==$val=*}']=}&gt;{*=$name=*}&lt;/option&gt;
+<strong>&lt;?PHP } ?&gt;</strong>
+  &lt;/select&gt;
+  &lt;input type="submit" value="OK" /&gt;
+&lt;/form&gt;
+&lt;p&gt;
+  <strong>{*==</strong>link_to('Back', 'index')<strong>=*}</strong> |
+  <strong>{*==</strong>link_to('Show '.<strong>_ep('$params["name"]')</strong>, 'show', <strong>_p('$params["id"]')</strong>)<strong>=*}</strong>
+&lt;/p&gt;
+</pre>
+<a name="preprocessing/select_P.result"></a>
+<div class="terminal_caption">
+Preprocessed code:</div>
+<pre class="terminal">$ phptenjin -a preprocess select.phtml
+&lt;form&gt;
+  &lt;label&gt;Select your language:&lt;/label&gt;
+  &lt;select name="lang"&gt;
+  &lt;?php $lang = $params['lang']; ?&gt;
+  &lt;?php $table = array(true=&gt;' selected="selected"', false=&gt;''); ?&gt;
+    &lt;option value="en" {==$table[$lang=='en']=}&gt;Engilish&lt;/option&gt;
+    &lt;option value="fr" {==$table[$lang=='fr']=}&gt;French&lt;/option&gt;
+    &lt;option value="de" {==$table[$lang=='de']=}&gt;German&lt;/option&gt;
+    &lt;option value="es" {==$table[$lang=='es']=}&gt;Spanish&lt;/option&gt;
+    &lt;option value="ch" {==$table[$lang=='ch']=}&gt;Chinese&lt;/option&gt;
+    &lt;option value="ja" {==$table[$lang=='ja']=}&gt;Japanese&lt;/option&gt;
+  &lt;/select&gt;
+  &lt;input type="submit" value="OK" /&gt;
+&lt;/form&gt;
+&lt;p&gt;
+  &lt;a href="/app/index"&gt;Back&lt;/a&gt; |
+  &lt;a href="/app/show/<strong>{==$params["id"]=}</strong>"&gt;Show <strong>{=$params["name"]=}</strong>&lt;/a&gt;
+&lt;/p&gt;
+</pre>
+<a name="preprocessing/main.php"></a>
+<div class="program_caption">
+Main program: 'main.php'</div>
+<pre class="program">&lt;?php
+// create engine
+require 'Tenjin.php';
+$properties = array('postfix'=&gt;'.phtml', <strong>'preprocess'=&gt;true</strong>);
+$engine = new Tenjin_Engine($properties);
+
+// render template with context data
+$params = array('id'=&gt;1234, 'name'=&gt;'Foo', 'lang'=&gt;'ch');
+$context = array('params'=&gt;$params);
+$output = $engine-&gt;render(':select', $context);
+echo $output;
+?&gt;
+</pre>
+<a name="preprocessing/main.result"></a>
+<div class="terminal_caption">
+Result:</div>
+<pre class="terminal">$ php main.php
+&lt;form&gt;
+  &lt;label&gt;Select your language:&lt;/label&gt;
+  &lt;select name="lang"&gt;
+    &lt;option value="en" &gt;Engilish&lt;/option&gt;
+    &lt;option value="fr" &gt;French&lt;/option&gt;
+    &lt;option value="de" &gt;German&lt;/option&gt;
+    &lt;option value="es" &gt;Spanish&lt;/option&gt;
+    &lt;option value="ch"  selected="selected"&gt;Chinese&lt;/option&gt;
+    &lt;option value="ja" &gt;Japanese&lt;/option&gt;
+  &lt;/select&gt;
+  &lt;input type="submit" value="OK" /&gt;
+&lt;/form&gt;
+&lt;p&gt;
+  &lt;a href="/app/index"&gt;Back&lt;/a&gt; |
+  &lt;a href="/app/show/1234"&gt;Show Foo&lt;/a&gt;
+&lt;/p&gt;
+</pre>
+<br>
+
+
+
+   </div>
+  </blockquote>
+
+ </body>
+</html>

@@ -1,0 +1,24 @@
+   <tbody>
+<?php $i = 0; ?>
+<?php foreach ($list as $item) { ?>
+    <tr class="{== ++$i % 2 == 0 ? 'even' : 'odd' =}">
+     <td style="text-align: center">{==$i=}</td>
+     <td>
+      <a href="/stocks/{==$item['symbol']=}">{==$item['symbol']=}</a>
+     </td>
+     <td>
+      <a href="{==$item['url']=}">{==$item['name']=}</a>
+     </td>
+     <td>
+      <strong>{==$item['price']=}</strong>
+     </td>
+    <?php if ($item['change'] < 0.0) { ?>
+     <td class="minus">{==$item['change']=}</td>
+     <td class="minus">{==$item['ratio']=}</td>
+    <?php } else { ?>
+     <td>{==$item['change']=}</td>
+     <td>{==$item['ratio']=}</td>
+    <?php } ?>
+    </tr>
+<?php } ?>
+   </tbody>

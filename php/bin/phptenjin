@@ -1,0 +1,519 @@
+#!/usr/bin/env php
+<?php
+
+///
+/// $Rev$
+/// $Release:$
+/// $Copyright$
+///
+
+require_once('Tenjin.php');
+
+define('SYCK_SO', 'syck.so');
+//define('SYCK_SO', '/usr/local/lib/php/extensions/no-debug-non-zts-20060613/syck.so');
+
+
+function strcount($str, $needle, $offset=0) {
+    $n = 0;
+    while (($pos = strpos($str, $needle, $offset)) !== false) {
+        $n++;
+        $offset = $pos + 1;
+    }
+    return $n;
+}
+
+function strrepeat($str, $ntimes) {
+    $buf = array();
+    while ($ntimes--) {
+        $buf[] = $str;
+    }
+    return join('', $buf);
+}
+
+function array_setdefault(&$array, $key, $default) {
+    if (array_key_exists($key, $array)) {
+        return $array[$key];
+    }
+    else {
+        return $array[$key] = $default;
+    }
+}
+
+function init_array_keys_by_chars($str, $val=null) {
+    $arr = array();
+    for ($i = 0; $i < strlen($str); $i++) {
+        $ch = substr($str, $i, 1);
+        $arr[$ch] = null;
+    }
+    return $arr;
+}
+
+function untabify($str, $width=8) {
+    $splitted = preg_split('/\t/', $str);
+    $last = array_pop($splitted);
+    $buf = array();
+    foreach ($splitted as $s) {
+        $buf[] = $s;
+        if (($rindex = strrpos($s, "\n")) !== false)
+            $column = strlen($s) - $rindex - 1;
+        else
+            $column = strlen($s);
+        $n = $width - ($column % $width);
+        $buf[] = str_repeat(' ', $n);
+    }
+    $buf[] = $last;
+    return join($buf);
+}
+
+function load_yamlstr($yamlstr) {
+    if (extension_loaded('syck')) { /*OK*/ }
+    elseif (dl('syck.so')) { /*OK*/ }
+    elseif (dl(SYCK_SO)) { /*OK*/ }
+    else {
+        die('syck.so required to parse YAML file or string.');
+    }
+    $context = syck_load($yamlstr);
+    return $context;
+}
+
+function load_phpexpr($_expr) {
+    eval($_expr);
+    $_vars = get_defined_vars();
+    unset($_vars['_expr']);
+    return $_vars;
+}
+
+
+class Tenjin_NoTextTemplate extends Tenjin_Template {
+
+    var $noexpr = false;
+
+    function __init__($filename=null, $properties=null) {
+        parent::Tenjin_Template($filename, $properties);
+        if (array_key_exists('noexpr', $properties)) {
+            $this->noexpr = $properties['noexpr'];
+        }
+    }
+
+    function start_text_part(&$buf) {
+        /// nothing
+    }
+
+    function stop_text_part(&$buf) {
+        /// nothing
+    }
+
+    function add_text(&$buf, $text) {
+        if (! $text) return;
+        $n = strcount($text, "\n");
+        if ($n) {
+            $buf[] = str_repeat($this->newline, $n);
+        }
+        $i = strrpos($text, "\n");
+        $s = $i === false ? $text : substr($text, $i+1);
+        if ($s) {
+            $buf[] = preg_replace('/[^\t]/', ' ', $s);
+        }
+    }
+
+    function add_expr(&$buf, $expr, $flag_escape=null) {
+        if (! trim($expr)) return;
+        if ($this->noexpr) {
+            $n = strcount($expr, "\n");
+            if ($n) {
+                $buf[] = sr_repeat($this->newline, $n);
+            }
+        }
+        elseif ($flag_escape) {
+            array_push($buf, $this->escapefunc, "(", $expr, "); ");
+        }
+        else {
+            array_push($buf, $expr, "; ");
+        }
+    }
+
+}
+
+
+
+class Tenjin_CommandOptionError extends Exception {
+}
+
+
+class Tenjin_Main {
+
+    var $argc;
+    var $argv;
+
+    function Tenjin_Main($argc, $argv) {
+        $this->argc = $argc;
+        $this->argv = $argv;
+    }
+
+    /* static method */
+    function main($argc, $argv) {
+        try {
+            $main = new Tenjin_Main($argc, $argv);
+            $output = $main->execute();
+            if ($output) {
+                echo $output;
+            }
+            exit(0);
+        }
+        catch (Tenjin_CommandOptionError $ex) {
+            printf(STDERR, $ex, "\n");
+            exit(1);
+        }
+    }
+
+    function execute() {
+        /// parse options
+        $noargopts ='hvsSNXCUbxzqwTPD';
+        $argopts   = 'fcikra';
+        $argopts2  = '';
+        $command   = basename($this->argv[0]);
+        $tuple = $this->parse_args($this->argc, $this->argv, $noargopts, $argopts, $argopts2);
+        list($options, $properties, $filenames) = $tuple;
+
+        /// help or version
+        if ($options['h'] || _array_get($properties, 'help')) {
+            return $this->usage($command);
+        }
+        if ($options['v'] || _array_get($properties, 'version')) {
+            return $this->version() + "\n";
+        }
+
+        /// check options
+        if ($options['f'] && !is_file($options['f'])) {
+            throw $this->error("-f ${options['f']}: file not found.");
+        }
+
+        /// set action
+        $action = $options['a'];
+        $actions = split(' ', 'render convert retrieve statements syntax preprocess');
+        if ($action) {
+            if (! in_array($action, $actions)) {
+                throw $this->error("-a $action: unknown action.");
+            }
+        }
+        elseif ($options['s']) { $action = 'convert'; }
+        elseif ($options['X']) { $action = 'statements'; }
+        elseif ($options['S']) { $action = 'retrieve'; }
+        elseif ($options['z']) { $action = 'syntax'; }
+        elseif ($options['P']) { $action = 'preprocess'; }
+        else                   { $action = 'render'; }
+
+        /// libraries
+        if ($options['r']) {
+            foreach (split(',', $options['r']) as $lib) {
+                require_once($lib);
+            }
+        }
+
+        /// context data file
+        $context = array();  /// hash table
+        if ($options['f']) {
+            $datafile = $options['f'];
+            $content = file_get_contents($datafile);
+            if (preg_match('/\.ya?ml$/', $datafile)) {
+                if (! $options['T']) {
+                    $content = untabify($content);
+                }
+                $context = load_yamlstr($content);
+                is_array($context) or die("$datafile: not a mapping.");
+            }
+            elseif (preg_match('/\.(php|inc)$/', $datafile)) {
+                $context = load_phpexpr(file_get_contents($datafile));
+            }
+            else {
+                die("-f $datafile: unknown file type ('*.yaml' or '*.php' expected).");
+            }
+        }
+
+        /// context data
+        if ($options['c']) {
+            $s = $options['c'];
+            if ($s) {
+                if (substr($s, 0, 1) == '{') {
+                    $yamlstr = $s;
+                    $context2 = load_yamlstr($yamlstr);
+                    is_array($context2) or die("-e: not a mapping.");
+                }
+                else {
+                    $phpcode = $s;
+                    $context2 = load_phpexpr($phpcode);
+                }
+                $context = array_merge($context, $context2);
+            }
+        }
+
+        /// set properties for Template
+        if ($options['b']) {
+            $properties['preamble'] = $properties['postamble'] = null;
+        }
+        elseif ($action == 'convert' || $action == 'retrieve' or $action == 'statements') {
+            array_setdefault($properties, 'preamble', '<'.'?php ');
+            array_setdefault($properties, 'postamble', "?".">\n");
+        }
+
+        /// set properties for Engine
+        array_setdefault($properties, 'cache', false);  // or leave to be true?
+        $path = null;
+        if (_array_get($properties, 'path')) {
+            $path = array();
+            foreach (split(',', $properties['path']) as $dir) {
+                if (! file_exists($dir)) {
+                    throw $this->error("$dir: directory not found.");
+                }
+                if (! is_dir($dir)) {
+                    throw $this->error("$dir: not a directory.");
+                }
+                $path[] = $dir;
+            }
+            $properties['path'] = $path;
+        }
+        if ($action == 'preprocess' || $options['P']) {
+            $properties['templateclass'] = 'Tenjin_Preprocessor';
+            $properties['preprocess'] = false;
+        }
+        elseif ($action == 'retrieve') {
+            $properties['templateclass'] = 'Tenjin_NoTextTemplate';
+        }
+        elseif ($action == 'statements') {
+            $properties['templateclass'] = 'Tenjin_NoTextTemplate';
+            $properties['noexpr'] = true;
+        }
+
+        /// create engine
+        $engine = new Tenjin_Engine($properties);
+
+        /// execute
+        $output_buf = array();  /// list
+        $template_names = $filenames;
+        if (! $template_names) {
+            $template_names = array(null);
+        }
+        foreach ($template_names as $template_name) {
+            if ($template_name === null) {
+                $input = stream_get_contents(STDIN);
+                $template = new Tenjin_Template(null, $properties);
+                $template->convert($input);
+                $template_name = '-';
+                $engine->register_template($template_name, $template);
+            }
+            if ($action == 'convert' || $action == 'retrieve' || $action == 'statements') {
+                $template = $engine->get_template($template_name);
+                if (! $template->script) {
+                    $s = file_get_contents($template->filename);
+                    $template->convert($s, $template->filename);
+                }
+                $output = $template->script;
+            }
+            elseif ($action == 'syntax') {
+                $template = $engine->get_template($template_name);
+                $output = $this->check_syntax($template->script, $template->filename);
+                if (!$output || preg_match('/^No syntax errors/', $output)) {
+                    $output = $options['q'] ? '' : '[ok] '.$template->filename."\n";
+                }
+                else {
+                    $output = '[NG] '.$template->filename."\n".trim($output)."\n";
+                }
+            }
+            elseif ($action == 'render' || $action == 'preprocess') {
+                $output = $engine->render($template_name, $context);
+            }
+            else {
+                throw UNREACHABLE;
+            }
+            $output_buf[] = $this->manipulate_output($output, $options);
+        }
+        ///
+        return join('', $output_buf);
+    }
+
+
+    function check_syntax($script, $filename) {
+        $tempname = '.tmp.' . $filename;
+        $temp = null;
+        //$temp = tmpfile();   /// how to get filename of temporary file?
+        //$temp = tempnam(null, filename + '.');
+        $temp = fopen($tempname, 'wb') or die("cannot open temporafy file.");
+        $s = '<?php '.$script.' ?>';
+        if (fwrite($temp, $s) === false) {
+            fclose($temp);
+            die("cannot write to temporary file.");
+        }
+        fflush($temp);
+        $output = `php -l $tempname`;
+        fclose($temp);
+        unlink($tempname);
+        return str_replace($tempname, $filename, $output);
+    }
+
+
+    function manipulate_output($output, $options) {
+        $flag_linenum  = $options['N'];   # add line numbers
+        $flag_compact  = $options['C'];   # remove empty lines
+        $flag_uniq     = $options['U'];   # compress empty lines into a line
+        $s = $output;
+        if ($flag_linenum) {
+            $n = 1;
+            $s = preg_replace('/^/me', 'sprintf("%5d:  ", $n++)', $s);
+            if ($flag_compact) {
+                $s = preg_replace('/^\s*\d+:\s+?\n/m', '', $s);
+            }
+            if ($flag_uniq) {
+                $s = preg_replace('/(^\s*\d+:\s+?\n)+/m', "\n", $s);
+            }
+        }
+        else {
+            if ($flag_compact) {
+                $s = preg_replace('/^\s*?\n/m', '', $s);
+            }
+            if ($flag_uniq) {
+                $s = preg_replace('/(^\s*?\n)+/m', "\n", $s);
+            }
+        }
+        return $s;
+    }
+
+    function usage($command) {
+        $s = <<<END
+%(command)s - fast and full-featured template engine
+Usage: %(command)s [..options..] [file1 [file2...]]
+  -h, --help          :  help
+  -v, --version       :  version
+  -a action           :  action (default 'render')
+     -a render        :  render template
+     -a convert       :  convert template into script
+     -a retrieve      :  retrieve statements and expressions
+     -a statements    :  retrieve only statements
+     -a syntax        :  syntax check of template
+#     -a dump          :  show scripts in cache file
+     -a preprocess    :  show preprocessed template
+  -s                  :  alias of '-a convert'
+  -S                  :  alias of '-a retrieve'
+  -X                  :  alias of '-a statements'
+  -z                  :  alias of '-a syntax'
+# -d                  :  alias of '-a dump'
+  -P                  :  alias of '-a preprocess'
+  -N                  :  add line number
+  -C                  :  compact: remove empty lines
+  -U                  :  uniq: compress empty lines into a line
+# -b                  :  remove "_buf=[];" and "''.join(_buf)"
+  -q                  :  quet mode (for '-a syntax')
+# -w                  :  use strict mode
+  -c string           :  context data string (yaml or php)
+  -f file             :  context data file (*.yaml or *.php)
+  -T                  :  unexpand tab chars in datafile
+  -r mod1,mod2,..     :  import modules
+# -i N, --indent=N    :  indent width (default 4)
+#  -k encoding         :  encoding name, without cnverting into unicode
+#  --indent=N          :  indent width (default 4)
+#  --encoding=encoding :  encoding name, with converting into unicode
+  --escapefunc=name   :  'escape' function name
+#  --tostrfunc=name    :  'to_str' function name
+  --preamble=text     :  preamble which is insreted into php script
+  --postamble=text    :  postamble which is insreted into php script
+#  --smarttrim         :  trim "\\n#{expr}\\n" into "\\n#{expr}".
+  --prefix=str        :  prefix string for template shortname
+  --postfix=str       :  postfix string for template shortname
+  --layout=filename   :  layout template name
+  --path=dir1,dir2,.. :  template lookup path
+  --preprocess        :  activate preprocessing
+  --templateclass=name:  template class (default: tenjin.Template)
+Examples:
+ ex1. render template
+   $ %(command)s file.phtml
+ ex2. convert template into php script
+   $ %(command)s -a convert file.phtml
+   $ %(command)s -a retrieve -UN file.phtml   # for debug
+ ex3. render with context data file (*.yaml or *.php)
+   $ %(command)s -f datafile.yaml file.phtml
+ ex4. render with context data string
+   $ %(command)s -c '{title: tenjin example, items: [1, 2, 3]}' file.phtml # yaml
+   $ %(command)s -c '\$title="tenjin example"; \$items=[1,2,3];' file.phtml  # php
+ ex5. syntax check
+   $ %(command)s -a syntax *.phtml     # or '-z'
+
+END;
+        $s = preg_replace('/%\(command\)s/', $command, $s);
+        $s = preg_replace('/^#.*?\n/m', '', $s);
+        return $s;
+    }
+
+
+    function version() {
+        return Tenjin_RELEASE;
+    }
+
+
+    function parse_args($argc, $argv, $noargopts='', $argopts='', $argopts2='') {
+        $options = init_array_keys_by_chars($noargopts.$argopts.$argopts2);
+        $properties = array();
+        for ($i = 1; $i < $argc; $i++) {
+            if (substr($argv[$i], 0, 1) != '-')
+                break;
+            $optstr = $argv[$i];
+            if ($optstr == '-') {
+                $i++;
+                break;
+            }
+            elseif (preg_match('/^--([-\w]+)(=(.*))?/', $optstr, $m)) {
+                $name = $m[1];
+                $value = array_key_exists(2, $m) && $m[2] ? $m[3] : true;
+                $properties[$name] = $value;
+            }
+            else {
+                $optstr = substr($optstr, 1);
+                while ($optstr) {
+                    $ch = substr($optstr, 0, 1);
+                    $optstr = substr($optstr, 1);
+                    if (strpos($noargopts, $ch) !== false) {
+                        $options[$ch] = true;
+                    }
+                    elseif (strpos($argopts, $ch) !== false) {
+                        if     ($optstr)       $options[$ch] = $optstr;
+                        elseif (++$i < $argc)  $options[$ch] = $argv[$i];
+                        else die("-$ch: argument required.");
+                        break;
+                    }
+                    elseif (strpos($argopts2, $ch) !== false) {
+                        $options[$ch] = $optstr || true;
+                        break;
+                    }
+                    else {
+                        die("-$ch: unknown option.");
+                    }
+                }
+            }
+        }
+        $filenames = array_slice($argv, $i);
+        return array($options, $properties, $filenames);
+    }
+
+
+    function to_value($s) {
+        if (s == 'true'  || s == 'TRUE'  || s == 'yes') return true;
+        if (s == 'false' || s == 'FALSE' || s == 'no')  return false;
+        if (s == 'null'  || s == 'NULL')                return null;
+        if (preg_match('/^\d+$/', $s))      return intval($s);
+        if (preg_match('/^\d+\.\d+$/', $s)) return intval($s);
+        return $s;
+    }
+
+
+    function error($message) {
+        //throw new CommandOptionError(message);
+        die($message);
+    }
+
+
+}
+
+
+if (! defined('DONT_INVOKE_MAIN_COMMAND')) {
+    Tenjin_Main::main($argc, $argv);
+}
+
+?>

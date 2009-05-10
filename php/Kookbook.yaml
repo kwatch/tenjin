@@ -1,0 +1,57 @@
+###
+### $Rev$
+### $Release:$
+### $Copyright$
+###
+
+
+properties:
+  - project:	phptenjin
+  - release:	0.0.2
+  - copyright:	copyright(c) 2007-8 kuwata-lab.com all rights reserved.
+  - textfiles:	[ MIT-LICENSE, README.txt, CHANGES.txt ]
+  - docfiles:   [ doc/users-guide.html, doc/faq.html, doc/examples.html, doc/docstyle.css ]
+  - binfiles:   [ bin/phptenjin ]
+  - libfiles:   [ lib/Tenjin.php ]
+  - testfiles:  [ test/*Test.php, test/TenjinTest.inc, test/data/**/* ]
+  - benchfiles: [ benchmark/Makefile, benchmark/bench.php, benchmark/bench_context.php, benchmark/templates/_* ]
+
+recipes:
+
+  - product:	:package
+    ingreds:	[ $(project)-$(release).tar.gz ]
+
+  - product:	$(project)-$(release).tar.gz
+    method*: |
+	// create directory
+	$dir = '$(project)-$(release)';
+	if (is_dir($dir)) k_delete($dir);
+	k_mkdir($dir);
+
+	// copy files
+	k_store($dir, $textfiles);
+	k_store($dir, $docfiles);
+	k_store($dir, $binfiles, $libfiles, $benchfiles);
+	k_store($dir, $testfiles);
+	k_delete("$dir/test/data/**/*.cache");
+
+	// edit files
+        $replacer = array(
+           array('/\$Release\$/', $release),
+           array('/\$Release: .*? \$/', '$Release: '.$release.' $'),
+           array('/\$Copyright\$/', $copyright),
+        );
+	k_edit($replacer, "$dir/**/*");
+
+	// chmod
+	k_chmod(0755, "$dir/bin/*");
+
+	// create tar.gz file
+	k_sys("tar czf $product $dir");
+
+  - product:	:test
+    method*: |
+	$backto = k_chdir('doc');
+	k_sys("kook :test");
+	k_backto($backto);
+

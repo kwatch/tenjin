@@ -1,0 +1,407 @@
+preparation*: |
+
+	function create_test_script($classname, $dir) {
+	    $s = <<<END
+	<?php
+	
+	///
+	/// \$Rev$
+	/// \$Release$
+	/// \$Copyright$
+	///
+	
+	require_once 'TenjinTest.inc';
+	require_once 'PHPUnit2/Framework/TestCase.php';
+	
+	\$files = array();
+	\$files = array_merge(\$files,
+	                     glob('$dir/*.result'),
+	                     glob('$dir/*.sources'));
+	
+	\$buf = array();
+	\$buf[] = "class $classname extends TenjinDocumentTest_ {\\n";
+	foreach (\$files as \$file) {
+	    \$basename = basename(\$file);
+	    \$s = preg_replace('/^data\\//', '', \$file);
+	    \$s = preg_replace('/[^\\w]/', '_', \$s);
+	    \$buf[] = "  function test_\$s() {\\n";
+	    \$buf[] = "    \\\$this->_test('\$basename');\\n";
+	    \$buf[] = "  }\\n";
+	}
+	
+	\$buf[] = "\\n}\\n";
+	\$classdef = join('', \$buf);
+	
+	//echo "*** classdef=\$classdef";
+	eval(\$classdef);
+	END;
+	    return $s;
+	}
+
+
+parameters:
+  - tagfile:	html-css
+  - dir:  data
+  - testdir:  ../test
+  - tidy_opts:      -q -i -wrap 9999 --hide-comments yes
+ 
+  #- users_guide_eruby:	users-guide.eruby
+  - original_docdir:    ../../../rbtenjin/trunk/doc
+  - users_guide_eruby:	$(original_docdir)/users-guide.eruby
+  - faq_eruby:	        $(original_docdir)/faq.eruby
+  - examples_eruby:     $(original_docdir)/examples.eruby
+  - original_files:	[ $(users_guide_eruby), $(faq_eruby), $(examples_eruby) ]
+  - kook_product:   :all
+  - testfiles:		[ TenjinUsersGuideTest.php, TenjinFaqTest.php, TenjinExamplesTest.php ]
+
+  - basenames:	  [ users-guide, faq, examples ]
+  - textfiles*:	  kook_array_suffix($basenames, '.txt')
+  - htmlfiles*:   kook_array_suffix($basenames, '.html');
+
+
+recipes:
+
+  - product:	:all
+    ingreds:	[ :doc, :test ]
+
+  - product:	:doc
+    desc:	generate *.html
+    ingreds:	[ $(htmlfiles) ]
+
+  - product:	:copy
+    desc:	copy *.eruby
+    ingreds:	[ $(original_files) ]
+    method*: |
+	k_mcopy('.', $original_files);
+
+  - product:	*.html
+    ingreds:	[ $(1).txt ]
+    byprods:	[ $(1).toc.html ]
+    method*: |
+	k_sys("kwaser -t $tagfile -T $ingred > $byprod");
+	k_sys("kwaser -t $tagfile    $ingred > $product");
+	k_delete($byprod);
+	#
+	$name = strtr('$(1)', '-', '_');
+	$datadir = "../test/data/$name";
+	if (is_dir($datadir))
+	    k_delete("$datadir/*", "$datadir/.??*");
+	else
+	    k_mkdir("$datadir");
+	k_sys("retrieve -Fd $datadir $ingred");
+	if (! file_exists('data'))
+	    k_sys("ln -s ../test/data .");
+	$filenames = glob("$datadir/*.result2");
+	foreach ($filenames as $filename) {
+	    $content = file_get_contents($filename);
+	    unlink($filename);
+	    $contents = preg_split('/^\$ /m', $content);
+	    $i = 0;
+	    foreach ($contents as $content) {
+	        if (! $content) continue;
+	        $i++;
+	        $fname = preg_replace('/\.result2$/', "$i.result",  $filename);
+		$content = '$ '. $content;
+		file_put_contents($fname, $content);
+	    }
+	}
+
+  - product:	*.txt
+    ingreds:	[ $(1).eruby ]
+    method*: |
+	k_sys("erubis -E PercentLine -c '@lang=%q|php|' -p '\\[% %\\]' $ingred > $product");
+
+  - product:	/^([-\w]+)\.eruby$/
+    ingreds:	[ $(original_docdir)/$(1).eruby ]
+    method*: |
+	k_copy($ingred, $product);
+
+
+  - product:	:test
+    ingreds:	[ :test_users_guide, :test_faq, :test_examples ]
+
+  - product:	:test_users_guide
+    ingreds:	[ ../test/TenjinUsersGuideTest.php, users-guide.html ]
+    method*:  &test_method |
+        $pwd = k_chdir("../test");
+	$filename = basename($ingred);
+	k_sys("phpunit $filename");
+	k_backdir($pwd);
+
+  - product:	:test_faq
+    ingreds:	[ ../test/TenjinFaqTest.php, faq.html ]
+    method*:  *test_method
+
+  - product:	:test_examples
+    ingreds:	[ ../test/TenjinExamplesTest.php, examples.html ]
+    method*:  *test_method
+
+  - product:	../test/Tenjin*Test.php
+    method*: |
+	$name = preg_replace('/([a-z])([A-Z])/', '$1_$2', '$(1)');
+	$name = strtolower($name);
+	$classname = 'Tenjin$(1)Test';
+	$dir = $name == 'examples' ? "data/$name/*" : "data/$name";
+	$s = create_test_script($classname, $dir);
+	file_put_contents($product, $s);
+
+#*#  - product:	users-guide.html
+#*#    ingreds:	[ users-guide.txt, :retrieve ]
+#*#    byprods:	[ users-guide.toc.html ]
+#*#    method*: |
+#*#	k_sys("kwaser -t $tagfile -T $ingred > $byprod");
+#*#	k_sys("kwaser -t $tagfile    $ingred > $product");
+#*#	k_delete($byprods);
+#*
+#*#  - product:	users-guide.html
+#*#    ingreds:	[ users-guide.rst ]
+#*#    byprods:	[ users-guide.tmp ]
+#*#    method*: |
+#*#	k_sys_f("$(rst2html) $rst2html_opts $ingred 2>&1 > $byprod");
+#*#	$str = file_get_contents($byprod);
+#*#	$str = to_strong($str);
+#*#	$str = pre_to_console($str);
+#*#	$str = pre_to_file($str);
+#*#	file_put_contents($byprod, $str);
+#*#	k_sys_f("tidy $(tidy_opts) $byprod > $product");
+#*#	//k_remove($byprod);
+#*
+#*  - product:	*.html
+#*    ingreds:	[ $(1).txt ]
+#*    byprods:	[ $(1).toc.html ]
+#*    method*: |
+#*	k_sys("kwaser -t html-css -T $ingred > $byprod");
+#*	k_sys("kwaser -t html-css    $ingred > $product");
+#*
+#*#  - product:	users-guide.txt
+#*#    ingreds:	[ users-guide.eruby ]
+#*#    toppings:	[ $(users_guide_eruby) ]
+#*#    method*: |
+#*#	if (file_exists($toppings[0])) {
+#*#	    k_copy($toppings[0], $ingred);
+#*#	}
+#*#	k_sys("erubis -c '@lang=%q|python|' -p '\\[% %\\]' $ingred > $product");
+#*
+#*#  - product:	users-guide.txt
+#*#    ingreds:	[ users_guide.txt ]
+#*#    method*: |
+#*#	k_rename($ingred, $product);
+#*
+#*  - product:	*.txt
+#*    ingreds:	[ $(1).eruby ]
+#*    toppings:	[ $(original_docdir)/$(1).eruby ]
+#*    method*: |
+#*	if (file_exists($topping))
+#*	    k_copy($topping, $ingred);
+#*	k_sys("erubis -E PercentLine -c '@lang=%q|python|' -p '\\[% %\\]' $ingred > $product");
+#*	#
+#*	$name = strtr('$(1)', '-', '_');
+#*	$datadir = "../test/data/$name";
+#*	if (is_dir($datadir))
+#*	    k_delete("$datadir/*");
+#*	else
+#*	    k_mkdir("$datadir");
+#*	k_sys("retrieve -Fd $datadir $product");
+#*	if (! file_exists('data'))
+#*	    k_sys("ln -s ../test/data .");
+#*	$filenames = glob("$datadir/*.result2");
+#*	foreach ($filenames as $filename) {
+#*	    $content = file_get_contents($filename);
+#*	    unlink($filename);
+#*	    $contents = preg_split('/^\$ /m', $content);
+#*	    $i = 0;
+#*	    foreach ($contents as $content) {
+#*	        if (! $content) continue;
+#*	        $i++;
+#*	        $fname = preg_replace('/\.result2$/', "$i.result",  $filename);
+#*		$content = '$ '. $content;
+#*		file_put_contents($fname, $content);
+#*	    }
+#*	}
+#*
+#*  - product:	:retrieve
+#*    ingreds:	[ $(textfiles) ]
+#*    method*: |
+#*	k_mkdir("$(dir)");
+#*	k_delete("$(dir)/*");
+#*	foreach ($ingreds as $ingred) {
+#*	    $name = preg_replace('/\.\w+$/', '', $ingred);
+#*	    $name = preg_replace('/-/', '_', $name);
+#*	    k_mkdir("$(dir)/$name");
+#*	    k_sys("retrieve -Fd $(dir)/$name $ingred");
+#*	}
+#*
+#*#  - product:	:retrieve
+#*#    ingreds:	[ users-guide.rst ]
+#*#    method*: |
+#*#	k_delete($dir);
+#*#	k_mkdir($dir);
+#*#	$str = file_get_contents($ingred);
+#*#	#
+#*#	$pat = '/^File \'?(.*?)\'?::\n\n((?:\t.*?\n)*)/m';
+#*#	preg_match_all($pat, $str, $mlist, PREG_SET_ORDER);
+#*#	foreach ($mlist as $m) {
+#*#	    $filename = $m[1];
+#*#	    $content = $m[2];
+#*#	    $content = preg_replace('/^\t/m', '', $content);
+#*#	    $content = preg_replace('/\{\{\*|\*\}\}/', '', $content);
+#*#	    //var_dump(array($filename, $content));
+#*#	    file_put_contents("$dir/$filename", $content);
+#*#	}
+#*#	#
+#*#	$pat = '/(?:^\.\. (?:result|console)=\'?(.*?)\'?\n\n)?^Result.*?::\n\n((?:\t.*?\n)*)/m';
+#*#	preg_match_all($pat, $str, $mlist, PREG_SET_ORDER);
+#*#	foreach ($mlist as $m) {
+#*#	    $filename = $m[1];
+#*#	    $content = $m[2];
+#*#	    $content = preg_replace('/^\t/m', '', $content);
+#*#	    $content = preg_replace('/\{\{\*|\*\}\}/', '', $content);
+#*#	    if (! $filename) {
+#*#	        if (preg_match('/\A\$.*? (\S+)$/m', $content, $m2)) {
+#*#		    $filename = preg_replace('/\.\w+\z/', '.result', $m2[1]);
+#*#		    if ($filename == $m2[1]) {
+#*#		        $filename .= '.result';
+#*#		    }
+#*#	        }
+#*#	    }
+#*#	    //var_dump(array($filename, $content));
+#*#	    file_put_contents("$dir/$filename", $content);
+#*#	}
+#*
+#*  - product:	:create_test
+#*    desc:       create test script
+#*    ingreds:	[ test_users_guide.py ]
+#*
+#*  - product:	:clean
+#*    method*: |
+#*	k_delete('*.toc.html', 'test.log', '*.pyc');
+#*
+#*  - product:	:test
+#*    ingreds:	[ :test_users_guide, :test_faq, :test_examples ]
+#*
+#*
+#*  - product:	:test_users_guide
+#*#    ingreds:    [ test_users_guide.php ]
+#*    method*: &testmethod |
+#*	$name = preg_replace('/^:test_/', '', $product);
+#*	$testdir = "../test";
+#*	$cwd = getcwd();
+#*	k_chdir("$testdir");
+#*	k_sys("php $ingred");
+#*	k_backdir($cwd);
+#*
+#*  - product:	:test_faq
+#*    ingreds:	[ test_faq.php ]
+#*    method*: *testmethod
+#*
+#*  - product:	:test_examples
+#*    ingreds:	[ test_examples.php ]
+#*    method*: *testmethod
+#*
+#*
+#*  - product:	test_users_guide.py
+#*    ingreds:	[ test_users-guide.py ]
+#*    method*: |
+#*	k_rename($ingred, $product);
+#*	#k_rename("data/users-guide", "data/users_guide");
+#*
+#*  - product:	test_*.py
+#*    ingreds:	[ $(1).txt ]
+#*    method*: |
+#*        $s = strtr('$(1)', '_-', '  ');    # 'foo-bar-baz' => 'foo bar baz'
+#*	$s = ucwords($s);                  # 'foo bar baz' => 'Foo Bar Baz'
+#*	$s = preg_replace('/\s/', '', $s); # 'Foo Bar Baz' => 'FooBarBaz'
+#*        $classname = $s . 'Test';
+#*	#
+#*	$name = strtr('$(1)', '-', '_');
+#*	$datadir = "$(dir)/$name";
+#*	if (!is_dir($datadir)) {
+#*	    k_mkdir($datadir);
+#*	}
+#*	k_delete("$datadir/*");
+#*	k_sys("retrieve -Fd $datadir $ingred");
+#*	#
+#*	$buf = array();
+#*	$buf[] = <<<HEADER
+#*
+#*	import unittest, os, re
+#*	from test import test_support
+#*
+#*	from testcase_helper import *
+#*	
+#*	class ${classname}(unittest.TestCase, TestCaseHelper):
+#*
+#*	    basedir = '$(dir)/${name}'
+#*	    DIR = (os.path.dirname(__file__) or '.') + '/' + basedir
+#*	    CWD = os.getcwd()
+#*	
+#*	    def setUp(self):
+#*	      os.chdir(self.__class__.DIR)
+#*	
+#*	    def tearDown(self):
+#*	      os.chdir(self.__class__.CWD)
+#*	
+#*	    def _test(self):
+#*	        filename = self.filename;
+#*		dirname = os.path.dirname(filename)
+#*		pwd = os.getcwd()
+#*		if dirname:
+#*		    os.chdir(dirname)
+#*		    filename = os.path.basename(filename)
+#*		s = open(filename).read()
+#*		pat = r'\\A\\$ (.*?)\\n'
+#*		m = re.match(pat, s)
+#*		command = m.group(1)
+#*		expected = re.sub(pat, '', s)
+#*	        result = os.popen(command).read()
+#*	        self.assertTextEqual(expected, result)
+#*
+#*	HEADER;
+#*
+#*	$buf[] = <<<BODY
+#*	
+#*	    from glob import glob
+#*	    import os
+#*	    filenames = []
+#*	    filenames.extend(glob('%s/*.result' % basedir))
+#*	    filenames.extend(glob('%s/*/*.result' % basedir))
+#*	    filenames.extend(glob('%s/*.source' % basedir))
+#*	    filenames.extend(glob('%s/*/*.source' % basedir))
+#*	    for filename in filenames:
+#*	        #name = os.path.basename(filename).replace('.result', '')
+#*		name = filename.replace(basedir+'/', '')
+#*		s = "\\n".join((\
+#*		     "def test_%s(self):" % re.sub('[^\w]', '_', name),
+#*		     "    self.filename = '%s'" % name,
+#*		     "    self._test()",
+#*		     ))
+#*		exec s
+#*	
+#*	BODY;
+#*
+#*	#$files = glob("$datadir/*.result");
+#*	#foreach ($files as $file) {
+#*	#    $name = preg_replace('/\.result$/', '', basename($file));
+#*	#    $buf[] = <<<BODY
+#*	#
+#*	#    def test_$name(self):
+#*	#        self.name = '$name';
+#*	#        self._test()
+#*	#
+#*	#BODY;
+#*	#}
+#*
+#*	$buf[] = <<<FOOTER
+#*
+#*	def test_main():
+#*	    test_support.run_unittest(${classname})
+#*	
+#*	if __name__ == '__main__':
+#*	    test_main()
+#*
+#*	FOOTER;
+#*
+#*	$s = join($buf);
+#*	file_put_contents($product, $s);
+#*	file_put_contents("../test/$product", $s);
+#*
