@@ -1,0 +1,22 @@
+
+parameters:
+
+  - dir:   "../../../rbtenjin/trunk/test"
+  - kook_product:	:data
+
+recipes:
+
+  - product:	:copy
+    desc:	copy data file (*.yaml)
+    method*: |
+	k_mcopy('.', '$(dir)/test_engine.yaml');
+	k_mcopy('.', '$(dir)/test_template.yaml');
+
+  - product:	:test
+    ingreds:	[ :copy ]
+    method*: |
+	k_sys("python test_all.py 2>&1 | tee test.log");
+
+  - product:	:clean
+    method*: |
+	k_delete("test.log");

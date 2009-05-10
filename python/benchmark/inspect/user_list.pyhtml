@@ -1,0 +1,35 @@
+<table class="list">
+  <thead>
+    <th>ID</th>
+    <th>Name</th>
+    <th>Email</th>
+    <th>Age</th>
+    <th>Gender</th>
+    <th></th>
+  </thead>
+  <tbody>
+<?py genders = {'m': 'Male', 'f': 'Female'} ?>
+<?py is_odd = False ?>
+<?py for user in users: ?>
+<?py     is_odd = not is_odd ?>
+<?py     klass = is_odd and 'odd' or 'even' ?>
+    <tr class="#{klass}" id="user-#{user.id}">
+      <td>#{user.id}</td>
+      <td>${user.name}</td>
+      <td>
+<?py     if user.email: ?>
+        <a href="mailto:${user.email}">${user.email}</a>
+<?py     else: ?>
+                -
+<?py     #endif ?>
+      </td>
+      <td>#{user.age or '-'}</td>
+      <td>${genders.get(user.gender, '-')}</td>
+      <td>
+        <a href="?action=show&id=#{user.id}">show</a>
+        <a href="?action=edit&id=#{user.id}">edit</a>
+      </td>
+    </td>
+<?py #endfor ?>
+  <tbody>
+<table>

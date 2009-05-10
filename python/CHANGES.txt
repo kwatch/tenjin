@@ -1,0 +1,41 @@
+=======
+CHANGES
+=======
+
+Release 0.6.2 (2008-02-27)
+--------------------------
+
+* [Changes]
+
+  * Package name is changed from 'pyTenjin' to 'Tenjin'
+
+  * When '-S', '-a retrieve', '-X', or '-a statements' specified,
+    pytenjin command replaces text before expressions into spaces
+    and print it.
+
+* [Bugfix]
+
+  * pytenjin command printed "\n\n" instead of "\n" when '-U' specified.
+    Fixed to print "\n".
+
+
+Release 0.6.1 (2007-10-23)
+--------------------------
+
+* [Enhancements]
+
+  * Benchmark script (benchmark/bench.py) is rewrited.
+
+  * Benchmark supports Genshi, Mako, and Templetor.
+
+  * Add examples.
+
+* [Bugfix]
+
+  * Typo in User's Guide is fixed.
+
+
+Release 0.6.0 (2007-08-04)
+--------------------------
+
+* first release

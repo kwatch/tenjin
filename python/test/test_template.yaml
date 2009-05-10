@@ -1,0 +1,1244 @@
+###
+- name:         convert1
+  desc:         basic
+  input*:
+   "python": |
+        <html>
+         <body>
+          <table>
+        <?py i = 0 ?>
+        <?py for item in ['<foo>', 'bar&bar', '"baz"']: ?>
+        <?py     i += 1 ?>
+        <?py     if i % 2 == 0: ?>
+        <?py         color = '#FCF' ?>
+        <?py     else: ?>
+        <?py         color = '#FFF' ?>
+        <?py     #endif ?>
+           <tr bgcolor="#{color}">
+            <td>${item}</td>
+           </tr>
+        <?py #endfor ?>
+          </table>
+         </body>
+        </html>
+   "ruby": |
+        <html>
+         <body>
+          <table>
+        <?rb i = 0 ?>
+        <?rb for item in ['<foo>', 'bar&bar', '"baz"'] ?>
+        <?rb     i += 1 ?>
+        <?rb     if i % 2 == 0 ?>
+        <?rb         color = '#FCF' ?>
+        <?rb     else ?>
+        <?rb         color = '#FFF' ?>
+        <?rb     end ?>
+           <tr bgcolor="#{color}">
+            <td>${item}</td>
+           </tr>
+        <?rb end ?>
+          </table>
+         </body>
+        </html>
+  source*:
+   "python": &convert1_source_python |
+        _buf.extend(('''<html>
+         <body>
+          <table>\n''', ));
+        i = 0
+        for item in ['<foo>', 'bar&bar', '"baz"']:
+            i += 1
+            if i % 2 == 0:
+                color = '#FCF'
+            else:
+                color = '#FFF'
+            #endif
+            _buf.extend(('''   <tr bgcolor="''', to_str(color), '''">
+            <td>''', escape(to_str(item)), '''</td>
+           </tr>\n''', ));
+        #endfor
+        _buf.extend(('''  </table>
+         </body>
+        </html>\n''', ));
+   "ruby": &convert1_source_ruby |5
+         _buf << %Q`<html>
+         <body>
+          <table>\n`
+        i = 0
+        for item in ['<foo>', 'bar&bar', '"baz"']
+            i += 1
+            if i % 2 == 0
+                color = '#FCF'
+            else
+                color = '#FFF'
+            end
+         _buf << %Q`   <tr bgcolor="#{color}">
+            <td>#{escape((item).to_s)}</td>
+           </tr>\n`
+        end
+         _buf << %Q`  </table>
+         </body>
+        </html>\n`
+  expected*:
+   "python": &convert1_expected |
+        <html>
+         <body>
+          <table>
+           <tr bgcolor="#FFF">
+            <td>&lt;foo&gt;</td>
+           </tr>
+           <tr bgcolor="#FCF">
+            <td>bar&amp;bar</td>
+           </tr>
+           <tr bgcolor="#FFF">
+            <td>&quot;baz&quot;</td>
+           </tr>
+          </table>
+         </body>
+        </html>
+   "ruby": *convert1_expected
+
+
+###
+- name:         convert2
+  desc:         basic2
+  input*:
+   "python": |
+        <html>
+         <body>
+          <table>
+        <?py i = 0 ?>
+        <?py for item in ['<foo>', 'bar&bar', '"baz"']: ?>
+            <?py i += 1 ?>
+            <?py if i % 2 == 0: ?>
+                <?py color = '#FCF' ?>
+            <?py else: ?>
+                <?py color = '#FFF' ?>
+            <?py #endif ?>
+           <tr bgcolor="#{color}">
+            <td>${item}</td>
+           </tr>
+        <?py #endfor ?>
+          </table>
+         </body>
+        </html>
+   "ruby": |
+        <html>
+         <body>
+          <table>
+        <?rb i = 0 ?>
+        <?rb for item in ['<foo>', 'bar&bar', '"baz"'] ?>
+            <?rb i += 1 ?>
+            <?rb if i % 2 == 0 ?>
+                <?rb color = '#FCF' ?>
+            <?rb else ?>
+                <?rb color = '#FFF' ?>
+            <?rb end ?>
+           <tr bgcolor="#{color}">
+            <td>${item}</td>
+           </tr>
+        <?rb end ?>
+          </table>
+         </body>
+        </html>
+  source*:
+   "python": *convert1_source_python
+   "ruby":   *convert1_source_ruby
+  expected*:
+   "python": *convert1_expected
+   "ruby":   *convert1_expected
+
+
+###
+- name:         convert3
+  desc:         basic3
+  input*:
+   "python": |
+        <html>
+         <body>
+          <table>
+        <?py
+        i = 0
+        for item in ['<foo>', 'bar&bar', '"baz"']:
+            i += 1
+            if i % 2 == 0:
+                color = '#FCF'
+            else:
+                color = '#FFF'
+            #endif
+        ?>
+           <tr bgcolor="#{color}">
+            <td>${item}</td>
+           </tr>
+        <?py
+        #endfor
+        ?>
+          </table>
+         </body>
+        </html>
+   "ruby": |
+        <html>
+         <body>
+          <table>
+        <?rb
+        i = 0
+        for item in ['<foo>', 'bar&bar', '"baz"']
+            i += 1
+            if i % 2 == 0
+                color = '#FCF'
+            else
+                color = '#FFF'
+            end
+        ?>
+           <tr bgcolor="#{color}">
+            <td>${item}</td>
+           </tr>
+        <?rb
+        end
+        ?>
+          </table>
+         </body>
+        </html>
+  source*:
+   "python": |
+        _buf.extend(('''<html>
+         <body>
+          <table>\n''', ));
+        
+        i = 0
+        for item in ['<foo>', 'bar&bar', '"baz"']:
+            i += 1
+            if i % 2 == 0:
+                color = '#FCF'
+            else:
+                color = '#FFF'
+            #endif
+        
+            _buf.extend(('''   <tr bgcolor="''', to_str(color), '''">
+            <td>''', escape(to_str(item)), '''</td>
+           </tr>\n''', ));
+        
+        #endfor
+        
+        _buf.extend(('''  </table>
+         </body>
+        </html>\n''', ));
+   "ruby": |5
+         _buf << %Q`<html>
+         <body>
+          <table>\n`
+        
+        i = 0
+        for item in ['<foo>', 'bar&bar', '"baz"']
+            i += 1
+            if i % 2 == 0
+                color = '#FCF'
+            else
+                color = '#FFF'
+            end
+        
+         _buf << %Q`   <tr bgcolor="#{color}">
+            <td>#{escape((item).to_s)}</td>
+           </tr>\n`
+        
+        end
+        
+         _buf << %Q`  </table>
+         </body>
+        </html>\n`
+
+  expected*:
+   "python": *convert1_expected
+   "ruby":   *convert1_expected
+
+
+###
+- name:         convert4
+  desc:         mixing styles
+  input*:
+   "python": |
+        <?py
+        users = [
+            {'name': 'Foo', 'email': 'foo@mail.com'},
+            {'name': 'Bar',},
+            {'name': 'Baz', 'email': 'baz@mail.org'},
+        ]
+        ?>
+        <ul>
+        <?py i = 0 ?>
+        <?py for user in users: ?>
+        <?py     i += 1 ?>
+          <li><?py
+            if user.get('email'):
+        ?><a href="mailto:${user['email']}">${user['name']}</a><?py
+            else:
+        ?>${user['name']}<?py
+            #endif
+        ?></li>
+        <?py #endfor ?>
+        </ul>
+   "ruby": |
+        <?rb
+        users = [
+            {'name'=>'Foo', 'email'=>'foo@mail.com'},
+            {'name'=>'Bar',},
+            {'name'=>'Baz', 'email'=>'baz@mail.org'},
+        ]
+        ?>
+        <ul>
+        <?rb i = 0 ?>
+        <?rb for user in users ?>
+        <?rb     i += 1 ?>
+          <li><?rb
+            if user['email']
+        ?><a href="mailto:${user['email']}">${user['name']}</a><?rb
+            else
+        ?>${user['name']}<?rb
+            end
+        ?></li>
+        <?rb end ?>
+        </ul>
+  source*:
+   "python": |
+        
+        users = [
+            {'name': 'Foo', 'email': 'foo@mail.com'},
+            {'name': 'Bar',},
+            {'name': 'Baz', 'email': 'baz@mail.org'},
+        ]
+        
+        _buf.extend(('''<ul>\n''', ));
+        i = 0
+        for user in users:
+            i += 1
+            _buf.extend(('''  <li>''', ));
+            if user.get('email'):
+                _buf.extend(('''<a href="mailto:''', escape(to_str(user['email'])), '''">''', escape(to_str(user['name'])), '''</a>''', ));
+            else:
+                _buf.extend((escape(to_str(user['name'])), ));
+            #endif
+            _buf.extend(('''</li>\n''', ));
+        #endfor
+        _buf.extend(('''</ul>\n''', ));
+   "ruby": |5
+        
+        users = [
+            {'name'=>'Foo', 'email'=>'foo@mail.com'},
+            {'name'=>'Bar',},
+            {'name'=>'Baz', 'email'=>'baz@mail.org'},
+        ]
+        
+         _buf << %Q`<ul>\n`
+        i = 0
+        for user in users
+            i += 1
+         _buf << %Q`  <li>`; 
+            if user['email']
+         _buf << %Q`<a href="mailto:#{escape((user['email']).to_s)}">#{escape((user['name']).to_s)}</a>`; 
+            else
+         _buf << %Q`#{escape((user['name']).to_s)}`; 
+            end
+         _buf << %Q`</li>\n`
+        end
+         _buf << %Q`</ul>\n`
+  expected*:
+   "python": |
+        <ul>
+          <li><a href="mailto:foo@mail.com">Foo</a></li>
+          <li>Bar</li>
+          <li><a href="mailto:baz@mail.org">Baz</a></li>
+        </ul>
+   "ruby": |
+        <ul>
+          <li><a href="mailto:foo@mail.com">Foo</a></li>
+          <li>Bar</li>
+          <li><a href="mailto:baz@mail.org">Baz</a></li>
+        </ul>
+
+###
+- name:         convert5
+  desc:         line starting with embedded expression
+  input*:
+   "python": |
+        <ul>
+        <?py for i in xrange(1,4): ?>
+        <li>
+        #{i}
+        </li>
+        <?py #endfor ?>
+        </ul>
+   "ruby": |
+        ${'title'}
+        <ul>
+        <?rb for i in 1...4 ?>
+        ${i}
+        <?rb end ?>
+        </ul>
+  source*:
+   "python": |
+        _buf.extend(('''<ul>\n''', ));
+        for i in xrange(1,4):
+            _buf.extend(('''<li>
+        ''', to_str(i), '''
+        </li>\n''', ));
+        #endfor
+        _buf.extend(('''</ul>\n''', ));
+   "ruby": |5
+         _buf << %Q`#{escape(('title').to_s)}
+        <ul>\n`
+        for i in 1...4
+         _buf << %Q`#{escape((i).to_s)}\n`
+        end
+         _buf << %Q`</ul>\n`
+  expected*:
+   "python": |
+        <ul>
+        <li>
+        1
+        </li>
+        <li>
+        2
+        </li>
+        <li>
+        3
+        </li>
+        </ul>
+   "ruby": |
+        title
+        <ul>
+        1
+        2
+        3
+        </ul>
+
+###
+- name:         convert6
+  desc:         lspaces
+  testopts:  { spacechar: '^' }
+  input*:
+   "python": |5
+          <?py
+        i = 0
+        for item in ['a', 'b', 'c']:
+            i += 1
+           ?>
+        <p>
+            <?py if i % 2 == 1: ?>
+        <span>#{item}</span>
+            <?py #endif ?>
+        </p>
+          <?py
+        #endfor
+           ?>
+   "ruby": |5
+          <?rb
+        i = 0
+        for item in ['a', 'b', 'c']
+            i += 1
+           ?>
+        <p>
+            <?rb if i % 2 == 1 ?>
+        <span>#{item}</span>
+            <?rb end ?>
+        </p>
+          <?rb
+        end
+           ?>
+  source*:
+   "python": |5
+          
+        i = 0
+        for item in ['a', 'b', 'c']:
+            i += 1
+          
+            _buf.extend(('''<p>\n''', ));
+            if i % 2 == 1:
+                _buf.extend(('''<span>''', to_str(item), '''</span>\n''', ));
+            #endif
+            _buf.extend(('''</p>\n''', ));
+          
+        #endfor
+          
+   "ruby": |5+
+        ^^
+        i = 0
+        for item in ['a', 'b', 'c']
+            i += 1
+        ^^
+         _buf << %Q`<p>\n`
+            if i % 2 == 1
+         _buf << %Q`<span>#{item}</span>\n`
+            end
+         _buf << %Q`</p>\n`
+        ^^
+        end
+        ^^
+  expected*:
+   "python": |
+        <p>
+        <span>a</span>
+        </p>
+        <p>
+        </p>
+        <p>
+        <span>c</span>
+        </p>
+   "ruby": |
+        <p>
+        <span>a</span>
+        </p>
+        <p>
+        </p>
+        <p>
+        <span>c</span>
+        </p>
+
+###
+- name:         quotation1
+  desc:         single quotation
+  input*:
+   "python": &quotation1_input_python |
+        'foo' and 'bar'
+        r"a'b'\n"
+   "ruby": &quotation1_input_ruby |
+        `foo` \1,000
+        r"a'b'\n"
+  source*:
+   "python": |
+        _buf.extend(('''\'foo\' and \'bar\'
+        r"a\'b\'\\n"\n''', ));
+   "ruby": |5
+         _buf << %Q`\`foo\` \\1,000
+        r"a'b'\\n"\n`
+  expected*:
+   "python": *quotation1_input_python
+   "ruby":   *quotation1_input_ruby
+
+###
+- name:         newline1
+  desc:         'newline is \r\n'
+  testopts:     { crchar: '^' }
+  input*:
+   "python": |
+        <?py for value in range(0,3): ?>^
+        #{value}^
+        i = #{value}^
+        <?py #end ?>^
+   "ruby": |
+        <?rb for value in 0...3 ?>^
+        #{value}^
+        i = #{value}^
+        <?rb end ?>^
+  source*:
+   "python": |
+        for value in range(0,3):
+            _buf.extend((to_str(value), '''^
+        i = ''', to_str(value), '''\r\n''', ));
+        #end
+   "ruby": |
+        for value in 0...3^
+         _buf << %Q`#{value}\r^
+        i = #{value}\r\n`^
+        end^
+  expected*:
+   "python": |
+        0^
+        i = 0^
+        1^
+        i = 1^
+        2^
+        i = 2^
+   "ruby": |
+        0^
+        i = 0^
+        1^
+        i = 1^
+        2^
+        i = 2^
+
+###
+- name:         newline2
+  desc:         'newline is \r\n'
+  testopts:     { crchar: '^' }
+  input*:
+   "python": |
+        <p>^
+        <?py^
+        for value in xrange(0,3):^
+        ?>^
+        i = #{value}^
+        #{value}^
+        <?py^
+        #end^
+        ?>^
+        </p>^
+   "ruby": |
+        <p>^
+        <?rb^
+        for value in 0...3^
+        ?>^
+        i = #{value}^
+        #{value}^
+        <?rb^
+        end^
+        ?>^
+        </p>^
+  source*:
+   "python": |
+        _buf.extend(('''<p>\r\n''', ));
+        
+        for value in xrange(0,3):
+        
+            _buf.extend(('''i = ''', to_str(value), '''^
+        ''', to_str(value), '''\r\n''', ));
+        
+        #end
+        
+        _buf.extend(('''</p>\r\n''', ));
+   "ruby": |5
+         _buf << %Q`<p>\r\n`^
+        ^
+        for value in 0...3^
+        ^
+         _buf << %Q`i = #{value}\r^
+        #{value}\r\n`^
+        ^
+        end^
+        ^
+         _buf << %Q`</p>\r\n`^
+  expected*:
+   "python": |
+        <p>^
+        i = 0^
+        0^
+        i = 1^
+        1^
+        i = 2^
+        2^
+        </p>^
+   "ruby": |
+        <p>^
+        i = 0^
+        0^
+        i = 1^
+        1^
+        i = 2^
+        2^
+        </p>^
+
+###
+- name:         option_initbuf1
+  desc:         initbuf option with input which starts with text
+  options: { preamble: true, postamble: true }
+  #options: { initbuf: true }
+  input*:
+   "python": |
+        <ul>
+        <?py for i in range(0,3): ?>
+        <li>#{i}</li>
+        <?py #end ?>
+        </ul>
+   "ruby": |
+        <ul>
+        <?rb for i in 0..2 ?>
+        <li>#{i}</li>
+        <?rb end ?>
+        </ul>
+  source*:
+   "python": |
+        _buf = []; _buf.extend(('''<ul>\n''', ));
+        for i in range(0,3):
+            _buf.extend(('''<li>''', to_str(i), '''</li>\n''', ));
+        #end
+        _buf.extend(('''</ul>\n''', ));
+        print ''.join(_buf)
+   "ruby": |
+        _buf = '';  _buf << %Q`<ul>\n`
+        for i in 0..2
+         _buf << %Q`<li>#{i}</li>\n`
+        end
+         _buf << %Q`</ul>\n`
+        _buf.to_s
+
+###
+- name:         option_initbuf2
+  desc:         initbuf option with input which starts with"python" code
+  options: { preamble: true, postamble: true }
+  #options: { initbuf: true }
+  input*:
+   "python": |
+        <?py for i in range(0,3): ?>
+        #{i}
+        <?py #end ?>
+   "ruby": |
+        <?rb for i in 0..2 ?>
+        #{i}
+        <?rb end ?>
+  source*:
+   "python": |
+        _buf = []
+        for i in range(0,3):
+            _buf.extend((to_str(i), '''\n''', ));
+        #end
+        print ''.join(_buf)
+   "ruby": |
+        _buf = ''; for i in 0..2
+         _buf << %Q`#{i}\n`
+        end
+        _buf.to_s
+
+###
+- name:         option_escapefunc1
+  desc:         escapefunc option
+  options*:
+   "python":     { escapefunc: cgi.escape }
+   "ruby":       { escapefunc: CGI.escapeHTML }
+  input*:
+   "python": |
+        #{value}
+        ${value}
+   "ruby": |
+        #{value}
+        ${value}
+  source*:
+   "python": |
+        _buf.extend((to_str(value), '''
+        ''', cgi.escape(to_str(value)), '''\n''', ));
+   "ruby": |5
+         _buf << %Q`#{value}
+        #{CGI.escapeHTML((value).to_s)}\n`
+
+###
+- name:         option_tostrfunc1
+  desc:         tostrfunc option
+  options: { tostrfunc: str }
+  disabled*:
+   "python": false
+   "ruby":   true
+  input: |
+        #{value}
+        ${value}
+  source*:
+   "python": |
+        _buf.extend((str(value), '''
+        ''', escape(str(value)), '''\n''', ));
+   "ruby": |
+
+###
+- name:         option_indent1
+  desc:         indent  option
+  options: { indent: 2 }
+  disabled*:
+   "python": false
+   "ruby":   true
+  input*:
+   "python": |
+        <?py for i in range(0,3): ?>
+        i = #{value}
+        <?py #end ?>
+   "ruby": |
+  source*:
+   "python": |
+        for i in range(0,3):
+          _buf.extend(('''i = ''', to_str(value), '''\n''', ));
+        #end
+   "ruby": |
+
+###
+- name:         option_encoding1
+  desc:         encoding option
+  disabled*:
+   "python": false
+   "ruby":   true
+  options: { encoding: utf-8 }
+  testopts: { encoding: utf-8 }
+  input*:
+   "python": |
+        こんにちは${user}!
+        <ul>
+        <?py for ch in [u'日', u'本', u'語', u'']: ?>
+          <li>#{ch}</li>
+        <?py #end ?>
+        </ul>
+  source*:
+   "python": |
+        _buf.extend((u'''こんにちは''', escape(to_str(user)), u'''!
+        <ul>\n''', ));
+        for ch in [u'日', u'本', u'語', u'']:
+            _buf.extend((u'''  <li>''', to_str(ch), u'''</li>\n''', ));
+        #end
+        _buf.extend((u'''</ul>\n''', ));
+  context: { user: 世界 }
+  expected: |
+        こんにちは世界!
+        <ul>
+          <li>日</li>
+          <li>本</li>
+          <li>語</li>
+          <li></li>
+        </ul>
+
+###
+- name:         syntaxerr1
+  desc:         syntax error
+  filename:     syntaxerr1.tenjin
+  disabled*:
+   "python": false
+   "ruby":   true
+  input*:
+   "python": |
+        <?py for i in range(0,3) ?>
+        #{i}
+        <?py #end ?>
+   "ruby": |
+  source*:
+   "python": |
+        for i in range(0,3)
+            _buf.append(to_str(i))
+        #end
+   "ruby": |
+  exception*:
+   "python":     SyntaxError
+   "ruby":
+  errormsg*:
+   "python":     invalid syntax
+   "ruby":
+
+
+###
+- name:         escape1
+  desc:         escape() function
+  input*:
+   "python": &input_escape1_python |
+        ${var}
+   "ruby": &input_escape1_ruby |
+        ${@var}
+  source*:
+   "python": &source_escape1_python |
+        _buf.extend((escape(to_str(var)), '''\n''', ));
+   "ruby": &source_escape1_ruby |5
+         _buf << %Q`#{escape((@var).to_s)}\n`
+  expected*:
+   "python": |
+        &amp; &lt; &gt; &quot;
+   "ruby": |
+        &amp; &lt; &gt; &quot;
+  context:  { var: '& < > "' }
+
+
+###
+- name:         to_str1
+  desc:         to_str() function
+  disabled*:
+   "python": false
+   "ruby":   true
+  input*:
+   "python": |
+        #{var},#{flag},#{flag2}
+        ${var},${flag},${flag2}
+   "ruby": |
+  source*:
+   "python": |
+        _buf.extend((to_str(var), ''',''', to_str(flag), ''',''', to_str(flag2), '''
+        ''', escape(to_str(var)), ''',''', escape(to_str(flag)), ''',''', escape(to_str(flag2)), '''\n''', ));
+   "ruby": |
+  expected*:
+   "python": |
+        ,True,False
+        ,True,False
+   "ruby": |
+  context:   { var: null, flag: true, flag2: false }
+
+
+##
+- name:		template_args
+  desc:		'#@ARGS'
+  input*:
+   "python": |
+        <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN">
+        <?py #@ARGS name, x,y,z ?>
+        <ul>
+        <span>hello #{name}</span>
+        <span>hello #{name2}</span>
+        </ul>
+   "ruby": |
+        <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN">
+        <?rb #@ARGS name, x,y,z ?>
+        <ul>
+        <span>hello #{name}</span>
+        <span>hello #{name2}</span>
+        </ul>
+  source*:
+   "python": |
+        _buf = []; _buf.extend(('''<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN">\n''', ));
+        name = _context.get('name'); x = _context.get('x'); y = _context.get('y'); z = _context.get('z'); 
+        _buf.extend(('''<span>hello ''', to_str(name), '''</span>
+          <span>hello ''', to_str(name2), '''</span>
+        </ul>\n''', ));
+        print ''.join(_buf)
+   "ruby": |5
+         _buf << %Q`<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN">\n`
+         name = @name; x = @x; y = @y; z = @z;
+         _buf << %Q`<ul>
+        <span>hello #{name}</span>
+        <span>hello #{name2}</span>
+        </ul>\n`
+  context: { name: 'world' }
+  exception*:
+   "python": NameError
+   "ruby":  NameError
+  errormsg*:
+   "python": "name 'name2' is not defined"
+   "ruby":   "undefined local variable or method `name2' for #<Tenjin::Context>"
+
+
+##
+- name:         arraybuffertemplate1
+  desc:         ArrayBufferTemplate class
+  disabled*:
+   "python": true
+   "ruby":   false
+  testopts*:
+   "python":
+   "ruby":   { templateclass: 'Tenjin::ArrayBufferTemplate' }
+  input*:
+   "python": |
+   "ruby": |
+        <table>
+        <?rb i = 0 ?>
+        <?rb for item in @items ?>
+        <?rb   i += 1 ?>
+          <tr>
+            <td>#{i}</td>
+            <td>${item}</td>
+          </tr>
+        <?rb end ?>
+        </table>
+  source*:
+   "python": |
+   "ruby": |5
+         _buf.push('<table>
+        '); i = 0
+        for item in @items
+          i += 1
+         _buf.push('  <tr>
+            <td>', (i).to_s, '</td>
+            <td>', escape((item).to_s), '</td>
+          </tr>
+        '); end
+         _buf.push('</table>
+        '); 
+  expected*:
+   "python": |
+   "ruby": |
+        <table>
+          <tr>
+            <td>1</td>
+            <td>&lt;AAA&gt;</td>
+          </tr>
+          <tr>
+            <td>2</td>
+            <td>B&amp;B</td>
+          </tr>
+          <tr>
+            <td>3</td>
+            <td>&quot;CCC&quot;</td>
+          </tr>
+        </table>
+  context:   { items: ['<AAA>', 'B&B', '"CCC"'] }
+
+###
+- name:         preprocessor1
+  desc:         template class for preprocessor
+  testopts*:
+   "python":   { templateclass: tenjin.Preprocessor }
+   "ruby":     { templateclass: 'Tenjin::Preprocessor' }
+  input*:
+   "python": |
+        <?PY states = { "CA": "California", ?>
+        <?PY            "NY": "New York", ?>
+        <?PY            "FL": "Florida", } ?>
+        <?PY # ?>
+        <?py chk = { params['state']: ' checked="checked"' } ?>
+        <?PY codes = states.keys() ?>
+        <?PY codes.sort() ?>
+        <select name="state">
+          <option value="">-</option>
+        <?PY for code in codes: ?>
+          <option value="#{{code}}"#{chk.get(#{{repr(code)}}, '')}>${{states[code]}}</option>
+        <?PY #endfor ?>
+        </select>
+   "ruby": |
+        <?RB states = { :CA => "California", ?>
+        <?RB            :NY => "New York", ?>
+        <?RB            :FL => "Florida", } ?>
+        <?rb chk = { params['state'] => ' checked="checked"' } ?>
+        <select name="state">
+          <option value="">-</option>
+        <?RB for code in states.keys.sort_by{|k| k.to_s} ?>
+          <option value="#{{code}}"#{chk[#{{code.inspect}}]}>${{states[code]}}</option>
+        <?RB end ?>
+        </select>
+   "perl": |
+	<?PL my $states = { "CA" => "California", ?>
+	<?PL     	    "NY" => "New York", ?>
+	<?PL                "FL" => "Florida", }; ?>
+	<?pl my $chk = { $params->{state} => ' checked="checked"' }; ?>
+	<select name="state">
+	  <option value="">-</option>
+	<?PL for my $code (sort(keys(%$states))) { ?>
+	  <option value="[%=$code=%]"[==$chk->{[%=$code=%]}=]>[%=$states->{code}=%]</option>
+	<?PL } ?>
+	</select>
+   "js": |
+	<?JS var states = { CA: "California", ?>
+	<?JS                NY: "New York", ?>
+	<?JS                FL: "Florida", }; ?>
+	<?js var chk = { }; ?>
+	<?js chk[params.state] = ' checked="checked"'; ?>
+	<select name="state">
+	  <option value="">-</option>
+	<?JS var codes = []; ?>
+	<?JS for (var code in states) { codes.push(code); } ?>
+	<?JS codes.sort(); ?>
+	<?JS for (var i = 0, n = codes.length; i < n; i++) { ?>
+	<?JS     var code = codes[i]; ?>
+	  <option value="#{{code}}"#{chk['#{{code}}']}>${{states[code]}}</option>
+	<?JS } ?>
+	</select>
+  source*:
+   "python": |
+        states = { "CA": "California",
+                   "NY": "New York",
+                   "FL": "Florida", }
+        #
+        _buf.extend(('''<?py chk = { params[\'state\']: \' checked="checked"\' } ?>\n''', ));
+        codes = states.keys()
+        codes.sort()
+        _buf.extend(('''<select name="state">
+          <option value="">-</option>\n''', ));
+        for code in codes:
+            _buf.extend(('''  <option value="''', to_str(_decode_params(code)), '''"#{chk.get(''', to_str(_decode_params(repr(code))), ''', \'\')}>''', escape(to_str(_decode_params(states[code]))), '''</option>\n''', ));
+        #endfor
+        _buf.extend(('''</select>\n''', ));
+   "ruby": |
+        states = { :CA => "California",
+                   :NY => "New York",
+                   :FL => "Florida", }
+         _buf << %Q`<?rb chk = { params['state'] => ' checked="checked"' } ?>
+        <select name="state">
+          <option value="">-</option>\n`
+        for code in states.keys.sort_by{|k| k.to_s}
+         _buf << %Q`  <option value="#{_decode_params((code))}"\#{chk[#{_decode_params((code.inspect))}]}>#{escape((_decode_params((states[code]))).to_s)}</option>\n`
+        end
+         _buf << %Q`</select>\n`
+   "perl": |
+	my @_buf = (); my $states = { "CA" => "California",
+	            "NY" => "New York",
+	               "FL" => "Florida", };
+	push(@_buf, q`<?pl my $chk = { $params->{state} => ' checked="checked"' }; ?>
+	<select name="state">
+	  <option value="">-</option>
+	`, ); for my $code (sort(keys(%$states))) {
+	push(@_buf, q`  <option value="`, escape($code), q`"[==$chk->{`, escape($code), q`}=]>`, escape($states->{code}), q`</option>
+	`, ); }
+	push(@_buf, q`</select>
+	`, ); join('', @_buf);
+   "js": |
+	var _buf = [];  var states = { CA: "California",
+	                NY: "New York",
+	                FL: "Florida", };
+	 _buf.push('<?js var chk = { }; ?>\n\
+	<?js chk[params.state] = \' checked="checked"\'; ?>\n\
+	<select name="state">\n\
+	  <option value="">-</option>\n');
+	 var codes = [];
+	 for (var code in states) { codes.push(code); }
+	 codes.sort();
+	 for (var i = 0, n = codes.length; i < n; i++) {
+	     var code = codes[i];
+	 _buf.push('  <option value="', Tenjin._decode_params(code), '"#{chk[\'', Tenjin._decode_params(code), '\']}>', escapeXml(Tenjin._decode_params(states[code])), '</option>\n');
+	 }
+	 _buf.push('</select>\n');
+	_buf.join('')
+  expected*:
+   "python": |
+        <?py chk = { params['state']: ' checked="checked"' } ?>
+        <select name="state">
+          <option value="">-</option>
+          <option value="CA"#{chk.get('CA', '')}>California</option>
+          <option value="FL"#{chk.get('FL', '')}>Florida</option>
+          <option value="NY"#{chk.get('NY', '')}>New York</option>
+        </select>
+   "ruby": |
+        <?rb chk = { params['state'] => ' checked="checked"' } ?>
+        <select name="state">
+          <option value="">-</option>
+          <option value="CA"#{chk[:CA]}>California</option>
+          <option value="FL"#{chk[:FL]}>Florida</option>
+          <option value="NY"#{chk[:NY]}>New York</option>
+        </select>
+   "perl": |
+	<?pl my $chk = { $params->{state} => ' checked="checked"' }; ?>
+	<select name="state">
+	  <option value="">-</option>
+	  <option value="CA"[==$chk->{CA}=]></option>
+	  <option value="FL"[==$chk->{FL}=]></option>
+	  <option value="NY"[==$chk->{NY}=]></option>
+	</select>
+   "js": |
+	<?js var chk = { }; ?>
+	<?js chk[params.state] = ' checked="checked"'; ?>
+	<select name="state">
+	  <option value="">-</option>
+	  <option value="CA"#{chk['CA']}>California</option>
+	  <option value="FL"#{chk['FL']}>Florida</option>
+	  <option value="NY"#{chk['NY']}>New York</option>
+	</select>
+
+##
+- name:         preprocessor2
+  desc:         template class for preprocessor
+  testopts*:
+   "python":   { templateclass: tenjin.Preprocessor }
+   "ruby":     { templateclass: 'Tenjin::Preprocessor' }
+  input*:
+    "python": |
+        <?PY def link_to(label, url): ?>
+	<?PY     import urllib ?>
+	<?PY     return '<a href="%s">%s</a>' % (urllib.quote(url), label) ?>
+	<?PY # ?>
+	#{{link_to('<b>Create</b>', '/items/create')}}
+	#{{link_to('"Show '+_P("item['name']")+'"', '/items/show/'+_p("item['id']"))}}
+	#{{escape('<b>'+_P('item["name"]')+'</b>')}}
+    "ruby": |
+        <?RB def link_to(label, url) ?>
+	<?RB     require 'cgi' ?>
+	<?RB     return '<a href="%s">%s</a>' % [CGI::escape(url).gsub(/%2F/,'/'), label] ?>
+	<?RB end ?>
+	#{{link_to('<b>Create</b>', '/items/create')}}
+	#{{link_to('"Show '+_P('item["name"]')+'"', '/items/show/'+_p('item["id"]'))}}
+	#{{escape('<b>'+_P('item["name"]')+'</b>')}}
+    "perl": |
+	<?PL sub link_to { ?>
+	<?PL   my($label, $url) = @_; ?>
+	<?PL   return sprintf('<a href="%s">%s</a>', Tenjin::Util::encode_url($url), $label); ?>
+	<?PL } ?>
+	[%==link_to('<b>Create</b>', '/items/create')=%]
+	[%==link_to('"Show '._P('$item->{"name"}').'"', '/items/show/'._p('$item->{"id"}'))=%]
+	[%==escape('<b>'._P('$item->{"name"}').'</b>')=%]
+    "js": |
+	<?JS function link_to(label, url) { ?>
+	<?JS     return '<a href="'+encodeURI(url)+'>'+label+'</a>'; ?>
+	<?JS } ?>
+	#{{link_to('<b>Create</b>', '/items/create')}}
+	#{{link_to('"Show '+_P('item["name"]')+'"', '/items/show/'+_p('item["id"]'))}}
+	#{{escapeXml('<b>'+_P('item["name"]')+'</b>')}}
+  source*:
+    "python": |
+	def link_to(label, url):
+	    import urllib
+	    return '<a href="%s">%s</a>' % (urllib.quote(url), label)
+	#
+	_buf.extend((to_str(_decode_params(link_to('<b>Create</b>', '/items/create'))), '''
+	''', to_str(_decode_params(link_to('"Show '+_P("item['name']")+'"', '/items/show/'+_p("item['id']")))), '''
+	''', to_str(_decode_params(escape('<b>'+_P('item["name"]')+'</b>'))), '''\n''', ));
+    "ruby": |
+	def link_to(label, url)
+	    require 'cgi'
+	    return '<a href="%s">%s</a>' % [CGI::escape(url).gsub(/%2F/,'/'), label]
+	end
+	 _buf << %Q`#{_decode_params((link_to('<b>Create</b>', '/items/create')))}
+	#{_decode_params((link_to('"Show '+_P('item["name"]')+'"', '/items/show/'+_p('item["id"]'))))}
+	#{_decode_params((escape('<b>'+_P('item["name"]')+'</b>')))}\n`
+    "perl": |
+	my @_buf = (); sub link_to {
+	  my($label, $url) = @_;
+	  return sprintf('<a href="%s">%s</a>', Tenjin::Util::encode_url($url), $label);
+	}
+	push(@_buf, Tenjin::Util::_decode_params(link_to('<b>Create</b>', '/items/create')), q`
+	`, Tenjin::Util::_decode_params(link_to('"Show '._P('$item->{"name"}').'"', '/items/show/'._p('$item->{"id"}'))), q`
+	`, Tenjin::Util::_decode_params(escape('<b>'._P('$item->{"name"}').'</b>')), q`
+	`, ); join('', @_buf);
+    "js": |
+	var _buf = [];  function link_to(label, url) {
+	     return '<a href="'+encodeURI(url)+'>'+label+'</a>';
+	 }
+	 _buf.push(Tenjin._decode_params(link_to('<b>Create</b>', '/items/create')), '\n\
+	', Tenjin._decode_params(link_to('"Show '+_P('item["name"]')+'"', '/items/show/'+_p('item["id"]'))), '\n\
+	', Tenjin._decode_params(escapeXml('<b>'+_P('item["name"]')+'</b>')), '\n');
+	_buf.join('')
+  expected*:
+    "python": |
+	<a href="/items/create"><b>Create</b></a>
+	<a href="/items/show/#{item['id']}">"Show ${item['name']}"</a>
+	&lt;b&gt;${item["name"]}&lt;/b&gt;
+    "ruby": |
+	<a href="/items/create"><b>Create</b></a>
+	<a href="/items/show/#{item["id"]}">"Show ${item["name"]}"</a>
+	&lt;b&gt;${item["name"]}&lt;/b&gt;
+    "perl": |
+	<a href="/items/create"><b>Create</b></a>
+	<a href="/items/show/[==$item->{"id"}=]">"Show [=$item->{"name"}=]"</a>
+	&lt;b&gt;[=$item->{"name"}=]&lt;/b&gt;
+    "js": |
+	<a href="/items/create><b>Create</b></a>
+	<a href="/items/show/#{item["id"]}>"Show ${item["name"]}"</a>
+	&lt;b&gt;${item["name"]}&lt;/b&gt;
+  context: { item: { id: 101, name: foo } }
+#  expected: |
+#	<a href="/items/create"><b>Create</b></a>
+#	<a href="/items/show/#{item['id']}">"Show ${item['name']}"</a>
+#	&lt;b&gt;${item['name']}&lt;/b&gt;
+
+##
+- name:         smarttrim1
+  desc:         smarttrim option
+  disabled*:
+   "python": false
+   "ruby":   true
+  options*:
+   "python":  { smarttrim: true }
+   "ruby":
+  input*:
+   "python": |
+        #{"A"}
+        #{"B"}
+        #{"C"}
+        foo#{"D"}
+        #{"E"}bar
+        #{"F"}#{"G"}
+        <?py if True: ?>
+        #{"H"}
+        #{"I"}
+        #{"J"}
+        <?py #end ?>
+        ${"K"}
+        ${"L"}
+        #{"M"}
+   "ruby": |
+  source*:
+   "python": |
+        _buf.extend((to_str("A"), 
+        to_str("B"), 
+        to_str("C"), 
+        '''foo''', to_str("D"), '''
+        ''', to_str("E"), '''bar
+        ''', to_str("F"), to_str("G"), ));
+        if True:
+            _buf.extend((to_str("H"), 
+        to_str("I"), 
+        to_str("J"), ));
+        #end
+        _buf.extend((escape(to_str("K")), '''
+        ''', escape(to_str("L")), '''
+        ''', to_str("M"), ));
+   "ruby": |
+  expected*:
+   "python": |-
+        ABCfooD
+        Ebar
+        FGHIJK
+        L
+        M
+   "ruby": |

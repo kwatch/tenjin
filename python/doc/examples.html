@@ -1,0 +1,316 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html">
+  <title>pyTenjin Examples</title>
+  <meta name="generator" content="kwaser">
+  <meta http-equiv="Content-Style-Type" content="text/css">
+  <link rel="stylesheet" href="docstyle.css" type="text/css">
+ </head>
+ <body>
+
+  <blockquote>
+   <div class="mainbody">
+
+    <div align="left"><h1>pyTenjin Examples</h1></div>
+    <div align="left">
+      last update: $Date$<br>
+    </div>
+
+<p>Release: $Release$
+</p>
+<p>Table of Contents:
+<ul>
+  <li><a href="#bordered-table">Bordered Table</a>
+  </li>
+  <li><a href="#form">Form</a>
+  </li>
+  <li><a href="#preprocessing">Preprocessing</a>
+  </li>
+</ul>
+</p>
+<a name="bordered-table"></a>
+<h2 class="section1">Bordered Table</h2>
+<a name="table/table.pyhtml"></a>
+<div class="program_caption">
+Template: 'table.pyhtml'</div>
+<pre class="program">&lt;html&gt;
+  &lt;body&gt;
+    &lt;h1&gt;<strong>${title}</strong>&lt;/h1&gt;
+    &lt;table&gt;
+<strong>&lt;?py i = 0 ?&gt;</strong>
+<strong>&lt;?py for item in items: ?&gt;</strong>
+<strong>&lt;?py     i += 1 ?&gt;</strong>
+<strong>&lt;?py     color = i % 2 == 0 and '#FFCCCC' or '#CCCCFF' ?&gt;</strong>
+      &lt;tr bgcolor="<strong>#{color}</strong>"&gt;
+        &lt;td&gt;<strong>#{i}</strong>&lt;/td&gt;
+        &lt;td&gt;<strong>${item}</strong>&lt;/td&gt;
+      &lt;/tr&gt;
+<strong>&lt;?py #endfor ?&gt;</strong>
+    &lt;/table&gt;
+  &lt;/body&gt;
+&lt;/html&gt;
+</pre>
+<a name="table/table_s.result"></a>
+<div class="terminal_caption">
+Convert into Python script:</div>
+<pre class="terminal">$ pytenjin -a convert table.pyhtml
+_buf = []; _buf.extend(('''&lt;html&gt;
+  &lt;body&gt;
+    &lt;h1&gt;''', <strong>escape(to_str(title))</strong>, '''&lt;/h1&gt;
+    &lt;table&gt;\n''', ));
+<strong>i = 0</strong>
+<strong>for item in items:</strong>
+    <strong>i += 1</strong>
+    <strong>color = i % 2 == 0 and '#FFCCCC' or '#CCCCFF'</strong>
+    _buf.extend(('''      &lt;tr bgcolor="''', <strong>to_str(color)</strong>, '''"&gt;
+        &lt;td&gt;''', <strong>to_str(i)</strong>, '''&lt;/td&gt;
+        &lt;td&gt;''', <strong>escape(to_str(item))</strong>, '''&lt;/td&gt;
+      &lt;/tr&gt;\n''', ));
+<strong>#endfor</strong>
+_buf.extend(('''    &lt;/table&gt;
+  &lt;/body&gt;
+&lt;/html&gt;\n''', ));
+print ''.join(_buf)
+</pre>
+<a name="table/table.py"></a>
+<div class="program_caption">
+Main program: 'table.py'</div>
+<pre class="program">## create Engine object
+import tenjin
+from tenjin.helpers import *
+<strong>engine = tenjin.Engine()</strong>
+
+## render template with context data
+context = { 'title': 'Bordered Table Example',
+            'items': [ '&lt;AAA&gt;', 'B&amp;B', '"CCC"' ] }
+<strong>output = engine.render('table.pyhtml', context)</strong>
+print output,
+</pre>
+<a name="table/table.result"></a>
+<div class="terminal_caption">
+Result:</div>
+<pre class="terminal">$ python table.py
+&lt;html&gt;
+  &lt;body&gt;
+    &lt;h1&gt;Bordered Table Example&lt;/h1&gt;
+    &lt;table&gt;
+      &lt;tr bgcolor="<strong>#CCCCFF</strong>"&gt;
+        &lt;td&gt;<strong>1</strong>&lt;/td&gt;
+        &lt;td&gt;<strong>&amp;lt;AAA&amp;gt;</strong>&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr bgcolor="<strong>#FFCCCC</strong>"&gt;
+        &lt;td&gt;<strong>2</strong>&lt;/td&gt;
+        &lt;td&gt;<strong>B&amp;amp;B</strong>&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr bgcolor="<strong>#CCCCFF</strong>"&gt;
+        &lt;td&gt;<strong>3</strong>&lt;/td&gt;
+        &lt;td&gt;<strong>&amp;quot;CCC&amp;quot;</strong>&lt;/td&gt;
+      &lt;/tr&gt;
+    &lt;/table&gt;
+  &lt;/body&gt;
+&lt;/html&gt;
+</pre>
+<br>
+
+
+<a name="form"></a>
+<h2 class="section1">Form</h2>
+<a name="form/form.pyhtml"></a>
+<div class="program_caption">
+Template: 'form.pyhtml':</div>
+<pre class="program"><strong>&lt;?py #@ARGS action, params, label ?&gt;</strong>
+&lt;form action="<strong>${action}</strong>" method="post"&gt;
+  &lt;p&gt;
+    &lt;label&gt;Name:&lt;/label&gt;
+    &lt;input type="text" name="name" value="<strong>${params.get('name')}</strong>" /&gt;
+  &lt;/p&gt;
+  &lt;p&gt;
+    &lt;label&gt;Gender:&lt;/label&gt;
+<strong>&lt;?py gender = params.get('gender') ?&gt;</strong>
+<strong>&lt;?py checked = {True:' checked="checked"', False:''} ?&gt;</strong>
+    &lt;input type="radio" name="gender" value="M" <strong>#{checked[gender=='M']}</strong> /&gt;Man
+    &lt;input type="radio" name="gender" value="W" <strong>#{checked[gender=='W']}</strong> /&gt;Woman
+  &lt;/p&gt;
+  &lt;input type="submit" value="<strong>${label}</strong>" /&gt;
+&lt;/form&gt;
+</pre>
+<a name="form/create.pyhtml"></a>
+<div class="program_caption">
+Template: 'create.pyhtml':</div>
+<pre class="program">&lt;?py _context['title'] = 'Create user' ?&gt;
+&lt;?py _context['label'] = 'Create' ?&gt;
+&lt;?py _context['action'] = 'action.cgi' ?&gt;
+<strong>&lt;?py include(':form') ?&gt;</strong>
+</pre>
+<a name="form/update.pyhtml"></a>
+<div class="program_caption">
+Template: 'update.pyhtml':</div>
+<pre class="program">&lt;?py _context['title'] = 'Update user' ?&gt;
+&lt;?py _context['label'] = 'Update' ?&gt;
+&lt;?py _context['action'] = 'update.cgi' ?&gt;
+<strong>&lt;?py include(':form') ?&gt;</strong>
+</pre>
+<a name="form/layout.pyhtml"></a>
+<div class="program_caption">
+Layout template: 'layout.pyhtml'</div>
+<pre class="program">&lt;html&gt;
+ &lt;body&gt;
+  &lt;h1&gt;${title}&lt;/h1&gt;
+  &lt;div class="main-content"&gt;
+<strong>#{_content}</strong>
+  &lt;/div&gt;
+ &lt;/body&gt;
+&lt;/html&gt;
+</pre>
+<a name="form/main.py"></a>
+<div class="program_caption">
+Main program: 'main.py':</div>
+<pre class="program">## create Engine object
+import tenjin
+from tenjin.helpers import *
+<strong>engine = tenjin.Engine(postfix='.pyhtml', layout='layout.pyhtml')</strong>
+
+## render template with context data
+params = { 'name': 'Foo', 'gender': 'M' }
+context = { 'params': params }
+<strong>output = engine.render(':update', context)</strong>   # ':update' == 'update'+postfix
+print output,
+</pre>
+<a name="form/main.result"></a>
+<div class="terminal_caption">
+Result:</div>
+<pre class="terminal">$ python main.py
+&lt;html&gt;
+ &lt;body&gt;
+  &lt;h1&gt;<strong>Update user</strong>&lt;/h1&gt;
+  &lt;div class="main-content"&gt;
+&lt;form action="<strong>update.cgi</strong>" method="post"&gt;
+  &lt;p&gt;
+    &lt;label&gt;Name:&lt;/label&gt;
+    &lt;input type="text" name="name" value="<strong>Foo</strong>" /&gt;
+  &lt;/p&gt;
+  &lt;p&gt;
+    &lt;label&gt;Gender:&lt;/label&gt;
+    &lt;input type="radio" name="gender" value="M" <strong> checked="checked"</strong> /&gt;Man
+    &lt;input type="radio" name="gender" value="W"  /&gt;Woman
+  &lt;/p&gt;
+  &lt;input type="submit" value="<strong>Update</strong>" /&gt;
+&lt;/form&gt;
+
+  &lt;/div&gt;
+ &lt;/body&gt;
+&lt;/html&gt;
+</pre>
+<br>
+
+
+<a name="preprocessing"></a>
+<h2 class="section1">Preprocessing</h2>
+<a name="preprocessing/helper.py"></a>
+<div class="program_caption">
+Library: 'helper.py'</div>
+<pre class="program">languages = [
+  ('en', 'Engilish'),
+  ('fr', 'French'),
+  ('de', 'German'),
+  ('es', 'Spanish'),
+  ('ch', 'Chinese'),
+  ('ja', 'Japanese'),
+]
+
+import urllib
+def link_to(label, action=None, id=None):
+    buf = ['/app']
+    if action: buf.append(action)
+    if id: buf.append(id)
+    return '&lt;a href="%s"&gt;%s&lt;/a&gt;' % (urllib.quote('/'.join(buf)), label)
+</pre>
+<a name="preprocessing/select.pyhtml"></a>
+<div class="program_caption">
+Template: 'select.pyhtml'</div>
+<pre class="program">&lt;?PY import helper ?&gt;
+&lt;?PY from helper import * ?&gt;
+&lt;form&gt;
+  &lt;label&gt;Select your language:&lt;/label&gt;
+  &lt;select name="lang"&gt;
+&lt;?py table = { params['lang']: ' selected="selected"' } ?&gt;
+<strong>&lt;?PY for val, name in languages: ?&gt;</strong>
+    &lt;option value="${{val}}" #{table.get(#{{repr(val)}}, '')}&gt;${{name}}&lt;/option&gt;
+<strong>&lt;?PY #endfor ?&gt;</strong>
+  &lt;/select&gt;
+  &lt;input type="submit" value="OK" /&gt;
+&lt;/form&gt;
+&lt;p&gt;
+  <strong>#{{</strong>link_to('Back', action='index')<strong>}}</strong> |
+  <strong>#{{</strong>link_to('Show '+<strong>_P('params["name"]')</strong>, action='show', id=<strong>_p('params["id"]')</strong>)<strong>}}</strong>
+&lt;/p&gt;
+</pre>
+<a name="preprocessing/select_P.result"></a>
+<div class="terminal_caption">
+Preprocessed code:</div>
+<pre class="terminal">$ pytenjin -a preprocess select.pyhtml
+&lt;form&gt;
+  &lt;label&gt;Select your language:&lt;/label&gt;
+  &lt;select name="lang"&gt;
+&lt;?py table = { params['lang']: ' selected="selected"' } ?&gt;
+    &lt;option value="en" #{table.get('en', '')}&gt;Engilish&lt;/option&gt;
+    &lt;option value="fr" #{table.get('fr', '')}&gt;French&lt;/option&gt;
+    &lt;option value="de" #{table.get('de', '')}&gt;German&lt;/option&gt;
+    &lt;option value="es" #{table.get('es', '')}&gt;Spanish&lt;/option&gt;
+    &lt;option value="ch" #{table.get('ch', '')}&gt;Chinese&lt;/option&gt;
+    &lt;option value="ja" #{table.get('ja', '')}&gt;Japanese&lt;/option&gt;
+  &lt;/select&gt;
+  &lt;input type="submit" value="OK" /&gt;
+&lt;/form&gt;
+&lt;p&gt;
+  &lt;a href="/app/index"&gt;Back&lt;/a&gt; |
+  &lt;a href="/app/show/<strong>#{params["id"]}</strong>"&gt;Show <strong>${params["name"]}</strong>&lt;/a&gt;
+&lt;/p&gt;
+</pre>
+<a name="preprocessing/main.py"></a>
+<div class="program_caption">
+Main program: 'main.py'</div>
+<pre class="program">import helper
+
+## create engine
+import tenjin
+from tenjin.helpers import *
+engine = tenjin.Engine(postfix='.pyhtml', <strong>preprocess=True</strong>)
+
+## render template with context data
+params = { 'id': 1234, 'name': 'Foo', 'lang': 'ch' }
+context = { 'params': params }
+output = engine.render(':select', context);
+print output,
+</pre>
+<a name="preprocessing/main.result"></a>
+<div class="terminal_caption">
+Result:</div>
+<pre class="terminal">$ python main.py
+&lt;form&gt;
+  &lt;label&gt;Select your language:&lt;/label&gt;
+  &lt;select name="lang"&gt;
+    &lt;option value="en" &gt;Engilish&lt;/option&gt;
+    &lt;option value="fr" &gt;French&lt;/option&gt;
+    &lt;option value="de" &gt;German&lt;/option&gt;
+    &lt;option value="es" &gt;Spanish&lt;/option&gt;
+    &lt;option value="ch"  selected="selected"&gt;Chinese&lt;/option&gt;
+    &lt;option value="ja" &gt;Japanese&lt;/option&gt;
+  &lt;/select&gt;
+  &lt;input type="submit" value="OK" /&gt;
+&lt;/form&gt;
+&lt;p&gt;
+  &lt;a href="/app/index"&gt;Back&lt;/a&gt; |
+  &lt;a href="/app/show/1234"&gt;Show Foo&lt;/a&gt;
+&lt;/p&gt;
+</pre>
+<br>
+
+
+
+   </div>
+  </blockquote>
+
+ </body>
+</html>

@@ -1,0 +1,161 @@
+list:
+
+  - name:       任天堂
+    name2:      任天堂（株）
+    url:        http://www.nintendo.co.jp/
+    symbol:     7974
+    price:      38650
+    change:     150
+    ratio:      -0.39
+
+  - name:       ソニー
+    name2:      ソニー（株）
+    url:        http://www.sony.co.jp/
+    symbol:     6758
+    price:      6410
+    change:     90
+    ratio:      1.42
+
+  - name:       松下電器
+    name2:      松下電器産業（株）
+    url:        http://panasonic.co.jp/
+    symbol:     6752
+    price:      2410
+    change:     10
+    ratio:      0.42
+
+  - name:       ヤフー
+    name2:      ヤフー（株）
+    url:        http://www.yahoo.co.jp/
+    symbol:     4689
+    price:      42750
+    change:     350
+    ratio:      0.83
+
+  - name:       ソフトバンク
+    name2:      ソフトバンク（株）
+    url:        http://www.softbank.co.jp/
+    symbol:     9984
+    price:      2665
+    change:     -20
+    ratio:      -0.75
+
+  - name:       SBIホールディングス
+    name2:      SBIホールディングス（株）
+    url:        http://www.sbigroup.co.jp/
+    symbol:     8473
+    price:      38450
+    change:     -250
+    ratio:      -0.65
+
+  - name:       スクウェア・エニックス
+    name2:      （株）スクウェア・エニックス
+    url:        http://www.square-enix.com/
+    symbol:     9684
+    price:      3150
+    change:     90
+    ratio:      2.94
+
+  - name:       トヨタ
+    name2:      トヨタ自動車（株）
+    url:        http://www.toyota.co.jp/
+    symbol:     7203
+    price:      7230
+    change:     -40
+    ratio:      -0.55
+
+  - name:       ホンダ
+    name2:      本田技研工業（株）
+    url:        http://www.honda.co.jp/
+    symbol:     7267
+    price:      4040
+    change:     -30
+    ratio:      -0.74
+
+  - name:       日産
+    name2:      日産自動車（株）
+    url:        http://www.nissan.co.jp/
+    symbol:     7201
+    price:      1205
+    change:     -15
+    ratio:      -1.23
+
+  - name:       キャノン
+    name2:      キャノン（株）
+    url:        http://www.canon.co.jp/
+    symbol:     7751
+    price:      6810
+    change:     30
+    ratio:      0.44
+
+  - name:       京セラ
+    name2:      京セラ（株）
+    url:        http://www.kyocera.co.jp/
+    symbol:     6971
+    price:      11750
+    change:     200
+    ratio:      1.73
+
+  - name:       東芝
+    name2:      （株）東芝
+    url:        http://www.toshiba.co.jp/
+    symbol:     6502
+    price:      894
+    change:     5
+    ratio:      0.56
+
+  - name:       カプコン
+    name2:      （株）カプコン
+    url:        http://www.capcom.co.jp/
+    symbol:     9697
+    price:      1906
+    change:     7
+    ratio:      0.37
+
+  - name:       コナミ
+    name2:      コナミ（株）
+    url:        http://www.konami.co.jp/
+    symbol:     9766
+    price:      3160
+    change:     -10
+    ratio:      -0.32
+
+  - name:       オリエンタルランド
+    name2:      （株）オリエンタルランド
+    url:        http://www.olc.co.jp/
+    symbol:     4661
+    price:      6650
+    change:     -40
+    ratio:      -0.60
+
+  - name:       KDDI
+    name2:      KDDI（株）
+    url:        http://www.kddi.com/
+    symbol:     9433
+    price:      1000000
+    change:     39000
+    ratio:      4.06
+
+  - name:       NTTドコモ
+    name2:      （株）NTTドコモ
+    url:        http://www.nttdocomo.co.jp/
+    symbol:     9437
+    price:      208000
+    change:     -1000
+    ratio:      -0.48
+
+  - name:       NTTデータ
+    name2:      （株）NTTデータ
+    url:        http://www.nttdata.co.jp/
+    symbol:     9613
+    price:      576000
+    change:     2000
+    ratio:      +0.35
+
+  - name:       セイコーエプソン
+    name2:      セイコーエプソン（株）
+    url:        http://www.epson.co.jp/
+    symbol:     6724
+    price:      3470
+    change:     -30
+    ratio:      -0.86

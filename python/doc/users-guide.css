@@ -1,0 +1,89 @@
+body {
+    margin: 0;
+    padding: 0 20px;
+    background: #FFF;
+    color: #222;
+    font-size: 12pt;
+    line-height: 150%;
+}
+
+h1 {
+    border: solid #3C3;
+    border-width: 1px 10px 1px 10px;
+    padding: 10px 0 2px 10px;
+    font-size: 18pt;
+}
+
+h1.title {
+    background-color: #3C3;
+    color: #FFF;
+    border: none;
+    font-size: 24pt;
+    padding: 30px 0 5px 20px;
+}
+
+h2 {
+    border: solid #3C3;
+    border-width: 0px 0px 0px 10px;
+    padding: 10px 0 2px 10px;
+    font-size: 14pt;
+}
+
+div.section {
+    margin-top: 40px;
+    margin-bottom: 40px;
+}
+
+pre {
+    padding: 5px 10px;
+    margin: 0px 20px;
+    white-space: -moz-pre-wrap; /* Mozilla */
+    white-space: -pre-wrap;     /* Opera 4-6 */
+    white-space: -o-pre-wrap;   /* Opera 7 */
+    white-space: pre-wrap;      /* CSS3 */
+    word-wrap: break-word;      /* IE 5.5+ */
+}
+
+pre.file {
+    background: #9F9;
+    border: solid 1px #3C3;
+}
+
+pre.console {
+    background: #353;
+    border: solid 1px #999;
+    color: #FFF;
+}
+
+pre.file strong {
+    font-weight: bold;
+    color: #722;
+}
+
+pre.console strong {
+    font-weight: bold;
+    color: #F99;
+}
+
+pre, tt {
+    font-size: 11pt;
+}
+
+table.footnote {
+    border: none;
+    margin: 20px 20px 10px 200px;
+}
+
+.footnote {
+    font-size: 10pt;
+}
+
+.footnote tt {
+    font-size: 9pt;
+}
+
+.footnote-reference {
+    font-size: 9pt;
+    text-decoration: none;
+    vertical-align: super;
+}

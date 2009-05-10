@@ -1,0 +1,54 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+          "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html lang="en">
+  <head>
+    <title>${title}</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta http-equiv="Content-Script-Type" content="text/javascript" />
+    <meta http-equiv="Content-Style-Type" content="text/css" />
+    <link rel="shortcut icon" href="/favicon.ico" />
+    <link rel="alternate" type="application/rss+xml" title="RSS"
+          href="http://www.example.com/rss/index.rdf" />
+    <link rel="stylesheet" type="text/css" href="/css/common.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="/user/#{action}.css" media="screen" />
+    <style type="text/css">
+      <!--
+          body {
+              margin: 0;
+              padding: 0;
+              background-color: #FFF;
+          }
+          a {
+              text-decoration: none;
+          }
+          .odd {
+              background-color: #FFF;
+          }
+          .even {
+              background-color: #FCF;
+          }
+      -->
+    </style>
+    <script type="text/javascript" src="/js/prototype.js"></script>
+    <script type="text/javascript" src="/js/example.js"></script>
+  </head>
+  <body>
+
+    <div id="center">
+      <h1>${title}</h1>
+
+      <!-- main content -->
+      <div id="maincontent">
+#{include('user_list.pyhtml')}
+      </div>
+      <!-- /main content -->
+
+    </div>
+
+    <div id="footer">
+#{include('user_footer.html')}
+    </div>
+
+  </body>
+</html>
+<!-- user_layout4.pyhtml -->

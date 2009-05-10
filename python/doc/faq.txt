@@ -1,0 +1,1073 @@
+.=title:	pyTenjin FAQ
+.?lastupdate:	$Date$
+.?release:	$Release$
+.?stylesheet:	docstyle.css
+
+Release:	$Release$
+
+Table of contents:
+.<<< faq.toc
+
+
+
+
+.$ Basic	| faq-basic
+
+
+
+.$$ I got an SyntaxError exception.	| faq-syntax-error
+
+
+Command-line option '-z' checks syntax of template file.
+You should check template by it.
+
+
+
+.? File 'ex1.pyhtml':
+.-------------------- ex1.pyhtml
+<?py for i in xrange(0, 10): ?>
+<?py     if i % 2 == 0: ?>
+#{i} is even.
+<?py     else ?>
+#{i} is odd.
+<?py     #end ?>
+<?py #end ?>
+.--------------------
+
+.? Result:
+.==================== ex1_chksyntax.result
+$ pytenjin {{*-z*}} ex1.pyhtml
+ex1.pyhtml:4:9: invalid syntax
+  4:     else
+             ^
+.====================
+
+
+
+
+
+.$$ Is there any way to 'escape' or 'remove' newline at the end of line?	| faq-escape-newline
+
+Yes, but it is not beautiful very much.
+
+
+Assume that you want to generate CSV file.
+The following is a wrong example.
+
+.? File 'ex2a.pycsv': (wrong)
+.-------------------- ex2a.pycsv
+<?py 
+table = [
+  ( "A",  10,  20,  30, ),
+  ( "B",  11,  21,  31, ),
+  ( "C",  12,  22,  23, ),
+]
+?>
+<?py for line in table: ?>
+<?py     sep = '' ?>
+<?py     for cell in line: ?>
+#{sep}#{cell}
+<?py         sep = ', ' ?>
+<?py     #end ?>
+<?py #end ?>
+.--------------------
+
+.? Result: (wrong)
+.==================== ex2a_pycsv.result
+$ pytenjin ex2a.pycsv
+A
+, 10
+, 20
+, 30
+B
+, 11
+, 21
+, 31
+C
+, 12
+, 22
+, 23
+.====================
+
+The following is corrected template.
+
+.? File 'ex2b.pycsv':
+.-------------------- ex2b.pycsv
+<?py 
+table = [
+  ( "A",  10,  20,  30, ),
+  ( "B",  11,  21,  31, ),
+  ( "C",  12,  22,  23, ),
+]
+?>
+<?py
+for line in table:
+    sep = ''
+    for cell in line:
+?>#{sep}#{cell}<?py
+        sep = ', '
+    #end
+?>
+
+<?py
+#end
+?>
+.--------------------
+
+.? Result:
+.==================== ex2b_pycsv.result
+$ pytenjin ex2b.pycsv
+A, 10, 20, 30
+B, 11, 21, 31
+C, 12, 22, 23
+.====================
+
+But it is a little complex and not beautiful.
+In this case, you may prefer to use '_buf' variable directly.
+
+.? File 'ex2c.pycsv':
+.-------------------- ex2c.pycsv
+<?py 
+table = [
+  ( "A",  10,  20,  30),
+  ( "B",  11,  21,  31),
+  ( "C",  12,  22,  23),
+]
+?>
+<?py
+for line in table:
+    sep = ''
+    for cell in line:
+        if sep: _buf.append(sep)
+	_buf.append(to_str(cell))
+	sep = ', '
+    #end
+    _buf.append("\n")
+#end
+?>
+.--------------------
+
+.? Result:
+.==================== ex2c_pycsv.result
+$ pytenjin ex2c.pycsv
+A, 10, 20, 30
+B, 11, 21, 31
+C, 12, 22, 23
+.====================
+
+
+
+
+
+
+.$$ '#{_content}' includes extra newline at end. Can I delete it?	| faq-delete-newline
+
+
+
+Yes. You can use '{{,<?py echo(_content) ?>,}}' or '{{,<?py _buf.append(_content),}} ?>' instead of '{{,#{_content},}}'.
+
+
+.? File 'ex3-layout.pyhtml':
+.-------------------- ex3-layout.pyhtml
+<!-- -->
+{{*#{_content}*}}
+<!-- -->
+
+<!-- -->
+{{*<?py echo(_content) ?>*}}
+<!-- -->
+
+<!-- -->
+{{*<?py _buf.append(_content) ?>*}}
+<!-- -->
+.--------------------
+
+.? File 'ex3-content.pyhtml':
+.-------------------- ex3-content.pyhtml
+foo
+bar
+baz
+.--------------------
+
+.? Result:
+.==================== ex3_removenl.result
+$ pytenjin --layout=ex3-layout.pyhtml ex3-content.pyhtml
+<!-- -->
+foo
+bar
+baz
+
+<!-- -->
+
+<!-- -->
+foo
+bar
+baz
+<!-- -->
+
+<!-- -->
+foo
+bar
+baz
+<!-- -->
+.====================
+
+
+
+[experimental] If you pass 'smarttrim=True' option to tenjin.Template() or tenjin.Engine(),
+"\n#{expr}\n" will be trimmed into "\n#{expr}".
+And command-line option '--smarttrim' is the same as 'smarttrim=True' option.
+
+The following example shows that an empty line is not appread when '--smarttrim' is specified.
+
+.? Result:
+.==================== ex3_smarttrim.result
+$ pytenjin {{*--smarttrim*}} --layout=ex3-layout.pyhtml ex3-content.pyhtml
+<!-- -->
+foo
+bar
+baz
+<!-- -->
+
+<!-- -->
+foo
+bar
+baz
+<!-- -->
+
+<!-- -->
+foo
+bar
+baz
+<!-- -->
+.====================
+
+.#.? File 'ex3-layout2.pyhtml':
+.#.-------------------- ex3-layout.pyhtml
+.#<!-- -->
+.#{{*#{_buf.append(_content)}*}}
+.#<!-- -->
+.#.--------------------
+.#
+.#.? File 'ex3.py':
+.#.-------------------- ex3.py
+.#import tenjin
+.#from tenjin.helpers import *  # or escape, to_str
+.#engine = tenjin.Engine({{*smarttrim=True*}})
+.#output = engine.render('ex-3.pyhtml', layout='ex3-layout2.pyhtml')
+.#print output,
+.#.--------------------
+.#
+.#.? Result (notice that empty line is not appeard!):
+.#.====================
+.#$ python ex3.py
+.#<!-- -->
+.#foo
+.#bar
+.#baz
+.#<!-- -->
+.#.====================
+
+
+
+
+
+
+.$$ Can I change 'escape()' and 'to_str()' function name?	| faq-change-funcname
+
+Yes. You can change them by setting 'escapefunc' and 'tostrfunc' options for tenjin.Template() or tenjin.Engine().
+
+
+
+
+
+
+.? File 'ex4.py':
+.-------------------- ex4.py
+import tenjin
+engine = tenjin.Engine({{*escapefunc='cgi.escape'*}}, {{*tostrfunc='str'*}})
+template = engine.get_template('ex4.pyhtml')
+print template.script,
+.--------------------
+
+.? File 'ex4.pyhtml':
+.-------------------- ex4.pyhtml
+Hello ${name}!
+<?py for item in items: ?>
+#{item}
+<?py #end ?>
+.--------------------
+
+.? Result:
+.-------------------- ex4_escapefunc1.result
+$ python ex4.py
+_buf.extend(('''Hello ''', {{*cgi.escape*}}({{*str*}}(name)), '''!\n''', ));
+for item in items:
+    _buf.extend(({{*str*}}(item), '''\n''', ));
+#end
+.--------------------
+
+Command-line option '--escapefunc={{/name/}}' and '--tostrfunc={{/name/}}' is equivarent to the above.
+
+.? Result:
+.-------------------- ex4_escapefunc2.result
+$ pytenjin -sb {{*--escapefunc=cgi.escape*}} {{*--tostrfunc=str*}} ex4.pyhtml
+_buf.extend(('''Hello ''', {{*cgi.escape*}}({{*str*}}(name)), '''!\n''', ));
+for item in items:
+    _buf.extend(({{*str*}}(item), '''\n''', ));
+#end
+.--------------------
+
+
+
+
+
+
+.$$ Can I change '_buf' variable name?	| faq-change-bufname
+
+No. Variable name '_buf' should not and will never be changed.
+
+
+
+
+
+
+.$$ Is it able to specify default value if a variable is not set?	| faq-default-value
+
+Yes. It is able to specify default value by {{,_context.get('{{/varname/}}', {{/defaultvalue/}}),}}.
+
+
+.? File 'ex5.pyhtml':
+.-------------------- ex5.pyhtml
+Hello ${{{*_context.get('username', 'Guest')*}}}!
+.--------------------
+
+.? Result:
+.====================
+$ pytenjin -c 'username="Tenjin"' ex5.pyhtml
+Hello Tenjin!
+$ pytenjin ex5.pyhtml
+Hello Guest!
+.====================
+
+.#+++
+.? Result:
+.==================== ex5a_defaultval.result
+$ pytenjin -c 'username="Tenjin"' ex5.pyhtml
+Hello Tenjin!
+.====================
+
+.==================== ex5b_defaultval.result
+$ pytenjin ex5.pyhtml
+Hello Guest!
+.====================
+.#---
+
+
+
+
+
+
+.$ Template		| faq-template
+
+
+.$$ Is it possible to specify variables passed to template?	| faq-template-args
+
+Yes. You can specify template arguments by '{{,<?py #@ARGS arg1, arg2, arg3 ?>,}}'.
+
+
+
+.? File 'ex6-layout.pyhtml'
+.-------------------- ex6.pyhtml
+<?xml version="1.0 ?>
+{{*<?py #@ARGS x, y ?>*}}
+<p>
+  x = #{x}
+  y = #{y}
+  z = #{z}
+</p>
+.--------------------
+
+
+Template arguments line is converted into local variable assignment statements.
+
+.? Source code
+.==================== ex6_template_args.source
+$ pytenjin -s ex6.pyhtml
+_buf = []; _buf.extend(('''<?xml version="1.0 ?>\n''', ));
+{{*x = _context.get('x'); y = _context.get('y'); *}}
+_buf.extend(('''<p>
+  x = ''', to_str(x), '''
+  y = ''', to_str(y), '''
+  z = ''', to_str(z), '''
+</p>\n''', ));
+print ''.join(_buf)
+.====================
+
+
+Undeclared arguments are not available even when they are passed via context object.
+
+.? Result:
+.#.==================== ex6_template_args.result
+.====================
+$ pytenjin -c 'x=10; y=20; z=30' ex6.pyhtml
+  File "ex6.pyhtml", line 6, in <module>
+    z = #{z}
+NameError: name 'z' is not defined
+.====================
+
+
+
+
+
+
+
+.$$ Is it able to change embedded expression pattern?	| faq-exprpat
+
+Yes, you can create subclass of Template class and override embedded expression pattern.
+
+
+
+
+
+.? ex7-expr-pattern.pyhtml:
+.-------------------- ex7-expr-pattern.pyhtml
+<p>HTML escaped: {{*[|value|]*}}</p>
+<p>not escaped:  {{*[:value:]*}}</p>
+.--------------------
+
+.? ex7-expr-pattern.py:
+.-------------------- ex7-expr-pattern.py
+import tenjin, re
+from tenjin.helpers import *
+
+class MyTemplate(tenjin.Template):
+
+    ## '[|expr|]' escapes HTML and '[:expr:]' doesn't
+    EXPR_PATTERN = re.compile('\[(\|(.*?)\||:(.*?):)\]', re.S);
+
+    ## return pattern object for embedded expressions
+    def {{*expr_pattern(self)*}}:
+        return MyTemplate.EXPR_PATTERN
+
+    ## return expression string and flag whether escape or not from matched object
+    def {{*get_expr_and_escapeflag(self, match)*}}:
+        expr = match.group(2) or match.group(3)
+	escapeflag = match.group(2) and True or False
+	return expr, escapeflag
+
+if __name__ == '__main__':
+    context = {'value': 'AAA&BBB'}
+    engine = tenjin.Engine({{*templateclass=MyTemplate*}})
+    output = engine.render('ex7-expr-pattern.pyhtml', context)
+    print output,
+.--------------------
+
+.? Result:
+.==================== ex7_expr_pattern.result
+$ python ex7-expr-pattern.py
+<p>HTML escaped: AAA&amp;BBB</p>
+<p>not escaped:  AAA&BBB</p>
+.====================
+
+
+
+
+
+.$$ Does pyTenjin support M17N?	| faq-m17n
+
+
+No, but it is easy to support M17N.
+The point is:
+.* Change cache filename according to language.
+   For example, create cache file 'file.pyhtml.en.cache', 'file.pyhtml.fr.cache', 'file.pyhtml.it.cache', and so on from template file 'file.pyhtml'.
+.* Create Engine object for each language.
+.* (optinal) Use preprocessing for performance reason.
+
+The following is an example to generate M17N pages from a template file.
+
+
+
+
+.? ex8-m18n.pyhtml:
+.-------------------- ex8-m18n.pyhtml
+<div>
+<?PY ## '_()' represents translator method ?>
+ <p>{{*${{{}}{_('Hello')}}*}} ${username}!</p>
+</div>
+.--------------------
+
+
+.? ex8-m18n.py:
+.-------------------- ex8-m18n.py
+# -*- coding: utf-8 -*-
+import tenjin
+from tenjin.helpers import *
+import re
+
+##
+## message catalog to translate message
+##
+MESSAGE_CATALOG = {
+    'en': { 'Hello': 'Hello',
+            'Good bye': 'Good bye', },
+    'fr': { 'Hello': 'Bonjour',
+            'Good bye': 'Au revoir', },
+    }
+
+
+##
+## engine class which supports M17N
+##
+class M17NEngine(tenjin.Engine):
+
+    lang = 'en'     # default language name
+
+    ## __ini__() takes 'lang' argument
+    def __init__(self, *args, **kwargs):
+        lang = kwargs.has_key('lang') and kwargs.pop('lang') or None
+        tenjin.Engine.__init__(self, *args, **kwargs)
+        if lang: self.lang = lang     # set language name
+
+    ## change cache filename to 'file.html.lang.cache'
+    {{*def cachename(self, filename):*}}
+        {{*return "%s.%s.cache" % (filename, self.lang)*}}
+
+    ## translate message according to self.lang
+    def translate(self, message_key):
+        message_dict = MESSAGE_CATALOG.get(self.lang)
+        if not message_dict:
+            return message_key
+        return message_dict.get(message_key, message_key)
+
+    ## set self.translate() to context['_']
+    def hook_context(self, context):
+        tenjin.Engine.hook_context(self, context)
+        context['_'] = self.translate
+
+
+##
+## test program
+##
+if __name__ == '__main__':
+
+    template_name = 'ex8-m18n.pyhtml'
+    context = { 'username': 'World' }
+    
+    ## engine for english
+    engine = {{*M17NEngine*}}(preprocess=True, cache=None)
+    output = engine.render(template_name, context)
+    print "--- lang: %s ---" %  engine.lang
+    print output
+    
+    ## engine for French
+    engine = {{*M17NEngine*}}(preprocess=True, cache=None, {{*lang='fr'*}})
+    output = engine.render(template_name, context)
+    print "--- lang: %s ---" %  engine.lang
+    print output
+.--------------------
+
+.? Result:
+.==================== ex8_m18n.result
+$ python ex8-m18n.py
+--- lang: en ---
+<div>
+ <p>{{*Hello*}} World!</p>
+</div>
+
+--- lang: fr ---
+<div>
+ <p>{{*Bonjour*}} World!</p>
+</div>
+
+.====================
+
+
+
+
+pyTenjin doesn't provide M17N feature directly because requirements for M17N are
+different for each applications or frameworks.
+Some applications or frameworks adapt GetText library and others use its original M17N library.
+What pyTenjin should do is not to provide M17N feature but to show an example to support M17N.
+
+
+
+.$ Layout Template	| faq-layout
+
+
+
+.$$ Can I change layout template name in a template file?	| faq-change-layout-template
+
+Yes. If you set {{,_context['_layout'],}},
+its value is regarded as layout template name.
+
+
+.* You can specify template file name (ex. 'user_list.pyhtml') or template short name (ex. ':list').
+.* If you set True to '_context['_layout']', default layout template name is used instead.
+.* It is able to N-th level nested template.
+
+
+See the next section for details.
+
+
+
+.$$ Can I nest layout templates for any depth?		| faq-nested-layout-template
+
+
+Yes. If you set {{,_context['_layout'],}},
+you can nest layout templates in any depth.
+
+The following example shows that:
+.* 'ex8-content.pyhtml' uses 'ex8-mylayout.pyhtml' as layout template.
+.* 'ex8-mylayout.pyhtml' uses 'ex8-baselayout.pyhtml' as layout template.
+
+
+
+
+.? File 'ex9-content.pyhtml':
+.-------------------- ex9-content.pyhtml
+<?py _context['title'] = 'Changing Layout Template Test' ?>
+<?py ## specify layout template name ?>
+{{*<?py _context['_layout'] = 'ex9-mylayout.pyhtml' ?>*}}
+foo
+bar
+baz
+.--------------------
+
+.? File 'ex9-mylayout.pyhtml':
+.-------------------- ex9-mylayout.pyhtml
+<?py ## use default layout template name ?>
+{{*<?py _context['_layout'] = True ?>*}}
+<div id="content">
+{{*<?py _buf.append(_content) ?>*}}
+</div>
+.--------------------
+
+.? File 'ex9-baselayout.pyhtml':
+.-------------------- ex9-baselayout.pyhtml
+<html>
+  <body>
+<?py if locals().has_key('title'): ?>
+    <h1>${title}</h1>
+<?py #end ?>
+{{*<?py _buf.append(_content) ?>*}}
+  </body>
+</html>
+.--------------------
+
+
+.? Result:
+.==================== ex9_changelayout.result
+$ pytenjin --layout=ex9-baselayout.pyhtml ex9-content.pyhtml
+<html>
+  <body>
+    <h1>Changing Layout Template Test</h1>
+<div id="content">
+foo
+bar
+baz
+</div>
+  </body>
+</html>
+.====================
+
+
+
+
+.$$ Can I disable default layout template for a certain template?	| faq-diable-layout
+
+
+Yes. If you set False to _context['_layout'], default layout template will not be applied.
+
+
+
+
+.$$ Is Django-like "Template Inheritance" supported?	| faq-template-inheritance
+
+
+No, but you can emulate it partially by combination of template capturing and '_context['_layout']'.
+
+
+
+.? File 'ex10-baselayout.pyhtml':
+.-------------------- ex10-baselayout.pyhtml
+<html>
+ <body>
+
+<?py ## if variable 'header_part' is defined then print it, ?>
+<?py ## else print default header part. ?>
+  <div id="header">
+{{*<?py if not captured_as('header_part'): ?>*}}
+   <img src="img/logo.png" alt="logo" ?>
+{{*<?py #end ?>*}}
+  </div>
+
+<?py ## main content part ?>
+  <div id="content">
+<?py _buf.append(content_part) ?>
+  </div>
+
+<?py ## if variable 'footer_part' is defined then print it, ?>
+<?py ## else print default footer part. ?>
+  <div id="footer">
+{{*<?py if not captured_as('footer_part'): ?>*}}
+   <hr />
+   <em>webmaster@example.com</em>
+{{*<?py #end ?>*}}
+  </div>
+  
+ </body>
+</html>
+.--------------------
+
+.? File 'ex10-customlayout.pyhtml':
+.-------------------- ex10-customlayout.pyhtml
+<?py ## '_context["_layout"]' is equivarent to '{% extends "foobar.html" %}' ?>
+<?py ## in Django template engine. ?>
+{{*<?py _context['_layout'] = 'ex10-baselayout.pyhtml' ?>*}}
+
+<?py ## you can override header or footer by capturing. ?>
+{{*<?py start_capture('footer_part') ?>*}}
+<address style="text-align:right">
+  copyright&copy; 2007 kuwata-lab all rights reserved<br />
+  <a href="webmaster&#64;kuwata-lab.com">webmaster&#64;kuwata-lab.com</a>
+</address>
+{{*<?py stop_capture() ?>*}}
+.--------------------
+
+.? File 'ex10-content.pyhtml':
+.-------------------- ex10-content.pyhtml
+<?py ## '_context["_layout"]' is equivarent to '{% extends "foobar.html" %}' ?>
+<?py ## in Django template engine. ?>
+{{*<?py _context['_layout'] = 'ex10-customlayout.pyhtml' ?>*}}
+
+<?py ## main content part ?>
+{{*<?py start_capture('content_part') ?>*}}
+<ul>
+<?py for item in items: ?>
+  <li>${item}</li>
+<?py #end ?>
+</ul>
+{{*<?py stop_capture() ?>*}}
+.--------------------
+
+'{{,captured_as(),}}' is a pre-defined helper function.
+For example,
+
+.--------------------
+<?py {{*if not captured_as('header_part'):*}} ?>
+   <img src="img/logo.png" alt="logo" ?>
+<?py {{*#end*}} ?>
+.--------------------
+
+is equivarent to the following.
+
+.--------------------
+<?py {{*if _context.has_key('header_part'):*}} ?>
+<?py     {{*_buf.append(_context['header_part'])*}} ?>
+<?py {{*else:*}} ?>
+   <img src="img/logo.png" alt="logo" ?>
+<?py {{*#end*}} ?>
+.--------------------
+
+
+
+
+The following is the result. It shows that footer part in baselayout is overrided by other templates.
+
+.? Result:
+.==================== ex10_inherit.result
+$ pytenjin -c "items=['AAA', 'BBB', 'CCC']" ex10-content.pyhtml
+<html>
+ <body>
+
+  <div id="header">
+   <img src="img/logo.png" alt="logo" ?>
+  </div>
+
+  <div id="content">
+<ul>
+  <li>AAA</li>
+  <li>BBB</li>
+  <li>CCC</li>
+</ul>
+  </div>
+
+  <div id="footer">
+<address style="text-align:right">
+  copyright&copy; 2007 kuwata-lab all rights reserved<br />
+  <a href="webmaster&#64;kuwata-lab.com">webmaster&#64;kuwata-lab.com</a>
+</address>
+  </div>
+  
+ </body>
+</html>
+.====================
+
+
+
+
+
+.$ Encoding	| faq-encoding
+
+
+.$$ How to specify template encoding?		| faq-template-encoding
+
+
+pyTenjin supports two approaches to handle template encoding.
+
+One way is to handle template content as string (byte sequence).
+In this way, you must decode unicode object to str in 'to_str()' function.
+
+pyTenjin provides the helper method for this purpose.
+
+
+.? File 'ex11a.rb':
+.-------------------- ex11a.py'
+import tenjin
+from tenjin.helpers import *
+
+## generate to_str() function which decode unicode object
+## into string object according to encoding name.
+encoding = 'euc-jp'
+{{*to_str = tenjin.generate_tostrfunc(encoding)*}}
+
+engine = tenjin.Engine()
+context = { 'title': u'\u65e5\u672c\u8a9e' }
+output = engine.render('ex11.euc-jp.pyhtml', context)
+assert isinstance(output, str)
+print output
+.--------------------
+
+Command-line option '-k {{/encoding/}}' is equivarent to the above way.
+
+The second way to convert template content into unicode object.
+In this way, output is unicode object and you must decode it to string with proper encoding name.
+
+.? File 'ex11b.py':
+.-------------------- ex11b.py'
+import tenjin
+from tenjin.helpers import *
+
+## set encoding option
+encoding = 'euc-jp'
+engine = tenjin.Engine({{*encoding=encoding*}})  
+context = { 'title': u'\u65e5\u672c\u8a9e' }
+output = engine.render('ex11.euc-jp.pyhtml', context)
+assert isinstance(output, unicode)
+print {{*output.decode(encoding)*}}   # decode unicode object into string
+.--------------------
+
+Command-line option '--encoding={{/encoding/}}' is equivarent the second way.
+
+
+.#+++
+
+.? File 'ex11.euc-jp.pyhtml':
+.-------------------- ex11.euc-jp.pyhtml
+<h1>${title}</h1>
+<p>日本語</p>
+<ul>
+<?py #items = [u'\u65e5', u'\u672c', u'\u8a9e'] # OK ?>
+<?py items = [u'日', u'本', u'語'] # NG for ex11a.rb ?>
+<?py for item in items: ?>
+ <li>${item}</li>
+<?py #end ?>
+</ul>
+.--------------------
+
+.#---
+
+
+
+.$$ Can I specify encoding name in template file?	| faq-encoding-decl
+
+
+Yes. You can contain encoding declaration in template.
+
+
+.? File 'ex12.pyhtml':
+.-------------------- ex12.pyhtml
+{{*<?py # -*- coding: <encoding-name> -*- ?>*}}
+<?py s1 = '..non-ascii characters..' ?>
+<?py s2 = u'..non-ascii characters..' ?>
+s1 = ${s1}  # OK
+s2 = ${s2}  # OK
+.--------------------
+
+
+
+
+
+
+.$ Performance		| faq-performance
+
+
+
+.$$ How fast is pyTenjin compared with other solutions?
+
+
+pyTenjin contains benchmark script.
+This shows that pyTenjin works much faster than other solutions.
+
+
+.? MacOS X 10.4 Tiger, Intel CoreDuo 1.83GHz, Memory 2GB
+.====================
+$ cd pyTenjin-X.X.X/benchmark
+$ python -V
+Python 2.5.1
+$ python bench.py -q -n 10000
+Compiling bench_cheetah.tmpl -> bench_cheetah.py (backup bench_cheetah.py.bak)
+*** ntimes=10000
+                           utime      stime      total       real
+tenjin                   6.47000    0.49000    6.96000    6.98909
+tenjin-reuse             5.54000    0.06000    5.61000    5.63055
+tenjin-nocache          20.14000    0.41000   20.55000   20.60475
+django                  69.99000    1.34000   71.33000   71.57211
+django-reuse            58.92000    0.88000   59.80000   59.94480
+cheetah                 20.33000    0.03000   20.36000   20.41416
+cheetah-reuse           19.80000    0.02000   19.82000   19.86858
+myghty                 106.25000    1.63000  107.88000  108.16097
+myghty-reuse            18.70000    0.60000   19.30000   19.35395
+kid                    379.64000    0.60000  380.24000  381.11728
+kid-reuse              378.52000    0.44000  378.96000  379.64911
+genshi                 557.29000    3.00000  560.30000  561.71955
+genshi-reuse           270.47000    1.22000  271.69000  272.26885
+mako                    16.82000    0.96000   17.78000   18.36388
+mako-reuse              13.47000    0.02000   13.49000   13.51232
+mako-nocache           236.10000    1.67000  237.77000  238.38705
+templetor              424.03000    4.15000  428.19000  429.59667
+templetor-reuse         61.46000    0.07000   61.53000   61.68483
+.#$ cd pytenjin-X.X.X/benchmark
+.#$ python -V
+.#Python 2.5
+.#$ python bench.py -q -n 10000
+.#Compiling bench_cheetah.tmpl -> bench_cheetah.py
+.#*** ntimes=10000
+.#                           utime      stime      total       real
+.#tenjin-programcache     11.25000    0.52000   11.77000   11.78554
+.#tenjin-bytecodecache     6.39000    0.43000    6.82000    6.82936
+.#tenjin-nocache          18.94000    0.41000   19.35000   19.39265
+.#tenjin-reuse             5.44000    0.06000    5.50000    5.50629
+.#django                  57.19000    0.40000   57.59000   58.06668
+.#django-reuse            50.51000    0.04000   50.55000   50.63985
+.#cheetah                 20.49000    0.02000   20.51000   20.52403
+.#cheetah-reuse           19.66000    0.02000   19.68000   19.70504
+.#myghty                 106.65000    1.50000  108.15000  108.40326
+.#myghty-reuse            18.72000    0.56000   19.28000   19.30800
+.#kid                    345.34000    0.47000  345.81000  346.40984
+.#kid-reuse              343.84000    0.32000  344.16000  344.77124
+.====================
+
+Versions:
+.* Python 2.5.1
+.* Tenjin 0.6.1
+.* Django 0.95
+.* Cheetah 2.0
+.* Myghty 1.1
+.* Kid 0.9.6
+.* Genshi 0.4.4
+.* Mako 0.1.9
+.* Templetor (web.py) 0.22
+
+
+In addition, module size of pyTenjin is small, and it is very light-weight to import it.
+This is important for CGI program.
+Other solutions may be very heavy to import the module and suitable only for apache module or FastCGI.
+
+
+.$$ Why pyTenjin is so fast?	     	    	| faq-why-so-fast
+
+Because it doesn't use template engine original language.
+
+Other template engines, such as Template-Toolkit(perl), Django(python), or Smarty(php),
+has their original languages.
+This is not good idea for script language because:
+.* They are slow.
+.* Implementation will be complex.
+.* Learning cost is high.
+
+In addition, pyTenjin is faster than Jakarta Velocity which is a very popular template engine in Java.
+(It means that dynamic Java is slower than script languages.)
+
+Template engine should use their host language directly unless there are some kind of reasons.
+
+
+
+.$$ Is there any way to get more speed?		| faq-performance-tuning
+
+
+
+You can get more speed by including 'escape()' and 'to_str()' functions to context data.
+
+.? File 'ex13a.py':
+.-------------------- ex13a.py
+import tenjin
+from tenjin.helpers import *
+
+## include 'escape()' and 'to_str()' functions to context data
+context = { 'title': 'Example', 'items': ['A', 'B', 'C'] }
+{{*context['escape'] = escape*}}
+{{*context['to_str'] = to_str*}}
+
+engine = tenjin.Engine()
+output = engine.render('ex13a.pyhtml', context)
+.--------------------
+
+You can get more and more speed by deleting implicit call of 'to_str()' function.
+Of course, you have to call it properly in your templates.
+
+.? File 'ex13b.py':
+.-------------------- ex13b.py
+import tenjin
+from tenjin.helpers import *
+
+## include 'escape()' and 'to_str()' functions to context data
+context = { 'title': 'Example', 'items': ['A', 'B', 'C'] }
+context['escape'] = escape
+context['to_str'] = to_str
+
+## delete implicit call of 'to_str()' function
+engine = tenjin.Engine({{*tostrfunc=''*}})
+
+## show python code and output
+filename = 'ex13b.pyhtml'
+template = engine.get_template(filename)
+output = engine.render(filename, context)
+print "--- python code ---"
+print template.script
+print "--- output ---"
+print output,
+.--------------------
+
+.? File 'ex13b.pyhtml':
+.-------------------- ex13b.pyhtml
+<h1>${title}</h1>
+<ul>
+<?py for i, item in enumerate(items): ?>
+  <li>#{{{*to_str(i)*}}}: #{item}</li>
+<?py #end ?>
+</ul>
+.--------------------
+
+.? Result:
+.==================== ex13b_deltostr.result
+$ python ex13b.py
+--- python code ---
+_buf.extend(('''<h1>''', {{*escape((title))*}}, '''</h1>
+<ul>\n''', ));
+for i, item in enumerate(items):
+    _buf.extend(('''  <li>''', {{*(to_str(i))*}}, ''': ''', {{*(item)*}}, '''</li>\n''', ));
+#end
+_buf.extend(('''</ul>\n''', ));
+
+--- output ---
+<h1>Example</h1>
+<ul>
+  <li>0: A</li>
+  <li>1: B</li>
+  <li>2: C</li>
+</ul>
+.====================
+
+
