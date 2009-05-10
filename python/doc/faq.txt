@@ -371,7 +371,7 @@ Hello Guest!
 .$ Template		| faq-template
 
 
-.$$ Is it possible to specify variables passed to template?	| faq-template-args
+.$$ Is it able to specify variables passed to template?	| faq-template-args
 
 Yes. You can specify template arguments by '{{,<?py #@ARGS arg1, arg2, arg3 ?>,}}'.
 
@@ -587,7 +587,7 @@ $ python ex8-m18n.py
 
 pyTenjin doesn't provide M17N feature directly because requirements for M17N are
 different for each applications or frameworks.
-Some applications or frameworks adapt GetText library and others use its original M17N library.
+Some applications or frameworks adapt GetText library and others use their original M17N library.
 What pyTenjin should do is not to provide M17N feature but to show an example to support M17N.
 
 
@@ -899,12 +899,389 @@ s2 = ${s2}  # OK
 
 
 
+.$ Preprocessing	| faq-preprocessing
+
+
+.$$ What is preprocessing?	| faq-what-is-pp
+
+Preprocessing is a feature to evaluate a part of logics embedded in template files at when template is loaded.
+
+Tenjin has two stages for rendering:
+.: Convertion stage
+	Convert template into Python script.
+	This stage is invoked only once for each template files.
+.: Evaluation stage
+	Evaluate converted script with given context data.
+	This stage is invoked every time when template is rendered.
+
+Normally, embedded logics in template files are evaluated at Evaluation stage.
+pyTenjin can also evaluate a part of logics at convertion stage.
+It is called preprocessing.
+
+Preprocessed logics are evaluated only once because it is evaluated at convertion stage.
+It means that preprocessed logics are not evaluated at rendering template.
+
+.? Notation of embedded logics
+.+============================================================
+kind                         .,  non-preprocessing  .,  preprocessing
+.------------------------------------------------------------
+statements                   .,  <?py ... ?>       .,  <?Erubis::PI ... ?>
+expression (with escape)     .,  ${...} .,  ${{...}}
+expression (without escape)  .,  #{...}  .,  #{{...}}
+.+============================================================
+
+
+.$$ What is the merit of preprocessing?		| faq-pp-merit
+
+The merit of preprocessing is the speed of rendering templates.
+
+Preprocessed logics are evaluated only once because it is evaluated at convertion stage and not evaluated at rendering templates.
+It means that preprocessed logics are no-weight when rendering time.
+
+For example, assume an helper function 'link_to()' which generates <a></a> tag.
+If you embed it to your template file such as '#{link_to("Create", action="new")}', this function will be evaluated whenever template is rendered.
+
+.? Without preprocessing
+.--------------------
+template file:
+  #{link_to("Create", action="new")}
+
+converted script:
+  _buf.extend(({{*to_str(link_to("Create", action="new"))*}}, ))
+
+output:
+  <a href="/new">Create</a>
+.--------------------
+
+However, if you use preprocessing such as '#{{link_to("Create", action="new")}}', this function will be evaluated only once when template is loaded.
+
+.? With preprocessing
+.--------------------
+template file:
+  {{*#{{*}}link_to('Create', action='new'){{*}}*}}
+
+converted script:
+  _buf.extend(({{*'''<a href="/new">Create</a>'''*}}, ))
+
+output:
+  <a href="/new">Create</a>
+.--------------------
+
+In the result, rendering template will be much faster because function evaluation is eliminated when rendering.
+
+
+.$$ Is there any examples of preprocessing?    | faq-pp-examples
+
+
+.$$$ Loop expantion
+
+Using preprocessing, it is able to expand loop in advance.
+It makes rendering speed much faster.
+
+
+.? weekday1.pyhtml:
+.-------------------- weekday1.pyhtml
+{{*<?PY*}} WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] ?>
+<select name="weekday">
+  <option>-</option>
+{{*<?PY*}} i = 0 ?>
+{{*<?PY*}} for wday in WEEKDAYS: ?>
+{{*<?PY*}}     i += 1?>
+  <option value="{{*#{{{}}{*}}i{{*}}*}}">{{*#{{{}}{*}}wday{{*}}*}}</option>
+{{*<?PY*}} #end ?>
+</select>
+.--------------------
+
+.? weekday1.py:
+.-------------------- weekday1.py
+## import all helper methods
+import tenjin
+{{*from tenjin.helpers import **}}
+## render with preprocessing
+engine = tenjin.Engine({{*preprocess=True*}})
+print '***** preprocessed *****'
+print engine.get_template('weekday1.pyhtml').script,
+print '***** output *****'
+print engine.render('weekday1.pyhtml'),
+.--------------------
+
+.? result:
+.==================== weekday1.result
+$ python weekday1.py
+***** preprocessed *****
+_buf.extend(('''<select name="weekday">
+  <option>-</option>
+  <option value="1">Sun</option>
+  <option value="2">Mon</option>
+  <option value="3">Tue</option>
+  <option value="4">Wed</option>
+  <option value="5">Thu</option>
+  <option value="6">Fri</option>
+  <option value="7">Sat</option>
+</select>\n''', ));
+***** output *****
+<select name="weekday">
+  <option>-</option>
+  <option value="1">Sun</option>
+  <option value="2">Mon</option>
+  <option value="3">Tue</option>
+  <option value="4">Wed</option>
+  <option value="5">Thu</option>
+  <option value="6">Fri</option>
+  <option value="7">Sat</option>
+</select>
+.====================
+
+If you want to add selected attribute (' selected="selected"') dinamically, see the following.
+
+.? weekday2.pyhtml:
+.-------------------- weekday2.pyhtml
+<?PY WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] ?>
+<select name="weekday">
+{{*<?py selected = { str(params.get('weekday')): ' selected="selected"' } ?>*}}
+  <option>-</option>
+<?PY i = 0 ?>
+<?PY for wday in WEEKDAYS: ?>
+<?PY     i += 1?>
+  <option value="#{{{}}{i}}"{{*#{selected.get('#{{i}}')}*}}>#{{{}}{wday}}</option>
+<?PY #end ?>
+</select>
+.--------------------
+
+.? weekday2.py:
+.-------------------- weekday2.py
+## import all helper methods
+import tenjin
+from tenjin.helpers import *
+## render with preprocessing
+engine = tenjin.Engine(preprocess=True)
+{{*context = { 'params': { 'weekday': 3, 'day': 19 } }*}}
+print '***** preprocessed *****'
+print engine.get_template('weekday2.pyhtml').script,
+print '***** output *****'
+print engine.render('weekday2.pyhtml'{{*, context*}}),
+.--------------------
+
+result:
+.==================== weekday2.result
+$ python weekday2.py
+***** preprocessed *****
+_buf.extend(('''<select name="weekday">\n''', ));
+selected = { str(params.get('weekday')): ' selected="selected"' }
+_buf.extend(('''  <option>-</option>
+  <option value="1"''', to_str(selected.get('1')), '''>Sun</option>
+  <option value="2"''', to_str(selected.get('2')), '''>Mon</option>
+  <option value="3"''', to_str(selected.get('3')), '''>Tue</option>
+  <option value="4"''', to_str(selected.get('4')), '''>Wed</option>
+  <option value="5"''', to_str(selected.get('5')), '''>Thu</option>
+  <option value="6"''', to_str(selected.get('6')), '''>Fri</option>
+  <option value="7"''', to_str(selected.get('7')), '''>Sat</option>
+</select>\n''', ));
+***** output *****
+<select name="weekday">
+  <option>-</option>
+  <option value="1">Sun</option>
+  <option value="2">Mon</option>
+  <option value="3"{{* selected="selected"*}}>Tue</option>
+  <option value="4">Wed</option>
+  <option value="5">Thu</option>
+  <option value="6">Fri</option>
+  <option value="7">Sat</option>
+</select>
+.====================
+
+It is possible to make helper function to generate <select> and <option> tags.
+
+.? weekday3.pyhtml:
+.-------------------- weekday3.pyhtml
+<form>
+{{*#{{pp_select_weekday_tag("params.get('weekday')", name='weekday')}}*}}
+</form>
+.--------------------
+
+.? weekday3.py:
+.-------------------- weekday3.py
+## helper function
+WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+def pp_select_weekday_tag(expr_str, name='weekday', indent=''):
+    buf = []
+    buf.append('<select name="%s">' % name)
+    attr = 'selected="selected"'
+    buf.append('%s<?py _selected = { str(%s): \' %s\' } ?>' % \
+                      (indent, expr_str, attr))
+    buf.append('  <option>-</option>')
+    i = 0
+    for wday in WEEKDAYS:
+        i += 1
+	expr = '_selected.get("%s")' % i
+	buf.append('  <option value="%s"#{%s}>%s</option>' % \
+                      (i, expr, wday))
+    buf.append('</select>')
+    return "\n".join(buf)
+
+## import all helper methods
+import tenjin
+from tenjin.helpers import *
+
+## 
+engine = tenjin.Engine(preprocess=True)
+{{*context = { 'params': { 'weekday': 3, 'day': 19 } }*}}
+print '***** preprocessed *****'
+print engine.get_template('weekday3.pyhtml').script,
+print '***** output *****'
+print engine.render('weekday3.pyhtml'{{*, context*}}),
+.--------------------
+
+.? result:
+.==================== weekday3.result
+$ python weekday3.py
+***** preprocessed *****
+_buf.extend(('''<form>
+<select name="weekday">\n''', ));
+_selected = { str(params.get('weekday')): ' selected="selected"' }
+_buf.extend(('''  <option>-</option>
+  <option value="1"''', to_str(_selected.get("1")), '''>Sun</option>
+  <option value="2"''', to_str(_selected.get("2")), '''>Mon</option>
+  <option value="3"''', to_str(_selected.get("3")), '''>Tue</option>
+  <option value="4"''', to_str(_selected.get("4")), '''>Wed</option>
+  <option value="5"''', to_str(_selected.get("5")), '''>Thu</option>
+  <option value="6"''', to_str(_selected.get("6")), '''>Fri</option>
+  <option value="7"''', to_str(_selected.get("7")), '''>Sat</option>
+</select>
+</form>\n''', ));
+***** output *****
+<form>
+<select name="weekday">
+  <option>-</option>
+  <option value="1">Sun</option>
+  <option value="2">Mon</option>
+  <option value="3"{{* selected="selected"*}}>Tue</option>
+  <option value="4">Wed</option>
+  <option value="5">Thu</option>
+  <option value="6">Fri</option>
+  <option value="7">Sat</option>
+</select>
+</form>
+.====================
+
+
+.$$$ Helper methods execution in advance	| faq-pp-helpers
+
+Many web frameworks provides their own helper functions for view layer.
+Some of them can be executed in advance.
+Using preprocessing, it is able to execute these helper functions in advance, and view layer will be much faster in the result.
+
+
+.? helpers1.pyhtml:
+.-------------------- helpers1.pyhtml
+<p>
+#{link_to('Create', action='new')}
+#{{link_to('Create', action='new')}}
+</p>
+.--------------------
+
+.? helpers1.py:
+.-------------------- helpers1.py
+## define helper method
+def link_to(label, href=None, action=None):
+    if not href and action:
+        href = "/%s/%s" % (controller_name, action)
+    return '<a href="%s">%s</a>' % (href, label)
+
+## import all helper methods to use preprocessing
+import tenjin
+from tenjin.helpers import *
+
+## 
+controller_name = 'user'
+engine = tenjin.Engine(preprocess=True)
+print '***** preprocessed *****'
+print engine.get_template('helpers1.pyhtml').script,
+print '***** output *****'
+print engine.render('helpers1.pyhtml'),
+.--------------------
+
+.? result:
+.==================== helpers1.result
+$ pytenjin helpers1.py
+***** preprocessed *****
+_buf.extend(('''<p>
+''', to_str(link_to('Create', action='new')), '''
+<a href="/user/new">Create</a>
+</p>\n''', ));
+***** output *****
+<p>
+<a href="/user/new">Create</a>
+<a href="/user/new">Create</a>
+</p>
+.====================
+
+It is able to embed expression which should be evaluated at rendering stage.
+.* {{,_p("..."),}} is equivarent to {{,#{...},}}
+.* {{,_P("..."),}} is equivarent to {{,${...},}}
+
+.? helpers2.pyhtml:
+.-------------------- helpers2.pyhtml
+<p>
+#{link_to(escape(user['name']), action='show', id=user['id'])}
+#{{link_to({{*_P("user['name']")*}}, action='show', id={{*_p("user['id']")*}})}}
+</p>
+.--------------------
+
+.? helpers2.py:
+.-------------------- helpers2.py
+## define helper method
+def link_to(label, href=None, action=None, id=None):
+    if not href and action:
+        if id:
+            href = "/%s/%s/%s" % (controller_name, action, id)
+        else:
+            href = "/%s/%s" % (controller_name, action)
+    return '<a href="%s">%s</a>' % (href, label)
+
+## import all helper methods to use preprocessing
+import tenjin
+from tenjin.helpers import *
+
+## 
+controller_name = 'user'
+{{*context = { 'user': {'id': 123, 'name': 'Tom&Jerry'} }*}}
+engine = tenjin.Engine(preprocess=True)
+print '***** preprocessed *****'
+print engine.get_template('helpers2.pyhtml'{{*, context*}}).script,
+print '***** output *****'
+print engine.render('helpers2.pyhtml'{{*, context*}}),
+.--------------------
+
+.? result:
+.==================== helpers2.result
+$ pytenjin helpers2.py
+***** preprocessed *****
+_buf.extend(('''<p>
+''', to_str(link_to(escape(user['name']), action='show', id=user['id'])), '''
+<a href="/user/show/''', {{*to_str(user['id'])*}}, '''">''', {{*escape(to_str(user['name']))*}}, '''</a>
+</p>\n''', ));
+***** output *****
+<p>
+<a href="/user/show/123">Tom&amp;Jerry</a>
+<a href="/user/show/123">Tom&amp;Jerry</a>
+</p>
+.====================
+
+
+.$$$ M17N (Multilingualization)		| faq-pp-m18n
+
+Preprocessing is also effective for M17N (Multilingualization), because the runtime cost of M17N can be almost zero by preprocessing.
+
+See {{<this section|#faq-m17n>}} for M17N example using preprocessing.
+
+
 
 .$ Performance		| faq-performance
 
 
 
-.$$ How fast is pyTenjin compared with other solutions?
+.$$ How fast is pyTenjin compared with other solutions?	| faq-how-fast
 
 
 pyTenjin contains benchmark script.
