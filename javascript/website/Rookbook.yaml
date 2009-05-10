@@ -1,0 +1,46 @@
+libraries:
+  - ../Rookbook.props
+
+parameters:
+  - tagfile:    site-design.ktag
+  - all:	[ $(project)-users-guide.html, $(project)-faq.html ]
+#  - all:	[ $(project)-CHANGES.txt, $(project)-users-guide.html, $(project)-faq.html ]
+
+recipes:
+  - product:	:all
+    ingreds:	[ $(all) ]
+    method*: |
+	cp '../lib/shotenjin.js', '.'
+
+  - product:	:clean
+    method*: |
+	rm_f '*users-guide.txt', '*faq.txt', '*.toc.html'
+
+  - product:	:clear
+    method*: |
+	rm_f '*.txt', '*.html', '*.js'
+
+  - product:	$(project)-*.txt
+    ingreds:	[ ../doc/$(1).txt ]
+    method*: |
+	cp @ingred, @product
+	edit [@product] do |s|
+	  s.gsub!('$(1).toc', '$(project)-$(1).toc')
+	  s.gsub!('docstyle.css', 'site-design.css')
+          s.gsub!(/\$Release\$/, '$(release)')
+          s.gsub!(/\$Release:.*?\$/, '$Release: $(release) $')
+          s.gsub!(/\$Copyright\$/, '$(copyright)')
+	  s
+	end
+
+  - product:	$(project)-*.html
+    ingreds:	[ $(project)-$(1).txt ]
+    byprods:	[ $(project)-$(1).toc.html ]
+    method*: |
+	sys "kwaser -t $(tagfile) -T2 #{@ingred} > #{@byprod}"
+	sys "kwaser -t $(tagfile)     #{@ingred} > #{@product}"
+
+  - product:	$(project)-CHANGES.txt
+    ingreds:	[ ../CHANGES.txt ]
+    method*: |
+	cp @ingred, @product

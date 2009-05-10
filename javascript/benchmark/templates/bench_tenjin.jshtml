@@ -1,0 +1,28 @@
+   <tbody>
+<?js
+for (var i = 0, n = list.length; i < n; i++) {
+    var item = list[i];
+ ?>
+    <tr class="#{i % 2 == 1 ? 'even' : 'odd'}">
+     <td style="text-align: center">#{i+1}</td>
+     <td>
+      <a href="/stocks/#{item.symbol}">#{item.symbol}</a>
+     </td>
+     <td>
+      <a href="#{item.url}">#{item.name}</a>
+     </td>
+     <td>
+      <strong>#{item.price}</strong>
+     </td>
+<?js if (item.change < 0.0) { ?>
+     <td class="minus">#{item.change}</td>
+     <td class="minus">#{item.ratio}</td>
+<?js } else { ?>
+     <td>#{item.change}</td>
+     <td>#{item.ratio}</td>
+<?js } ?>
+    </tr>
+<?js
+}
+ ?>
+   </tbody>

@@ -1,0 +1,100 @@
+parameters:
+
+  - home*:	  ENV['HOME']
+  - docpath:	  ../../../rbtenjin/trunk/doc
+  - basenames:	  [ users-guide, faq, examples ]
+  - erubyfiles*:  'basenames.collect{|s| s+".eruby"}'
+  - textfiles*:	  'basenames.collect{|s| s+".txt"}'
+  - htmlfiles*:	  'basenames.collect{|s| s+".html"}'
+
+recipes:
+
+  - product:	:copy
+    ingreds:	[ $(erubyfiles) ]
+
+  - product:	:doc
+    ingreds:	[ $(htmlfiles) ]
+    method*: |
+	cp '../lib/shotenjin.js', '.'
+
+  - product:	:clear
+    method*: |
+	rm_rf '*.html', '*.txt', '*.eruby', '*.js', 'data/*'
+
+  - product:	:clean
+    method*: |
+	rm_rf '*.toc.html', 'test.log', 'data/**/*.cache'
+
+  - product:	*.eruby
+    ingreds:	[ $(docpath)/$(1).eruby ]
+    method*: |
+	cp @ingred, @product
+
+  - product:	*.txt
+    ingreds:	[ $(1).eruby ]
+    method*: |
+	sys %Q`erubis -E PercentLine -c "@lang='js'" -p '\\[% %\\]' #{@ingred} > #{@product}`
+
+  - product:	*.html
+    ingreds:	[ $(1).txt ]
+    byprods:	[ $(1).toc.html ]
+    method*: |
+	sys %Q`kwaser -t html-css -T #{@ingred} > #{@byprod}`
+	sys %Q`kwaser -t html-css    #{@ingred} > #{@product}`
+
+  - product:	:retrieve
+    ingreds:	[ $(textfiles) ]
+    method*: |
+	for filename in @ingreds
+	  name = filename.sub(/\.\w+$/, '').sub(/-/, '_')
+	  dir = "data/#{name}"
+	  if test(?d, dir)
+	    rm_rf "#{dir}/*"
+	  else
+	    mkdir_p dir
+	  end
+	  sys "retrieve -Fd #{dir} #{filename}"
+	  cp "../lib/tenjin.js", dir
+	end
+	rm_rf '../test/data'
+	cp_pr 'data', '../test'
+
+  - product:	:test
+    ingreds:	[ :test_users_guide, :test_faq ]
+
+  - product:	:test_users_guide
+    ingreds:	[ test_users_guide.rb, :retrieve ]
+    byprods:	[ test.log ]
+    method*:  &test_method |
+	cp @ingred, '../test'
+	sys "ruby #{@ingred} 2>&1 | tee test.log"
+
+  - product:	:test_faq
+    ingreds:	[ test_faq.rb, :retrieve ]
+    byprods:	[ test.log ]
+    method*:  *test_method
+
+  - product:	:test_examples
+    ingreds:	[ test_examples.rb, :retrieve ]
+    byprods:	[ test.log ]
+    method*:  *test_method
+
+  - product:	test_faq.rb
+    ingreds:	[ test_users_guide.rb ]
+    method*: |
+	cp @ingred, @product
+	edit [@product] do |s|
+	  s.gsub!(/users[-_]guide/, 'faq')
+	  s.gsub!(/UsersGuide/, 'Faq')
+	  s
+	end
+
+  - product:	test_examples.rb
+    ingreds:	[ test_users_guide.rb ]
+    method*: |
+	cp @ingred, @product
+	edit [@product] do |s|
+	  s.gsub!(/users[-_]guide/, 'examples')
+	  s.gsub!(/UsersGuide/, 'Examples')
+	  s
+	end

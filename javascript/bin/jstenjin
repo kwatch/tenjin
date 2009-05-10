@@ -1,0 +1,402 @@
+#!/usr/bin/env js -s
+//#!/usr/bin/env java -jar /usr/local/java/js.jar -strict
+
+/*
+ * $Copyright$
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining
+ * a copy of this software and associated documentation files (the
+ * "Software"), to deal in the Software without restriction, including
+ * without limitation the rights to use, copy, modify, merge, publish,
+ * distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to
+ * the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be
+ * included in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+ * LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+ * OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+ * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
+// $Rev$
+// $Release: 0.0.0 $
+
+
+var TENJIN_JS = 'tenjin.js';         // ex. '/usr/local/lib/tenjin.js'
+
+
+/////////////////////////////////
+
+
+/// load tenjin.js
+if (typeof(java) == 'object' && typeof(Packages) == 'function') // Rhino
+	TENJIN_JS = String(java.lang.System.getenv('TENJIN_JS') || TENJIN_JS);
+else if (typeof(environment) == 'object')                       // SpiderMonkey
+	TENJIN_JS = environment.TENJIN_JS || TENJIN_JS;
+load(TENJIN_JS);
+
+/// main class
+Tenjin.Main = function() {};
+
+Tenjin.Main.main = function(args) {
+	try {
+		(new Tenjin.Main(args)).execute(args);
+		return 0;
+	}
+	catch (ex) {
+		print("*** Error:");
+		if (typeof(ex) == 'string') {
+			print(ex);
+		}
+		else {
+			var s = Tenjin.Main.prototype.exceptionToString(ex);
+			print(s);
+		}
+		return -1;
+	}
+};
+
+Tenjin.Main.prototype.exceptionToString = function(ex) {
+	//for (var p in ex) { print('*** debug: exceptionToString(): "'+ p+'": '+ex[p]) }
+	var filename = ex.fileName || null;;
+	var linenum = ex.lineNumber || null;
+	var message = ex.message || null;
+	if (filename && filename.length >= TENJIN_JS.length &&
+		filename.substring(0, TENJIN_JS.length) == TENJIN_JS) {
+		var m = message.match(/^([-\/.\w]+): (.*)/);
+		if (m) {
+			filename = m[1];
+			message = m[2];
+		}
+		else {
+			var rest = filename.substring(TENJIN_JS.length);
+			var m = TENJIN_JS.match(/[-.\w]+$/);
+			filename = m[0] + rest;
+		}
+	}
+	var buf = [];
+	buf.push(filename, ':', linenum, ': ', ex.name, ': ', message);
+	return buf.join('');
+};
+
+Tenjin.Main.prototype.execute = function(args) {
+	var tuple = this.parseArgs(args);
+	var opts       = tuple[0];
+	var properties = tuple[1];
+	var filenames  = tuple[2];
+
+	if (opts['D']) {
+		print("** opts = " + Tenjin.inspect(opts));
+		print("** properties = " + Tenjin.inspect(properties));
+		print("** filenames = " + Tenjin.inspect(filenames));
+		return 0;
+	}
+
+	/// help, version
+	if (opts['h'] || properties['help']) {
+		print(this.chomp(this.usage()));
+		return 0;
+	}
+	if (opts['v'] || properties['version']) {
+		print(this.version);
+		return 0;
+	}
+
+	/// action
+	var action = opts['a'] || null;
+	var actions = ['render', 'convert', 'retrieve', 'statements', 'syntax', 'preprocess'];
+	if (action) {
+		var i, n;
+		for (i = 0, n = actions.length; i < n; i++) {
+			if (action == actions[i])
+				break;
+		}
+		if (i == 0) { // not found
+			throw "-a " + action + ": unknown action.";
+		}
+	}
+	else {
+		action = opts['s'] && 'convert'
+			|| opts['X'] && 'statements'
+			|| opts['S'] && 'retrieve'
+			|| opts['z'] && 'syntax'
+			|| opts['d'] && 'dump'
+			|| opts['P'] && 'preprocess'
+			|| 'render';
+	}
+
+	/// libraries
+	if (opts['r']) {
+		var libs = opts['r'].split(',');
+		for (var i = 0, n = libs.length; i < n; i++) {
+			var name = libs[i];
+			load(name.match(/\.\w+$/) ? name : name + '.js');
+		}
+	}
+
+	/// context
+	var context = {};
+	if (opts['f']) {
+		var s = Tenjin.readFile(opts['f']);
+		var obj;
+		eval("obj = \n" + s);
+		for (var p in obj) { context[p] = obj[p]; }
+	}
+	if (opts['c']) {
+		var s = opts['c'];
+		s = s.match(/^\{.*\}$/) ? s : '{' + s + '};'
+		var obj;
+		eval("obj = " + s + ";");
+		for (var p in obj) { context[p] = obj[p]; }
+	}
+
+	/// set atline option
+	/// see http://developer.mozilla.org/en/docs/Introduction_to_the_JavaScript_shell#options.28.5Boption_....5D.29
+	if (typeof(options) == 'function') {
+		options('atline');
+		if (!opts['s'] && !opts['S'] && typeof(properties.atline) == 'undefined') {
+			properties.atline = 1;
+		}
+	}
+	if (typeof(properties.atline) == 'string') {
+		properties.atline = parseInt(properties.atline);
+	}
+
+	/// set properties for Template
+	if (opts['b']) {
+		properties['preamble'] = false;
+		properties['postamble'] = false;
+	}
+
+	/// set properties for Engine
+	if (typeof(properties['cache']) != 'undefined') {
+		properties['cache'] = false;
+	}
+	if (properties['path']) {
+		properties['path'] = properties['path'].split(/,/);
+	}
+	if (properties['templateclass']) {
+		classname = properties['templateclass'];
+		klass = eval(classname);
+		if (! klass) {
+			throw classname + ": class not found.";
+		}
+		properties['templateclass'] = klass;
+	}
+	if (action == 'preprocess' || opts['P']) {
+		properties['templateclass'] = Tenjin.Preprocessor;
+		properties['preprocess'] = false;
+	}
+	else if (action == 'retrieve') {
+		properties['templateclass'] = Tenjin.NoTextTemplate;
+	}
+	else if (action == 'statements') {
+		properties['templateclass'] = Tenjin.NoTextTemplate;
+		var proto = Tenjin.NoTextTemplate.prototype;
+		proto.parseExpressions = proto.addText;
+	}
+
+	/// create engine
+	var engine = new Tenjin.Engine(properties);
+
+	/// main loop
+	for (var i = 0, n = filenames.length; i < n; i++) {
+		var template_name = filenames[i];
+		var output;
+		if (action == 'convert' || action == 'retrieve' || action == 'statements') {
+			var template = engine.getTemplate(template_name, context);
+			output = template.script;
+		}
+		else if (action == 'syntax') {
+			var template = engine.getTemplate(template_name, context);
+			var filename = engine.templateFilename(template_name);
+			var filepath = engine.findTemplateFile(filename);
+			output = this.checkSyntax(filepath, template.script, opts, properties.atline);
+		}
+		else if (action == 'render' || action == 'preprocess') {
+			output = engine.render(template_name, context);
+		}
+		else {
+			throw "unreachable";
+		}
+		if (output) {
+			output = this.manipulateOutput(output, opts);
+			print(this.chomp(output));
+		}
+	}
+
+	return 0
+};
+
+Tenjin.Main.prototype.checkSyntax = function(filename, script, opts, atline) {
+	try {
+		eval("function(_context) {" + script + "}");
+		return opts['q'] ? '' : '[ok] ' + filename;
+	}
+	catch (ex) {
+		var s = '[NG] ' + filename + "\n";
+		var lines = script.split(/\n/);
+		//var line = lines[ex.lineNumber - (atline ? atline : 0)];
+		if (! atline) atline = 0;
+		var line = lines[ex.lineNumber - (atline ? 0 : 1)];
+		var msg = ex.message;
+		if (msg == 'missing } after function body'
+			&& lines.length == ex.lineNumber + atline) {
+			msg = 'missing } in compound statement';
+			line = null;
+		}
+		s += filename + ':' + ex.lineNumber + ': ' + ex.name + ': ' + msg;
+		if (line) s += "\n" + filename + ':' + ex.lineNumber + ': ' + line;
+		return s;
+	}
+}
+
+Tenjin.Main.prototype.manipulateOutput = function(output, opts) {
+	var flag_linenum = opts['N'];    // add line numbers
+	var flag_compact = opts['C'];    // remove empty lines
+	var flag_unique  = opts['U'];    // compress empty lines to a line
+	if (flag_linenum) {
+		var n = 0;
+		output = output.replace(/^/mg, function() {
+			var s = "     " + ++n + ":  ";
+			return s.substring(s.length - 8);  // sprintf("%5d:  ", ++n)
+			//var space = "     ".substring(String(++n).length);
+			//return space + n + ":  ";  // sprintf("%5d:  ", ++n)
+		});
+		output = output.replace(/\n *\d+:  $/, '\n');
+		if (flag_compact)  output = output.replace(/^ *\d+:\s+?\n/mg, '');
+		if (flag_unique)   output = output.replace(/(^ *\d+:\s+?\n)+/mg, "\n");
+	}
+	else {
+		if (flag_compact)  output = output.replace(/^\s*?\n/mg, '');
+		if (flag_unique)   output = output.replace(/(^\s*?\n)+/mg, "\n");
+	}
+	return output;
+};
+
+Tenjin.Main.prototype.chomp = function(str) {
+	return str.replace(/\r?\n$/, '');
+	//len = str.length;
+	//var n = 0;
+	//if (len >= 1 && str.charAt(len-1) == "\n")
+	//	n = len >= 2 && str.charAt(len-2) == "\r" ? 2 : 1;
+	//return n ? str.substring(0, len - n) : str;
+}
+
+Tenjin.Main.prototype.parseArgs = function(args) {
+	var opts = {};
+	var properties = {};
+	var i, n;
+	for (i = 0, n = args.length; i < n && args[i].charAt(0) == '-'; i++) {
+		var argstr = args[i];
+		var m;
+		if (argstr == '-') {
+			break;
+		}
+		else if ((m = argstr.match(/^--([-\w]+)(=(.*))?/)) != null) {
+			var name = m[1];
+			var value = m[2] ? m[3] : true;
+			properties[name] = value;
+		}
+		else if ((m = argstr.match(/^-(.*)/)) != null) {
+			var optstr = m[1];
+			while (optstr) {
+				var optch = optstr.charAt(0);
+				if ("hvDsSNXUCbzqTP".indexOf(optch) >= 0) {
+					opts[optch] = true;
+				}
+				else if ("cfra".indexOf(optch) >= 0) {
+					opts[optch] = optstr.substring(1);
+					if (opts[optch]) {
+						optstr = '';
+					} else {
+						if (++i >= n) {
+							throw "-"+optch+": argument required.";
+						}
+						opts[optch] = args[i];
+					}
+				}
+				else {
+					throw "-"+optch+": unknown option.";
+				}
+				optstr = optstr.substring(1);
+			}//while
+		}//if
+	}//for
+	var filenames = args.slice(i);
+	return [opts, properties, filenames];
+};
+
+Tenjin.Main.prototype.usage = function(command) {
+	var s = "\
+%(command)s - fast and full-featured template engine\n\
+Usage: %(command)s [..options..] [file1 [file2...]]\n\
+  -h, --help          :  help\n\
+  -v, --version       :  version\n\
+  -a action           :  action (default 'render')\n\
+     -a render        :  render template\n\
+     -a convert       :  convert template into script\n\
+     -a retrieve      :  retrieve statements and expressions\n\
+     -a statements    :  retrieve only statements\n\
+     -a syntax        :  syntax check of template\n\
+#    -a dump          :  show scripts in cache file\n\
+     -a preprocess    :  show preprocessed template\n\
+  -s                  :  alias of '-a convert'\n\
+  -S                  :  alias of '-a retrieve'\n\
+  -X                  :  alias of '-a statements'\n\
+  -z                  :  alias of '-a syntax'\n\
+# -d                  :  alias of '-a dump'\n\
+  -P                  :  alias of '-a preprocess'\n\
+  -N                  :  add line number\n\
+  -C                  :  compact: remove empty lines\n\
+  -U                  :  uniq: compress empty lines into a line\n\
+  -b                  :  remove \"var _buf=[];\" and \"_buf.join('')\"\n\
+  -q                  :  quet mode (for '-a syntax')\n\
+# -w                  :  set warning level to 2\n\
+  -c string           :  context data string (json)\n\
+  -f file             :  context data file (*.json)\n\
+# -T                  :  unexpand tab chars in datafile\n\
+  -r mod1,mod2,..     :  import modules\n\
+# -i N, --indent=N    :  indent width (default 4)\n\
+# -k encoding         :  encoding name, without cnverting into unicode\n\
+# --indent=N          :  indent width (default 4)\n\
+# --encoding=encoding :  encoding name, with converting into unicode\n\
+  --escapefunc=name   :  'escape' function name\n\
+# --tostrfunc=name    :  'to_str' function name\n\
+  --preamble=text     :  preamble which is insreted into javascript\n\
+  --postamble=text    :  postamble which is insreted into javascript\n\
+# --smarttrim         :  trim \"\\n#{expr}\\n\" into \"\\n#{expr}\".\n\
+  --prefix=str        :  prefix string for template shortname\n\
+  --postfix=str       :  postfix string for template shortname\n\
+  --layout=filename   :  layout template name\n\
+  --path=dir1,dir2,.. :  template lookup path\n\
+  --preprocess        :  activate preprocessing\n\
+  --templateclass=name:  template class (default: Tenjin.Template)\n\
+Examples:\n\
+ ex1. render template\n\
+   $ %(command)s file.jshtml\n\
+ ex2. convert template into javascript script\n\
+   $ %(command)s -a convert file.jshtml\n\
+   $ %(command)s -a retrieve -UN file.jshtml   # for debug\n\
+ ex3. render with context data file\n\
+   $ %(command)s -f datafile.json file.jshtml\n\
+ ex4. render with context data string\n\
+   $ %(command)s -c '{title:\"tenjin example\", items:[1,2,3]}' file.jshtml # json\n\
+ ex5. syntax check\n\
+   $ %(command)s -a syntax *.jshtml         # or '-z'\n\
+";
+	s = s.replace(/%\(command\)s/g, command || 'jstenjin');
+	s = s.replace(/^#.*\n/mg, '');
+	return s;
+};
+
+Tenjin.Main.prototype.version = '$Release$';
+
+/// invoke command
+Tenjin.Main.main(arguments);

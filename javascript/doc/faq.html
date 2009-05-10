@@ -1,0 +1,720 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html">
+  <title>jsTenjin FAQ</title>
+  <meta name="generator" content="kwaser">
+  <meta http-equiv="Content-Style-Type" content="text/css">
+  <link rel="stylesheet" href="docstyle.css" type="text/css">
+ </head>
+ <body>
+
+  <blockquote>
+   <div class="mainbody">
+
+    <div align="left"><h1>jsTenjin FAQ</h1></div>
+    <div align="left">
+      last update: $Date$<br>
+    </div>
+
+<p>Release:	$Release$
+</p>
+<p>Table of contents:
+<ul>
+  <li><a href="#faq-basic">Basic</a>
+  <ul>
+    <li><a href="#faq-syntax-error">I got an SyntaxError exception.</a>
+    </li>
+    <li><a href="#faq-delete-newline">'#{_content}' includes extra newline at end. Can I delete it?</a>
+    </li>
+    <li><a href="#faq-change-funcname">Can I change 'escapeXml()' function name?</a>
+    </li>
+    <li><a href="#faq-change-bufname">Can I change '_buf' variable name?</a>
+    </li>
+    <li><a href="#faq-default-value">Is it able to specify default value if a variable is not set?</a>
+    </li>
+  </ul>
+  </li>
+  <li><a href="#faq-template">Template</a>
+  <ul>
+    <li><a href="#faq-template-args">Is it possible to specify variables passed to template?</a>
+    </li>
+    <li><a href="#faq-exprpat">Is it able to change embedded expression pattern?</a>
+    </li>
+    <li><a href="#faq-m17n">Does jsTenjin support M17N?</a>
+    </li>
+  </ul>
+  </li>
+  <li><a href="#faq-layout">Layout Template</a>
+  <ul>
+    <li><a href="#faq-change-layout-template">Can I change layout template name in a template file?</a>
+    </li>
+    <li><a href="#faq-nested-layout-template">Can I nest layout templates for any depth?</a>
+    </li>
+    <li><a href="#faq-diable-layout">Can I disable default layout template for a certain template?</a>
+    </li>
+    <li><a href="#faq-template-inheritance">Is Django-like "Template Inheritance" supported?</a>
+    </li>
+  </ul>
+  </li>
+  <li><a href="#faq-performance">Performance</a>
+  <ul>
+    <li><a href="#How fast is jsTenjin compared with other solutions?">How fast is jsTenjin compared with other solutions?</a>
+    </li>
+    <li><a href="#faq-why-so-fast">Why jsTenjin is so fast?</a>
+    </li>
+  </ul>
+  </li>
+</ul>
+</p>
+<a name="faq-basic"></a>
+<h2 class="section1">Basic</h2>
+<a name="faq-syntax-error"></a>
+<h3 class="section2">I got an SyntaxError exception.</h3>
+<p>Command-line option '-z' checks syntax of template file.
+You should check template by it.
+</p>
+<a name="ex1.jshtml"></a>
+<div class="program_caption">
+File 'ex1.jshtml':</div>
+<pre class="program">&lt;ul&gt;
+&lt;?js for (var i = 0, i &lt;= 10, i++) { ?&gt;
+  &lt;li&gt;#{i}&lt;/li&gt;
+&lt;?js } ?&gt;
+&lt;/ul&gt;
+</pre>
+<a name="ex1_chksyntax.result"></a>
+<div class="terminal_caption">
+Result:</div>
+<pre class="terminal">$ jstenjin <strong>-z</strong> ex1.jshtml
+[NG] ex1.jshtml
+ex1.jshtml:2: SyntaxError: missing ; after for-loop initializer
+ex1.jshtml:2:  for (var i = 0, i &lt;= 10, i++) {
+</pre>
+<br>
+
+
+<a name="faq-delete-newline"></a>
+<h3 class="section2">'#{_content}' includes extra newline at end. Can I delete it?</h3>
+<p>Yes. You can use '<code>&lt;?js echo(_content); ?&gt;</code>' or '<code>&lt;?js _buf.push(_content); ?&gt;</code>' instead of '<code>#{_conent}</code>'.
+</p>
+<a name="ex2-layout.jshtml"></a>
+<div class="program_caption">
+File 'ex2-layout.jshtml':</div>
+<pre class="program">&lt;!-- --&gt;
+<strong>#{_content}</strong>
+&lt;!-- --&gt;
+
+&lt;!-- --&gt;
+<strong>&lt;?js echo(_content); ?&gt;</strong>
+&lt;!-- --&gt;
+
+&lt;!-- --&gt;
+<strong>&lt;?js _buf.push(_content); ?&gt;</strong>
+&lt;!-- --&gt;
+</pre>
+<a name="ex2-content.jshtml"></a>
+<div class="program_caption">
+File 'ex2-content.jshtml':</div>
+<pre class="program">foo
+bar
+baz
+</pre>
+<a name="ex2_removenl.result"></a>
+<div class="terminal_caption">
+Result:</div>
+<pre class="terminal">$ jstenjin --layout=ex2-layout.jshtml ex2-content.jshtml
+&lt;!-- --&gt;
+foo
+bar
+baz
+
+&lt;!-- --&gt;
+
+&lt;!-- --&gt;
+foo
+bar
+baz
+&lt;!-- --&gt;
+
+&lt;!-- --&gt;
+foo
+bar
+baz
+&lt;!-- --&gt;
+</pre>
+<br>
+
+
+<a name="faq-change-funcname"></a>
+<h3 class="section2">Can I change 'escapeXml()' function name?</h3>
+<p>Yes. You can change them by setting <code>escapefunc</code> option for Tenjin.Template() or Tenjin.Engine().
+</p>
+<a name="ex3.js"></a>
+<div class="program_caption">
+File 'ex3.js':</div>
+<pre class="program">load('tenjin.js');
+var engine = new Tenjin.Engine(<strong>{escapefunc:'.escapeHTML'}</strong>);
+var template = engine.getTemplate('ex3.jshtml');
+print(template.script);
+</pre>
+<a name="ex3.jshtml"></a>
+<div class="program_caption">
+File 'ex3.jshtml':</div>
+<pre class="program">Hello ${name}!
+</pre>
+<a name="ex3_escapefunc1.result"></a>
+<div class="program_caption">
+Result:</div>
+<pre class="program">$ js ex3.js
+var _buf = [];  _buf.push('Hello ', <strong>(name).escapeHTML()</strong>, '!\n');
+_buf.join('')
+
+</pre>
+<p>Command-line option '--escapefunc=<em>name</em>' is equivarent to the above.
+</p>
+<a name="ex3_escapefunc2.result"></a>
+<div class="program_caption">
+Result:</div>
+<pre class="program">$ jstenjin -s <strong>--escapefunc=.escapeHTML</strong> ex3.jshtml
+var _buf = [];  _buf.push('Hello ', <strong>(name).escapeHTML()</strong>, '!\n');
+_buf.join('')
+</pre>
+<br>
+
+
+<a name="faq-change-bufname"></a>
+<h3 class="section2">Can I change '_buf' variable name?</h3>
+<p>No. Variable name '_buf' should not and will never be changed.
+</p>
+<br>
+
+
+<a name="faq-default-value"></a>
+<h3 class="section2">Is it able to specify default value if a variable is not set?</h3>
+<p>Yes, by <code>_context['<em>varname</em>']</code>.
+It is able to check whether value is set or not by inspecting special variable '<code>_context</code>' which represents context values.
+</p>
+<a name="ex4.jshtml"></a>
+<div class="program_caption">
+File 'ex4.jshtml':</div>
+<pre class="program">&lt;?js <strong>var user = typeof(_context.user) == 'undefined' ? 'Guest' : _context.user;</strong> ?&gt;
+Hello ${<strong>user</strong>}!
+</pre>
+<div class="terminal_caption">
+Result:</div>
+<pre class="terminal">$ jstenjin -c 'user:"Tenjin"' ex4.jshtml
+Hello Tenjin!
+$ jstenjin ex4.jshtml
+Hello Guest!
+</pre>
+<br>
+
+
+<br>
+
+
+<a name="faq-template"></a>
+<h2 class="section1">Template</h2>
+<a name="faq-template-args"></a>
+<h3 class="section2">Is it possible to specify variables passed to template?</h3>
+<p>Yes. You can specify template arguments by '<code>&lt;?js //@ARGS arg1, arg2, arg3 ?&gt;</code>'.
+</p>
+<a name="ex5.jshtml"></a>
+<div class="program_caption">
+File 'ex5-layout.jshtml'</div>
+<pre class="program">&lt;?xml version="1.0 ?&gt;
+<strong>&lt;?js //@ARGS x, y ?&gt;</strong>
+&lt;p&gt;
+  x = #{x}
+  y = #{y}
+  z = #{z}
+&lt;/p&gt;
+</pre>
+<p>Template arguments line is converted into local variable assignment statements.
+</p>
+<a name="ex5_template_args.source"></a>
+<div class="terminal_caption">
+Source code</div>
+<pre class="terminal">$ jstenjin -s ex5.jshtml
+var _buf = [];  _buf.push('&lt;?xml version="1.0 ?&gt;\n');
+ var x = _context['x']; var y = _context['y'];
+ _buf.push('&lt;p&gt;\n\
+  x = ', x, '\n\
+  y = ', y, '\n\
+  z = ', z, '\n\
+&lt;/p&gt;\n');
+_buf.join('')
+</pre>
+<p>Undeclared arguments are not available even when they are passed via context object.
+</p>
+<a name="ex5_template_args.result"></a>
+<div class="terminal_caption">
+Result:</div>
+<pre class="terminal">$ jstenjin -c 'x:10, y:20, z:30' ex5.jshtml
+*** Error:
+ex5.jshtml:3: ReferenceError: "z" is not defined.
+</pre>
+<br>
+
+
+<a name="faq-exprpat"></a>
+<h3 class="section2">Is it able to change embedded expression pattern?</h3>
+<p>Yes, you can create subclass of Template class and override embedded expression pattern.
+</p>
+<a name="ex6-expr-pattern.jshtml"></a>
+<div class="program_caption">
+ex6-expr-pattern.jshtml:</div>
+<pre class="program">&lt;p&gt;HTML escaped: ${value}&lt;/p&gt;
+&lt;p&gt;not escaped:  #{value}&lt;/p&gt;
+&lt;p&gt;not escaped:  <strong>&lt;%= value %&gt;</strong>&lt;/p&gt;
+</pre>
+<a name="ex6-expr-pattern.js"></a>
+<div class="program_caption">
+ex6-expr-pattern.js:</div>
+<pre class="program">load('tenjin.js');
+
+var MyTemplate = function(properties) {
+    Tenjin.Template.call(this, properties);
+}
+
+MyTemplate.prototype = new Tenjin.Template();
+
+// embedded expression pattern
+<strong>MyTemplate.prototype.expressionPattern = /([$#])\{(.*?)\}|&lt;%=((.|\n)*?)%&gt;/g;</strong>
+
+// return expression string and flag whether escape or not from matched object
+<strong>MyTemplate.prototype.getExpressionAndEscapeflag = function(matched) {</strong>
+    var expr, escapeflag;
+    if (matched[1]) {
+        expr = matched[2];
+	escapeflag = matched[1] == '$';
+    }
+    else {
+        expr = matched[3];
+	escapeflag = false;
+    }
+    return [expr, escapeflag];
+<strong>};</strong>
+
+// test program
+var context = { value: 'AAA&amp;BBB' };
+var engine = new Tenjin.Engine({<strong>templateclass: MyTemplate</strong>});
+var output = engine.render('ex6-expr-pattern.jshtml', context);
+print(output);
+</pre>
+<a name="ex6_expr_pattern.result"></a>
+<div class="terminal_caption">
+Result:</div>
+<pre class="terminal">$ js ex6-expr-pattern.js
+&lt;p&gt;HTML escaped: AAA&amp;amp;BBB&lt;/p&gt;
+&lt;p&gt;not escaped:  AAA&amp;BBB&lt;/p&gt;
+&lt;p&gt;not escaped:  AAA&amp;BBB&lt;/p&gt;
+
+</pre>
+<br>
+
+
+<a name="faq-m17n"></a>
+<h3 class="section2">Does jsTenjin support M17N?</h3>
+<p>No, but it is easy to support M17N.
+The point is:
+</p>
+<ul type="disc">
+<li>Change cache filename according to language.
+   For example, create cache file 'file.jshtml.en.cache', 'file.jshtml.fr.cache', 'file.jshtml.it.cache', and so on from template file 'file.jshtml'.
+</li>
+<li>Create Engine object for each language.
+</li>
+<li>(optinal) Use preprocessing for performance reason.
+</li>
+</ul>
+<p>The following is an example to generate M17N pages from a template file.
+</p>
+<a name="ex7-m18n.jshtml"></a>
+<div class="program_caption">
+ex7-m18n.jshtml:</div>
+<pre class="program">&lt;div&gt;
+&lt;?JS // '_()' is a translation method ?&gt;
+ &lt;p&gt;<strong>${{_('Hello')}}</strong> ${username}!&lt;/p&gt;
+&lt;/div&gt;
+</pre>
+<a name="ex7-m18n.js"></a>
+<div class="program_caption">
+ex7-m18n.js:</div>
+<pre class="program">load('tenjin.js');
+
+///
+/// message catalog to translate message
+///
+var MESSAGE_CATALOG = {
+  en: { 'Hello'    : 'Hello',
+        'Good bye' : 'Good bye' },
+  fr: { 'Hello'    : 'Bonjour',
+        'Good bye' : 'Au revoir' }
+};
+
+function translation_func(lang) {
+    var f = function(message_key) {
+        var dict = MESSAGE_CATALOG[lang] || {};
+	return dict[message_key] || message_key;
+    };
+    return f;
+}
+
+
+///
+/// engine class which supports M17N
+///
+var M17NEngine = function(properties) {
+    Tenjin.Engine.call(this, properties);
+    if (properties.lang)
+        this.lang = properties.lang;
+};
+
+M17NEngine.prototype = new Tenjin.Engine();
+
+M17NEngine.prototype.lang = 'en';       // default language
+
+/// change cache flename to 'file.html.lang.cache'
+<strong>M17NEngine.prototype.cachename = function(filename) {</strong>
+    <strong>return filename+'.'+this.lang+'.cache';</strong>
+<strong>};</strong>
+
+/// set translation function to context object
+M17NEngine.prototype.hookContext = function(context) {
+    context = Tenjin.Engine.prototype.hookContext(context);
+    context._ = translation_func(this.lang);  // set _() to context
+    return context;
+};
+
+
+///
+/// test program
+///
+var template_name = 'ex7-m18n.jshtml';
+var context = { username: 'World' };
+
+/// engine for english
+var engine = new <strong>M17NEngine</strong>({preprocess:true, cache:true});
+var output = engine.render(template_name, context);   // same template
+print("--- lang:", engine.lang, "---");
+print(output);
+
+/// engine for French
+var engine = new <strong>M17NEngine</strong>({preprocess:true, cache:true, <strong>lang:'fr'</strong>});
+var output = engine.render(template_name, context);   // same template
+print("--- lang:", engine.lang, "---");
+print(output);
+</pre>
+<a name="ex7_m18n.result"></a>
+<div class="terminal_caption">
+Result:</div>
+<pre class="terminal">$ js ex7-m18n.js
+--- lang: en ---
+&lt;div&gt;
+ &lt;p&gt;<strong>Hello</strong> World!&lt;/p&gt;
+&lt;/div&gt;
+
+--- lang: fr ---
+&lt;div&gt;
+ &lt;p&gt;<strong>Bonjour</strong> World!&lt;/p&gt;
+&lt;/div&gt;
+
+</pre>
+<p>jsTenjin doesn't provide M17N feature directly because requirements for M17N are
+different for each applications or frameworks.
+Some applications or frameworks adapt GetText library and others use its original M17N library.
+What jsTenjin should do is not to provide M17N feature but to show an example to support M17N.
+</p>
+<br>
+
+
+<br>
+
+
+<a name="faq-layout"></a>
+<h2 class="section1">Layout Template</h2>
+<a name="faq-change-layout-template"></a>
+<h3 class="section2">Can I change layout template name in a template file?</h3>
+<p>Yes. If you set <code>_context._layout</code>,
+its value is regarded as layout template name.
+</p>
+<ul type="disc">
+<li>You can specify template file name (ex. 'user_list.jshtml') or template short name (ex. ':list').
+</li>
+<li>If you set true to '_context._layout', default layout template name is used instead.
+</li>
+<li>It is able to N-th level nested template.
+</li>
+</ul>
+<p>See the next section for details.
+</p>
+<br>
+
+
+<a name="faq-nested-layout-template"></a>
+<h3 class="section2">Can I nest layout templates for any depth?</h3>
+<p>Yes. If you set <code>_context._layout</code>,
+you can nest layout templates in any depth.
+</p>
+<p>The following example shows that:
+</p>
+<ul type="disc">
+<li>'ex7-content.jshtml' uses 'ex7-mylayout.jshtml' as layout template.
+</li>
+<li>'ex7-mylayout.jshtml' uses 'ex7-baselayout.jshtml' as layout template.
+</li>
+</ul>
+<a name="ex8-content.jshtml"></a>
+<div class="program_caption">
+File 'ex8-content.jshtml':</div>
+<pre class="program">&lt;?js _context.title = 'Changing Layout Template Test'; ?&gt;
+&lt;?js /// specify layout template name ?&gt;
+<strong>&lt;?js _context._layout = 'ex8-mylayout.jshtml'; ?&gt;</strong>
+foo
+bar
+baz
+</pre>
+<a name="ex8-mylayout.jshtml"></a>
+<div class="program_caption">
+File 'ex8-mylayout.jshtml':</div>
+<pre class="program">&lt;?js /// use default layout template name ?&gt;
+<strong>&lt;?js _context._layout = true; ?&gt;</strong>
+&lt;div id="content"&gt;
+<strong>&lt;?js echo(_content); ?&gt;</strong>
+&lt;/div&gt;
+</pre>
+<a name="ex8-baselayout.jshtml"></a>
+<div class="program_caption">
+File 'ex8-baselayout.jshtml':</div>
+<pre class="program">&lt;html&gt;
+  &lt;body&gt;
+&lt;?js if (typeof(_context['title']) != 'undefined') { ?&gt;
+    &lt;h1&gt;${title}&lt;/h1&gt;
+&lt;?js } ?&gt;
+<strong>&lt;?js echo(_content); ?&gt;</strong>
+  &lt;/body&gt;
+&lt;/html&gt;
+</pre>
+<a name="ex8_changelayout.result"></a>
+<div class="terminal_caption">
+Result:</div>
+<pre class="terminal">$ jstenjin --layout=ex8-baselayout.jshtml ex8-content.jshtml
+&lt;html&gt;
+  &lt;body&gt;
+    &lt;h1&gt;Changing Layout Template Test&lt;/h1&gt;
+&lt;div id="content"&gt;
+foo
+bar
+baz
+&lt;/div&gt;
+  &lt;/body&gt;
+&lt;/html&gt;
+</pre>
+<br>
+
+
+<a name="faq-diable-layout"></a>
+<h3 class="section2">Can I disable default layout template for a certain template?</h3>
+<p>Yes. If you set false to _context._layout, default layout template will not be applied.
+</p>
+<br>
+
+
+<a name="faq-template-inheritance"></a>
+<h3 class="section2">Is Django-like "Template Inheritance" supported?</h3>
+<p>No, but you can emulate it partially by combination of template capturing and '_context._layout'.
+</p>
+<a name="ex9-baselayout.jshtml"></a>
+<div class="program_caption">
+File 'ex9-baselayout.jshtml':</div>
+<pre class="program">&lt;html&gt;
+ &lt;body&gt;
+
+&lt;?js /// if variable 'header_part' is defined then print it, ?&gt;
+&lt;?js /// else print default header part. ?&gt;
+  &lt;div id="header"&gt;
+<strong>&lt;?js startPlaceholder('header_part'); ?&gt;</strong>
+   &lt;img src="img/logo.png" alt="logo" ?&gt;
+<strong>&lt;?js stopPlaceholder(); ?&gt;</strong>
+  &lt;/div&gt;
+
+&lt;?js /// main content part ?&gt;
+  &lt;div id="content"&gt;
+&lt;?js echo(content_part); ?&gt;
+  &lt;/div&gt;
+
+&lt;?js /// if variable 'footer_part' is defined then print it, ?&gt;
+&lt;?js /// else print default footer part. ?&gt;
+  &lt;div id="footer"&gt;
+<strong>&lt;?js startPlaceholder('footer_part'); ?&gt;</strong>
+   &lt;hr /&gt;
+   &lt;em&gt;webmaster@example.com&lt;/em&gt;
+<strong>&lt;?js stopPlaceholder(); ?&gt;</strong>
+  &lt;/div&gt;
+  
+ &lt;/body&gt;
+&lt;/html&gt;
+</pre>
+<a name="ex9-customlayout.jshtml"></a>
+<div class="program_caption">
+File 'ex9-customlayout.jshtml':</div>
+<pre class="program">&lt;?js /// '_context._layout' is equivarent to '{% extends "foobar.html" %}' ?&gt;
+&lt;?js /// in Django template engine. ?&gt;
+<strong>&lt;?js _context._layout = 'ex9-baselayout.jshtml'; ?&gt;</strong>
+
+&lt;?js /// you can override header or footer by capturing. ?&gt;
+<strong>&lt;?js startCapture('footer_part'); ?&gt;</strong>
+&lt;address style="text-align:right"&gt;
+  copyright&amp;copy; 2007 kuwata-lab all rights reserved&lt;br /&gt;
+  &lt;a href="webmaster&amp;#64;kuwata-lab.com"&gt;webmaster&amp;#64;kuwata-lab.com&lt;/a&gt;
+&lt;/address&gt;
+<strong>&lt;?js stopCapture(); ?&gt;</strong>
+</pre>
+<a name="ex9-content.jshtml"></a>
+<div class="program_caption">
+File 'ex9-content.jshtml':</div>
+<pre class="program">&lt;?js /// '_context._layout' variable is equivarent to '{% extends "foobar.html" %}' ?&gt;
+&lt;?js /// in Django template engine. ?&gt;
+<strong>&lt;?js _context._layout = 'ex9-customlayout.jshtml'; ?&gt;</strong>
+
+&lt;?js /// main content part ?&gt;
+<strong>&lt;?js startCapture('content_part'); ?&gt;</strong>
+&lt;ul&gt;
+&lt;?js for (var i = 0, n = items.length; i &lt; n; i++) { ?&gt;
+  &lt;li&gt;${items[i]}&lt;/li&gt;
+&lt;?js } ?&gt;
+&lt;/ul&gt;
+<strong>&lt;?js stopCapture(); ?&gt;</strong>
+</pre>
+<p>'startPlaceholder()' and 'stopPlaceholder()' are pre-defined helper macros.
+For example,
+</p>
+<pre class="program">&lt;?js <strong>startPlaceholder('header_part')</strong>; ?&gt;
+   &lt;img src="img/logo.png" alt="logo" ?&gt;
+&lt;?js <strong>stopPlaceholder()</strong>; ?&gt;
+</pre>
+<p>is equivarent to the following.
+</p>
+<pre class="program">&lt;?js <strong>if (typeof(_context['header_part'])!='undefined') {</strong> ?&gt;
+&lt;?js     <strong>_buf.push(_context['header_part']);</strong> ?&gt;
+&lt;?js <strong>} else {</strong> ?&gt;
+   &lt;img src="img/logo.png" alt="logo" ?&gt;
+&lt;?js <strong>}</strong> ?&gt;
+</pre>
+<p>The following is the result. It shows that footer part in baselayout is overrided by other templates.
+</p>
+<a name="ex9_inherit.result"></a>
+<div class="terminal_caption">
+Result:</div>
+<pre class="terminal">$ jstenjin -c "items:['AAA','BBB','CCC']" ex9-content.jshtml
+&lt;html&gt;
+ &lt;body&gt;
+
+  &lt;div id="header"&gt;
+   &lt;img src="img/logo.png" alt="logo" ?&gt;
+  &lt;/div&gt;
+
+  &lt;div id="content"&gt;
+&lt;ul&gt;
+  &lt;li&gt;AAA&lt;/li&gt;
+  &lt;li&gt;BBB&lt;/li&gt;
+  &lt;li&gt;CCC&lt;/li&gt;
+&lt;/ul&gt;
+  &lt;/div&gt;
+
+  &lt;div id="footer"&gt;
+&lt;address style="text-align:right"&gt;
+  copyright&amp;copy; 2007 kuwata-lab all rights reserved&lt;br /&gt;
+  &lt;a href="webmaster&amp;#64;kuwata-lab.com"&gt;webmaster&amp;#64;kuwata-lab.com&lt;/a&gt;
+&lt;/address&gt;
+  &lt;/div&gt;
+  
+ &lt;/body&gt;
+&lt;/html&gt;
+</pre>
+<br>
+
+
+<br>
+
+
+<a name="faq-performance"></a>
+<h2 class="section1">Performance</h2>
+<a name="How fast is jsTenjin compared with other solutions?"></a>
+<h3 class="section2">How fast is jsTenjin compared with other solutions?</h3>
+<p>jsTenjin contains benchmark script.
+This shows that jsTenjin works much faster than other solutions.
+</p>
+<div class="terminal_caption">
+MacOS X 10.4 Tiger, Intel CoreDuo 1.83GHz, Memory 2GB</div>
+<pre class="terminal">$ cd pltenjin-X.X.X/benchmark
+$ js -h
+JavaScript-C 1.6 pre-release 1 2006-04-04 (OSSP js 1.6.20070208)
+usage: js [-PswWxC] [-b branchlimit] [-c stackchunksize] [-v version] [-f script
+file] [-e script] [-S maxstacksize] [scriptfile] [scriptarg...]
+$ make N=10000 JS=js
+time js bench.js -n 10000
+        0.01 real         0.01 user         0.00 sys
+time js bench.js -n 10000 tenjin-cached
+       19.00 real        15.14 user         3.73 sys
+time js bench.js -n 10000 tenjin-nocache
+       29.78 real        26.74 user         2.92 sys
+time js bench.js -n 10000 tenjin-reuse
+       12.98 real        12.43 user         0.47 sys
+
+$ java -version
+java version "1.5.0_07"
+Java(TM) 2 Runtime Environment, Standard Edition (build 1.5.0_07-164)
+Java HotSpot(TM) Client VM (build 1.5.0_07-87, mixed mode, sharing)
+$ make N=10000 JS='java -server -jar js.jar'
+time java -server -jar js.jar bench.js -n 10000
+        0.69 real         0.58 user         0.06 sys
+time java -server -jar js.jar bench.js -n 10000 tenjin-cached
+       24.29 real        23.15 user         1.22 sys
+time java -server -jar js.jar bench.js -n 10000 tenjin-nocache
+       42.05 real        40.59 user         1.61 sys
+time java -server -jar js.jar bench.js -n 10000 tenjin-reuse
+       19.15 real        18.59 user         0.42 sys
+</pre>
+<p>In addition, module size of jsTenjin is small, and it is very light-weight to import it.
+This is important for CGI program.
+Other solutions may be very heavy to import the module and suitable only for apache module or FastCGI.
+</p>
+<br>
+
+
+<a name="faq-why-so-fast"></a>
+<h3 class="section2">Why jsTenjin is so fast?</h3>
+<p>Because it doesn't use template engine original language.
+</p>
+<p>Other template engines, such as Template-Toolkit(perl), Django(python), or Smarty(php),
+has their original languages.
+This is not good idea for script language because:
+</p>
+<ul type="disc">
+<li>They are slow.
+</li>
+<li>Implementation will be complex.
+</li>
+<li>Learning cost is high.
+</li>
+</ul>
+<p>In addition, jsTenjin is faster than Jakarta Velocity which is a very popular template engine in Java.
+(It means that dynamic Java is slower than script languages.)
+</p>
+<p>Template engine should use their host language directly unless there are some kind of reasons.
+</p>
+<br>
+
+
+<br>
+
+
+
+   </div>
+  </blockquote>
+
+ </body>
+</html>

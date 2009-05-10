@@ -1,0 +1,71 @@
+#properties:
+#  - release:	'0.0.1'
+#  - project:	jstenjin
+
+parameters:
+#  - copyright:	Copyright(c) 2007 kuwata-lab.com all rights reserved
+  - builddir : $(project)-$(release)
+  - textfiles: [ README.txt, MIT-LICENSE, CHANGES.txt ]
+  - docfiles:  [ doc/users-guide.html, doc/faq.html, doc/examples.html, doc/docstyle.css ]
+  - testfiles: [ test/test_*.rb, test/assert*.rb, test/data/**/* ]
+  - benchfiles: [ benchmark/Makefile, benchmark/bench.js, benchmark/bench_context.json,
+                  benchmark/templates/* ]
+
+recipes:
+
+  - product:	:all
+    ingreds:	[ :doc, :package, :website ]
+
+  - product:	:doc
+    method*: |
+	chdir 'doc' do
+	  sys "#{rook_command()} :doc"
+	end
+
+  - product:	:website
+    method*: |
+	chdir 'website' do
+	  sys "#{rook_command()} :all"
+	end
+
+  - product:	:clean
+    method*: |
+	rm_rf '$(builddir)'
+
+  - product:	:clear
+    method*: |
+	rm_rf '$(builddir)*'
+
+  - product:	:package
+    method*: |
+	## build directory
+	dir = 'build/$(builddir)'
+	rm_rf dir if test(?d, dir)
+	mkdir_p dir
+
+	## copy files
+	store  textfiles, dir
+	store 'bin/*', 'lib/*.js', dir
+	rm_f 'test/data/**/*.cache'
+	store testfiles, dir
+	store docfiles, dir
+	store benchfiles, dir
+	rm_f "#{dir}/test/test_tenjin.rb"
+	cp 'lib/shotenjin.js', "#{dir}/doc"
+
+	## edit files
+	edit "#{dir}/**/*" do |s|
+	  #puts s.class.name
+	  s.gsub!(/\$Release\$/, '$(release)')
+	  s.gsub!(/\$Release:.*?\$/, "$Release: $(release) $")
+	  s.gsub!(/\$Copyright\$/, '$(copyright)')
+	  s
+	end
+
+	## create package
+	chdir 'build' do
+	  rm_f "$(builddir).tar.gz"
+	  tar_czf "$(builddir).tar.gz", "$(builddir)"
+	  rm_f "$(builddir).zip"
+	  zip_r "$(builddir).zip", "$(builddir)"
+	end

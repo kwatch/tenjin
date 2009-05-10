@@ -1,0 +1,28 @@
+=======
+CHANGES
+=======
+
+
+--------------------------
+Release 0.0.3 (2008-12-21)
+--------------------------
+
+
+Bugfix
+------
+
+* In Tenjin.Engine(), 'path' parameter was ignored. Now fixed. (thanks Matthew!)
+
+
+
+--------------------------
+Release 0.0.2 (2008-02-01)
+--------------------------
+
+
+Bugfix
+------
+
+* On SpiderMonkey, if template was large (>=4KB) then Tenjin#readFile() inserted
+  extra commas (','). Now fixed.
+

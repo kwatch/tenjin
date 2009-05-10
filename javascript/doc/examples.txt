@@ -1,0 +1,302 @@
+.=title:	jsTenjin Examples
+.?lastupdate:	$Date$
+.?release:	$Release$
+.?stylesheet:	docstyle.css
+
+Release: $Release$
+
+
+Table of Contents:
+.<<< examples.toc
+
+
+
+.$ Bordered Table		| bordered-table
+
+
+
+
+.? Template: 'table.jshtml'
+.-------------------- table/table.jshtml
+<html>
+  <body>
+    <h1>{{*${title}*}}</h1>
+    <table>
+{{*<?js for (var i = 0, n = items.length; i < n; i++) { ?>*}}
+{{*<?js    var color = i % 2 == 1 ? '#FFCCCC' : '#CCCCFF'; ?>*}}
+      <tr bgcolor="{{*#{color}*}}">
+        <td>{{*#{i+1}*}}</td>
+        <td>{{*${items[i]}*}}</td>
+      </tr>
+{{*<?js } ?>*}}
+    </table>
+  </body>
+</html>
+.--------------------
+
+.? Convert into Ruby script:
+.==================== table/table_s.result
+$ jstenjin -a convert table.jshtml
+var _buf = [];  _buf.push('<html>\n\
+  <body>\n\
+    <h1>', {{*escapeXml(title)*}}, '</h1>\n\
+    <table>\n');
+ {{*for (var i = 0, n = items.length; i < n; i++) {*}}
+    {{*var color = i % 2 == 1 ? '#FFCCCC' : '#CCCCFF';*}}
+ _buf.push('      <tr bgcolor="', {{*color*}}, '">\n\
+        <td>', {{*i+1*}}, '</td>\n\
+        <td>', {{*escapeXml(items[i])*}}, '</td>\n\
+      </tr>\n');
+ }
+ _buf.push('    </table>\n\
+  </body>\n\
+</html>\n');
+_buf.join('')
+.====================
+
+.? Main program: 'table.js'
+.-------------------- table/table.js
+/// create Engine object
+load('tenjin.js');
+{{*var engine = new Tenjin.Engine()*}}
+
+/// render template with context data
+var context = { title: 'Bordered Table Example',
+                items: [ '<AAA>', 'B&B', '"CCC"' ] };
+{{*var output = engine.render('table.jshtml', context);*}}
+print(output);
+.--------------------
+
+
+
+
+.? Result:
+.==================== table/table.result
+$ js table.js
+<html>
+  <body>
+    <h1>Bordered Table Example</h1>
+    <table>
+      <tr bgcolor="{{*#CCCCFF*}}">
+        <td>{{*1*}}</td>
+        <td>{{*&lt;AAA&gt;*}}</td>
+      </tr>
+      <tr bgcolor="{{*#FFCCCC*}}">
+        <td>{{*2*}}</td>
+        <td>{{*B&amp;B*}}</td>
+      </tr>
+      <tr bgcolor="{{*#CCCCFF*}}">
+        <td>{{*3*}}</td>
+        <td>{{*&quot;CCC&quot;*}}</td>
+      </tr>
+    </table>
+  </body>
+</html>
+
+.====================
+
+
+
+.$ Form		| form
+
+
+
+
+.? Template: 'form.jshtml':
+.-------------------- form/form.jshtml
+{{*<?js //@ARGS action, params, label ?>*}}
+<form action="{{*${action}*}}" method="post">
+  <p>
+    <label>Name:</label>
+    <input type="text" name="name" value="{{*${params.name}*}}" />
+  </p>
+  <p>
+    <label>Gender:</label>
+{{*<?js gender = params.gender ?>*}}
+{{*<?js checked = Tenjin.checked ?>*}}
+    <input type="radio" name="gender" value="M" {{*#{checked(gender=='M')}*}} />Man
+    <input type="radio" name="gender" value="W" {{*#{checked(gender=='W')}*}} />Woman
+  </p>
+  <input type="submit" value="{{*${label}*}}" />
+</form>
+.--------------------
+
+.? Template: 'create.jshtml':
+.-------------------- form/create.jshtml
+<?js _context.title = 'Create user'; ?>
+<?js _context.label = 'Create'; ?>
+<?js _context.action = 'action.cgi'; ?>
+{{*<?js include(':form'); ?>*}}
+.--------------------
+
+.? Template: 'update.jshtml':
+.-------------------- form/update.jshtml
+<?js _context.title = 'Update user'; ?>
+<?js _context.label = 'Update'; ?>
+<?js _context.action = 'update.cgi'; ?>
+{{*<?js include(':form'); ?>*}}
+.--------------------
+
+.? Layout template: 'layout.jshtml'
+.-------------------- form/layout.jshtml
+<html>
+ <body>
+  <h1>${title}</h1>
+  <div class="main-content">
+{{*#{_content}*}}
+  </div>
+ </body>
+</html>
+.--------------------
+
+.? Main program: 'main.js':
+.-------------------- form/main.js
+/// create Engine object
+load('tenjin.js');
+{{*var engine = new Tenjin.Engine({postfix:'.jshtml', layout:'layout.jshtml'});*}}
+
+/// render template with context data
+var params = { name:'Foo', gender:'M' };
+var context = { params:params };
+{{*var output = engine.render(':update', context);*}}  // ':update' == 'update'+postfix
+print(output);
+.--------------------
+
+
+
+
+.? Result:
+.==================== form/main.result
+$ js main.js
+<html>
+ <body>
+  <h1>{{*Update user*}}</h1>
+  <div class="main-content">
+<form action="{{*update.cgi*}}" method="post">
+  <p>
+    <label>Name:</label>
+    <input type="text" name="name" value="{{*Foo*}}" />
+  </p>
+  <p>
+    <label>Gender:</label>
+    <input type="radio" name="gender" value="M" {{* checked="checked"*}} />Man
+    <input type="radio" name="gender" value="W"  />Woman
+  </p>
+  <input type="submit" value="{{*Update*}}" />
+</form>
+
+  </div>
+ </body>
+</html>
+
+.====================
+
+
+
+.$ Preprocessing			| preprocessing
+
+
+
+
+.? Library: 'helper.js'
+.-------------------- preprocessing/helper.js
+var LANGUAGES = [
+    ['en', 'Engilish'],
+    ['fr', 'French'],
+    ['de', 'German'],
+    ['es', 'Spanish'],
+    ['ch', 'Chinese'],
+    ['ja', 'Japanese'],
+];
+
+function link_to(label, options) {
+    if (! options) options = {};
+    var action = options.action || null;
+    var id     = options.id     || null;
+    var buf = ['/app'];
+    if (action) { buf.push(action); }
+    if (id)     { buf.push(id); }
+    var url = buf.join('/');
+    return "<a href=\""+escape(url)+"\">"+label+"</a>";
+}
+.--------------------
+
+.? Template: 'select.jshtml'
+.-------------------- preprocessing/select.jshtml
+<?JS load('helper.js'); ?>
+<form>
+  <label>Select your language:</label>
+  <select name="lang">
+<?js var table = { }; table[params.lang] = ' selected="selected"'; ?>
+{{*<?JS for (var i = 0, n = LANGUAGES.length; i < n; i++) { ?>*}}
+{{*<?JS     var tuple = LANGUAGES[i]; var val = tuple[0], name = tuple[1]; ?>*}}
+    <option value="${{val}}" #{table.#{{val}}||''}>${{name}}</option>
+{{*<?JS } ?>*}}
+  </select>
+  <input type="submit" value="OK" />
+</form>
+<p>
+  {{*#{{{{}}*}}link_to('Back', {action:'index'}){{*{{}}}}*}} |
+  {{*#{{{{}}*}}link_to('Show '+{{*_P('params.name')*}}, {action:'show', id:{{*_p('params.id')*}}}){{*{{}}}}*}}
+</p>
+.--------------------
+
+.? Preprocessed code:
+.==================== preprocessing/select_P.result
+$ jstenjin -a preprocess select.jshtml
+<form>
+  <label>Select your language:</label>
+  <select name="lang">
+<?js var table = { }; table[params.lang] = ' selected="selected"'; ?>
+    <option value="en" #{table.en||''}>Engilish</option>
+    <option value="fr" #{table.fr||''}>French</option>
+    <option value="de" #{table.de||''}>German</option>
+    <option value="es" #{table.es||''}>Spanish</option>
+    <option value="ch" #{table.ch||''}>Chinese</option>
+    <option value="ja" #{table.ja||''}>Japanese</option>
+  </select>
+  <input type="submit" value="OK" />
+</form>
+<p>
+  <a href="/app/index">Back</a> |
+  <a href="/app/show/{{*#{params.id}*}}">Show {{*${params.name}*}}</a>
+</p>
+.====================
+
+.? Main program: 'main.js'
+.-------------------- preprocessing/main.js
+/// create engine
+load('tenjin.js');
+var engine = new Tenjin.Engine({ postfix: '.jshtml', {{*preprocess: true*}} });
+
+/// render template with context data
+var params = { id: 1234, name: 'Foo', lang: 'ch' };
+var context = { params: params };
+var output = engine.render(':select', context);
+print(output);
+.--------------------
+
+
+
+
+.? Result:
+.==================== preprocessing/main.result
+$ js main.js
+<form>
+  <label>Select your language:</label>
+  <select name="lang">
+    <option value="en" >Engilish</option>
+    <option value="fr" >French</option>
+    <option value="de" >German</option>
+    <option value="es" >Spanish</option>
+    <option value="ch"  selected="selected">Chinese</option>
+    <option value="ja" >Japanese</option>
+  </select>
+  <input type="submit" value="OK" />
+</form>
+<p>
+  <a href="/app/index">Back</a> |
+  <a href="/app/show/1234">Show Foo</a>
+</p>
+
+.====================

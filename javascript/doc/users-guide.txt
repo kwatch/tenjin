@@ -1,0 +1,1676 @@
+.=title:	jsTenjin User's Guide
+.?lastupdate:	$Date$
+.?release:	$Release$
+.?stylesheet:	docstyle.css
+
+Release: $Release$
+
+
+Table of Contents:
+.<<< users-guide.toc
+
+
+
+.$ Introduction		| intro
+
+
+
+.$$ Overview		| overview
+
+
+jsTenjin is a very fast and lightweight template engine based on embedded JavaScript.
+You can embed JavaScript statements and expressions into your text file.
+jsTenjin converts it into JavaScript script and evaluate it.
+
+
+The following is an example of jsTenjin.
+
+.? File 'ex.jshtml':
+.-------------------- ex.jshtml
+Hello {{*#{name}*}}!
+<ul>
+{{*<?js for (var i = 0, n = items.length; i < n; i++) { ?>*}}
+ <li>{{*${items[i]}*}}</li>
+{{*<?js } ?>*}}
+</ul>
+.--------------------
+
+Here is the notation:
+
+.* {{,<?js ... ?>,}} represents embedded JavaScript statements.
+.* {{,#{...},}} represents embedded JavaScript expression.
+.* {{,${...},}} represents embedded escaped (sanitized) JavaScript expression.
+
+.? Result of covertion into JavaScript script:
+.==================== ex_source.result
+$ jstenjin -s ex.jshtml
+var _buf = [];  _buf.push('Hello ', name, '!\n\
+<ul>\n');
+ for (var i = 0, n = items.length; i < n; i++) {
+ _buf.push(' <li>', escapeXml(items[i]), '</li>\n');
+ }
+ _buf.push('</ul>\n');
+_buf.join('')
+.====================
+
+
+.? Output of execution with context data:
+.==================== ex.result
+$ jstenjin -c "name:'World', items:['<AAA>','B&B','\"CCC\"']" ex.jshtml
+Hello World!
+<ul>
+ <li>&lt;AAA&gt;</li>
+ <li>B&amp;B</li>
+ <li>&quot;CCC&quot;</li>
+</ul>
+.====================
+
+
+.? Example of JavaScript script
+.-------------------- ex.script
+load('tenjin.js');
+var engine = new Tenjin.Engine();
+var context = { name:'World', items:['<AAA>', 'B&B', '"CCC"'] };
+var output = engine.render('ex.jshtml', context);
+print(output);
+.--------------------
+
+
+jsTenjin is designed for server-side JavaScript and it may be overspec for client-side JavaScript.
+Download files of jsTenjin contains 'shotenjin.js' which is minimun subset of 'tenjin.js' and more suitable for client-side JavaScript.
+
+.? Example of JavaScript script
+.-------------------- ex.html
+.#<html>
+.#  <head>
+.#    <title>Shotenjin Example</title>
+    <script language="JavaScript" type="text/javascript" {{*src="shotenjin.js"*}}></script>
+    <script language="JavaScript" type="text/javascript">
+      <!--
+
+function build_table() {
+    var input = '\
+<table border="1">\n\
+  <tbody>\n\
+    <?js for (var i = 0, n = items.length; i < n; i++) { ?>\n\
+    <tr>\n\
+      <td>#{i}</td>\n\
+      <td>${items[i]}</td>\n\
+    </tr>\n\
+    <?js } ?>\n\
+  </tbody>\n\
+<table>\
+';
+    var context = {items: ['AAA','BBB','CCC']};
+    var output = {{*Shotenjin.render(input, context)*}};
+    document.getElementById('targettable').innerHTML = output;
+    document.getElementById('htmlsource').innerHTML = escapeXml(output);
+}
+      -->
+    </script>
+.#  </head>
+.#  <body>
+    <input type="button" value="Build table" onclick="javascript:build_table()" />
+    <table id="targettable"></table>
+    <div id="htmlsource"></div>
+.#  </body>
+.#</html>
+.--------------------
+
+.+++
+<!-- SCRIPT -->
+<div>
+    <script language="JavaScript" type="text/javascript" src="shotenjin.js"></script>
+    <script language="JavaScript" type="text/javascript">
+      <!--
+
+function build_table() {
+    var input = '\
+<table border="1">\n\
+  <tbody>\n\
+    <?js for (var i = 0, n = items.length; i < n; i++) { ?>\n\
+    <tr>\n\
+      <td>#{i}</td>\n\
+      <td>${items[i]}</td>\n\
+    </tr>\n\
+    <?js } ?>\n\
+  </tbody>\n\
+<table>\
+';
+    var context = {items: ['AAA','BBB','CCC']};
+    var output = Shotenjin.render(input, context);
+    document.getElementById('targettable').innerHTML = output;
+    document.getElementById('htmlsource').innerHTML = escapeXml(output);
+}
+      -->
+    </script>
+</div>
+<!-- /SCRIPT -->
+    <input type="button" value="Build table" onclick="javascript:build_table()" />
+    <table id="targettable"></table>
+    <span>Source:</span>
+    <pre id="htmlsource"></pre>
+.+++
+
+
+.#+++
+.==================== ex_script.result
+$ js -f ex.script
+Hello World!
+<ul>
+ <li>&lt;AAA&gt;</li>
+ <li>B&amp;B</li>
+ <li>&quot;CCC&quot;</li>
+</ul>
+
+.====================
+.#---
+
+
+
+
+.$$ Features		| features
+
+jsTenjin has the following features:
+
+.* jsTenjin runs very fast.
+.* jsTenjin doesn't break HTML design because it uses XML Processing
+  Instructions (PI) as embedded notation for JavaScript statements.
+.* jsTenjin is secure because it supports escaping expression value by default.
+.* jsTenjin is small and lightweight. It is very easy to include jsTenjin
+  into your application.
+.* jsTenjin supports auto caching of converted JavaScript code.
+.* jsTenjin supports partial template and layout template.
+  These are very useful especially for web application.
+.* jsTenjin supports partial capturing of template.
+.* jsTenjin can load YAML file as context data. Using jsTenjin, it is able to
+  separate template file and data file.
+
+
+
+
+
+.$$ Comparison with other solutions	| comparison
+
+
+jsTenjin has advantages compared with other solutions (including other language solutions):
+
+.* {{*Easy to design*}} --
+  JSP, ePerl, or eRuby breaks HTML design because they use
+  '{{,<% ... %>,}}' as embedded notation which is not valid in HTML.
+  jsTenjin doesn't break HTML desgin because it uses Processing
+  Instructions (PI) as embedded notation which is valid in HTML.
+.* {{*Easy to write*}} --
+  In PHP, it is a little bother to write embedded expression
+  because the notation '{{,<?php echo $value; ?>,}}' is a little long,
+  and very bother to embed escaped expression because
+  '{{,<?php echo htmlspecialchars($value); ?>,}}' is very long.
+  In jsTenjin, these are very easy to write because embedded expression
+  notations ('{{,#{value},}}' and '{{,${value},}}') are very short.
+.* {{*Easy to learn*}} --
+  Some template systems
+  are hard to learn because they are large, highly functinal, and
+  based on non-JavaScript syntax.
+  jsTenjin is very easy to learn if you already know JavaScript language because
+  it is very small and  you can embed any JavaScript code into HTML template.
+
+
+
+
+
+.$$ Benchmark		| benchmark
+
+Benchmark script is contained in jsTenjin archive.
+The following is an example of benchmark.
+
+
+
+.? MacOS X 10.4 Tiger, Intel CoreDuo 1.83GHz, Memory 2GB
+.====================
+$ cd pltenjin-X.X.X/benchmark
+$ js -h
+JavaScript-C 1.6 pre-release 1 2006-04-04 (OSSP js 1.6.20070208)
+usage: js [-PswWxC] [-b branchlimit] [-c stackchunksize] [-v version] [-f script
+file] [-e script] [-S maxstacksize] [scriptfile] [scriptarg...]
+$ make N=10000 JS=js
+time js bench.js -n 10000
+        0.01 real         0.01 user         0.00 sys
+time js bench.js -n 10000 tenjin-cached
+       19.00 real        15.14 user         3.73 sys
+time js bench.js -n 10000 tenjin-nocache
+       29.78 real        26.74 user         2.92 sys
+time js bench.js -n 10000 tenjin-reuse
+       12.98 real        12.43 user         0.47 sys
+.#                        0.0200     0.0000     0.1200
+.#tenjin-cached         151.4100    37.3200   189.9800
+.#tenjin-nocache        267.3800    29.1700   297.8300
+.#tenjin-reuse          124.3300     4.7000   129.8000
+
+$ java -version
+java version "1.5.0_07"
+Java(TM) 2 Runtime Environment, Standard Edition (build 1.5.0_07-164)
+Java HotSpot(TM) Client VM (build 1.5.0_07-87, mixed mode, sharing)
+$ make N=10000 JS='java -server -jar js.jar'
+time java -server -jar js.jar bench.js -n 10000
+        0.69 real         0.58 user         0.06 sys
+time java -server -jar js.jar bench.js -n 10000 tenjin-cached
+       24.29 real        23.15 user         1.22 sys
+time java -server -jar js.jar bench.js -n 10000 tenjin-nocache
+       42.05 real        40.59 user         1.61 sys
+time java -server -jar js.jar bench.js -n 10000 tenjin-reuse
+       19.15 real        18.59 user         0.42 sys
+.#                        5.8200     0.6300     6.9500
+.#tenjin-cached         231.4800    12.2300   242.8700
+.#tenjin-nocache        405.9100    16.1200   420.5200
+.#tenjin-reuse          185.8100     4.1900   191.5000
+.====================
+
+
+
+.$ Installation			| installation
+
+
+.1) Install Rhino or Spidermonkey with File object enabled.
+    .====================
+    ### Rhino
+    $ wget ftp://ftp.mozilla.org/pub/mozilla.org/js/rhino1_6R5.zip
+    $ jar xf rhino1_6R5.zip
+    $ sudo mkdir -p /usr/local/java
+    $ cp rhino1_6R5/js.jar /usr/local/java
+    $ java -jar /usr/local/java/js.jar -e 'print(typeof(java))'
+    object
+    ### Spidermonkey
+    $ wget ftp://ftp.ossp.org/pkg/lib/js/js-1.6.20070208.tar.gz
+    $ tar xzf js-1.6.20070208.tar.gz
+    $ cd js-1.6.*/
+    $ ./configure --prefix=/usr/local --with-utf8 --with-editline
+    $ make JS_THREADSAFE=1 JS_HAS_FILE_OBJECT=1
+    $ sudo make install
+    $ js -e 'print(typeof(File))'
+    function
+    .====================
+.2) Copy 'lib/tenjin.js' to proper directory.
+    .====================
+    $ mkdir -p $HOME/lib/js
+    $ cp lib/tenjin.js $HOME/lib/js
+    .====================
+.3) Set '$TENJIN_JS' environment variable or edit 'jstenjin' and set TENJIN_JS variable.
+    .====================
+    $ export TENJINS_JS=$HOME/lib/js/tenjin.js
+    ## or vi bin/jstenjin
+    .====================
+.4) Copy 'jstenjin' to proper directory.
+    .====================
+    $ mkdir $HOME/bin
+    $ export PATH=$PATH:$HOME/bin
+    $ cp bin/jstenjin $HOME/bin/jstenjin
+    $ chmod 755 $HOME/bin/jstenjin
+    .====================
+.5) Edit 'bin/jstenjin' command script and set command path
+    .--------------------
+    #!/usr/local/bin/java -jar /usr/local/java/js.jar -strict     # for Rhino
+    #!/usr/local/bin/js -s                                        # for Spidermonkey
+    .--------------------
+
+Notice that jstenjin command is written in Ruby. You must install Ruby 1.8 or higher.
+
+
+
+
+.$ Designer's Guide		| desguide
+
+This section shows how to use jsTenjin for designer.
+
+If you want to know how to use jsTenjin in your program, see {{<Developer's Guide|#devguide>}} section.
+
+
+
+.$$ Notation			| des-notation
+
+The following is the notation of jsTenjin.
+
+.* '{{,<?js ... ?>,}}' represents embedded JavaScript statement.
+.* '{{,#{...},}}' represents embedded JavaScript expression.
+.* '{{,${...},}}' represents embedded JavaScript expression which is to be escaped (for example, '{{,& < > ",}}' is escaped to '{{,&amp; &lt; &gt; &quot;,}}').
+
+
+.? File 'example1.jshtml':
+.-------------------- example1.jshtml
+<table>
+  <tbody>
+{{*<?js var items = ['<foo>', 'bar&bar', '"baz"']; ?>*}}
+{{*<?js for (var i = 0, n = items.length; i < n; i++) { ?>*}}
+{{*<?js     var item = items[i]; ?>*}}
+    <tr>
+      <td>{{*#{item}*}}</td>
+      <td>{{*${item}*}}</td>
+    </tr>
+{{*<?js } ?>*}}
+  <tbody>
+</table>
+.#<html>
+.# <body>
+.#  <ul>
+.#{{*<?js for (var i = 0, n = items.length; i < n; i++) { ?>*}}
+.#{{*<?js     var item = items[i]; ?>*}}
+.#   <li>{{*#{item}*}}
+.#       {{*${item}*}}</li>
+.#{{*<?js end ?>*}}
+.#  </ul>
+.# </body>
+.#</html>
+.--------------------
+
+
+
+The following is the result of executing 'example1.jshtml'.
+
+.? Result:
+.==================== example1.result
+$ jstenjin example1.jshtml
+<table>
+  <tbody>
+    <tr>
+      <td>{{*<foo>*}}</td>
+      <td>{{*&lt;foo&gt;*}}</td>
+    </tr>
+    <tr>
+      <td>{{*bar&bar*}}</td>
+      <td>{{*bar&amp;bar*}}</td>
+    </tr>
+    <tr>
+      <td>{{*"baz"*}}</td>
+      <td>{{*&quot;baz&quot;*}}</td>
+    </tr>
+  <tbody>
+</table>
+.#<html>
+.# <body>
+.#  <ul>
+.#   <li>{{*<foo>*}}
+.#       {{*&lt;foo&gt;*}}</li>
+.#   <li>{{*bar&bar*}}
+.#       {{*bar&amp;bar*}}</li>
+.#   <li>{{*"baz"*}}
+.#       {{*&quot;baz&quot;*}}</li>
+.#  </ul>
+.# </body>
+.#</html>
+.====================
+
+
+
+
+
+
+
+
+.$$ Convert into JavaScript Code	| des-convert
+
+Command-line option '-s' converts embedded files into JavaScript code.
+
+.? Result:
+.==================== example1_source.result
+$ jstenjin {{*-s*}} example1.jshtml
+var _buf = [];  _buf.push('<table>\n\
+  <tbody>\n');
+ {{*var items = ['<foo>', 'bar&bar', '"baz"'];*}}
+ {{*for (var i = 0, n = items.length; i < n; i++) {*}}
+     {{*var item = items[i];*}}
+ _buf.push('    <tr>\n\
+      <td>', item, '</td>\n\
+      <td>', escapeXml(item), '</td>\n\
+    </tr>\n');
+ {{*}*}}
+ _buf.push('  <tbody>\n\
+</table>\n');
+_buf.join('')
+.====================
+
+
+
+
+.* Variable {{,_buf,}} is a array.
+.* Function {{,escapeXml(),}} (= {{,Tenjin.escapeXml(),}}) escapes {{,'& < > "',}} into {{,'&amp; &lt; &gt; &quot;',}}.
+  Command-line option {{,--escapefunc=func,}} makes jstenjin to use {{,func(),}} instead of {{,escape(),}}.
+.* Newline character ("\n" or "\r\n") is automatically detected by jsTenjin.
+
+
+'{{,_buf = [];,}}' is called as preamble and '{{,_buf.join(''),}}' is called as postamble.
+Command-line option '{{,-b,}}' removes preamble and postamble.
+
+
+.? File 'example2.jshtml'
+.-------------------- example2.jshtml
+<?js var list = [1, 2, 3]; ?>
+<?js for (var i = 0, n = list.length; i < n; i++) { ?>
+<p>#{list[i]}</p>
+<?js } ?>
+.--------------------
+
+.? Result:
+.==================== example2_sb.result2
+$ jstenjin -s example2.jshtml
+{{*var _buf = [];*}}  var list = [1, 2, 3];
+ for (var i = 0, n = list.length; i < n; i++) {
+ _buf.push('<p>', list[i], '</p>\n');
+ }
+{{*_buf.join('')*}}
+$ jstenjin -s{{*b*}} example2.jshtml
+ var list = [1, 2, 3];
+ for (var i = 0, n = list.length; i < n; i++) {
+ _buf.push('<p>', list[i], '</p>\n');
+ }
+.====================
+
+
+
+Command-line option '-S' also show converted JavaScript code but it doesn't print text part.
+This is useful to check JavaScript code for debugging.
+
+
+.? Result:
+.==================== example1_S.result
+$ jstenjin {{*-S*}} example1.jshtml
+var _buf = []; 
+
+ var items = ['<foo>', 'bar&bar', '"baz"'];
+ for (var i = 0, n = items.length; i < n; i++) {
+     var item = items[i];
+
+           _buf.push(item);
+           _buf.push(escapeXml(item));
+
+ }
+
+
+_buf.join('')
+.====================
+
+
+In addition, the following command-line options are available.
+
+.[ -N ]	     Add line number.
+.[ -X ]	     Delete expressions.
+.[ -C ]	     Remove empty lines (compact-mode).
+.[ -U ]	     Compress empty lines to a line (uniq-mode).
+
+
+.? Result:
+.==================== example1_SXNC.result
+$ jstenjin {{*-SUNX*}} example1.jshtml
+    1:  var _buf = []; 
+
+    3:   var items = ['<foo>', 'bar&bar', '"baz"'];
+    4:   for (var i = 0, n = items.length; i < n; i++) {
+    5:       var item = items[i];
+
+   10:   }
+
+   13:  _buf.join('')
+.====================
+
+
+
+
+
+
+.$$ Syntax Checking			| des-syntaxchk
+
+Command-line option '{{,-z,}}' checks syntax error in embedded JavaScript code.
+
+.? File example3.jshtml:
+.-------------------- example3.jshtml
+<ul>
+<?js for (var i = 0; i < items.length; i++) { ?>
+.#<?js for (var i = 0{{*,*}} i < items.length{{*,*}} i++) { ?>
+  <li>${items[i]}</li>
+<?js {{*//}*}} ?>
+.#<?js } ?>
+</ul>
+.--------------------
+
+
+.? Result:
+.==================== example3_syntaxcheck.result
+$ jstenjin {{*-z*}} example3.jshtml
+[NG] example3.jshtml
+example3.jshtml:7: SyntaxError: missing } in compound statement
+.#example3.jshtml:2: SyntaxError: missing ; after for-loop initializer
+.#example3.jshtml:2:  for (var i = 0, i < items.length, i++) {
+.====================
+
+
+{{,js -sC,}} or {{,java -jar js.jar -strict,}} may reports more details about syntax error.
+It is useful to try '{{,jstenjin -s file.jshtml | js -sC,}}'.
+
+
+
+
+
+.$$ Context Data File			| des-contextdata
+
+
+jsTenjin allows you to specify context data by JSON file.
+
+
+.? File 'example4.jshtml':
+.-------------------- example4.jshtml
+<p>
+  ${text}
+  #{num}
+  #{flag}
+</p>
+
+<?js for (var i = 0, n = items.length; i < n; i++) { ?>
+<p>${items[i]}</p>
+<?js } ?>
+
+<?js for (var key in hash) { ?>
+<p>#{key} = ${hash[key]}</p>
+<?js } ?>
+.--------------------
+
+
+
+
+.? File 'datafile.js':
+.-------------------- datafile.js
+{
+  text  :  "foo",
+  num   :  3.14,
+  flag  :  true,
+  items :  ["foo", "bar", "baz"],
+  hash  :  { x:1, y:2 }
+}
+.--------------------
+
+
+.? Result:
+.==================== example4_datafile_js.result
+$ jstenjin {{*-f datafile.js*}} example4.jshtml
+<p>
+  foo
+  3.14
+  true
+</p>
+
+<p>foo</p>
+<p>bar</p>
+<p>baz</p>
+
+<p>x = 1</p>
+<p>y = 2</p>
+.====================
+
+
+
+
+
+
+.$$ Command-line Context Data		| des-cmlinecontext
+
+Command-line option '{{,-z,}}' specifies context data in JSON format.
+
+.? File 'example5.jshtml':
+.-------------------- example5.jshtml
+text:  #{text}
+items:
+<?js for (var i = 0, n = items.length; i < n; i++) { ?>
+  - #{items[i]}
+<?js } ?>
+hash:
+<?js for (var key in hash) { ?>
+  #{key}: #{hash[key]}
+<?js } ?>
+.--------------------
+
+'{{,{,}}' at start and '{{,},}}' at end are omittable.
+
+
+.? Result of context data in js code:
+.==================== example5_datastr_js.result
+$ jstenjin {{*-c 'text:"foo", items:["a","b","c"], hash:{x:1,y:2}'*}} example5.jshtml
+text:  foo
+items:
+  - a
+  - b
+  - c
+hash:
+  x: 1
+  y: 2
+.====================
+
+
+
+
+
+
+
+
+.$$ Nested Template			| des-nested-template
+
+
+Template can include other templates.
+Included templates can also include other templates.
+
+The following function is available to include other templates.
+
+.[ include(template_name) ]
+    Include other template.
+
+
+.? File 'example6.jshtml':
+.-------------------- example6.jshtml
+<html>
+  <body>
+
+    <div id="sidemenu">
+{{*<?js include('sidemenu.jshtml'); ?>*}}
+    </div>
+
+    <div id="main-content">
+<?js for (var i = 0, n = items.length; i < n; i++) { ?>
+      <p>${items[i]}</p>
+<?js } ?>
+    </div>
+
+    <div id="footer">
+{{*<?js include('footer.jshtml'); ?>*}}
+    </div>
+
+  </body>
+</table>
+.--------------------
+
+.? File 'sidemenu.jshtml':
+.-------------------- sidemenu.jshtml
+<ul>
+<?js for (var i = 0, n = menu.length; i < n; i++) { ?>
+  <li><a href="${menu[i].url}">${menu[i].name}</a></li>
+<?js } ?>
+</ul>
+.--------------------
+
+.? File 'footer.jshtml':
+.-------------------- footer.jshtml
+<hr />
+<address>
+  <a href="mailto:${webmaster_email}">${webmaster_email}</a>
+</address>
+.--------------------
+
+
+.? File 'contextdata.js':
+.-------------------- contextdata.js
+{
+    items: [ '<FOO>', '&BAR', '"BAZ"' ],
+    webmaster_email: 'webmaster@example.com',
+    menu: [
+        { name: 'Top',      url: '/' },
+        { name: 'Products', url: '/prod' },
+        { name: 'Support',  url: '/support' },
+    ]
+}
+.--------------------
+
+
+
+.? Result:
+.==================== example6_nested.result
+$ jstenjin -f contextdata.js example6.jshtml
+<html>
+  <body>
+
+    <div id="sidemenu">
+{{*<ul>*}}
+  {{*<li><a href="/">Top</a></li>*}}
+  {{*<li><a href="/prod">Products</a></li>*}}
+  {{*<li><a href="/support">Support</a></li>*}}
+{{*</ul>*}}
+    </div>
+
+    <div id="main-content">
+      <p>&lt;FOO&gt;</p>
+      <p>&amp;BAR</p>
+      <p>&quot;BAZ&quot;</p>
+    </div>
+
+    <div id="footer">
+{{*<hr />*}}
+{{*<address>*}}
+{{*  <a href="mailto:webmaster@example.com">webmaster@example.com</a>*}}
+{{*</address>*}}
+    </div>
+
+  </body>
+</table>
+.====================
+
+
+'{{,include(),}}' can take template filename
+(ex. 'user_main.jshtml') or template short name (ex. ':main').
+Template short name represents a template in short notation. It starts with colon (':').
+
+
+
+To make template short name available, command-line option '{{,--prefix,}}' and
+'{{,--postfix,}}' are required.
+For example, '{{,include("user_main.jshtml"),}}' can be described as '{{,include(":main"),}}'
+when '{{,--prefix="user_",}}' and '{{,--postfix=".jshtml",}}' are specified in command-line.
+
+
+
+
+.$$ Layout Template			| des-layout
+
+
+Command-line option '{{,--layout=templatename,}}' specifies layout template name.
+
+For example, 'exmample6.jshtml' template in the previous section can be divided
+into layout file 'layout6.jshtml' and content file 'content6.jshtml'.
+Variable '{{,_content,}}' in layout template represents the result of content file.
+
+
+
+
+.? File 'layout6.jshtml':
+.-------------------- layout6.jshtml
+<html>
+  <body>
+
+    <div id="sidemenu">
+<?js include('sidemenu.jshtml'); ?>
+    </div>
+
+    <div id="main-content">
+{{*#{_content}*}}
+    </div>
+
+    <div id="footer">
+<?js include('footer.jshtml'); ?>
+    </div>
+
+  </body>
+</table>
+.--------------------
+
+.? File 'content6.jshtml':
+.-------------------- content6.jshtml
+<?js for (var i = 0, n = items.length; i < n; i++) { ?>
+  <p>${items[i]}</p>
+<?js } ?>
+.--------------------
+
+
+
+
+.? Result:
+.==================== example6_layout.result
+$ jstenjin -f contextdata.js {{*--layout=layout6.jshtml*}} content6.jshtml
+<html>
+  <body>
+
+    <div id="sidemenu">
+<ul>
+  <li><a href="/">Top</a></li>
+  <li><a href="/prod">Products</a></li>
+  <li><a href="/support">Support</a></li>
+</ul>
+    </div>
+
+    <div id="main-content">
+{{*  <p>&lt;FOO&gt;</p>*}}
+{{*  <p>&amp;BAR</p>*}}
+{{*  <p>&quot;BAZ&quot;</p>*}}
+
+    </div>
+
+    <div id="footer">
+<hr />
+<address>
+  <a href="mailto:webmaster@example.com">webmaster@example.com</a>
+</address>
+    </div>
+
+  </body>
+</table>
+.====================
+
+
+.#Target temlate and layout template shares the same context object.
+.#If you set some variables in target template, they are available in layout template.
+Target template and layout template don't share local variables.
+It means that local variables set in a template are not available in layout template.
+
+
+If you want variables set in a temlate to be available in layout template,
+you should use '_context' dict.
+
+.? File 'layout7.jshtml':
+.-------------------- layout7.jshtml
+...
+<h1>{{*${title}*}}</h1>
+
+<div id="main-content">
+#{_content}
+<div>
+
+<a href="{{*${url}*}}">Next page</a>
+...
+.--------------------
+
+.? File 'content7.jshtml':
+.-------------------- content7.jshtml
+{{*<?js _context.title = 'Document Title'; ?>*}}
+{{*<?js _context.url = '/next/page'; ?>*}}
+<table>
+  ...content...
+</table>
+.--------------------
+
+
+
+.? Result:
+.==================== example7_layout2.result
+$ jstenjin --layout=layout7.jshtml content7.jshtml
+...
+<h1>{{*Document Title*}}</h1>
+
+<div id="main-content">
+<table>
+  ...content...
+</table>
+
+<div>
+
+<a href="{{*/next/page*}}">Next page</a>
+...
+.====================
+
+
+Using '_context._layout', it is able to specify layout template name in each template file.
+If you assigned false to '_context._layout', no layout template is used.
+
+
+
+.? File 'content8.jshtml':
+.-------------------- content8.jshtml
+{{*<?js _context._layout = ':layout8_xhtml'; ?>*}}
+<h1>Hello World!</h1>
+.--------------------
+
+.? File 'layout8_html.jshtml':
+.-------------------- layout8_html.jshtml
+<html>
+  <body>
+#{_content}
+  </body>
+</html>
+.--------------------
+
+.? File 'layout8_xhtml.jshtml':
+.-------------------- layout8_xhtml.jshtml
+<?xml version="1.0" encoding="UTF-8"?>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+  <body>
+#{_content}
+  </body>
+</html>
+.--------------------
+
+.? Result: ':layout8_html' is specified in command-line option but ':layout8_xhtml' is used
+.==================== example8_layout3.result
+$ jstenjin --postfix='.jshtml' {{*--layout=':layout8_html'*}} content8.jshtml
+<?xml version="1.0" encoding="UTF-8"?>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+  <body>
+<h1>Hello World!</h1>
+
+  </body>
+</html>
+.====================
+
+
+
+.$$ Capturing				| des-capturing
+
+It is able to capture any part of template.
+
+.? File 'example9.jshtml':
+.-------------------- example9.jshtml
+<?js _context['title'] = 'Capture Test'; ?>
+<html>
+  <body>
+
+{{*<?js startCapture('content_part'); ?>*}}
+    <ul>
+<?js for (var i = 0; i <= 2; i++) { ?>
+      <li>i = #{i}</li>
+<?js } ?>
+    </ul>
+{{*<?js stopCapture() ?>*}}
+
+{{*<?js startCapture('footer_part'); ?>*}}
+    <div class="footer">copyright&copy; 2007 kuwata-lab.com</div>
+{{*<?js stopCapture(); ?>*}}
+
+  </body>
+</html>
+.--------------------
+
+Captured strings are accessable as local variables.
+For example, you can get captured string as a variable '{{,content_part,}}' in the above example.
+
+A template can contain several capturing.
+It is not able to nest capturing.
+
+In layout file, it is able to use strings captured in templates.
+
+.? File 'layout9.jshtml':
+.-------------------- layout9.jshtml
+<html lang="en">
+  <head>
+    <title>${title}</title>
+  </head>
+  <body>
+
+    <!-- HEADER -->
+{{*<?js startPlaceholder('header_part'); ?>*}}
+    <h1>${title}</h1>
+{{*<?js stopPlaceholder(); ?>*}}
+    <!-- /HEADER -->
+
+    <!-- CONTENT -->
+{{*#{content_part}*}}
+    <!-- /CONTENT -->
+
+    <!-- FOOTER -->
+{{*<?js startPlaceholder('footer_part'); ?>*}}
+    <hr />
+    <address>webmaster@localhost</address>
+{{*<?js stopPlaceholder(); ?>*}}
+    <!-- /FOOTER -->
+
+  </body>
+</html>
+.--------------------
+
+
+.#'{{,stopCapture(true);,}}' is equivarent to '{{,_context["{{/varname/}}"] = stopCapture();,}}'.
+'{{,startPlaceholder("name") ... stopPlaceholder(),}}' is quivarent to the following.
+.--------------------
+{{*<?js if (_context['name']) { ?>*}}
+#{_context['name']}
+{{*<?js } else { ?>*}}
+    ...
+{{*<?js } ?>*}}
+.--------------------
+
+The following result shows that content part and footer part are overrided by capturing in content template but header part is not.
+
+.? Result:
+.==================== example9_capture.result
+$ jstenjin --layout=layout9.jshtml example9.jshtml
+<html lang="en">
+  <head>
+    <title>Capture Test</title>
+  </head>
+  <body>
+
+    <!-- HEADER -->
+    <h1>Capture Test</h1>
+    <!-- /HEADER -->
+
+    <!-- CONTENT -->
+    {{*<ul>*}}
+      {{*<li>i = 0</li>*}}
+      {{*<li>i = 1</li>*}}
+      {{*<li>i = 2</li>*}}
+    {{*</ul>*}}
+
+    <!-- /CONTENT -->
+
+    <!-- FOOTER -->
+    {{*<div class="footer">copyright&copy; 2007 kuwata-lab.com</div>*}}
+    <!-- /FOOTER -->
+
+  </body>
+</html>
+.====================
+
+
+
+
+.$$ Template Arguments			| des-args
+
+It is able to specify template arguments in template files.
+Template arguments are variables which are passed by main program via context object.
+In the following example, '{{,title,}}' and '{{,name,}}' are template arguments.
+
+
+.? File 'example10.jshtml':
+.-------------------- example10.jshtml
+<?xml version="1.0"?>
+{{*<?js //@ARGS title, name ?>*}}
+<h1>${title}</h1>
+<p>Hello ${name}!</p>
+.--------------------
+
+Template arguments line is converted into assignment statements of local variables.
+
+.==================== example10_template_args.result
+$ jstenjin -s example10.jshtml
+var _buf = [];  _buf.push('<?xml version="1.0"?>\n');
+{{* var title = _context['title']; var name = _context['name'];*}}
+ _buf.push('<h1>', escapeXml(title), '</h1>\n\
+<p>Hello ', escapeXml(name), '!</p>\n');
+_buf.join('')
+.====================
+
+
+If template arguments are specified, other variables passed by context object are not set.
+
+.? File 'example11.jshtml':
+.-------------------- example11.jshtml
+<p>
+{{*<?js //@ARGS x ?>*}}
+x = ${x}
+y = ${y}   # error
+</p>
+.--------------------
+
+.? Result:
+.==================== example11_template_args_result
+$ jstenjin {{*-wc 'x:10,y:20'*}} example11.jshtml
+*** ERROR:
+example11.jshtml: y is not defined
+.====================
+
+Special variable '{{,_context,}}' which represents context object is always available whether template arguments are specified or not.
+
+
+
+.$$ Preprocessing			| des-preprocess
+
+jsTenjin supports preprocessing of template.
+Preprocessing executes some logics when templates are loaded and that logics are not executed when rendering.
+Preprocessing makes your application much faster.
+
+Notation of preprocessing is the following.
+.* {{,<?JS ... ?>,}} represents preprocessing statement.
+.* {{,#{{...}},}} represents preprocessing expression (without HTML escape).
+.* {{,${{...}},}} represents preprocessing expression (with HTML escape).
+
+For example, assume the following template.
+
+.? File 'example12.jshtml':
+.-------------------- example12.jshtml
+{{*<?JS var states = { CA: "California", ?>*}}
+{{*<?JS                NY: "New York", ?>*}}
+{{*<?JS                FL: "Florida",  ?>*}}
+{{*<?JS                TX: "Texas",  ?>*}}
+{{*<?JS                HI: "Hawaii" }; ?>*}}
+<?js var chk = {};  chk[params.state] = ' selected="selected"'; ?>
+{{*<?JS var codes = []; ?>*}}
+{{*<?JS for (var code in states) { codes.push(code); } ?>*}}
+{{*<?JS codes.sort(); ?>*}}
+<select name="state">
+  <option value="">-</option>
+{{*<?JS for (var i = 0, n = codes.length; i < n; i++) { ?>*}}
+{{*<?JS     var code = codes[i]; ?>*}}
+  <option value="{{*#{{code}}*}}"#{chk.{{*#{{code}}*}}||''}>{{*${{states[code]}}*}}</option>
+{{*<?JS } ?>*}}
+</select>
+.--------------------
+
+If preprocessing is activated, the above will be converted into the following when template is loaded.
+(Command-line option {{,-P,}} shows the result of preprocessing.)
+
+.? Result of preprocessing:
+.==================== example12_preprocessed.result
+$ jstenjin {{*-P*}} example12.jshtml
+<?js var chk = {};  chk[params.state] = ' selected="selected"'; ?>
+<select name="state">
+  <option value="">-</option>
+  <option value="CA"#{chk.CA||''}>California</option>
+  <option value="FL"#{chk.FL||''}>Florida</option>
+  <option value="HI"#{chk.HI||''}>Hawaii</option>
+  <option value="NY"#{chk.NY||''}>New York</option>
+  <option value="TX"#{chk.TX||''}>Texas</option>
+</select>
+.====================
+
+This means that for-loop is executed only once when template is loaded and is not executed when rendering.
+In the result, rendering speed becomes to be much faster.
+
+And the JavaScript code is here. This shows that there is no for-loop.
+
+.? Translated script code:
+.==================== example12_preprocessed_source.result
+$ jstenjin {{*--preprocess*}} -sb example12.jshtml
+ var chk = {};  chk[params.state] = ' selected="selected"';
+ _buf.push('<select name="state">\n\
+  <option value="">-</option>\n\
+  <option value="CA"', chk.CA||'', '>California</option>\n\
+  <option value="FL"', chk.FL||'', '>Florida</option>\n\
+  <option value="HI"', chk.HI||'', '>Hawaii</option>\n\
+  <option value="NY"', chk.NY||'', '>New York</option>\n\
+  <option value="TX"', chk.TX||'', '>Texas</option>\n\
+</select>\n');
+.====================
+
+If you have errors on preprocessing, you should check source script by {{,-Ps,}} option{{(Command-line option '-Ps' is available but '-PS' is not availabe. This is a current restriction of jstenjin. )}}.
+
+
+
+
+The following is an another example.
+Assume that {{,link_to(),}} is a helper method which takes label and url and generate
+{{,<a></a>,}} tag.
+In this case, label and url can be parameterized by {{,_p("..."),}} and {{,_P("..."),}}.
+The former is converted into {{,#{...},}} and the latter converted into {{,${...},}}
+by preprocessor.
+
+.? File 'example13.jshtml':
+.-------------------- example13.jshtml
+<?JS // ex. link_to('Show', '/show/1')  => <a href="/show/1">Show</a> ?>
+<?JS function link_to(label, url) { ?>
+<?JS     return '<a href="' + escape(url) + '">' + label + '</a>'; ?>
+<?JS } ?>
+#{{link_to('Show '+{{*_P('params["name"]')*}}, '/items/show/'+{{*_p('params["id"]')*}})}}
+.--------------------
+
+.? Preprocessed template:
+.==================== example13_preprocessed.result
+$ jstenjin {{*-P*}} example13.jshtml
+<a href="/items/show/{{*#{params["id"]}"*}}>Show {{*${params["name"]}*}}</a>
+.====================
+
+.? Translated script code:
+.==================== example13_preprocessed_source.result
+$ jstenjin {{*--preprocess*}} -sb example13.jshtml
+ _buf.push('<a href="/items/show/', params["id"], '">Show ', escapeXml(params["name"]), '</a>\n');
+.====================
+
+There are many web-application framework and they provides helper functions.
+These helper functions are divided into two groups.
+.* {{,link_to(),}} or {{,_(),}} (function for M17N) return the same result
+   when the same arguments are passed.
+   These functions can be expanded by preprocessor.
+.* Some functions return the different result even if the same arguments are passed.
+   These functions can't be expaned by preprocessor.
+
+Preprocessor has the power to make your application much faster,
+but it may make the debugging difficult.
+You should use it carefully.
+
+
+
+
+
+
+.$$ Other Options			| des-otheropts
+
+
+
+.#.* Command-line option '-w' uses strict package. This is useful for development.
+.* Command-line option '{{,--escapefunc=func1,}}' changes {{,escape(),}} function name to {{,func1,}}.
+.#   For example, '{{,--escapefunc=HTML::Entities::encode_entities,}}' changes escape function from {{,esca;e(),}} to {{,HTML::Entities::encode_entities(),}}.
+.* Command-line option '{{,--path=dir1,dir2,...,}}' sepcifies template directory path.
+.* Rhino and SpiderMonkey are supported as JavaScript engine.
+
+
+
+
+.$ Developer's Guide		| devguide
+
+
+This section shows how to use jsTenjin in your JavaScript script.
+
+If you want to know the notation or features of jsTenjin, see {{<Designer's Guide|#desguide>}} section.
+
+
+.$$ An Example			| dev-example
+
+The following is an example to use jsTenjin in JavaScript.
+
+
+.? Example:
+.--------------------
+load('tenjin.js');
+var engine = new Tenjin.Engine();
+var context = { title:'jsTenjin Example', items:['AAA', 'BBB', 'CCC'] };
+var filename = 'file.jshtml';
+var output = engine.render(filename, context);
+print(output);
+.--------------------
+
+
+
+.$$ Classes and Functions in jsTenjin	| dev-classes
+
+
+jsTenjin has the follwoing classes.
+
+.[ Tenjin.Template ]
+    This class represents a template file.
+    An object of Tenjin.Template correspond to a template file.
+
+.[ Tenjin.Engine ]
+    This class represents some template objects.
+    It can handle nested template and layout template.
+    Using Tenjin.Engine class, you can use jsTenjin as a template engine for web application.
+
+.[ Tenjin.Context ]
+    This class represents context data.
+
+
+
+.#jsTenjin has the following utility functions.
+
+
+
+
+
+.$$ Class Tenjin.Template		| dev-templateclass
+
+
+Tenjin.Template class represents a template file.
+An object of Tenjin.Template corresponds to a template file.
+It doesn't support nested template nor layout template (use Tenjin.Engine class instead).
+
+This class has the following methods and attributes.
+
+
+.[ Tenjin.Template(filename=undefined, properties={}) ]
+    Create template object. If filename is given, read and convert it to JavaScript code.
+
+.[ Tenjin.Template.convert(input, filename=undefined) ]
+    Convert input text into JavaScript code and return it.
+
+.[ Tenjin.Template.convert_file(filename) ]
+    Convert file into JavaScript code and return it.
+    This is equivarent to {{,Tenjin.Template.convert(Tenjin.readFile(filename), filename),}}
+
+.#.[ Tenjin.Template#render(context=null, _buf=null) ]
+.[ Tenjin.Template#render(context=undefined) ]
+    Convert JavaScript code, evaluate it with context data, and return the result of evaluation.
+    .#If {{,_buf,}} is null then new String is created as {{,_buf,}} and returned.
+    .#If {{,_buf,}} is not null then the result of evaluation is appended
+    .#into {{,_buf,}} and returns null.
+
+.[ Tenjin.Template.script ]
+    Converted JavaScript code
+
+
+
+The followings are examples to use Tenjin.Template in JavaScript script.
+
+
+.? File 'example14.jshtml':
+.-------------------- example14.jshtml
+<h1>#{title}</h1>
+<ul>
+<?js for (var i = 0, n = items.length; i < n; i++) { ?>
+ <li>${items[i]}</li>
+<?js } ?>
+</ul>
+.--------------------
+
+.? File 'example14.js':
+.-------------------- example14.js
+//// template file
+var filename = 'example14.jshtml';
+
+//// convert into js code
+load('tenjin.js');
+var template = {{*new Tenjin.Template(filename)*}};
+var script = {{*template.script*}};
+//// or
+// var template = new Tenjin.Template();
+// var script = {{*template.convert_file(filename)*}};
+//// or
+// var template = new Tenjin.Template();
+// var input = Tenjin.Util.readFile(filename);
+// var script = {{*template.convert(input, filename)*}};  # filename is optional
+
+//// show converted js code
+print("---- js code ----");
+print(script);
+
+//// evaluate js code
+var context = {title:'jsTenjin Example', items:['<AAA>','B&B','"CCC"']};
+var output = {{*template.render(context)*}};
+print("---- output ----");
+print(output);
+.--------------------
+
+.? Result:
+.==================== example14_tmplclass.result
+$ js example14.js
+---- js code ----
+var _buf = [];  _buf.push('<h1>', title, '</h1>\n\
+<ul>\n');
+ for (var i = 0, n = items.length; i < n; i++) {
+ _buf.push(' <li>', escapeXml(items[i]), '</li>\n');
+ }
+ _buf.push('</ul>\n');
+_buf.join('')
+
+---- output ----
+<h1>jsTenjin Example</h1>
+<ul>
+ <li>&lt;AAA&gt;</li>
+ <li>B&amp;B</li>
+ <li>&quot;CCC&quot;</li>
+</ul>
+
+.====================
+
+
+
+
+
+
+.$$ Class Tenjin.Engine		| dev-engineclass
+
+
+Tenjin.Engine class contains some template objects.
+It can handle nested template and layout template.
+Using Tenjin.Engine class, you can use jsTenjin as a template engine for web application.
+
+This class has the following methods.
+
+
+
+.[ new Tenjin.Engine(properties={prefix:'', postfix:'', layout:undefined, path:undefined, cache:false, preprocess:false, templateclass:Tenjin.Template}) ]
+    Create Engine object.
+    {{,path,}} represents template search path and it should be an Array of directory name.
+    If other properties are passed then they are passed to Tenjin.Template() internally.
+
+.[ Tenjin.Engine.render(template_name, context=undefined, layout=null) ]
+    Convert template into JavaScript code, evaluate it with context data, and return the result of it.
+    If {{,layout,}} is true or null then layout template name specified by constructor option is
+    used as layout template, else if false then layout template is not used,
+    else if string then it is regarded as layout template name.
+
+Argument {{,template_name,}} in render() methods is filename or short name of template.
+Template short name is a string starting with colon (':').
+For example, '{{,render(":list", context),}}' is equivarent to '{{,render("user_list.jshtml", context),}}' if prefix option is '{{,user_,}}' and postfix option is '{{,.jshtml,}}'.
+
+
+
+In template file, the followings are available.
+
+.[ _content ]
+    This variable represents the result of evaluation of other template.
+    This is available only in layout template file.
+
+.[ include(template_name) ]
+    Include other template file.
+
+
+.[ startCapture(name) ]
+    Start capturing. Result will be stored into {{,_context.{{/name/}},}}.
+
+.[ stopcapture() ]
+    Stop capturing.
+
+.[ startPlaceholder(varname), stopPlaceholder() ]
+    Placeholder is a region from startPlaceholder() to stopPlaceholder().
+    If captured string as {{/varname/}} exists then use it as content,
+    else use content in placeholder as is.
+    For example,
+    .====================
+    <?js startPlaceholder('foo'); ?>
+      ...
+    <?js stopPlaceholder(); ?>
+    .====================
+    is equivarent to:
+    .====================
+    <?js if (typeof(_context['foo']) != 'undefined') { ?>
+    <?js     _buf.push(_contet['foo']); ?>
+    <?js } else { ?>
+      ...
+    <?js } ?>
+    .====================
+
+(Notice that include(), startCapture(), stopCapture(), startPlaceholder(), and stopPlaceholder() are built-in macros
+of jsTenjin and they are not function of JavaScript.)
+
+
+The followings are example of Tenjin.Engine class.
+
+
+
+.? File 'user_form.jshtml':
+.-------------------- user_form.jshtml
+<?js //@ARGS params ?>
+<p>
+  Name:  <input type="text" name="name"  value="${params.name}" /><br />
+  Email: <input type="text" name="email" value="${params.email}" /><br />
+  Gender:
+<?js gender = params.gender; ?>
+<?js chk = {}; chk[true] = ' checked="checked"'; chk[false] = ''; ?>
+  <input type="radio" name="gender" value="m" #{chk[gender=='m']} />Male
+  <input type="radio" name="gender" value="f" #{chk[gender=='f']} />Female
+</p>
+.--------------------
+
+.? File 'user_create.jshtml':
+.-------------------- user_create.jshtml
+<?js //@ARGS ?>
+<form action="user_app.cgi" method="post">
+  <input type="hidden" name="action" value="create" />
+{{*<?js include(':form'); ?>*}}
+  <input type="submit" value="Create" />
+</form>
+.--------------------
+
+.? File 'user_edit.jshtml':
+.-------------------- user_edit.jshtml
+<?js //@ARGS params ?>
+<form action="user_app.cgi" method="post">
+  <input type="hidden" name="action" value="edit" />
+  <input type="hidden" name="id" value="${params.id}" />
+{{*<?js include(':form'); ?>*}}
+  <input type="submit" value="Edit" />
+</form>
+.--------------------
+
+.? File 'user_layout.jshtml':
+.-------------------- user_layout.jshtml
+<?js //@ARGS _content, title ?>
+<html>
+  <body>
+
+    <h1>${title}</h1>
+
+    <div id="main-content">
+{{*#{_content}*}}
+    </div>
+
+    <div id="footer">
+{{*<?js include('footer.html'); ?>*}}
+    </div>
+
+  </body>
+</html>
+.--------------------
+
+.? File 'footer.html':
+.-------------------- footer.html
+<?js //@ARGS ?>
+<hr />
+<address>
+  <a href="mailto:webmaster@example.com">webmaster@example.com</a>
+</address>
+.--------------------
+
+.? File 'user_app.cgi':
+.-------------------- user_app.cgi
+#!/usr/bin/env js -f
+
+{{*load('tenjin.js');*}}
+
+// set action ('create' or 'edit')
+var action = 'create';
+
+// set context data
+var title, params;
+if (action == 'create') {
+    title = 'Create User';
+    params = {};
+}
+else {
+    title = 'Edit User';
+    params = {
+        name: 'Margalette',
+        email: 'meg@example.com',
+        gender: 'f',
+        id: 123
+    };
+}
+{{*var context = { title: title, params: params }*}};
+
+// create engine object
+var layout = ':layout';   // or 'user_layout.jshtml'
+{{*var engine = new Tenjin.Engine({prefix:'user_', postfix:'.jshtml', layout:layout})*}};
+
+// evaluate template
+var template_name = ':'+action;   // ':create' or ':edit'
+{{*var output = engine.render(template_name, context)*}};
+print(output);
+.--------------------
+
+
+
+.? Result:
+.==================== user_app.result
+$ js user_app.cgi create
+<html>
+  <body>
+
+    <h1>Create User</h1>
+
+    <div id="main-content">
+{{*<form action="user_app.cgi" method="post">*}}
+{{*  <input type="hidden" name="action" value="create" />*}}
+{{*<p>*}}
+{{*  Name:  <input type="text" name="name"  value="" /><br />*}}
+{{*  Email: <input type="text" name="email" value="" /><br />*}}
+{{*  Gender:*}}
+{{*  <input type="radio" name="gender" value="m"  />Male*}}
+{{*  <input type="radio" name="gender" value="f"  />Female*}}
+{{*</p>*}}
+{{*  <input type="submit" value="Create" />*}}
+{{*</form>*}}
+
+    </div>
+
+    <div id="footer">
+{{*<hr />*}}
+{{*<address>*}}
+{{*  <a href="mailto:webmaster@example.com">webmaster@example.com</a>*}}
+{{*</address>*}}
+    </div>
+
+  </body>
+</html>
+
+.====================
+
+
+
+.$$ Template Initialize Options		| dev-initopts
+
+Tenjin.Template() can take the follwoing options.
+
+
+.* '{{,escapefunc,}}' (string) specifies function name to escape string.
+  Default is '{{,escapeXml,}}' (= {{,Tenjin.Util.escapeXml,}}).
+
+
+Constructor of Tenjin.Engine can also take the same options as above.
+These options given to constructor of Tenjin.Engine are passed to constructor of Tenjin.Template internally.
+
+
+
+.? File 'example15.js':
+.-------------------- example15.js
+load('tenjin.js');
+var filename = 'example14.jshtml';
+var template = new Tenjin.Template(filename, {{*{escapefunc:'.escapeHTML'}*}});
+print(template.script);
+
+String.prototype.escapeHTML = function() {
+    return this.replace(/\&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+var title = 'jsTenjin Example';
+var items = ['<foo>', '&bar', '"baz"'];
+var output = template.render({title:title, items:items});
+print(output);
+.--------------------
+
+
+
+
+.? Result:
+.==================== example15_escapefunc.result
+$ js example15.js
+var _buf = [];  _buf.push('<h1>', title, '</h1>\n\
+<ul>\n');
+ for (var i = 0, n = items.length; i < n; i++) {
+ _buf.push(' <li>', {{*(items[i]).escapeHTML()*}}, '</li>\n');
+ }
+ _buf.push('</ul>\n');
+_buf.join('')
+
+<h1>jsTenjin Example</h1>
+<ul>
+ <li>&lt;foo&gt;</li>
+ <li>&amp;bar</li>
+ <li>&quot;baz&quot;</li>
+</ul>
+
+.====================
+
+
+
+
+
+
+
+
+
+
+.$$ Other Topics		| dev-othertopics
+
+.* jsTenjin is suitable for server-side JavaScript, but it may be too large for client-side JavaScript.
+   If you want to use jsTenjin in client-side, try 'shotenjin.js'.
+   'shotenjin.js' is a minimum subset of jsTenjin.
+   .-------------------- example_shotenjin.js
+   var input = '\
+   <ul>\n\
+   <?js for (var i = 0, n = items.length; i < n; i++) { ?>\n\
+     <li>${items[i]}</li>\n\
+   <?js } ?>\n\
+   </ul>\n\
+   ';
+   load('shotenjin.js');
+   var context = {items: ['AAA','BBB','CCC']};
+   var output = {{*Shotenjin.render(input, context)*}};
+   .--------------------
+
+.* Tenjin.Template detects newline character ("\n" or "\r\n") automatically.
+   If input file contains "\r\n", jsTenjin generates output which contains "\r\n".
+
+.* Tenjin.Template.render() can be called many times.
+   If you create a Tenjin.Template object, you can call render() method many times.
+
+.* Tenjin.Template.convert() also can be called many times.
+  If you create a Tenjin.Template object, you can call convert() (and also render()) method many times.
+
+.# * Tenjin.Template object is not thread-safe. It is not able to share Template objects with several threads.
+
