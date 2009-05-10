@@ -54,21 +54,22 @@ import re, sys, os, time, marshal
 
 try:
     import fcntl
-    def _lock_file(file, content, arg):
-        if arg == 2:
+    def _lock_file(file, content, lock):
+        if lock == 2:
             fcntl.flock(file.fileno(), fcntl.LOCK_EX)
-        elif arg == 1:
+        elif lock == 1:
             fcntl.flock(file.fileno(), fcntl.LOCK_SH)
 except ImportError, ex:
     try:
         import msvcrt
-        def _lock_file(file, content, arg):
+        def _lock_file(file, content, lock):
             msvcrt.locking(file.fileno(), msvcrt.LK_LOCK, len(content))
     except ImportError, ex:
-        def _lock_file(file, content, arg):
+        def _lock_file(file, content, lock):
             pass
 
 def write_file(filename, content, lock=False, mode='wb'):
+    """Write string into file, with closing file certainly (necessary for Jython)."""
     f = None
     try:
         f = open(filename, mode)
@@ -78,6 +79,7 @@ def write_file(filename, content, lock=False, mode='wb'):
         if f: f.close()
 
 def read_file(filename, lock=False, mode='rb'):
+    """Read all string from file, with closing file certainly (necessary for Jython)."""
     f = None
     try:
         f = open(filename, mode)
@@ -948,21 +950,6 @@ class Engine(object):
         template.args     = dct['args']
         template.script   = dct['script']
         template.bytecode = dct['bytecode']
-
-    def _load_cachefile_for_script(self, cache_filename, template):
-        s = read_file(cache_filename, mode='r')
-        if s.startswith('#@ARGS '):
-            pos = s.find("\n")
-            args_str = s[len('#@ARGS '):pos]
-            template.args = args_str and args_str.split(', ') or []
-            s = s[pos+1:]
-        else:
-            template.args = None
-        if template.encoding:
-            #s = s.decode(template.encoding)
-            s = s.decode('utf-8')
-        template.script = s
-        template.compile()
 
     def store_cachefile(self, cache_filename, template):
         """store template into marshal file"""
