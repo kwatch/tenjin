@@ -798,14 +798,20 @@ class Template(object):
 
 class Preprocessor(Template):
 
-    STMT_PATTERN = Template.compile_stmt_pattern('PY')
+    STMT_PATTERN = None
 
     def stmt_pattern(self):
+        pat = Preprocessor.STMT_PATTERN
+        if not pat:   # re.compile() is heavy weight, so make it lazy
+            pat = Preprocessor.STMT_PATTERN = Template.compile_stmt_pattern('PY')
         return Preprocessor.STMT_PATTERN
 
-    EXPR_PATTERN = re.compile(r'([#$])\{\{(.*?)\}\}', re.S)
+    EXPR_PATTERN = None
 
     def expr_pattern(self):
+        pat = Preprocessor.EXPR_PATTERN
+        if not pat:   # re.compile() is heavy weight, so make it lazy
+            pat = Preprocessor.EXPR_PATTERN = re.compile(r'([#$])\{\{(.*?)\}\}', re.S)
         return Preprocessor.EXPR_PATTERN
 
     #def get_expr_and_escapeflag(self, match):
