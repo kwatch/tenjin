@@ -497,12 +497,15 @@ class Template(object):
     def compile_stmt_pattern(pi):
         return re.compile(r'<\?%s( |\t|\r?\n)(.*?) ?\?>([ \t]*\r?\n)?' % pi, re.S)
 
-    STMT_PATTERN = compile_stmt_pattern('py')
+    STMT_PATTERN = None
 
     compile_stmt_pattern = staticmethod(compile_stmt_pattern)
 
     def stmt_pattern(self):
-        return Template.STMT_PATTERN
+        pat = Template.STMT_PATTERN
+        if not pat:   # make re.compile() to be lazy (because it is heavy weight)
+            pat = Template.STMT_PATTERN = Template.compile_stmt_pattern('py')
+        return pat
 
     def parse_stmts(self, buf, input):
         if not input:
@@ -600,10 +603,13 @@ class Template(object):
     #def get_macro_handler(name):
     #    return MACRO_HANDLER_TABLE.get(name)
 
-    EXPR_PATTERN = re.compile(r'([#$])\{(.*?)\}', re.S)
+    EXPR_PATTERN = None
 
     def expr_pattern(self):
-        return Template.EXPR_PATTERN
+        pat = Template.EXPR_PATTERN
+        if not pat:   # make re.compile() to be lazy (because it is heavy weight)
+            pat = Template.EXPR_PATTERN = re.compile(r'([#$])\{(.*?)\}', re.S)
+        return pat
 
     def get_expr_and_escapeflag(self, match):
         return match.group(2), match.group(1) == '$'
@@ -654,7 +660,7 @@ class Template(object):
     def stop_text_part(self, buf):
         buf.append("));")
 
-    _quote_rexp = re.compile(r"(['\\\\])")
+    _quote_rexp = None
 
     def add_text(self, buf, text, encode_newline=False):
         if not text:
@@ -664,7 +670,10 @@ class Template(object):
         else:
             buf.append("'''")
         #text = re.sub(r"(['\\\\])", r"\\\1", text)
-        text = Template._quote_rexp.sub(r"\\\1", text)
+        rexp = Template._quote_rexp
+        if not rexp:   # make re.compile() to be lazy (because it is heavy weight)
+            rexp = Template._quote_rexp = re.compile(r"(['\\\\])")
+        text = rexp.sub(r"\\\1", text)
         if not encode_newline or text[-1] != "\n":
             buf.append(text)
             buf.append("''', ")
