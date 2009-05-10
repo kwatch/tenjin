@@ -2,14 +2,14 @@ from __future__ import with_statement
 
 import os, re
 from glob import glob
-from kook.util import read_file, write_file
+from kook.utils import read_file, write_file
 
 release = prop('release', '0.6.2')
 #package = prop('package', 'pyTenjin')
 package = prop('package', 'Tenjin')
 
 
-copyright       = "copyright(c) 2007-2008 kuwata-lab.com all rights reserved."
+copyright       = "copyright(c) 2007-2009 kuwata-lab.com all rights reserved."
 license         = "MIT License"
 python_basepath = "/Library/Frameworks/Python.framework/Versions/2.4"
 python_basepath = "/usr/local/lib/python2.5"
@@ -123,8 +123,8 @@ def task_uninstall(c):
 
 
 def task_test(c):
-    with chdir('test') as d:
-        system("python test_all.py 2>&1 >  test.log")
+    with chdir('test'):
+        system("pykook test")
 
 
 def task_clean(c):
@@ -134,3 +134,4 @@ def task_clean(c):
         if os.path.isdir(dir):
             with chdir(dir) as d:
                 system("make clean")
+    rm_f("test/test.log", "test/kook.log")
