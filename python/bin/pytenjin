@@ -153,7 +153,7 @@ class Main(object):
         context = {}
         if options.has_key('f'):
             datafile = options['f']
-            content = open(datafile).read()
+            content = tenjin.read_file(datafile, mode='r')
             if datafile.endswith('.yaml') or datafile.endswith('.yml'):
                 if not options.get('T'):
                     content = content.expandtabs()
@@ -223,12 +223,12 @@ class Main(object):
             if action == 'convert' or action == 'retrieve' or action == 'statements':
                 template = engine.get_template(template_name)
                 if not template.script:
-                    template.convert(open(template.filename).read(), template.filename)
+                    template.convert(tenjin.read_file(template.filename, mode='r'), template.filename)
                 output = template.script
             elif action == 'cache':
                 template = engine.get_template(template_name)
                 #if not template.script:
-                #    template.convert(open(template.filename).read(), template.filename)
+                #    template.convert(tenjin.read_file(template.filename, mode='r'), template.filename)
                 output = ''
             elif action == 'syntax':
                 template = engine.get_template(template_name)
