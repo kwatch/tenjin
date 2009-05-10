@@ -5,30 +5,43 @@
 ###
 
 
+def main(verbose):
 
-import sys, os
-os.system('python test_template.py')
-os.system('python test_engine.py')
-os.system('python test_main.py')
-os.system('python test_users_guide.py')
-os.system('python test_faq.py')
-os.system('python test_htmlhelper.py')
-sys.exit(0)
+    basenames = (
+        "test_template",
+        "test_engine",
+        "test_preprocess",
+        "test_htmlhelper",
+        "test_main",
+        "test_users_guide",
+        "test_faq",
+        "test_examples",
+        )
 
-import unittest
+    if verbose:
 
-#import test_template, test_engine, test_cmdapp
+        import os
+        for basename in basenames:
+            print('')
+            print("************************************************* " + basename)
+            os.system("python %s.py" % basename)
+
+    else:
+
+        import unittest
+        suite = unittest.TestSuite()
+        for basename in basenames:
+            test_module = __import__(basename)
+            suite.addTest(unittest.findTestCases(test_module))
+
+        unittest.TextTestRunner(verbosity=1).run(suite)
+        #unittest.TextTestRunner(verbosity=2).run(test_template.TemplateTest)
 
 
-#suite = unittest.TestSuite()
-#suite.addTest(test_template.TemplateTest)
-#suite.addTest(test_engine.Engineest)
-#suite.addTest(test_cmdapp.CommandApplicationTest)
 
-#unittest.TextTestRunner(verbosity=2).run(suite)
-#unittest.TextTestRunner(verbosity=2).run(test_template.TemplateTest)
+if __name__ == '__main__':
 
-#from test import test_support
-#test_support.run_unittest(suite)
-
-#unittest.main()
+    import sys
+    verbose = len(sys.argv) > 1 and sys.argv[1] == '-v'
+    main(verbose)
+    sys.exit(0)
