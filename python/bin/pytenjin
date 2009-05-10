@@ -117,7 +117,7 @@ class Main(object):
 
         ## set action
         action = options.get('a')
-        actions = ('render', 'convert', 'retrieve', 'statements', 'syntax', 'dump', 'preprocess')
+        actions = ('render', 'convert', 'cache', 'retrieve', 'statements', 'syntax', 'dump', 'preprocess')
         if action:
             if action not in actions:
                 raise self.error("-a %s: unknown action." % action)
@@ -186,7 +186,7 @@ class Main(object):
             properties['indent'] = int(options['i'])
 
         ## set properties for tenjin.Engine
-        properties.setdefault('cache', False);
+        properties.setdefault('cache', action == 'cache');
         path = None
         if properties.has_key('path'):
             path = []
@@ -225,6 +225,11 @@ class Main(object):
                 if not template.script:
                     template.convert(open(template.filename).read(), template.filename)
                 output = template.script
+            elif action == 'cache':
+                template = engine.get_template(template_name)
+                #if not template.script:
+                #    template.convert(open(template.filename).read(), template.filename)
+                output = ''
             elif action == 'syntax':
                 template = engine.get_template(template_name)
                 output = self.check_syntax(template.script, template.filename)
@@ -332,6 +337,7 @@ Usage: %(command)s [..options..] [file1 [file2...]]
   -a action           :  action (default 'render')
      -a render        :  render template
      -a convert       :  convert template into script
+     -a cache         :  convert template into cache file
      -a retrieve      :  retrieve statements and expressions
      -a statements    :  retrieve only statements
      -a syntax        :  syntax check of template
@@ -374,12 +380,14 @@ Examples:
  ex2. convert template into python script
    $ %(command)s -a convert file.pyhtml
    $ %(command)s -a retrieve -UN file.pyhtml   # for debug
- ex3. render with context data file (*.yaml or *.py)
+ ex3. create cache file (*.cache) from template
+   $ %(command)s -a cache *.pyhtml
+ ex4. render with context data file (*.yaml or *.py)
    $ %(command)s -f datafile.yaml file.pyhtml
- ex4. render with context data string
+ ex5. render with context data string
    $ %(command)s -c '{title: tenjin example, items: [1, 2, 3]}' file.pyhtml # yaml
    $ %(command)s -c 'title="tenjin example"; items=[1,2,3]' file.pyhtml   # python
- ex5. syntax check
+ ex6. syntax check
    $ %(command)s -a syntax *.pyhtml   # or '-z'
 """ % { 'command': command }
         return re.compile(r'^#.*?\n', re.M).sub('', s[1:])

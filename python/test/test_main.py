@@ -261,6 +261,42 @@ class MainTest(unittest.TestCase, TestCaseHelper):
         self.options = "-baconvert"
         self._test()
 
+    def test_cache1(self):   # -a cache
+        if not self.is_target(): return
+        self.options  = "-a cache"
+        self.input    = (
+            '<?py #@ARGS title, items ?>\n'
+            '<h1>${title}</h1>\n'
+            '<ul>\n'
+            '<?py for item in items: ?>\n'
+            '  <li>${item}</li>\n'
+            '<?py #endfor ?>\n'
+            '</ul>\n'
+            )
+        self.expected = ''
+        script = (
+            "title = _context.get('title'); items = _context.get('items'); \n"
+            "_buf.extend(('''<h1>''', escape(to_str(title)), '''</h1>\n"
+            "<ul>\\n''', ));\n"
+            "for item in items:\n"
+            "    _buf.extend(('''  <li>''', escape(to_str(item)), '''</li>\\n''', ));\n"
+            "#endfor\n"
+            "_buf.extend(('''</ul>\\n''', ));\n"
+            )
+        self.filename = 'test_cache1.pyhtml'
+        cachename = self.filename + '.cache'
+        try:
+            self._test()
+            self.assertTrue(os.path.exists(cachename))
+            import marshal
+            dct = marshal.load(open(cachename, 'rb'))
+            self.assertTextEqual(['title', 'items'], dct.get('args'))
+            self.assertEquals("<type 'code'>", str(type(dct.get('bytecode'))))
+            self.assertTextEqual(script, dct.get('script'))
+        finally:
+            if os.path.exists(cachename):
+                os.unlink(cachename)
+
     input_for_retrieve = (
         '<div>\n'
         '<?py if list: ?>\n'
