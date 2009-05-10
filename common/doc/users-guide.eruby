@@ -1,0 +1,6439 @@
+% Object.class_eval { remove_const(:TRUE) }
+% Object.class_eval { remove_const(:FALSE) }
+% PYTHON = RUBY = PERL = JS = PHP = false
+% if @lang == 'python'
+%    #Object.class_eval { remove_const(:PYTHON) }
+%    PYTHON  = true
+%    name    = 'pyTenjin'
+%    package = 'pyTenjin'
+%    command = 'pytenjin'
+%    pi      = 'py'
+%    PI      = 'PY'
+%    ext     = 'py'
+%    Lang    = 'Python'
+%    lang    = 'python'
+%    prefix  = ''
+%    suffix  = 'pyhtml'
+%    TRUE    = 'True'
+%    FALSE   = 'False'
+%    NULL    = 'None'
+%    ARRAY   = 'list'
+%    HASH    = 'dict'
+%    template_class = 'tenjin.Template'
+%    engine_class   = 'tenjin.Engine'
+%    context_class  = nil
+%    def symbol(name)
+%      return "':#{name}'"
+%    end
+%    imsep   = '.'
+%    empty_line = "\n"
+%    bufname = '_buf'
+%    comment = '#'
+%    embexpr1 = '#{...}'
+%    embexpr2 = '${...}'
+% elsif @lang == 'ruby'
+%    RUBY    = true
+%    name    = 'rbTenjin'
+%    package = 'rbtenjin'
+%    command = 'rbtenjin'
+%    pi      = 'rb'
+%    PI      = 'RB'
+%    ext     = 'rb'
+%    Lang    = 'Ruby'
+%    lang    = 'ruby'
+%    prefix  = '@'
+%    suffix  = 'rbhtml'
+%    TRUE    = 'true'
+%    FALSE   = 'false'
+%    NULL    = 'nil'
+%    ARRAY   = 'Array'
+%    HASH    = 'Hash'
+%    template_class = 'Tenjin::Template'
+%    engine_class  = 'Tenjin::Engine'
+%    context_class  = 'Tenjin::Context'
+%    def symbol(name)
+%      return ":#{name}"
+%    end
+%    imsep   = '#'
+%    empty_line = "\n"
+%    bufname = '@_buf'
+%    comment = '#'
+%    embexpr1 = '#{...}'
+%    embexpr2 = '${...}'
+% elsif @lang == 'perl'
+%    PERL    = true
+%    name    = 'plTenjin'
+%    package = 'pltenjin'
+%    command = 'pltenjin'
+%    pi      = 'pl'
+%    PI      = 'PL'
+%    ext     = 'pl'
+%    Lang    = 'Perl'
+%    lang    = 'perl'
+%    prefix  = '$'
+%    suffix  = 'plhtml'
+%    TRUE    = '1'
+%    FALSE   = '0'
+%    NULL    = 'undef'
+%    ARRAY   = 'list'
+%    HASH    = 'hash'
+%    template_class = 'Tenjin::Template'
+%    engine_class  = 'Tenjin::Engine'
+%    context_class  = 'Tenjin::Context'
+%    def symbol(name)
+%      return "':#{name}'"
+%    end
+%    imsep   = '::'
+%    empty_line = ""
+%    bufname = '@_buf'
+%    comment = '#'
+%    embexpr1 = '[== ... =]'
+%    embexpr2 = '[= ... =]'
+% elsif @lang == 'js'
+%    JS      = true
+%    name    = 'jsTenjin'
+%    package = 'jstenjin'
+%    command = 'jstenjin'
+%    pi      = 'js'
+%    PI      = 'JS'
+%    ext     = 'js'
+%    Lang    = 'JavaScript'
+%    lang    = 'js'
+%    prefix  = ''
+%    suffix  = 'jshtml'
+%    TRUE    = 'true'
+%    FALSE   = 'false'
+%    NULL    = 'null'
+%    ARRAY   = 'array'
+%    HASH    = 'object'
+%    template_class = 'Tenjin.Template'
+%    engine_class  = 'Tenjin.Engine'
+%    context_class  = 'Tenjin.Context'
+%    def symbol(name)
+%      return "':#{name}'"
+%    end
+%    imsep   = '.'
+%    empty_line = "\n"
+%    bufname = '_buf'
+%    comment = '//'
+%    embexpr1 = '#{...}'
+%    embexpr2 = '${...}'
+% elsif @lang == 'php'
+%    PHP    = true
+%    name    = 'phpTenjin'
+%    package = 'phptenjin'
+%    command = 'phptenjin'
+%    pi      = 'php'
+%    PI      = 'PHP'
+%    ext     = 'php'
+%    Lang    = 'PHP'
+%    lang    = 'php'
+%    prefix  = '$'
+%    suffix  = 'phtml'
+%    TRUE    = 'TRUE'
+%    FALSE   = 'FALSE'
+%    NULL    = 'NULL'
+%    ARRAY   = 'array'
+%    HASH    = 'array'
+%    template_class = 'Tenjin_Template'
+%    engine_class  = 'Tenjin_Engine'
+%    context_class  = ''
+%    def symbol(name)
+%      return "':#{name}'"
+%    end
+%    imsep   = '->'
+%    empty_line = "\n"
+%    bufname = ''
+%    comment = '//'
+%    embexpr1 = '{== ... =}'
+%    embexpr2 = '{= ... =}'
+% else
+%    assert false
+% end
+% n = 0    # example counter
+%
+.=title:	[%= name %] User's Guide
+.?lastupdate:	$Date$
+.?release:	$Release$
+.?stylesheet:	docstyle.css
+
+Release: $Release$
+
+
+Table of Contents:
+.<<< users-guide.toc
+
+
+
+.$ Introduction		| intro
+
+
+
+.$$ Overview		| overview
+
+
+[%= name %] is a very fast and lightweight template engine based on embedded [%= Lang %].
+You can embed [%= Lang %] statements and expressions into your text file.
+[%= name %] converts it into [%= Lang %] script and evaluate it.
+
+
+The following is an example of [%= name %].
+
+% if PYTHON
+.? File 'ex.pyhtml':
+.-------------------- ex.pyhtml
+Hello {{*#{name}*}}!
+<ul>
+{{*<?py for item in items: ?>*}}
+ <li>{{*${item}*}}</li>
+{{*<?py #end ?>*}}
+</ul>
+.--------------------
+% elsif RUBY
+.? File 'ex.rbhtml':
+.-------------------- ex.rbhtml
+Hello {{*#{@name}*}}!
+<ul>
+{{*<?rb for item in @items ?>*}}
+ <li>{{*${item}*}}</li>
+{{*<?rb end ?>*}}
+</ul>
+.--------------------
+% elsif PERL
+.? File 'ex.plhtml':
+.-------------------- ex.plhtml
+Hello {{*[== $name =]*}}!
+<ul>
+{{*<?pl for my $item (@$items) { ?>*}}
+ <li>{{*[= $item =]*}}</li>
+{{*<?pl } ?>*}}
+</ul>
+.--------------------
+% elsif JS
+.? File 'ex.jshtml':
+.-------------------- ex.jshtml
+Hello {{*#{name}*}}!
+<ul>
+{{*<?js for (var i = 0, n = items.length; i < n; i++) { ?>*}}
+ <li>{{*${items[i]}*}}</li>
+{{*<?js } ?>*}}
+</ul>
+.--------------------
+% elsif PHP
+.? File 'ex.phtml':
+.-------------------- ex.phtml
+Hello {{*{==$name=}*}}!
+<ul>
+{{*<?php foreach ($items as $item) { ?>*}}
+ <li>{{*{=$item=}*}}</li>
+{{*<?php } ?>*}}
+</ul>
+.--------------------
+% else assert false 
+% end 
+
+Here is the notation:
+
+.* {{,<?[%= pi %] ... ?>,}} represents embedded [%= Lang %] statements.
+.* {{,[%=embexpr1%],}} represents embedded [%= Lang %] expression.
+.* {{,[%=embexpr2%],}} represents embedded escaped (sanitized) [%= Lang %] expression.
+
+.? Result of covertion into [%= Lang %] script:
+% if PYTHON
+.==================== ex_source.result
+$ [%= command %] -s ex.pyhtml
+_buf = []; _buf.extend(('''Hello ''', {{*to_str(name)*}}, '''!
+<ul>\n''', ));
+{{*for item in items:*}}
+    _buf.extend((''' <li>''', {{*escape(to_str(item))*}}, '''</li>\n''', ));
+{{*#end*}}
+_buf.extend(('''</ul>\n''', ));
+print ''.join(_buf)
+.====================
+% elsif RUBY
+.==================== ex_source.result
+$ [%= command %] -s ex.rbhtml
+_buf = '';  _buf << %Q`Hello {{*#{@name}*}}!
+<ul>\n`
+{{*for item in @items*}}
+ _buf << %Q` <li>{{*#{escape((item).to_s)}*}}</li>\n`
+{{*end*}}
+ _buf << %Q`</ul>\n`
+_buf.to_s
+.====================
+% elsif PERL
+.==================== ex_source.result
+$ [%= command %] -s ex.plhtml
+my @_buf = (); push(@_buf, q`Hello `,  {{*$name*}} , q`!
+<ul>
+`, ); {{*for my $item (@$items) {*}}
+push(@_buf, q` <li>`, {{*escape( $item )*}}, q`</li>
+`, ); {{*}*}}
+push(@_buf, q`</ul>
+`, ); join('', @_buf);
+.====================
+% elsif JS
+.==================== ex_source.result
+$ [%= command %] -s ex.jshtml
+var _buf = [];  _buf.push('Hello ', name, '!\n\
+<ul>\n');
+ for (var i = 0, n = items.length; i < n; i++) {
+ _buf.push(' <li>', escapeXml(items[i]), '</li>\n');
+ }
+ _buf.push('</ul>\n');
+_buf.join('')
+.====================
+% elsif PHP
+.==================== ex_source.result
+$ [%= command %] -s ex.phtml
+<?php echo 'Hello ', $name, '!
+<ul>
+'; foreach ($items as $item) { 
+echo ' <li>', htmlspecialchars($item), '</li>
+'; } 
+echo '</ul>
+';
+?>
+.====================
+% else assert false 
+% end 
+
+
+.? Output of execution with context data:
+% if PYTHON
+.==================== ex.result
+$ [%= command %] -c "name='World'; items=['<AAA>','B&B','\"CCC\"']" ex.[%=suffix%]
+Hello World!
+<ul>
+ <li>&lt;AAA&gt;</li>
+ <li>B&amp;B</li>
+ <li>&quot;CCC&quot;</li>
+</ul>
+.====================
+% elsif RUBY
+.==================== ex.result
+$ [%= command %] -c "@name='World'; @items=['<AAA>','B&B','\"CCC\"']" ex.[%=suffix%]
+Hello World!
+<ul>
+ <li>&lt;AAA&gt;</li>
+ <li>B&amp;B</li>
+ <li>&quot;CCC&quot;</li>
+</ul>
+.====================
+% elsif PERL
+.==================== ex.result
+$ [%= command %] -w -c "name=>'World', items=>['<AAA>','B&B','\"CCC\"']" ex.[%=suffix%]
+Hello World!
+<ul>
+ <li>&lt;AAA&gt;</li>
+ <li>B&amp;B</li>
+ <li>&quot;CCC&quot;</li>
+</ul>
+.====================
+% elsif JS
+.==================== ex.result
+$ [%= command %] -c "name:'World', items:['<AAA>','B&B','\"CCC\"']" ex.[%=suffix%]
+Hello World!
+<ul>
+ <li>&lt;AAA&gt;</li>
+ <li>B&amp;B</li>
+ <li>&quot;CCC&quot;</li>
+</ul>
+.====================
+% elsif PHP
+.==================== ex.result
+$ [%= command %] -c '$name="World"; $items=array("<AAA>","B&B","\"CCC\"");' ex.[%=suffix%]
+Hello World!
+<ul>
+ <li>&lt;AAA&gt;</li>
+ <li>B&amp;B</li>
+ <li>&quot;CCC&quot;</li>
+</ul>
+.====================
+% else assert false 
+% end 
+
+
+.? Example of [%= Lang %] script
+% if PYTHON
+.-------------------- ex.script
+import tenjin
+from tenjin.helpers import *   # or escape, to_str
+engine = tenjin.Engine()
+context = { 'name': 'World', 'items': ['<AAA>', 'B&B', '"CCC"'] }
+output = engine.render('ex.pyhtml', context)
+print output,
+.--------------------
+% elsif RUBY
+.-------------------- ex.script
+require 'tenjin'
+engine = Tenjin::Engine.new()
+context = { :name=>'World', :items=>['<AAA>', 'B&B', '"CCC"'] }
+output = engine.render('ex.rbhtml', context)
+print output
+.--------------------
+% elsif PERL
+.-------------------- ex.script
+use Tenjin;
+$Tenjin::USE_STRICT = 1;  # (optional but recommended)
+my $engine = new Tenjin::Engine();
+my $context = { name=>'World', items=>['<AAA>', 'B&B', '"CCC"'] };
+my $output = $engine->render('ex.plhtml', $context);
+print $output;
+.--------------------
+% elsif JS
+.-------------------- ex.script
+load('tenjin.js');
+var engine = new Tenjin.Engine();
+var context = { name:'World', items:['<AAA>', 'B&B', '"CCC"'] };
+var output = engine.render('ex.jshtml', context);
+print(output);
+.--------------------
+% elsif PHP
+.-------------------- ex.script
+<?php
+require_once 'Tenjin.php';
+$engine = new Tenjin_Engine();
+$context = array('name'=>'World', 'items'=>array('<AAA>', 'B&B', '"CCC"'));
+$output = $engine->render('ex.phtml', $context);
+echo($output);
+?>
+.--------------------
+% else assert false 
+% end 
+
+
+% if JS
+[%=name%] is designed for server-side JavaScript and it may be overspec for client-side JavaScript.
+Download files of [%=name%] contains 'shotenjin.js' which is minimun subset of 'tenjin.js' and more suitable for client-side JavaScript.
+
+.? Example of [%= Lang %] script
+.-------------------- ex.html
+.#<html>
+.#  <head>
+.#    <title>Shotenjin Example</title>
+    <script language="JavaScript" type="text/javascript" {{*src="shotenjin.js"*}}></script>
+    <script language="JavaScript" type="text/javascript">
+      <!--
+
+function build_table() {
+    var input = '\
+<table border="1">\n\
+  <tbody>\n\
+    <?js for (var i = 0, n = items.length; i < n; i++) { ?>\n\
+    <tr>\n\
+      <td>#{i}</td>\n\
+      <td>${items[i]}</td>\n\
+    </tr>\n\
+    <?js } ?>\n\
+  </tbody>\n\
+<table>\
+';
+    var context = {items: ['AAA','BBB','CCC']};
+    var output = {{*Shotenjin.render(input, context)*}};
+    document.getElementById('targettable').innerHTML = output;
+    document.getElementById('htmlsource').innerHTML = escapeXml(output);
+}
+      -->
+    </script>
+.#  </head>
+.#  <body>
+    <input type="button" value="Build table" onclick="javascript:build_table()" />
+    <table id="targettable"></table>
+    <div id="htmlsource"></div>
+.#  </body>
+.#</html>
+.--------------------
+
+.+++
+<!-- SCRIPT -->
+<div>
+    <script language="JavaScript" type="text/javascript" src="shotenjin.js"></script>
+    <script language="JavaScript" type="text/javascript">
+      <!--
+
+function build_table() {
+    var input = '\
+<table border="1">\n\
+  <tbody>\n\
+    <?js for (var i = 0, n = items.length; i < n; i++) { ?>\n\
+    <tr>\n\
+      <td>#{i}</td>\n\
+      <td>${items[i]}</td>\n\
+    </tr>\n\
+    <?js } ?>\n\
+  </tbody>\n\
+<table>\
+';
+    var context = {items: ['AAA','BBB','CCC']};
+    var output = Shotenjin.render(input, context);
+    document.getElementById('targettable').innerHTML = output;
+    document.getElementById('htmlsource').innerHTML = escapeXml(output);
+}
+      -->
+    </script>
+</div>
+<!-- /SCRIPT -->
+    <input type="button" value="Build table" onclick="javascript:build_table()" />
+    <table id="targettable"></table>
+    <span>Source:</span>
+    <pre id="htmlsource"></pre>
+.+++
+
+% end 
+
+.#+++
+% opt = JS ? '-f ' : '' 
+.==================== ex_script.result
+$ [%=lang%] [%=opt%]ex.script
+Hello World!
+<ul>
+ <li>&lt;AAA&gt;</li>
+ <li>B&amp;B</li>
+ <li>&quot;CCC&quot;</li>
+</ul>
+% _buf << "\n" if JS
+.====================
+.#---
+
+
+
+
+.$$ Features		| features
+
+[%= name %] has the following features:
+
+% if PYTHON
+.* [%= name %] runs very fast. It works about twice as fast as any other solution.
+% elsif RUBY
+.* [%= name %] runs very fast. It works about three times as fast as ERB.
+% elsif PERL
+.* [%= name %] runs very fast. It works about three times as fast as Template-Toolkit.
+% elsif JS
+.* [%= name %] runs very fast.
+% elsif PHP
+.* [%= name %] runs very fast. It works about twice as fast as Smarty.
+% else assert false 
+% end 
+.* [%= name %] doesn't break HTML design because it uses XML Processing
+  Instructions (PI) as embedded notation for [%= Lang %] statements.
+.* [%= name %] is secure because it supports escaping expression value by default.
+.* [%= name %] is small and lightweight. It is very easy to include [%= name %]
+  into your application.
+.* [%= name %] supports auto caching of converted [%= Lang %] code.
+.* [%= name %] supports partial template and layout template.
+  These are very useful especially for web application.
+.* [%= name %] supports partial capturing of template.
+.* [%= name %] can load YAML file as context data. Using [%= name %], it is able to
+  separate template file and data file.
+
+
+
+
+% if ! RUBY   # *m1 
+
+.$$ Comparison with other solutions	| comparison
+
+
+[%= name %] has advantages compared with other solutions (including other language solutions):
+
+.* {{*Easy to design*}} --
+  JSP, ePerl, or eRuby breaks HTML design because they use
+  '{{,<% ... %>,}}' as embedded notation which is not valid in HTML.
+  [%= name %] doesn't break HTML desgin because it uses Processing
+  Instructions (PI) as embedded notation which is valid in HTML.
+.* {{*Easy to write*}} --
+  In PHP, it is a little bother to write embedded expression
+  because the notation '{{,<?php echo $value; ?>,}}' is a little long,
+  and very bother to embed escaped expression because
+  '{{,<?php echo htmlspecialchars($value); ?>,}}' is very long.
+  In [%= name %], these are very easy to write because embedded expression
+  notations ('{{,#{value},}}' and '{{,${value},}}') are very short.
+.* {{*Easy to learn*}} --
+% if PYTHON
+  Zope DTML, PageTemplate, Django Template, and other template systems
+% else 
+  Some template systems
+% end 
+  are hard to learn because they are large, highly functinal, and
+  based on non-[%= Lang %] syntax.
+  [%= name %] is very easy to learn if you already know [%= Lang %] language because
+  it is very small and  you can embed any [%= Lang %] code into HTML template.
+
+% end # *m1 
+
+
+
+
+.$$ Benchmark		| benchmark
+
+Benchmark script is contained in [%= name %] archive.
+The following is an example of benchmark.
+
+
+% if PYTHON
+
+.? MacOS X 10.4 Tiger, Intel CoreDuo 1.83GHz, Memory 2GB
+.====================
+$ cd pytenjin-X.X.X/benchmark
+$ python -V
+Python 2.5.1
+$ python bench.py -q -n 10000
+Compiling bench_cheetah.tmpl -> bench_cheetah.py (backup bench_cheetah.py.bak)
+*** ntimes=10000
+                           utime      stime      total       real
+tenjin                   6.47000    0.49000    6.96000    6.98909
+tenjin-reuse             5.54000    0.06000    5.61000    5.63055
+tenjin-nocache          20.14000    0.41000   20.55000   20.60475
+django                  69.99000    1.34000   71.33000   71.57211
+django-reuse            58.92000    0.88000   59.80000   59.94480
+cheetah                 20.33000    0.03000   20.36000   20.41416
+cheetah-reuse           19.80000    0.02000   19.82000   19.86858
+myghty                 106.25000    1.63000  107.88000  108.16097
+myghty-reuse            18.70000    0.60000   19.30000   19.35395
+kid                    379.64000    0.60000  380.24000  381.11728
+kid-reuse              378.52000    0.44000  378.96000  379.64911
+genshi                 557.29000    3.00000  560.30000  561.71955
+genshi-reuse           270.47000    1.22000  271.69000  272.26885
+mako                    16.82000    0.96000   17.78000   18.36388
+mako-reuse              13.47000    0.02000   13.49000   13.51232
+mako-nocache           236.10000    1.67000  237.77000  238.38705
+templetor              424.03000    4.15000  428.19000  429.59667
+templetor-reuse         61.46000    0.07000   61.53000   61.68483
+.#$ python -V
+.#Python 2.5
+.#$ python bench.py -q -n 10000
+.#Compiling bench_cheetah.tmpl -> bench_cheetah.py
+.#*** ntimes=10000
+.#                           utime      stime      total       real
+.#.#tenjin-programcache     11.30000    0.53000   11.83000   11.86865
+.#.#tenjin-bytecodecache     6.46000    0.44000    6.90000    6.91217
+.#tenjin                   6.46000    0.44000    6.90000    6.91217
+.#tenjin-nocache          20.05000    0.41000   20.47000   20.52184
+.#tenjin-reuse             5.49000    0.06000    5.56000    5.57317
+.#django                  56.95000    0.41000   57.36000   57.55391
+.#django-reuse            50.24000    0.06000   50.30000   50.43268
+.#cheetah                 19.73000    0.03000   19.75000   19.80586
+.#cheetah-reuse           19.12000    0.02000   19.14000   19.19589
+.#myghty                 107.14000    1.60000  108.74000  109.07036
+.#myghty-reuse            18.78000    0.57000   19.35000   19.40151
+.#kid                    343.21000    0.58000  343.79000  344.61319
+.#kid-reuse              342.06000    0.45000  342.52000  343.51891
+.====================
+
+Versions:
+.* Python 2.5.1
+.* Tenjin 0.6.1
+.* Django 0.95
+.* Cheetah 2.0
+.* Myghty 1.1
+.* Kid 0.9.6
+.* Genshi 0.4.4
+.* Mako 0.1.9
+.* Templetor (web.py) 0.22
+
+This shows the followings.
+.* pyTenjin is the fastest template engine.
+.#   It runs at least three times faster than other solutions.
+.* Cheetah's performance is good.
+.* Myghty's performance is good for mod_python, but is bad for CGI program.
+.* Django's performance is not good.
+.* Kid's performance is worse. It is too slow.
+.* Genshi's performance is also worse. It is faster than Kid, but slower than others.
+.* Mako's performance is very good when module caching is enabled.
+.* Templetor's performance is not good for mod_python and worse for CGI program.
+
+% elsif RUBY
+
+.? MacOS X 10.4 Tiger, Intel CoreDuo 1.83GHz, Memory 2GB
+.====================
+$ cd rbtenjin-X.X.X/benchmark
+$ ruby -v
+ruby 1.8.6 (2007-03-13 patchlevel 0) [i686-darwin8.9.1]
+$ ruby bench.rb -n 10000
+                          user     system      total        real
+eruby                 12.02000    0.27000   12.29000 (  12.34855)
+eruby-cache           11.09000    0.43000   11.53000 (  11.58262)
+erb                   36.32000    0.41000   36.73000 (  36.89404)
+erb-cache             11.13000    0.45000   11.57000 (  11.62259)
+erb-reuse             10.78000    0.03000   10.81000 (  10.85908)
+erb-defmethod          5.82000    0.02000    5.84000 (   5.86168)
+erubis                10.31000    0.32000   10.64000 (  10.68644)
+erubis-cache           7.02000    0.43000    7.45000 (   7.50923)
+erubis-reuse           4.43000    0.01000    4.44000 (   4.45338)
+tenjin                 6.87000    0.47000    7.34000 (   7.37263)
+tenjin-nocache         8.73000    0.36000    9.10000 (   9.14337)
+tenjin-reuse           4.45000    0.07000    4.52000 (   4.53931)
+.#
+.#                          user     system      total        real
+.#eruby                12.250000   0.260000  12.510000 ( 12.543581)
+.#eruby-cache          11.330000   0.430000  11.760000 ( 11.804727)
+.#erb                  36.240000   0.390000  36.630000 ( 36.759454)
+.#erb-cache            11.060000   0.440000  11.500000 ( 11.548973)
+.#erb-reuse            10.730000   0.020000  10.750000 ( 10.801543)
+.#erubis               10.150000   0.310000  10.460000 ( 10.501336)
+.#erubis-cache          6.900000   0.420000   7.320000 (  7.348610)
+.#erubis-reuse          6.400000   0.010000   6.410000 (  6.446206)
+.#tenjin                 6.650000   0.430000   7.080000 (  7.106622)
+.#tenjin-nocache         8.250000   0.360000   8.610000 (  8.643487)
+.#tenjin-reuse           4.370000   0.060000   4.430000 (  4.453653)
+.#
+.#                          user     system      total        real
+.#tenjin-arrbuf          6.640000   0.420000   7.060000 (  7.090081)
+.#tenjin-arrbuf-nocache 10.150000   0.370000  10.520000 ( 10.561252)
+.#tenjin-arrbuf-reuse    4.070000   0.070000   4.140000 (  4.157313)
+.#$ ruby -v
+.#ruby 1.8.5 (2006-08-25) [i686-darwin8.6.2]
+.#$ ruby bench.rb -n 10000
+.#                     user     system      total        real
+.#eruby           25.260000   0.570000  25.830000 ( 29.417001)
+.#eruby-cache     23.380000   0.880000  24.260000 ( 27.428129)
+.#erb             73.100000   0.970000  74.070000 ( 83.774299)
+.#erb-reuse       22.960000   0.120000  23.080000 ( 26.189293)
+.#erubis          20.630000   0.640000  21.270000 ( 23.976988)
+.#erubis-reuse    13.240000   0.060000  13.300000 ( 15.011609)
+.#tenjin           13.200000   0.810000  14.010000 ( 15.860334)
+.#tenjin-nocache   16.210000   0.710000  16.920000 ( 19.148423)
+.#tenjin-reuse      8.580000   0.330000   8.910000 ( 10.311393)
+.====================
+
+This shows that rbTenjin is much faster than any other eRuby implementations.
+
+% elsif PERL
+
+.? MacOS X 10.4 Tiger, Intel CoreDuo 1.83GHz, Memory 2GB
+.====================
+$ cd pltenjin-X.X.X/benchmark
+$ perl -v | grep built
+This is perl, v5.8.8 built for darwin-2level
+$ perl -I ../lib bench.pl -n 10000 
+*** n = 10000
+                          user         sys       total        real
+tenjin                  9.8500      0.5700     10.4200     11.0000
+tenjin-nocache         16.2500      0.4300     16.6800     17.0000
+tenjin-reuse            5.7100      0.0100      5.7200      6.0000
+tt                    102.6100      0.9700    103.5800    104.0000
+tt-reuse               26.2500      0.0500     26.3000     26.0000
+htmltmpl               46.2300      0.4700     46.7000     47.0000
+htmltmpl-reuse         30.1700      0.0400     30.2100     31.0000
+.#                         user         sys       total        real
+.#tenjin                9.68000     0.55000    10.23000    10.00000
+.#tenjin-nocache       15.35000     0.38000    15.73000    16.00000
+.#tenjin-reuse          5.50000     0.01000     5.51000     5.00000
+.#tt                  102.26000     0.83000   103.09000   104.00000
+.#tt-reuse             26.38000     0.02000    26.40000    26.00000
+.====================
+
+This shows that [%= name %] runs about five times faster than Template-Toolkit.
+
+% elsif JS
+
+.? MacOS X 10.4 Tiger, Intel CoreDuo 1.83GHz, Memory 2GB
+.====================
+$ cd pltenjin-X.X.X/benchmark
+$ js -h
+JavaScript-C 1.6 pre-release 1 2006-04-04 (OSSP js 1.6.20070208)
+usage: js [-PswWxC] [-b branchlimit] [-c stackchunksize] [-v version] [-f script
+file] [-e script] [-S maxstacksize] [scriptfile] [scriptarg...]
+$ make N=10000 JS=js
+time js bench.js -n 10000
+        0.01 real         0.01 user         0.00 sys
+time js bench.js -n 10000 tenjin-cached
+       19.00 real        15.14 user         3.73 sys
+time js bench.js -n 10000 tenjin-nocache
+       29.78 real        26.74 user         2.92 sys
+time js bench.js -n 10000 tenjin-reuse
+       12.98 real        12.43 user         0.47 sys
+.#                        0.0200     0.0000     0.1200
+.#tenjin-cached         151.4100    37.3200   189.9800
+.#tenjin-nocache        267.3800    29.1700   297.8300
+.#tenjin-reuse          124.3300     4.7000   129.8000
+
+$ java -version
+java version "1.5.0_07"
+Java(TM) 2 Runtime Environment, Standard Edition (build 1.5.0_07-164)
+Java HotSpot(TM) Client VM (build 1.5.0_07-87, mixed mode, sharing)
+$ make N=10000 JS='java -server -jar js.jar'
+time java -server -jar js.jar bench.js -n 10000
+        0.69 real         0.58 user         0.06 sys
+time java -server -jar js.jar bench.js -n 10000 tenjin-cached
+       24.29 real        23.15 user         1.22 sys
+time java -server -jar js.jar bench.js -n 10000 tenjin-nocache
+       42.05 real        40.59 user         1.61 sys
+time java -server -jar js.jar bench.js -n 10000 tenjin-reuse
+       19.15 real        18.59 user         0.42 sys
+.#                        5.8200     0.6300     6.9500
+.#tenjin-cached         231.4800    12.2300   242.8700
+.#tenjin-nocache        405.9100    16.1200   420.5200
+.#tenjin-reuse          185.8100     4.1900   191.5000
+.====================
+
+% elsif PHP
+
+.====================
+$ cd pltenjin-X.X.X/benchmark
+$ php -v
+PHP 5.2.0 (cli) (built: Jan 29 2007 18:35:33) 
+Copyright (c) 1997-2006 The PHP Group
+Zend Engine v2.2.0, Copyright (c) 1998-2006 Zend Technologies
+$ php bench.php -n 10000
+*** ntimes=10000
+                          user        sys      total       real
+tenjin                  4.2300     1.1600     5.3900     5.4362
+tenjin_reuse            3.1600     0.4800     3.6400     3.6688
+smarty                 10.1100     0.7300    10.8400    10.9260
+smarty_reuse            9.5100     0.6900    10.2100    10.2996
+php                     3.0300     0.4900     3.5200     3.5620
+.#                          user        sys      total       real
+.#tenjin                  3.6300     0.8800     4.5200     4.6301
+.#tenjin_reuse            2.7800     0.0000     2.7800     2.8144
+.#smarty                 10.1200     0.7300    10.8500    10.9883
+.#smarty_reuse            9.4800     0.6900    10.1700    10.2770
+.#php                     3.0400     0.4800     3.5200     3.5681
+.====================
+
+
+% else assert false 
+% end 
+
+
+.$ Installation			| installation
+
+% if PYTHON
+
+[%= name %] works on CPython (2.3 or higher).
+
+.#.* CPython
+   
+  .1) Download [%= package %]-X.X.X.tar.gz and extract it.
+  .2) Just type '{{,python setup.py install,}}' with administrator or root user,
+      or copy 'lib/tenjin.py' and 'bin/pytenjin' into proper directory if you don't
+      have administrator or root priviledge.
+  .3) (Optional) Install {{<PyYAML|http://pyyaml.org>}}.
+
+.#.* Jython
+.#   
+.#  .1) Download pytenjin-X.X.X.tar.gz and extract it.
+.#  .2) Copy 'lib/tenjin.py' and 'bin/pytenjin' into proper directory.
+.#  .3) Edit 'bin/pytenjin' according to the following::
+.#      
+.#	.--------------------
+.#	{{*#!/usr/bin/env jython*}}
+.#	
+.#	{{*libdir = '/home/yourname/pytenjin-X.X.X/lib'*}}
+.#	{{*import sys*}}
+.#	{{*sys.path.append(libdir)*}}
+.#	
+.#	...
+.#	.--------------------
+
+% elsif RUBY
+
+[%= name %] requires Ruby 1.8 or later.
+
+.* If you have installed RubyGems, just type '{{,gem install [%= package %],}}'.
+.* Or if you have administrator privilegde, install with setup.rb.
+   .====================
+   $ tar xjf [%= package %]_X.X.X.tar.bz
+   $ cd [%= package %]_X.X.X/
+   $ ruby setup.rb --help | more
+   $ ruby setup.rb config
+   $ ruby setup.rb setup
+   $ sudo ruby setup.rb install
+   .====================
+.* Or copy 'lib/tenjin.rb' and 'bin/rbtenjin' to proper directories.
+   .====================
+   $ tar xjf [%= package %]_X.X.X.tar.bz
+   $ cd [%= package %]_X.X.X/
+   $ cp lib/tenjin.rb $HOME/lib/ruby/
+   $ cp bin/rbtenjin $HOME/bin/
+   .====================
+
+% elsif PERL
+
+.1) Just copy 'lib/Tenjin.pm' and 'bin/pltenjin' into your proper directory.
+.2) (Optional) Install YAML::Syck package.
+
+
+% elsif JS
+
+.1) Install Rhino or Spidermonkey with File object enabled.
+    .====================
+    ### Rhino
+    $ wget ftp://ftp.mozilla.org/pub/mozilla.org/js/rhino1_6R5.zip
+    $ jar xf rhino1_6R5.zip
+    $ sudo mkdir -p /usr/local/java
+    $ cp rhino1_6R5/js.jar /usr/local/java
+    $ java -jar /usr/local/java/js.jar -e 'print(typeof(java))'
+    object
+    ### Spidermonkey
+    $ wget ftp://ftp.ossp.org/pkg/lib/js/js-1.6.20070208.tar.gz
+    $ tar xzf js-1.6.20070208.tar.gz
+    $ cd js-1.6.*/
+    $ ./configure --prefix=/usr/local --with-utf8 --with-editline
+    $ make JS_THREADSAFE=1 JS_HAS_FILE_OBJECT=1
+    $ sudo make install
+    $ js -e 'print(typeof(File))'
+    function
+    .====================
+.2) Copy 'lib/tenjin.js' to proper directory.
+    .====================
+    $ mkdir -p $HOME/lib/js
+    $ cp lib/tenjin.js $HOME/lib/js
+    .====================
+.3) Set '$TENJIN_JS' environment variable or edit 'jstenjin' and set TENJIN_JS variable.
+    .====================
+    $ export TENJINS_JS=$HOME/lib/js/tenjin.js
+    ## or vi bin/jstenjin
+    .====================
+.4) Copy 'jstenjin' to proper directory.
+    .====================
+    $ mkdir $HOME/bin
+    $ export PATH=$PATH:$HOME/bin
+    $ cp bin/jstenjin $HOME/bin/jstenjin
+    $ chmod 755 $HOME/bin/jstenjin
+    .====================
+.5) Edit 'bin/jstenjin' command script and set command path
+    .--------------------
+    #!/usr/local/bin/java -jar /usr/local/java/js.jar -strict     # for Rhino
+    #!/usr/local/bin/js -s                                        # for Spidermonkey
+    .--------------------
+
+Notice that jstenjin command is written in Ruby. You must install Ruby 1.8 or higher.
+
+% elsif PHP
+
+.1) Just copy 'lib/Tenjin.php' and 'bin/pltenjin' into your proper directory.
+    .====================
+    $ sudo cp lib/Tenjin.php /usr/local/lib/php
+    $ sudo cp bin/pltenjin /usr/local/bin
+    .====================
+.2) (Optional) Install Syck library for YAML parsing.
+
+% else assert false 
+% end 
+
+
+
+.$ Designer's Guide		| desguide
+
+This section shows how to use [%= name %] for designer.
+
+If you want to know how to use [%= name %] in your program, see {{<Developer's Guide|#devguide>}} section.
+
+
+
+.$$ Notation			| des-notation
+
+The following is the notation of [%= name %].
+
+.* '{{,<?[%= pi %] ... ?>,}}' represents embedded [%= Lang %] statement.
+.* '{{,[%=embexpr1%],}}' represents embedded [%= Lang %] expression.
+.* '{{,[%=embexpr2%],}}' represents embedded [%= Lang %] expression which is to be escaped (for example, '{{,& < > ",}}' is escaped to '{{,&amp; &lt; &gt; &quot;,}}').
+
+
+% n += 1 
+% if PYTHON
+.? File 'example[%= n %].[%= suffix %]':
+.-------------------- example[%= n %].[%= suffix %]
+<table>
+  <tbody>
+{{*<?py i = 0 ?>*}}
+{{*<?py for item in ['<foo>', 'bar&bar', '"baz"']: ?>*}}
+{{*<?py     i += 1 ?>*}}
+    <tr>
+      <td>{{*#{item}*}}</td>
+      <td>{{*${item}*}}</td>
+    </tr>
+{{*<?py #end ?>*}}
+  <tbody>
+</table>
+.#<html>
+.# <body>
+.#  <ul>
+.#{{*<?py i = 0 ?>*}}
+.#{{*<?py for item in ['<foo>', 'bar&bar', '"baz"']: ?>*}}
+.#{{*<?py     i += 1 ?>*}}
+.#   <li>{{*#{item}*}}
+.#       {{*${item}*}}</li>
+.#{{*<?py #end ?>*}}
+.#  </ul>
+.# </body>
+.#</html>
+.--------------------
+% elsif RUBY
+.? File 'example[%= n %].[%= suffix %]':
+.-------------------- example[%= n %].[%= suffix %]
+<table>
+  <tbody>
+{{*<?rb i = 0 ?>*}}
+{{*<?rb for item in ['<foo>', 'bar&bar', '"baz"'] ?>*}}
+{{*<?rb     i += 1 ?>*}}
+    <tr>
+      <td>{{*#{item}*}}</td>
+      <td>{{*${item}*}}</td>
+    </tr>
+{{*<?rb end ?>*}}
+  <tbody>
+</table>
+.#<html>
+.# <body>
+.#  <ul>
+.#{{*<?rb i = 0 ?>*}}
+.#{{*<?rb for item in ['<foo>', 'bar&bar', '"baz"'] ?>*}}
+.#{{*<?rb     i += 1 ?>*}}
+.#   <li>{{*#{item}*}}
+.#       {{*${item}*}}</li>
+.#{{*<?rb end ?>*}}
+.#  </ul>
+.# </body>
+.#</html>
+.--------------------
+% elsif PERL
+.? File 'example[%= n %].[%= suffix %]':
+.-------------------- example[%= n %].[%= suffix %]
+<table>
+  <tbody>
+{{*<?pl my $i = 0; ?>*}}
+{{*<?pl for my $item (('<foo>', 'bar&bar', '"baz"')) { ?>*}}
+{{*<?pl     $i++; ?>*}}
+    <tr>
+      <td>{{*[== $item =]*}}</td>
+      <td>{{*[= $item =]*}}</td>
+    </tr>
+{{*<?pl } ?>*}}
+  <tbody>
+</table>
+.--------------------
+% elsif JS
+.? File 'example[%= n %].[%= suffix %]':
+.-------------------- example[%= n %].[%= suffix %]
+<table>
+  <tbody>
+{{*<?js var items = ['<foo>', 'bar&bar', '"baz"']; ?>*}}
+{{*<?js for (var i = 0, n = items.length; i < n; i++) { ?>*}}
+{{*<?js     var item = items[i]; ?>*}}
+    <tr>
+      <td>{{*#{item}*}}</td>
+      <td>{{*${item}*}}</td>
+    </tr>
+{{*<?js } ?>*}}
+  <tbody>
+</table>
+.#<html>
+.# <body>
+.#  <ul>
+.#{{*<?js for (var i = 0, n = items.length; i < n; i++) { ?>*}}
+.#{{*<?js     var item = items[i]; ?>*}}
+.#   <li>{{*#{item}*}}
+.#       {{*${item}*}}</li>
+.#{{*<?js end ?>*}}
+.#  </ul>
+.# </body>
+.#</html>
+.--------------------
+% elsif PHP
+.? File 'example[%= n %].[%= suffix %]':
+.-------------------- example[%= n %].[%= suffix %]
+<table>
+  <tbody>
+{{*<?php $items = array('<foo>', 'bar&bar', '"baz"'); ?>*}}
+{{*<?php foreach ($items as $item) { ?>*}}
+    <tr>
+      <td>{{*{==$item=}*}}</td>
+      <td>{{*{=$item=}*}}</td>
+    </tr>
+{{*<?php } ?>*}}
+  <tbody>
+</table>
+.--------------------
+% else assert false 
+% end 
+
+% if PYTHON
+Notice that it is required to add '{{,<?py #end ?>,}}' line because [%= Lang %] doesn't have block-end mark.
+Block-end mark line tells [%= command %] command the position of end of block.
+It is able to use '{{,#endfor,}}', '{{,#,}}', '{{,pass,}}', and so on as block-end mark.
+% elsif RUBY
+% elsif PERL
+% elsif JS
+% elsif PHP
+% else assert false 
+% end 
+
+
+The following is the result of executing 'example1.[%= suffix %]'.
+
+.? Result:
+.==================== example1.result
+$ [%= command %] example[%= n %].[%= suffix %]
+<table>
+  <tbody>
+    <tr>
+      <td>{{*<foo>*}}</td>
+      <td>{{*&lt;foo&gt;*}}</td>
+    </tr>
+    <tr>
+      <td>{{*bar&bar*}}</td>
+      <td>{{*bar&amp;bar*}}</td>
+    </tr>
+    <tr>
+      <td>{{*"baz"*}}</td>
+      <td>{{*&quot;baz&quot;*}}</td>
+    </tr>
+  <tbody>
+</table>
+.#<html>
+.# <body>
+.#  <ul>
+.#   <li>{{*<foo>*}}
+.#       {{*&lt;foo&gt;*}}</li>
+.#   <li>{{*bar&bar*}}
+.#       {{*bar&amp;bar*}}</li>
+.#   <li>{{*"baz"*}}
+.#       {{*&quot;baz&quot;*}}</li>
+.#  </ul>
+.# </body>
+.#</html>
+.====================
+
+
+% if PHP
+
+[%=name%]'s error reporting may be not useful because it doesn't report filename on which error happended in default{{(This is a restriction of [%=name%] because {{,eval(),}} of PHP can't take filename as argument.)}}.
+The following is an error example and it shows that errored filename is not reported.
+
+.#+++
+.-------------------- ex2.[%=suffix%]
+<?php $i = 0 ?>
+<ul>
+  <li>{=$i=}</li>
+<?ul>
+.--------------------
+.#---
+
+.==================== ex2_error.result
+$ [%=command %] ex2.[%=suffix%]
+
+Parse error: syntax error, unexpected T_ECHO in {{*/usr/local/lib/php/Tenjin.php(497) : eval()'d code*}} on line 2
+.====================
+
+If you specify {{,--cache,}} option, {{,[%=command%],}} will report errored filename (and also temporary cache file will be created){{(If {{,--cache,}} is specified, PHP's function {{,include(),}} is called instead of {{,eval(),}}.)}}.
+
+.==================== ex2_error_with_filename.result
+$ [%=command %] {{*--cache*}} ex2.[%=suffix%]
+
+Parse error: syntax error, unexpected T_ECHO in {{*/home/tmp/ex2.phtml.cache*}} on line 2
+.====================
+
+% end
+
+
+
+% if PYTHON
+.$$ Embedded Statement Styles		| des-styles
+
+Two styles of embedded statement are available.
+The first style is shown in the previous section.
+In this style, it is able to put indent spaces before '{{,<?[%= pi %],}}' like the following:
+
+.? File 'example[%= n %]a.pyhtml':
+.-------------------- example[%= n %]a.pyhtml
+<table>
+  <tbody>
+<?py i = 0 ?>
+<?py for item in ['<foo>', 'bar&bar', '"baz"']: ?>
+    {{*<?py i += 1 ?>*}}
+    <tr>
+      <td>#{item}</td>
+      <td>${item}</td>
+    </tr>
+<?py #end ?>
+  </tbody>
+</table>
+.--------------------
+
+The second style is shown in the following.
+This style is convenient for a lot of statements.
+
+.? File 'example[%= n %]b.pyhtml':
+.-------------------- example[%= n %]b.pyhtml
+<table>
+  <tbody>
+{{*<?py*}}
+{{*i = 0*}}
+{{*for item in ['<foo>', 'bar&bar', '"baz"']:*}}
+{{*    i += 1*}}
+{{*?>*}}
+    <tr>
+      <td>#{item}</td>
+      <td>${item}</td>
+    </tr>
+{{*<?py*}}
+{{*#end*}}
+{{*?>*}}
+  </tbody>
+</table>
+.--------------------
+
+.#+++
+.? Result:
+.==================== example[%= n %]b_source.result
+$ [%= command %] -s example[%= n %]b.pyhtml
+_buf = []; _buf.extend(('''<table>
+  <tbody>\n''', ));
+
+{{*i = 0*}}
+{{*for item in ['<foo>', 'bar&bar', '"baz"']:*}}
+    {{*i += 1*}}
+
+    _buf.extend(('''    <tr>
+      <td>''', to_str(item), '''</td>
+      <td>''', escape(to_str(item)), '''</td>
+    </tr>\n''', ));
+
+{{*#end*}}
+
+_buf.extend(('''  </tbody>
+</table>\n''', ));
+print ''.join(_buf)
+.====================
+.#---
+
+It is able to mix two styles in a file.
+
+
+The following styles are {{*not*}} available.
+
+.? Invalid example #1:
+.--------------------
+<ul>
+{{*<?py i = 0*}}
+{{*     for item in ['<foo>', 'bar&bar', '"baz"']:*}}
+{{*     i += 1 ?>*}}
+ <li>#{item}
+     ${item}</li>
+<?py #end ?>
+</ul>
+.--------------------
+
+.? Invalid example #2:
+.--------------------
+<ul>
+{{*<?py*}}
+{{*    i = 0*}}
+{{*    for item in ['<foo>', 'bar&bar', '"baz"']:*}}
+{{*        i += 1*}}
+{{*?>*}}
+ <li>#{item}
+     ${item}</li>
+{{*<?py*}}
+    {{*#end*}}
+{{*?>*}}
+</ul>
+.--------------------
+
+% elsif RUBY
+% elsif PERL
+% elsif JS
+% elsif PHP
+% else assert false 
+% end 
+
+
+
+.$$ Convert into [%= Lang %] Code	| des-convert
+
+Command-line option '-s' converts embedded files into [%= Lang %] code.
+
+% if PYTHON
+.? Result:
+.==================== example[%= n %]_source.result
+$ [%= command %] {{*-s*}} example[%= n %].[%= suffix %]
+_buf = []; _buf.extend(('''<table>
+  <tbody>\n''', ));
+{{*i = 0*}}
+{{*for item in ['<foo>', 'bar&bar', '"baz"']:*}}
+    {{*i += 1*}}
+    _buf.extend(('''    <tr>
+      <td>''', {{*to_str(item)*}}, '''</td>
+      <td>''', {{*escape(to_str(item))*}}, '''</td>
+    </tr>\n''', ));
+{{*#end*}}
+_buf.extend(('''  <tbody>
+</table>\n''', ));
+print ''.join(_buf)
+.#_buf = []; _buf.extend(('''<html>
+.# <body>
+.#  <ul>\n''');
+.#{{*i = 0*}}
+.#{{*for item in ['<foo>', 'bar&bar', '"baz"']:*}}
+.#    {{*i += 1*}}
+.#    _buf.extend(('''   <li>''', {{*to_str(item)*}}, '''
+.#       ''', {{*escape(to_str(item))*}}, '''</li>\n''');
+.#{{*#end*}}
+.#_buf.extend(('''  </ul>
+.# </body>
+.#</html>\n''');
+.#print ''.join(_buf)
+.====================
+% elsif RUBY
+.? Result:
+.==================== example[%= n %]_source.result
+$ [%= command %] {{*-s*}} example[%= n %].[%= suffix %]
+_buf = '';  _buf << %Q`<table>
+  <tbody>\n`
+{{*i = 0*}}
+{{*for item in ['<foo>', 'bar&bar', '"baz"']*}}
+    {{*i += 1*}}
+ _buf << %Q`    <tr>
+      <td>{{*#{item}*}}</td>
+      <td>{{*#{escape((item).to_s)}*}}</td>
+    </tr>\n`
+{{*end*}}
+ _buf << %Q`  <tbody>
+</table>\n`
+_buf.to_s
+.#_buf = '';  _buf << %Q`<html>
+.# <body>
+.#  <ul>\n`
+.#{{*i = 0*}}
+.#{{*for item in ['<foo>', 'bar&bar', '"baz"']*}}
+.#    {{*i += 1*}}
+.# _buf << %Q`   <li>{{*#{item}*}}
+.#       {{*#{escape((item).to_s)}*}}</li>\n`
+.#{{*end*}}
+.# _buf << %Q`  </ul>
+.# </body>
+.#</html>\n`
+.#_buf.to_s
+.====================
+% elsif PERL
+.? Result:
+.==================== example[%= n %]_source.result
+$ [%= command %] {{*-s*}} example[%= n %].[%= suffix %]
+my @_buf = (); push(@_buf, q`<table>
+  <tbody>
+`, ); {{*my $i = 0;*}}
+{{*for my $item (('<foo>', 'bar&bar', '"baz"')) {*}}
+    {{*$i++;*}}
+push(@_buf, q`    <tr>
+      <td>`,  {{*$item*}} , q`</td>
+      <td>`, {{*escape( $item )*}}, q`</td>
+    </tr>
+`, ); {{*}*}}
+push(@_buf, q`  <tbody>
+</table>
+`, ); join('', @_buf);
+.====================
+% elsif JS
+.? Result:
+.==================== example[%= n %]_source.result
+$ [%= command %] {{*-s*}} example[%= n %].[%= suffix %]
+var _buf = [];  _buf.push('<table>\n\
+  <tbody>\n');
+ {{*var items = ['<foo>', 'bar&bar', '"baz"'];*}}
+ {{*for (var i = 0, n = items.length; i < n; i++) {*}}
+     {{*var item = items[i];*}}
+ _buf.push('    <tr>\n\
+      <td>', item, '</td>\n\
+      <td>', escapeXml(item), '</td>\n\
+    </tr>\n');
+ {{*}*}}
+ _buf.push('  <tbody>\n\
+</table>\n');
+_buf.join('')
+.====================
+% elsif PHP
+.? Result:
+.==================== example[%= n %]_source.result
+$ [%= command %] {{*-s*}} example[%= n %].[%= suffix %]
+<?php echo '<table>
+  <tbody>
+'; {{*$items = array('<foo>', 'bar&bar', '"baz"');*}} 
+ {{*foreach ($items as $item) {*}} 
+echo '    <tr>
+      <td>', {{*$item*}}, '</td>
+      <td>', {{*htmlspecialchars($item)*}}, '</td>
+    </tr>
+'; {{*}*}} 
+echo '  <tbody>
+</table>
+';
+?>
+.====================
+% else assert false 
+% end 
+
+
+% if PYTHON
+%   klass = 'list' 
+%   preamble = "_buf = [];" 
+%   postamble = "print ''.join(_buf)" 
+%   escapefunc = 'tenjin.escape()' 
+% elsif RUBY
+%   klass = 'String' 
+%   preamble = "_buf = '';" 
+%   postamble = "_buf.to_s" 
+%   escapefunc = 'Tenjin::Context.escape()' 
+% elsif PERL
+%   klass = 'list' 
+%   preamble = "@_buf = ();" 
+%   postamble = "join('', @_buf);" 
+%   escapefunc = 'Tenjin::Context::escape()' 
+% elsif JS
+%   klass = 'array' 
+%   preamble = "_buf = [];" 
+%   postamble = "_buf.join('')" 
+%   escapefunc = 'Tenjin.escapeXml()' 
+% elsif PHP
+%   klass = 'array' 
+%   preamble = "<?php" 
+%   postamble = "?>" 
+%   escapefunc = 'htmlspecialchars()' 
+% else assert false 
+% end 
+
+
+.* Variable {{,[%= bufname %],}} is a [%= klass %].
+% if PYTHON
+.* Function {{,to_str(),}} (= {{,tenjin.helpers.html.to_str(),}}) converts value into string
+   except None is converted into {{,"",}} (empty string).
+   Command-line option {{,--tostrfunc=func,}} makes [%= command %] to use {{,func(),}} instead of {{,to_str(),}}.
+% end 
+% if PYTHON
+.* Function {{,escape(),}} (= {{,[%= escapefunc %],}}) escapes {{,'& < > "',}} into {{,'&amp; &lt; &gt; &quot;',}}{{(Difference between {{,escape(),}} and {{,cgi.escape(),}} is that the former escapes double-quotation mark into '{{,&quot;,}}' and the latter doesn't.)}}.
+% elsif JS
+.* Function {{,escapeXml(),}} (= {{,[%= escapefunc %],}}) escapes {{,'& < > "',}} into {{,'&amp; &lt; &gt; &quot;',}}.
+% elsif PHP
+% else 
+.* Function {{,escape(),}} (= {{,[%= escapefunc %],}}) escapes {{,'& < > "',}} into {{,'&amp; &lt; &gt; &quot;',}}.
+% end 
+  Command-line option {{,--escapefunc=func,}} makes [%= command %] to use {{,func(),}} instead of {{,escape(),}}.
+.* Newline character ("\n" or "\r\n") is automatically detected by [%= name %].
+
+
+'{{,[%= preamble %],}}' is called as preamble and '{{,[%= postamble %],}}' is called as postamble.
+Command-line option '{{,-b,}}' removes preamble and postamble.
+
+% n += 1 
+% if PYTHON
+
+.? File 'example[%= n %].[%= suffix %]'
+.-------------------- example[%= n %].[%= suffix %]
+<?py for i in [1, 2, 3]: ?>
+<p>#{i}</p>
+<?py #end ?>
+.--------------------
+
+.? Result:
+.==================== example[%= n %]_sb.result2
+.#$ cat example[%= n %].[%= suffix %]
+.#<?py for i in [1, 2, 3]: ?>
+.#<p>#{i}</p>
+.#<?py #end ?>
+$ [%= command %] -s example[%= n %].[%= suffix %]
+{{*_buf = []*}}
+for i in [1, 2, 3]:
+    _buf.extend(('''<p>''', to_str(i), '''</p>\n''', ));
+#end
+{{*print ''.join(_buf)*}}
+$ [%= command %] -s{{*b*}} example[%= n %].[%= suffix %]
+for i in [1, 2, 3]:
+    _buf.extend(('''<p>''', to_str(i), '''</p>\n''', ));
+#end
+.====================
+.#.? Result:
+.#.==================== example[%= n %]_b_source.result
+.#$ [%= command %] {{*-sb*}} example[%= n %].[%= suffix %]
+.#_buf.extend(('''<table>
+.#  <tbody>\n''', ));
+.#i = 0
+.#for item in ['<foo>', 'bar&bar', '"baz"']:
+.#    i += 1
+.#    _buf.extend(('''    <tr>
+.#      <td>''', to_str(item), '''</td>
+.#      <td>''', escape(to_str(item)), '''</td>
+.#    </tr>\n''', ));
+.##end
+.#_buf.extend(('''  <tbody>
+.#</table>\n''', ));
+.#_buf.extend(('''<html>
+.# <body>
+.#  <ul>\n''');
+.#i = 0
+.#for item in ['<foo>', 'bar&bar', '"baz"']:
+.#    i += 1
+.#    _buf.extend(('''   <li>''', to_str(item), '''
+.#       ''', escape(to_str(item)), '''</li>\n''');
+.##end
+.#_buf.extend(('''  </ul>
+.# </body>
+.#</html>\n''');
+.#.====================
+
+% elsif RUBY
+
+.? File 'example[%= n %].[%= suffix %]'
+.-------------------- example[%= n %].[%= suffix %]
+<?rb for i in [1, 2, 3] ?>
+<p>#{item}</p>
+<?rb end ?>
+.--------------------
+
+.? Result:
+.==================== example[%= n %]_sb.result2
+.#$ cat example[%= n %].[%= suffix %]
+.#<?rb for i in [1, 2, 3] ?>
+.#<p>#{item}</p>
+.#<?rb end ?>
+$ [%= command %] -s example[%= n %].[%= suffix %]
+{{*_buf = '';*}} for i in [1, 2, 3]
+ _buf << %Q`<p>#{item}</p>\n`
+end
+{{*_buf.to_s*}}
+$ [%= command %] -s{{*b*}} example[%= n %].[%= suffix %]
+for i in [1, 2, 3]
+ _buf << %Q`<p>#{item}</p>\n`
+end
+.====================
+.#.? Result:
+.#.==================== example[%= n %]_b_source.result
+.#$ [%= command %] {{*-sb*}} example[%= n %].[%= suffix %]
+.# _buf << %Q`<table>
+.#  <tbody>\n`
+.#i = 0
+.#for item in ['<foo>', 'bar&bar', '"baz"']
+.#    i += 1
+.# _buf << %Q`    <tr>
+.#      <td>#{item}</td>
+.#      <td>#{escape((item).to_s)}</td>
+.#    </tr>\n`
+.#end
+.# _buf << %Q`  <tbody>
+.#</table>\n`
+.# _buf << %Q`<html>
+.# <body>
+.#  <ul>\n`
+.#i = 0
+.#for item in ['<foo>', 'bar&bar', '"baz"']
+.#    i += 1
+.# _buf << %Q`   <li>#{item}
+.#       #{escape((item).to_s)}</li>\n`
+.#end
+.# _buf << %Q`  </ul>
+.# </body>
+.#</html>\n`
+.#.====================
+
+% elsif PERL
+
+.? File 'example[%= n %].[%= suffix %]'
+.-------------------- example[%= n %].[%= suffix %]
+<?pl for my $i ((1, 2, 3)) { ?>
+<p>[== $i =]</p>
+<?pl } ?>
+.--------------------
+
+.? Result:
+.==================== example[%= n %]_sb.result2
+.#$ cat example[%= n %].[%= suffix %]
+.#<?pl for my $i ((1, 2, 3)) { ?>
+.#<p>[== $i =]</p>
+.#<?pl } ?>
+$ [%= command %] -s example[%= n %].[%= suffix %]
+{{*my @_buf = ();*}} for my $i ((1, 2, 3)) {
+push(@_buf, q`<p>`,  $i , q`</p>
+`, ); }
+{{*join('', @_buf);*}}
+$ [%= command %] -s{{*b*}} example[%= n %].[%= suffix %]
+for my $i ((1, 2, 3)) {
+push(@_buf, q`<p>`,  $i , q`</p>
+`, ); }
+.====================
+
+% elsif JS
+
+.? File 'example[%= n %].[%= suffix %]'
+.-------------------- example[%= n %].[%= suffix %]
+<?js var list = [1, 2, 3]; ?>
+<?js for (var i = 0, n = list.length; i < n; i++) { ?>
+<p>#{list[i]}</p>
+<?js } ?>
+.--------------------
+
+.? Result:
+.==================== example[%= n %]_sb.result2
+$ [%= command %] -s example[%= n %].[%= suffix %]
+{{*var _buf = [];*}}  var list = [1, 2, 3];
+ for (var i = 0, n = list.length; i < n; i++) {
+ _buf.push('<p>', list[i], '</p>\n');
+ }
+{{*_buf.join('')*}}
+$ [%= command %] -s{{*b*}} example[%= n %].[%= suffix %]
+ var list = [1, 2, 3];
+ for (var i = 0, n = list.length; i < n; i++) {
+ _buf.push('<p>', list[i], '</p>\n');
+ }
+.====================
+
+% elsif PHP
+
+.? File 'example[%= n %].[%= suffix %]'
+.-------------------- example[%= n %].[%= suffix %]
+<?php $list = array(1, 2, 3); ?>
+<?php for ($list as $item) { ?>
+<p>{==$item=}</p>
+<?php } ?>
+.--------------------
+
+.? Result:
+.==================== example[%= n %]_sb.result2
+$ [%= command %] -s example[%= n %].[%= suffix %]
+{{*<?php*}}  $list = array(1, 2, 3); 
+ for ($list as $item) { 
+echo '<p>', $item, '</p>
+'; } 
+{{*?>*}}
+$ [%= command %] -s{{*b*}} example[%= n %].[%= suffix %]
+ $list = array(1, 2, 3); 
+ for ($list as $item) { 
+echo '<p>', $item, '</p>
+'; } 
+.====================
+
+% else assert false 
+% end 
+
+
+Command-line option '-S' also show converted [%= Lang %] code but it doesn't print text part.
+This is useful to check [%= Lang %] code for debugging.
+
+% n -= 1 
+% if PYTHON
+
+.? Result:
+.==================== example[%= n %]_S.result
+$ [%= command %] {{*-S*}} example[%= n %].[%= suffix %]
+_buf = []; 
+
+i = 0
+for item in ['<foo>', 'bar&bar', '"baz"']:
+    i += 1
+
+          to_str(item); 
+          escape(to_str(item)); 
+
+#end
+
+
+print ''.join(_buf)
+.====================
+
+% elsif RUBY
+
+.? Result:
+.==================== example[%= n %]_S.result
+$ [%= command %] {{*-S*}} example[%= n %].[%= suffix %]
+_buf = ''; 
+
+i = 0
+for item in ['<foo>', 'bar&bar', '"baz"']
+    i += 1
+
+
+          escape((item).to_s); 
+
+end
+
+
+_buf.to_s
+.====================
+
+% elsif PERL
+
+.? Result:
+.==================== example[%= n %]_S.result
+$ [%= command %] {{*-S*}} example[%= n %].[%= suffix %]
+my @_buf = (); 
+
+my $i = 0;
+for my $item (('<foo>', 'bar&bar', '"baz"')) {
+    $i++;
+
+ $item ; 
+escape( $item ); 
+
+}
+
+
+join('', @_buf);
+.====================
+
+% elsif JS
+
+.? Result:
+.==================== example[%= n %]_S.result
+$ [%= command %] {{*-S*}} example[%= n %].[%= suffix %]
+var _buf = []; 
+
+ var items = ['<foo>', 'bar&bar', '"baz"'];
+ for (var i = 0, n = items.length; i < n; i++) {
+     var item = items[i];
+
+           _buf.push(item);
+           _buf.push(escapeXml(item));
+
+ }
+
+
+_buf.join('')
+.====================
+
+% elsif PHP
+
+.? Result:
+.==================== example[%= n %]_S.result
+$ [%= command %] {{*-S*}} example[%= n %].[%= suffix %]
+<?php 
+
+ $items = array('<foo>', 'bar&bar', '"baz"'); 
+ foreach ($items as $item) { 
+
+          $item; 
+          htmlspecialchars($item); 
+
+ } 
+
+
+?>
+.====================
+
+% else assert false 
+% end 
+
+In addition, the following command-line options are available.
+
+.[ -N ]	     Add line number.
+.[ -X ]	     Delete expressions.
+.[ -C ]	     Remove empty lines (compact-mode).
+.[ -U ]	     Compress empty lines to a line (uniq-mode).
+
+% if PYTHON
+
+.? Result:
+.==================== example[%= n %]_SXNC.result
+$ [%= command %] {{*-SUNX*}} example[%= n %].[%= suffix %]
+    1:  _buf = []; 
+
+    3:  i = 0
+    4:  for item in ['<foo>', 'bar&bar', '"baz"']:
+    5:      i += 1
+
+   10:  #end
+
+   13:  print ''.join(_buf)
+.====================
+
+% elsif RUBY
+
+.? Result:
+.==================== example[%= n %]_SXNC.result
+$ [%= command %] {{*-SUNX*}} example[%= n %].[%= suffix %]
+    1:  _buf = ''; 
+
+    3:  i = 0
+    4:  for item in ['<foo>', 'bar&bar', '"baz"']
+    5:      i += 1
+
+   10:  end
+
+   13:  _buf.to_s
+.====================
+
+% elsif PERL
+
+.? Result:
+.==================== example[%= n %]_SXNC.result
+$ [%= command %] {{*-SUNX*}} example[%= n %].[%= suffix %]
+    1:  my @_buf = (); 
+
+    3:  my $i = 0;
+    4:  for my $item (('<foo>', 'bar&bar', '"baz"')) {
+    5:      $i++;
+
+   10:  }
+
+   13:  join('', @_buf);
+.====================
+
+% elsif JS
+
+.? Result:
+.==================== example[%= n %]_SXNC.result
+$ [%= command %] {{*-SUNX*}} example[%= n %].[%= suffix %]
+    1:  var _buf = []; 
+
+    3:   var items = ['<foo>', 'bar&bar', '"baz"'];
+    4:   for (var i = 0, n = items.length; i < n; i++) {
+    5:       var item = items[i];
+
+   10:   }
+
+   13:  _buf.join('')
+.====================
+
+% elsif PHP
+
+.? Result:
+.==================== example[%= n %]_SXNC.result
+$ [%= command %] {{*-SUNX*}} example[%= n %].[%= suffix %]
+    1:  <?php 
+
+    3:   $items = array('<foo>', 'bar&bar', '"baz"'); 
+    4:   foreach ($items as $item) { 
+
+    6:            $item; 
+    7:            htmlspecialchars($item); 
+
+    9:   } 
+
+   12:  ?>
+.====================
+
+% else assert false 
+% end 
+
+% n += 1 
+
+
+% if false && ! JS   ######################################## 
+.$$ Helper Functions			| des-helpers
+
+[%= name %] provides the following helper functions for HTML.
+% if PYTHON
+{{(These helper functions are defined in tenjin.helpers.html module.)}}
+% elsif RUBY
+{{(These helper functions are defined in Tenjin::HtmlHelper module, and Tenjin::Context class includes this module.)}}
+% elsif PERL
+{{(These helper functions are defined in Tenjin::Context package.)}}
+% elsif JS
+% elsif PHP
+% else assert false 
+% end 
+
+% if PYTHON
+.[ to_str(value) ]
+    Nearly equal to '{{,str(value),}}' except that {{,to_str(value),}} returns empty string ({{,"",}}) if value is None.
+% elsif RUBY
+% elsif PERL
+% elsif JS
+% elsif PHP
+% else assert false 
+% end 
+
+% if JS
+.[ escapeXml(str) ]
+% else 
+.[ escape(str), escape_xml(str) ]
+% end 
+    Convert '{{,& < > ",}}' into '{{,&amp &lt; &gt; &quot;,}}'.
+
+.[ checked(condition) ]
+    Return {{,' checked="checked"',}} if condition is true else return empty string.
+
+.[ selected(condition) ]
+    Return {{,' selected="selected"',}} if condition is true else return empty string.
+
+.[ disabled(condition) ]
+    Return {{,' disabled="disabled"',}} if condition is true else return empty string.
+
+% if !PHP
+.[ nl2br(str) ]
+    Replace "\n" in str into "<br />\n" and return it.
+% end
+
+% if PYTHON
+.[ tagattr(tagname, expression, value=None, escape=True) ]
+    {{*(experimental)*}}
+    if expression is true then return '{{, {{/tagname/}}="{{/value/}}",}}', else
+    return empty string.
+    if value is None, value of expression is used instead.
+    if escape is true, value is escaped by escape() function.
+% elsif RUBY
+.[ tagattr(tagname, expression, value=nil, escape=true) ]
+    {{*(experimental)*}}
+    if expression is true then return '{{, {{/tagname/}}="{{/value/}}",}}', else
+    return empty string.
+    if value is None, value of expression is used instead.
+    if escape is true, value is escaped by escape() function.
+% elsif PERL
+.[ tagattr(tagname, expression, value=undef) ]
+    {{*(experimental)*}}
+    if expression is true then return '{{, {{/tagname/}}="{{/value/}}",}}', else
+    return empty string.
+    if value is undef, value of expression is used instead.
+    .#if escape is true, value is escaped by escape() function.
+% elsif JS
+.[ tagattr(tagname, expression, value=undef) ]
+    {{*(experimental)*}}
+    if expression is true then return '{{, {{/tagname/}}="{{/value/}}",}}', else
+    return empty string.
+    if value is undef, value of expression is used instead.
+    .#if escape is true, value is escaped by escape() function.
+% elsif PHP
+% else assert false 
+% end 
+
+
+% n += 1 
+% if PYTHON
+
+.? File 'example[%= n %].[%= suffix %]':
+.-------------------- example[%= n %].[%= suffix %]':
+to_str(123):     #{repr(to_str(123))}
+to_str(None):    #{repr(to_str(None))}
+checked(1==1):   #{repr(checked(1==1))}
+checked(1==0):   #{repr(checked(1==0))}
+selected(1==1):  #{repr(selected(1==1))}
+selected(1==0):  #{repr(selected(1==0))}
+disabled(1==1):  #{repr(disabled(1==1))}
+disabled(1==0):  #{repr(disabled(1==0))}
+nl2br("foo\nbbar\n"):   #{repr(nl2br("foo\nbar\n"))}
+tagattr("size", 1, 9):  #{repr(tagattr("size", 1, 9))}
+tagattr("size", 1):     #{repr(tagattr("size", 1))}
+tagattr("size", 0):     #{repr(tagattr("size", 0))}
+.--------------------
+
+Result:
+.==================== example[%= n %]_helpers.result
+$ [%= command %] example[%= n %].[%= suffix %]
+to_str(123):     '123'
+to_str(None):    ''
+checked(1==1):   ' checked="checked"'
+checked(1==0):   ''
+selected(1==1):  ' selected="selected"'
+selected(1==0):  ''
+disabled(1==1):  ' disabled="disabled"'
+disabled(1==0):  ''
+nl2br("foo\nbbar\n"):   'foo<br />\nbar<br />\n'
+tagattr("size", 1, 9):  ' size="9"'
+tagattr("size", 1):     ' size="1"'
+tagattr("size", 0):     ''
+.====================
+
+% elsif RUBY
+
+.? File 'example[%= n %].[%= suffix %]':
+.-------------------- example[%= n %].[%= suffix %]':
+checked(1==1):   #{checked(1==1).inspect}
+checked(1==0):   #{checked(1==0).inspect}
+selected(1==1):  #{selected(1==1).inspect}
+selected(1==0):  #{selected(1==0).inspect}
+disabled(1==1):  #{disabled(1==1).inspect}
+disabled(1==0):  #{disabled(1==0).inspect}
+nl2br("foo\nbbar\n"):   #{nl2br("foo\nbar\n").inspect}
+tagattr("size", 1, 9):  #{tagattr("size", 1, 9).inspect}
+tagattr("size", 1):     #{tagattr("size", 1).inspect}
+tagattr("size", nil):   #{tagattr("size", nil).inspect}
+.--------------------
+
+Result:
+.==================== example[%= n %]_helpers.result
+$ [%= command %] example[%= n %].[%= suffix %]
+checked(1==1):   " checked=\"checked\""
+checked(1==0):   ""
+selected(1==1):  " selected=\"selected\""
+selected(1==0):  ""
+disabled(1==1):  " disabled=\"disabled\""
+disabled(1==0):  ""
+nl2br("foo\nbbar\n"):   "foo\\nbar\\n"
+tagattr("size", 1, 9):  " size=\"9\""
+tagattr("size", 1):     " size=\"1\""
+tagattr("size", nil):   ""
+.====================
+
+% elsif PERL
+
+.? File 'example[%= n %].[%= suffix %]':
+.-------------------- example[%= n %].[%= suffix %]':
+<?pl use Data::Dumper; ?>
+checked(1==1):          [== Dumper(checked(1==1)) ==]
+checked(1==0):          [== Dumper(checked(1==0)) ==]
+selected(1==1):         [== Dumper(selected(1==1)) ==]
+selected(1==0):         [== Dumper(selected(1==0)) ==]
+disabled(1==1):         [== Dumper(disabled(1==1)) ==]
+disabled(1==0):         [== Dumper(disabled(1==0)) ==]
+nl2br("foo\nbbar\n"):   [== Dumper(nl2br("foo\nbar\n")) ==]
+tagattr("size", 1, 9):  [== Dumper(tagattr("size", 1, 9)) ==]
+tagattr("size", 1):     [== Dumper(tagattr("size", 1)) ==]
+tagattr("size", 0):     [== Dumper(tagattr("size", 0)) ==]
+.--------------------
+
+Result:
+.==================== example[%= n %]_helpers.result
+$ [%= command %] example[%= n %].[%= suffix %]
+checked(1==1):          $VAR1 = ' checked="checked"';
+checked(1==0):          $VAR1 = '';
+selected(1==1):         $VAR1 = ' selected="selected"';
+selected(1==0):         $VAR1 = '';
+disabled(1==1):         $VAR1 = ' disabled="disabled"';
+disabled(1==0):         $VAR1 = '';
+nl2br("foo\nbbar\n"):   $VAR1 = 'foo<br />
+bar<br />
+';
+tagattr("size", 1, 9):  $VAR1 = ' size="9"';
+tagattr("size", 1):     $VAR1 = ' size="1"';
+tagattr("size", 0):     $VAR1 = '';
+.====================
+
+% elsif JS
+
+.#.? File 'example[%= n %].[%= suffix %]':
+.#.-------------------- example[%= n %].[%= suffix %]':
+.#checked(1==1):   #{checked(1==1).inspect}
+.#checked(1==0):   #{checked(1==0).inspect}
+.#selected(1==1):  #{selected(1==1).inspect}
+.#selected(1==0):  #{selected(1==0).inspect}
+.#disabled(1==1):  #{disabled(1==1).inspect}
+.#disabled(1==0):  #{disabled(1==0).inspect}
+.#nl2br("foo\nbbar\n"):   #{nl2br("foo\nbar\n").inspect}
+.#tagattr("size", 1, 9):  #{tagattr("size", 1, 9).inspect}
+.#tagattr("size", 1):     #{tagattr("size", 1).inspect}
+.#tagattr("size", nil):   #{tagattr("size", nil).inspect}
+.#.--------------------
+.#
+.#Result:
+.#.==================== example[%= n %]_helpers.result
+.#$ [%= command %] example[%= n %].[%= suffix %]
+.#checked(1==1):   " checked=\"checked\""
+.#checked(1==0):   ""
+.#selected(1==1):  " selected=\"selected\""
+.#selected(1==0):  ""
+.#disabled(1==1):  " disabled=\"disabled\""
+.#disabled(1==0):  ""
+.#nl2br("foo\nbbar\n"):   "foo\\nbar\\n"
+.#tagattr("size", 1, 9):  " size=\"9\""
+.#tagattr("size", 1):     " size=\"1\""
+.#tagattr("size", nil):   ""
+.#.====================
+
+% elsif PHP
+
+.? File 'example[%= n %].[%= suffix %]':
+.-------------------- example[%= n %].[%= suffix %]':
+checked(1==1):   {==var_export(checked(1==1), true)=}
+checked(1==0):   {==var_export(checked(1==0), true)=}
+selected(1==1):  {==var_export(selected(1==1), true)=}
+selected(1==0):  {==var_export(selected(1==0), true)=}
+disabled(1==1):  {==var_export(disabled(1==1), true)=}
+disabled(1==0):  {==var_export(disabled(1==0), true)=}
+.#nl2br("foo\nbbar\n"):   {==var_export(nl2br("foo\nbar\n"), true)=}
+tagattr("size", 1, 9):  {==var_export(tagattr("size", 1, 9), true)=}
+tagattr("size", 1):     {==var_export(tagattr("size", 1), true)=}
+tagattr("size", nil):   {==var_export(tagattr("size", null), true)=}
+.--------------------
+
+Result:
+.==================== example[%= n %]_helpers.result
+$ [%= command %] example[%= n %].[%= suffix %]
+checked(1==1):   ' checked="checked"'
+checked(1==0):   ''
+selected(1==1):  ' selected="selected"'
+selected(1==0):  ''
+disabled(1==1):  ' disabled="disabled"'
+disabled(1==0):  ''
+.#nl2br("foo\nbbar\n"):   "foo\nbar\n"
+tagattr("size", 1, 9):  ' size="9"'
+tagattr("size", 1):     ' size="1"'
+tagattr("size", nil):   ''
+.====================
+
+% else assert false 
+% end 
+
+% end  ######################################## 
+
+
+.$$ Syntax Checking			| des-syntaxchk
+
+% if PYTHON
+Command-line option '{{,-z,}}' checks syntax error in embedded [%= Lang %] code.
+% elsif RUBY
+Command-line option '{{,-z,}}' checks syntax error in embedded [%= Lang %] code
+and command-line option '{{,-w,}}' sets warning level to 2.
+It is recommended to use '-w' when you specify '-z'.
+% elsif PERL
+Command-line option '{{,-z,}}' checks syntax error in embedded [%= Lang %] code
+and command-line option '{{,-w,}}' enables 'use strict;'.
+It is recommended to use '-w' when you specify '-z'.
+% elsif JS
+Command-line option '{{,-z,}}' checks syntax error in embedded [%= Lang %] code.
+% elsif PHP
+Command-line option '{{,-z,}}' checks syntax error in embedded [%= Lang %] code.
+% else assert false 
+% end 
+
+% n += 1 
+% if PYTHON
+.? File example[%= n %].[%= suffix %]:
+.-------------------- example[%= n %].[%= suffix %]
+<ul>
+<?py for item in items: ?>
+ <li>${item}</li>
+<?py   {{*#end*}} ?>
+</ul>
+.--------------------
+% elsif RUBY
+.? File example[%= n %].[%= suffix %]:
+.-------------------- example[%= n %].[%= suffix %]
+<ul>
+<?rb for item in items ?>
+  <li>${item}</li>
+<?rb {{*ende*}} ?>
+</ul>
+.--------------------
+% elsif PERL
+.? File example[%= n %].[%= suffix %]:
+.-------------------- example[%= n %].[%= suffix %]
+<ul>
+<?pl for my $item (@$items) { ?>
+  <li>[= $item =]</li>
+<?pl {{*#}*}} ?>
+</ul>
+.--------------------
+% elsif JS
+.? File example[%= n %].[%= suffix %]:
+.-------------------- example[%= n %].[%= suffix %]
+<ul>
+<?js for (var i = 0; i < items.length; i++) { ?>
+.#<?js for (var i = 0{{*,*}} i < items.length{{*,*}} i++) { ?>
+  <li>${items[i]}</li>
+<?js {{*//}*}} ?>
+.#<?js } ?>
+</ul>
+.--------------------
+% elsif PHP
+.? File example[%= n %].[%= suffix %]:
+.-------------------- example[%= n %].[%= suffix %]
+<ul>
+<?php {{*for*}} ($items {{*as*}} $item) { ?>
+  <li>{=$item=}</li>
+<?php } ?>
+</ul>
+.--------------------
+% else assert false 
+% end 
+
+
+% if PYTHON
+.? Result:
+.==================== example[%= n %]_syntaxcheck.result
+$ [%= command %] {{*-z*}} example[%= n %].[%= suffix %]
+example[%= n %].pyhtml:4:3: unindent does not match any outer indentation level
+  4:   #end
+       ^
+.====================
+% elsif RUBY
+.? Result:
+.==================== example[%= n %]_syntaxcheck.result
+$ [%= command %] {{*-wz*}} example[%= n %].[%= suffix %]
+example[%= n %].rbhtml:5: syntax error, unexpected $end, expecting kEND
+.====================
+% elsif PERL
+.? Result:
+.==================== example[%= n %]_syntaxcheck.result
+$ [%= command %] {{*-z*}} example[%= n %].[%= suffix %]
+*** example[%= n %].plhtml - NG
+Missing right curly or square bracket at example[%= n %].plhtml line 6, at end of line
+syntax error at example[%=n%].plhtml line 6, at EOF
+example[%= n %].plhtml had compilation errors.
+.====================
+% elsif JS
+.? Result:
+.==================== example[%= n %]_syntaxcheck.result
+$ [%= command %] {{*-z*}} example[%= n %].[%= suffix %]
+[NG] example[%= n %].jshtml
+example[%= n %].[%= suffix %]:7: SyntaxError: missing } in compound statement
+.#example[%= n %].[%= suffix %]:2: SyntaxError: missing ; after for-loop initializer
+.#example[%= n %].[%= suffix %]:2:  for (var i = 0, i < items.length, i++) {
+.====================
+% elsif PHP
+.? Result:
+.==================== example[%= n %]_syntaxcheck.result
+$ [%= command %] {{*-z*}} example[%= n %].[%= suffix %]
+[NG] example[%=n%].phtml
+Parse error: syntax error, unexpected T_AS, expecting ';' in example[%=n%].phtml on line 2
+Errors parsing example[%=n%].phtml
+.====================
+% else assert false 
+% end 
+
+
+% if PYTHON
+Error message is the same format as gcc compiler or java compiler.
+Error jump in Emacs or other editor is available.
+% elsif RUBY
+Command-line option '-wz' is more convenient than '{{,[%= command %] -s file | [%= lang %] -wc,}}'
+because the former can take several filenames.
+% elsif PERL
+Command-line option '-wz' is more convenient than '{{,[%= command %] -s file | [%= lang %] -wc,}}'
+because the former can take several filenames.
+% elsif JS
+{{,js -sC,}} or {{,java -jar js.jar -strict,}} may reports more details about syntax error.
+It is useful to try '{{,[%= command %] -s file.[%= suffix %] | js -sC,}}'.
+% elsif PHP
+Command-line option '-z' is more convenient than '{{,[%= command %] -s file | [%= lang %] -l,}}'
+because the former can take several filenames.
+% else assert false 
+% end 
+
+% if ! JS
+Command-line option '-q' (quiet-mode) prints nothing if it has no errors.
+% end 
+
+
+
+
+.$$ Context Data File			| des-contextdata
+
+
+% if JS
+[%= name %] allows you to specify context data by JSON file.
+% else
+[%= name %] allows you to specify context data by YAML file or [%= Lang %] script.
+% end
+
+
+% n += 1 
+% if PYTHON
+.? File 'example[%= n %].[%= suffix %]':
+.-------------------- example[%= n %].[%= suffix %]
+<p>
+  ${text}
+  #{num}
+  #{flag}
+</p>
+
+<?py for item in items: ?>
+<p>${item}</p>
+<?py #end ?>
+
+<?py for key, value in hash.iteritems(): ?>
+<p>#{key} = ${value}</p>
+<?py #end ?>
+.--------------------
+% elsif RUBY
+.? File 'example[%= n %].[%= suffix %]':
+.-------------------- example[%= n %].[%= suffix %]
+<p>
+  ${@text}
+  #{@num}
+  #{@flag}
+</p>
+
+<?rb for item in @items ?>
+<p>${item}</p>
+<?rb end ?>
+
+<?rb for key, value in @hash ?>
+<p>#{key} = ${value}</p>
+<?rb end ?>
+.--------------------
+% elsif PERL
+.? File 'example[%= n %].[%= suffix %]':
+.-------------------- example[%= n %].[%= suffix %]
+<p>
+  [= $text =]
+  [== $num =]
+  [== $flag =]
+</p>
+
+<?pl for my $item (@$items) { ?>
+<p>[= $item =]</p>
+<?pl } ?>
+
+<?pl while (my ($key, $value) = each %$hash) { ?>
+<p>[= $key =] = [= $value =]</p>
+<?pl } ?>
+.--------------------
+% elsif JS
+.? File 'example[%= n %].[%= suffix %]':
+.-------------------- example[%= n %].[%= suffix %]
+<p>
+  ${text}
+  #{num}
+  #{flag}
+</p>
+
+<?js for (var i = 0, n = items.length; i < n; i++) { ?>
+<p>${items[i]}</p>
+<?js } ?>
+
+<?js for (var key in hash) { ?>
+<p>#{key} = ${hash[key]}</p>
+<?js } ?>
+.--------------------
+% elsif PHP
+.? File 'example[%= n %].[%= suffix %]':
+.-------------------- example[%= n %].[%= suffix %]
+<p>
+  {=$text=}
+  {==$num=}
+  {==$flag=}
+</p>
+
+<?php foreach ($items as $item) { ?>
+<p>{=$item=}</p>
+<?php } ?>
+
+<?php foreach ($hash as $key=>$val) { ?>
+<p>{=$key=} = {=$val=}</p>
+<?php } ?>
+.--------------------
+% else assert false 
+% end 
+
+
+% unless JS                         ######
+
+.? File 'datafile.yaml':
+.-------------------- datafile.yaml
+text:   foo
+num:    3.14
+flag:   yes
+items:
+  - foo
+  - bar
+  - baz
+hash:
+  x: 1
+  y: 2
+.--------------------
+
+
+.? Result:
+.==================== example[%= n %]_yaml.result
+$ [%= command %] {{*-f datafile.yaml*}} example[%= n %].[%= suffix %]
+<p>
+  foo
+  3.14
+% if PERL
+  yes
+% elsif PHP
+  1
+% else 
+  [%= TRUE %]
+% end 
+</p>
+
+<p>foo</p>
+<p>bar</p>
+<p>baz</p>
+
+% if PYTHON
+<p>y = 2</p>
+<p>x = 1</p>
+% elsif RUBY
+<p>x = 1</p>
+<p>y = 2</p>
+% elsif PERL
+<p>y = 2</p>
+<p>x = 1</p>
+% elsif JS
+<p>x = 1</p>
+<p>y = 2</p>
+% elsif PHP
+<p>x = 1</p>
+<p>y = 2</p>
+% else assert false 
+% end 
+.====================
+
+
+% end                                ######
+
+
+% if PYTHON
+.? File 'datafile.py':
+.-------------------- datafile.py
+text  = "foo"
+num   = 3.14
+flag  = True
+items = ["foo", "bar", "baz"]
+hash  = {"x":1, "y":2}
+.--------------------
+% elsif RUBY
+.? File 'datafile.rb':
+.-------------------- datafile.rb
+@text  = "foo"
+@num   = 3.14
+@flag  = true
+@items = ["foo", "bar", "baz"]
+@hash  = {:x=>1, :y=>2}
+.--------------------
+% elsif PERL
+.? File 'datafile.pl':
+.-------------------- datafile.pl
+{
+  text  => "foo",
+  num   => 3.14,
+  flag  => 1,
+  items => ['foo', 'bar', 'baz'],
+  hash  => { x=>1, y=>2, },
+}
+.--------------------
+% elsif JS
+.? File 'datafile.js':
+.-------------------- datafile.js
+{
+  text  :  "foo",
+  num   :  3.14,
+  flag  :  true,
+  items :  ["foo", "bar", "baz"],
+  hash  :  { x:1, y:2 }
+}
+.--------------------
+% elsif PHP
+.? File 'datafile.php':
+.-------------------- datafile.php
+$text  =  "foo";
+$num   =  3.14;
+$flag  =  true;
+$items =  array("foo", "bar", "baz");
+$hash  =  array('x'=>1, 'y'=>2);
+.--------------------
+% else assert false 
+% end 
+
+
+.? Result:
+.==================== example[%= n %]_datafile_[%= pi %].result
+$ [%= command %] {{*-f datafile.[%= pi %]*}} example[%= n %].[%= suffix %]
+<p>
+  foo
+  3.14
+% if PERL || PHP
+  1
+% else 
+  [%= TRUE %]
+% end 
+</p>
+
+<p>foo</p>
+<p>bar</p>
+<p>baz</p>
+
+% if PYTHON
+<p>y = 2</p>
+<p>x = 1</p>
+% elsif RUBY
+<p>x = 1</p>
+<p>y = 2</p>
+% elsif PERL
+<p>y = 2</p>
+<p>x = 1</p>
+% elsif JS
+<p>x = 1</p>
+<p>y = 2</p>
+% elsif PHP
+<p>x = 1</p>
+<p>y = 2</p>
+% else assert false 
+% end 
+.====================
+
+
+% if PYTHON
+You must install {{<PyYAML|http://pyyaml.org>}} if you want to use YAML-format context data file.
+% elsif RUBY
+% elsif PERL
+You must install YAML::Syck package if you want to use YAML-format context data file.
+% elsif JS
+% elsif PHP
+You must install Syck library if you want to use YAML-format context data file.
+% else assert false 
+% end 
+
+
+
+
+.$$ Command-line Context Data		| des-cmlinecontext
+
+% if JS
+Command-line option '{{,-c,}}' specifies context data in JSON format.
+% else
+Command-line option '{{,-c,}}' specifies context data in YAML format or [%= Lang %] code.
+% end
+
+% n += 1 
+% if PYTHON
+.? File 'example[%= n %].[%= suffix %]':
+.-------------------- example[%= n %].[%= suffix %]
+text:  #{text}
+items:
+<?py for item in items: ?>
+  - #{item}
+<?py #end ?>
+hash:
+<?py for key, val in hash.iteritems(): ?>
+  #{key}: #{val}
+<?py #end ?>
+.--------------------
+% elsif RUBY
+.? File 'example[%= n %].[%= suffix %]':
+.-------------------- example[%= n %].[%= suffix %]
+text:  #{@text}
+items:
+<?rb for item in @items ?>
+  - #{item}
+<?rb end ?>
+hash:
+<?rb for key, val in @hash ?>
+  #{key}: #{val}
+<?rb end ?>
+.--------------------
+% elsif PERL
+.? File 'example[%= n %].[%= suffix %]':
+.-------------------- example[%= n %].[%= suffix %]
+text:  [=$text=]
+items:
+<?pl for my $item (@$items) { ?>
+  - [=$item=]
+<?pl } ?>
+hash:
+<?pl while (my ($key, $val) = each %$hash) { ?>
+  [=$key=]: [=$val=]
+<?pl } ?>
+.--------------------
+% elsif JS
+.? File 'example[%= n %].[%= suffix %]':
+.-------------------- example[%= n %].[%= suffix %]
+text:  #{text}
+items:
+<?js for (var i = 0, n = items.length; i < n; i++) { ?>
+  - #{items[i]}
+<?js } ?>
+hash:
+<?js for (var key in hash) { ?>
+  #{key}: #{hash[key]}
+<?js } ?>
+.--------------------
+% elsif PHP
+.? File 'example[%= n %].[%= suffix %]':
+.-------------------- example[%= n %].[%= suffix %]
+text:  {==$text=}
+items:
+<?php foreach ($items as $item) { ?>
+  - {==$item=}
+<?php } ?>
+hash:
+<?php foreach ($hash as $key=>$val) { ?>
+  {==$key=}: {==$val=}
+<?php } ?>
+.--------------------
+% else assert false 
+% end 
+
+% if JS
+'{{,{,}}' at start and '{{,},}}' at end are omittable.
+% end
+
+
+.? Result of context data in [%= lang %] code:
+.==================== example[%= n %]_datastr_[%= pi %].result
+% if PYTHON
+$ [%= command %] {{*-c 'text="foo"; items=["a","b","c"]; hash={"x":1,"y":2}'*}} example[%= n %].[%= suffix %]
+% elsif RUBY
+$ [%= command %] {{*-c '@text="foo"; @items=%w[a b c]; @hash={"x"=>1,"y"=>2}'*}} example[%= n %].[%= suffix %]
+% elsif PERL
+$ [%= command %] {{*-c 'text=>"foo", items=>["a","b","c"], hash=>{x=>1,y=>2}'*}} example[%= n %].[%= suffix %]
+% elsif JS
+$ [%= command %] {{*-c 'text:"foo", items:["a","b","c"], hash:{x:1,y:2}'*}} example[%= n %].[%= suffix %]
+% elsif PHP
+$ [%= command %] {{*-c '$text="foo"; $items=array("a","b","c"); $hash=array("x"=>1,"y"=>2);'*}} example[%= n %].[%= suffix %]
+% else assert false 
+% end 
+text:  foo
+items:
+  - a
+  - b
+  - c
+hash:
+% if PYTHON
+  y: 2
+  x: 1
+% elsif RUBY
+  x: 1
+  y: 2
+% elsif PERL
+  y: 2
+  x: 1
+% elsif JS
+  x: 1
+  y: 2
+% elsif PHP
+  x: 1
+  y: 2
+% else assert false 
+% end 
+.====================
+
+
+% unless JS                            ######
+
+.? Result of context data in yaml format:
+.==================== example[%= n %]_datastr_yaml.result
+$ [%= command %] {{*-c '{text: foo, items: [a, b, c], hash: {x: 1, y: 2} }'*}} example[%= n %].[%= suffix %]
+text:  foo
+items:
+  - a
+  - b
+  - c
+hash:
+% if PYTHON
+  y: 2
+  x: 1
+% elsif RUBY
+  x: 1
+  y: 2
+% elsif PERL
+  y: 2
+  x: 1
+% elsif JS
+  x: 1
+  y: 2
+% elsif PHP
+  x: 1
+  y: 2
+% else assert false 
+% end 
+.====================
+
+% end                                   ######
+
+
+% if PYTHON
+You must install {{<PyYAML|http://pyyaml.org>}} at first if you want to specify context data in YAML format.
+% elsif RUBY
+% elsif PERL
+You must install YAML::Syck package at first if you want to specify context data in YAML format.
+% elsif JS
+% elsif PHP
+You must install Syck library at first if you want to specify context data in YAML format.
+% else assert false 
+% end 
+
+
+
+
+.$$ Nested Template			| des-nested-template
+
+
+Template can include other templates.
+Included templates can also include other templates.
+
+The following function is available to include other templates.
+
+% if PYTHON
+.#.[ include(str template_name, bool append_to_buf=[%= TRUE %]) ]
+.[ include(str template_name) ]
+% elsif RUBY
+.#.[ import(template_name, append_to_buf=[%= TRUE %]) ]
+.[ import(template_name) ]
+% elsif PERL
+.[ include(str template_name) ]
+% elsif JS
+.[ include(template_name) ]
+% elsif PHP
+.[ import(template_name) ]
+% else assert false 
+% end 
+% if PYTHON || RUBY
+    Include other template.
+    .#If second argument is [%= TRUE %] then included template is appended into {{,_buf,}}
+    .#(ex. {{,<?[%= pi %] include(template_name) ?>,}}),
+    .#else return it as string (ex. {{,#{include(template_name, [%= FALSE %])},}} or
+    .#{{,<?[%= pi %] var = include(template_name, [%= FALSE %]),}}).
+% else 
+    Include other template.
+% end 
+
+% n +=1 
+
+.? File 'example[%= n %].[%= suffix %]':
+.-------------------- example[%= n %].[%= suffix %]
+<html>
+  <body>
+
+    <div id="sidemenu">
+% if PYTHON
+{{*<?py include('sidemenu.pyhtml') ?>*}}
+% elsif RUBY
+{{*<?rb import 'sidemenu.rbhtml' ?>*}}
+% elsif PERL
+{{*<?pl include('sidemenu.plhtml'); ?>*}}
+% elsif JS
+{{*<?js include('sidemenu.jshtml'); ?>*}}
+% elsif PHP
+{{*<?php import('sidemenu.phtml'); ?>*}}
+% else assert false 
+% end 
+    </div>
+
+    <div id="main-content">
+% if PYTHON
+<?py for item in items: ?>
+      <p>${item}</p>
+<?py #end ?>
+% elsif RUBY
+<?rb for item in @items ?>
+      <p>${item}</p>
+<?rb end ?>
+% elsif PERL
+<?pl for my $item (@$items) { ?>
+      <p>[=$item=]</p>
+<?pl } ?>
+% elsif JS
+<?js for (var i = 0, n = items.length; i < n; i++) { ?>
+      <p>${items[i]}</p>
+<?js } ?>
+% elsif PHP
+<?php foreach ($items as $item) { ?>
+      <p>{=$item=}</p>
+<?php } ?>
+% else assert false 
+% end 
+    </div>
+
+    <div id="footer">
+% if PYTHON
+{{*#{include('footer.pyhtml', False)}*}}
+% elsif RUBY
+{{*#{import 'footer.rbhtml', false}*}}
+% elsif PERL
+{{*<?pl include('footer.plhtml'); ?>*}}
+% elsif JS
+{{*<?js include('footer.jshtml'); ?>*}}
+% elsif PHP
+{{*<?php import('footer.phtml'); ?>*}}
+% else assert false 
+% end 
+    </div>
+
+  </body>
+</table>
+.--------------------
+
+.? File 'sidemenu.[%= suffix %]':
+.-------------------- sidemenu.[%= suffix %]
+<ul>
+% if PYTHON
+<?py for item in menu: ?>
+  <li><a href="${item['url']}">${item['name']}</a></li>
+<?py #end ?>
+% elsif RUBY
+<?rb for item in @menu ?>
+  <li><a href="${item['url']}">${item['name']}</a></li>
+<?rb end ?>
+% elsif PERL
+<?pl for my $item (@$menu) { ?>
+  <li><a href="[=$item->{'url'}=]">[=$item->{'name'}=]</a></li>
+<?pl } ?>
+% elsif JS
+<?js for (var i = 0, n = menu.length; i < n; i++) { ?>
+  <li><a href="${menu[i].url}">${menu[i].name}</a></li>
+<?js } ?>
+% elsif PHP
+<?php foreach ($menu as $item) { ?>
+  <li><a href="{=$item['url']=}">{=$item['name']=}</a></li>
+<?php } ?>
+% else assert false 
+% end 
+</ul>
+.--------------------
+
+.? File 'footer.[%= suffix %]':
+.-------------------- footer.[%= suffix %]
+<hr />
+<address>
+% if PYTHON
+  <a href="mailto:${webmaster_email}">${webmaster_email}</a>
+% elsif RUBY
+  <a href="mailto:${@webmaster_email}">${@webmaster_email}</a>
+% elsif PERL
+  <a href="mailto:[=$webmaster_email=]">[=$webmaster_email=]</a>
+% elsif JS
+  <a href="mailto:${webmaster_email}">${webmaster_email}</a>
+% elsif PHP
+  <a href="mailto:{=$webmaster_email=}">{=$webmaster_email=}</a>
+% else assert false 
+% end 
+</address>
+.--------------------
+
+% if PYTHON
+
+.? File 'contextdata.py':
+.-------------------- contextdata.py
+items = [ '<FOO>', '&BAR', '"BAZ"' ]
+webmaster_email = 'webmaster@example.com'
+menu  = [
+    {'name': 'Top',      'url': '/' },
+    {'name': 'Products', 'url': '/prod' },
+    {'name': 'Support',  'url': '/support' },
+]
+.--------------------
+
+% elsif RUBY
+
+.? File 'contextdata.rb':
+.-------------------- contextdata.rb
+@items = [ '<FOO>', '&BAR', '"BAZ"' ]
+@webmaster_email = 'webmaster@example.com'
+@menu  = [
+    {'name'=> 'Top',      'url'=> '/' },
+    {'name'=> 'Products', 'url'=> '/prod' },
+    {'name'=> 'Support',  'url'=> '/support' },
+]
+.--------------------
+
+% elsif PERL
+
+.? File 'contextdata.pl':
+.-------------------- contextdata.pl
+{
+    items => [ '<FOO>', '&BAR', '"BAZ"' ],
+    webmaster_email => 'webmaster@example.com',
+    menu  => [
+        { name => 'Top',      url => '/' },
+        { name => 'Products', url => '/prod' },
+        { name => 'Support',  url => '/support' },
+    ],
+}
+.--------------------
+
+% elsif JS
+
+.? File 'contextdata.js':
+.-------------------- contextdata.js
+{
+    items: [ '<FOO>', '&BAR', '"BAZ"' ],
+    webmaster_email: 'webmaster@example.com',
+    menu: [
+        { name: 'Top',      url: '/' },
+        { name: 'Products', url: '/prod' },
+        { name: 'Support',  url: '/support' },
+    ]
+}
+.--------------------
+
+% elsif PHP
+
+.? File 'contextdata.php':
+.-------------------- contextdata.php
+$items = array('<FOO>', '&BAR', '"BAZ"');
+$webmaster_email = 'webmaster@example.com';
+$menu = array(
+          array('name'=>'Top',   'url'=>'/'),
+          array('name'=>'Products',   'url'=>'/prod'),
+          array('name'=>'Support',   'url'=>'/support'),
+        );
+.--------------------
+
+% else assert false 
+% end 
+
+
+.? Result:
+.==================== example[%= n %]_nested.result
+$ [%= command %] -f contextdata.[%= pi %] example[%= n %].[%= suffix %]
+<html>
+  <body>
+
+    <div id="sidemenu">
+{{*<ul>*}}
+  {{*<li><a href="/">Top</a></li>*}}
+  {{*<li><a href="/prod">Products</a></li>*}}
+  {{*<li><a href="/support">Support</a></li>*}}
+{{*</ul>*}}
+    </div>
+
+    <div id="main-content">
+      <p>&lt;FOO&gt;</p>
+      <p>&amp;BAR</p>
+      <p>&quot;BAZ&quot;</p>
+    </div>
+
+    <div id="footer">
+{{*<hr />*}}
+{{*<address>*}}
+{{*  <a href="mailto:webmaster@example.com">webmaster@example.com</a>*}}
+{{*</address>*}}
+% _buf << empty_line if ! JS && ! PHP
+    </div>
+
+  </body>
+</table>
+.====================
+
+
+% if PYTHON
+Function '{{,include(),}}' can take template filename
+(ex. 'user_main.[%= suffix %]') or template short name (ex. ':main').
+Template short name represents a template in short notation. It starts with colon (':').
+% elsif RUBY
+Function '{{,import(),}}' can take template filename
+(ex. 'user_main.[%= suffix %]') or template short name (ex. :main).
+Template short name is a Symbol.
+% elsif PERL|| JS
+'{{,include(),}}' can take template filename
+(ex. 'user_main.[%= suffix %]') or template short name (ex. ':main').
+Template short name represents a template in short notation. It starts with colon (':').
+% elsif PHP
+'{{,import(),}}' can take template filename
+(ex. 'user_main.[%= suffix %]') or template short name (ex. ':main').
+Template short name represents a template in short notation. It starts with colon (':').
+% else assert false 
+% end 
+
+
+% if RUBY
+%   shortname = ':main' 
+% else 
+%   shortname = '":main"' 
+% end 
+
+To make template short name available, command-line option '{{,--prefix,}}' and
+'{{,--postfix,}}' are required.
+For example, '{{,include("user_main.[%= suffix %]"),}}' can be described as '{{,include([%= shortname %]),}}'
+when '{{,--prefix="user_",}}' and '{{,--postfix=".[%= suffix %]",}}' are specified in command-line.
+
+
+
+
+.$$ Layout Template			| des-layout
+
+
+Command-line option '{{,--layout=templatename,}}' specifies layout template name.
+
+For example, 'exmample[%= n %].[%= suffix %]' template in the previous section can be divided
+into layout file 'layout[%= n %].[%= suffix %]' and content file 'content[%= n %].[%= suffix %]'.
+Variable '{{,[%= prefix %]_content,}}' in layout template represents the result of content file.
+
+
+
+% if PYTHON
+
+.? File 'layout[%= n %].[%= suffix %]':
+.-------------------- layout[%= n %].[%= suffix %]
+<html>
+  <body>
+
+    <div id="sidemenu">
+<?py include('sidemenu.[%= suffix %]') ?>
+    </div>
+
+    <div id="main-content">
+{{*#{_content}*}}
+    </div>
+
+    <div id="footer">
+#{include('footer.[%= suffix %]', [%= FALSE %])}
+    </div>
+
+  </body>
+</table>
+.--------------------
+
+.? File 'content[%= n %].[%= suffix %]':
+.-------------------- content[%= n %].[%= suffix %]
+<?py for item in items: ?>
+  <p>${item}</p>
+<?py #end ?>
+.--------------------
+
+% elsif RUBY
+
+.? File 'layout[%= n %].[%= suffix %]':
+.-------------------- layout[%= n %].[%= suffix %]
+<html>
+  <body>
+
+    <div id="sidemenu">
+<?rb import 'sidemenu.[%= suffix %]' ?>
+    </div>
+
+    <div id="main-content">
+{{*#{@_content}*}}
+    </div>
+
+    <div id="footer">
+#{import 'footer.[%= suffix %]', [%= FALSE %]}
+    </div>
+
+  </body>
+</table>
+.--------------------
+
+.? File 'content[%= n %].[%= suffix %]':
+.-------------------- content[%= n %].[%= suffix %]
+<?rb for item in @items ?>
+  <p>${item}</p>
+<?rb end ?>
+.--------------------
+
+% elsif PERL
+
+.? File 'layout[%= n %].[%= suffix %]':
+.-------------------- layout[%= n %].[%= suffix %]
+<html>
+  <body>
+
+    <div id="sidemenu">
+<?pl include('sidemenu.[%= suffix %]'); ?>
+    </div>
+
+    <div id="main-content">
+{{*[== $_content ==]*}}
+    </div>
+
+    <div id="footer">
+<?pl include('footer.[%= suffix %]'); ?>
+    </div>
+
+  </body>
+</table>
+.--------------------
+
+.? File 'content[%= n %].[%= suffix %]':
+.-------------------- content[%= n %].[%= suffix %]
+<?pl for my $item (@$items) { ?>
+  <p>[=$item=]</p>
+<?pl } ?>
+.--------------------
+
+% elsif JS
+
+.? File 'layout[%= n %].[%= suffix %]':
+.-------------------- layout[%= n %].[%= suffix %]
+<html>
+  <body>
+
+    <div id="sidemenu">
+<?js include('sidemenu.[%= suffix %]'); ?>
+    </div>
+
+    <div id="main-content">
+{{*#{_content}*}}
+    </div>
+
+    <div id="footer">
+<?js include('footer.[%= suffix %]'); ?>
+    </div>
+
+  </body>
+</table>
+.--------------------
+
+.? File 'content[%= n %].[%= suffix %]':
+.-------------------- content[%= n %].[%= suffix %]
+<?js for (var i = 0, n = items.length; i < n; i++) { ?>
+  <p>${items[i]}</p>
+<?js } ?>
+.--------------------
+
+% elsif PHP
+
+.? File 'layout[%= n %].[%= suffix %]':
+.-------------------- layout[%= n %].[%= suffix %]
+<html>
+  <body>
+
+    <div id="sidemenu">
+<?php import('sidemenu.[%= suffix %]'); ?>
+    </div>
+
+    <div id="main-content">
+{{*{==$_content=}*}}
+    </div>
+
+    <div id="footer">
+<?php import('footer.[%= suffix %]'); ?>
+    </div>
+
+  </body>
+</table>
+.--------------------
+
+.? File 'content[%= n %].[%= suffix %]':
+.-------------------- content[%= n %].[%= suffix %]
+<?php foreach ($items as $item) { ?>
+  <p>{=$item=}</p>
+<?php } ?>
+.--------------------
+
+% else assert false 
+% end 
+
+
+
+.? Result:
+.==================== example[%= n %]_layout.result
+$ [%= command %] -f contextdata.[%= pi %] {{*--layout=layout[%= n %].[%= suffix %]*}} content[%= n %].[%= suffix %]
+<html>
+  <body>
+
+    <div id="sidemenu">
+<ul>
+  <li><a href="/">Top</a></li>
+  <li><a href="/prod">Products</a></li>
+  <li><a href="/support">Support</a></li>
+</ul>
+    </div>
+
+    <div id="main-content">
+{{*  <p>&lt;FOO&gt;</p>*}}
+{{*  <p>&amp;BAR</p>*}}
+{{*  <p>&quot;BAZ&quot;</p>*}}
+% _buf << empty_line 
+    </div>
+
+    <div id="footer">
+<hr />
+<address>
+  <a href="mailto:webmaster@example.com">webmaster@example.com</a>
+</address>
+% _buf << empty_line if ! JS && ! PHP
+    </div>
+
+  </body>
+</table>
+.====================
+
+
+.#Target temlate and layout template shares the same context object.
+.#If you set some variables in target template, they are available in layout template.
+Target template and layout template don't share local variables.
+It means that local variables set in a template are not available in layout template.
+
+% n += 1 
+% if PYTHON
+
+If you want variables set in a temlate to be available in layout template,
+you should use '_context' dict.
+
+.? File 'layout[%= n %].[%= suffix %]':
+.-------------------- layout[%= n %].[%= suffix %]
+...
+<h1>{{*${title}*}}</h1>
+
+<div id="main-content">
+#{_content}
+<div>
+
+<a href="{{*${url}*}}">Next page</a>
+...
+.--------------------
+
+.? File 'content[%= n %].[%= suffix %]':
+.-------------------- content[%= n %].[%= suffix %]
+{{*<?py _context['title'] = 'Document Title' ?>*}}
+{{*<?py _context['url'] = '/next/page' ?>*}}
+<table>
+  ...content...
+</table>
+.--------------------
+
+% elsif RUBY
+
+If you want variables set in a temlate to be available in layout template,
+use instance variables instead of local variables.
+
+.? File 'layout[%= n %].[%= suffix %]':
+.-------------------- layout[%= n %].[%= suffix %]
+...
+<h1>{{*${@title}*}}</h1>
+
+<div id="main-content">
+#{@_content}
+<div>
+
+<a href="{{*${@url}*}}">Next page</a>
+...
+.--------------------
+
+.? File 'content[%= n %].[%= suffix %]':
+.-------------------- content[%= n %].[%= suffix %]
+{{*<?rb @title = 'Document Title' ?>*}}
+{{*<?rb @url = '/next/page' ?>*}}
+<table>
+  ...content...
+</table>
+.--------------------
+
+% elsif PERL
+
+If you want variables set in a temlate to be available in layout template,
+you should use '$_context' hash reference.
+
+.? File 'layout[%= n %].[%= suffix %]':
+.-------------------- layout[%= n %].[%= suffix %]
+...
+<h1>{{*[=$title=]*}}</h1>
+
+<div id="main-content">
+[==$_content==]
+<div>
+
+<a href="{{*[=$url=]*}}">Next page</a>
+...
+.--------------------
+
+.? File 'content[%= n %].[%= suffix %]':
+.-------------------- content[%= n %].[%= suffix %]
+{{*<?pl $_context->{'title'} = 'Document Title'; ?>*}}
+{{*<?pl $_context->{'url'}   = '/next/page'; ?>*}}
+<table>
+  ...content...
+</table>
+.--------------------
+
+% elsif JS
+
+If you want variables set in a temlate to be available in layout template,
+you should use '_context' dict.
+
+.? File 'layout[%= n %].[%= suffix %]':
+.-------------------- layout[%= n %].[%= suffix %]
+...
+<h1>{{*${title}*}}</h1>
+
+<div id="main-content">
+#{_content}
+<div>
+
+<a href="{{*${url}*}}">Next page</a>
+...
+.--------------------
+
+.? File 'content[%= n %].[%= suffix %]':
+.-------------------- content[%= n %].[%= suffix %]
+{{*<?js _context.title = 'Document Title'; ?>*}}
+{{*<?js _context.url = '/next/page'; ?>*}}
+<table>
+  ...content...
+</table>
+.--------------------
+
+% elsif PHP
+
+If you want variables set in a temlate to be available in layout template,
+you should use '$_context' array.
+
+.? File 'layout[%= n %].[%= suffix %]':
+.-------------------- layout[%= n %].[%= suffix %]
+...
+<h1>{{*{=$title=}*}}</h1>
+
+<div id="main-content">
+{==$_content=}
+<div>
+
+<a href="{{*{=$url=}*}}">Next page</a>
+...
+.--------------------
+
+.? File 'content[%= n %].[%= suffix %]':
+.-------------------- content[%= n %].[%= suffix %]
+{{*<?php $_context['title'] = 'Document Title'; ?>*}}
+{{*<?php $_context['url']   = '/next/page'; ?>*}}
+<table>
+  ...content...
+</table>
+.--------------------
+
+% else assert false 
+% end 
+
+
+.? Result:
+.==================== example[%= n %]_layout2.result
+$ [%= command %] --layout=layout[%= n %].[%= suffix %] content[%= n %].[%= suffix %]
+...
+<h1>{{*Document Title*}}</h1>
+
+<div id="main-content">
+<table>
+  ...content...
+</table>
+% _buf << empty_line 
+<div>
+
+<a href="{{*/next/page*}}">Next page</a>
+...
+.====================
+
+
+% if PYTHON
+Using '_context["_layout"]', it is able to specify layout template name in each template file.
+If you assigned [%= FALSE %] to '_context["_layout"]', no layout template is used.
+% elsif RUBY
+Using '[%= prefix %]_layout' variable, it is able to specify layout template name in each template file.
+If you assigned [%= FALSE %] to '[%= prefix %]_layout' variable, no layout template is used.
+% elsif PERL
+Using '$_context->{_layout}', it is able to specify layout template name in each template file.
+If you assigned [%= FALSE %] to '$_context->{_layout}', no layout template is used.
+% elsif JS
+Using '_context._layout', it is able to specify layout template name in each template file.
+If you assigned [%= FALSE %] to '_context._layout', no layout template is used.
+% elsif PHP
+Using '$_context["_layout"]', it is able to specify layout template name in each template file.
+If you assigned [%= FALSE %] to '$_context["_layout"]', no layout template is used.
+% else assert false 
+% end 
+
+
+% n += 1 
+
+.? File 'content[%= n %].[%= suffix %]':
+.-------------------- content[%= n %].[%= suffix %]
+% if PYTHON
+{{*<?[%= pi %] _context['_layout'] = ":layout[%= n %]_xhtml" ?>*}}
+% elsif RUBY
+{{*<?[%= pi %] @_layout = :layout[%= n %]_xhtml ?>*}}
+% elsif PERL
+{{*<?[%= pi %] $_context->{'_layout'} = ':layout[%= n %]_xhtml'; ?>*}}
+% elsif JS
+{{*<?[%= pi %] _context._layout = ':layout[%= n %]_xhtml'; ?>*}}
+% elsif PHP
+{{*<?[%= pi %] $_context['_layout'] = ':layout[%= n %]_xhtml'; ?>*}}
+% else assert false 
+% end 
+<h1>Hello World!</h1>
+.--------------------
+
+.? File 'layout[%= n %]_html.[%= suffix %]':
+.-------------------- layout[%= n %]_html.[%= suffix %]
+<html>
+  <body>
+% if PYTHON
+#{[%= prefix %]_content}
+% elsif RUBY
+#{[%= prefix %]_content}
+% elsif PERL
+[== $_content ==]
+% elsif JS
+#{[%= prefix %]_content}
+% elsif PHP
+{==[%= prefix %]_content=}
+% else assert false 
+% end 
+  </body>
+</html>
+.--------------------
+
+.? File 'layout[%= n %]_xhtml.[%= suffix %]':
+.-------------------- layout[%= n %]_xhtml.[%= suffix %]
+<?xml version="1.0" encoding="UTF-8"?>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+  <body>
+% if PYTHON
+#{[%= prefix %]_content}
+% elsif RUBY
+#{[%= prefix %]_content}
+% elsif PERL
+[== $_content ==]
+% elsif JS
+#{[%= prefix %]_content}
+% elsif PHP
+{==[%= prefix %]_content=}
+% else assert false 
+% end 
+  </body>
+</html>
+.--------------------
+
+.? Result: ':layout[%= n %]_html' is specified in command-line option but ':layout[%= n %]_xhtml' is used
+.==================== example[%= n %]_layout3.result
+$ [%= command %] --postfix='.[%= suffix %]' {{*--layout=':layout[%= n %]_html'*}} content[%= n %].[%= suffix %]
+<?xml version="1.0" encoding="UTF-8"?>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+  <body>
+<h1>Hello World!</h1>
+% _buf << empty_line 
+  </body>
+</html>
+.====================
+
+
+
+.$$ Capturing				| des-capturing
+
+It is able to capture any part of template.
+
+% n += 1 
+.? File 'example[%= n %].[%= suffix %]':
+.-------------------- example[%= n %].[%= suffix %]
+% if PYTHON
+<?[%= pi %] _context['title'] = 'Capture Test' ?>
+% elsif RUBY
+<?[%= pi %] [%= prefix %]title = 'Capture Test' ?>
+% elsif PERL
+<?[%= pi %] $_context->{'title'} = 'Capture Test'; ?>
+% elsif JS
+<?[%= pi %] _context['title'] = 'Capture Test'; ?>
+% elsif PHP
+<?[%= pi %] $_context['title'] = 'Capture Test'; ?>
+% else assert false 
+% end 
+<html>
+  <body>
+
+% if PYTHON
+{{*<?[%= pi %] start_capture('content_part') ?>*}}
+    <ul>
+<?[%= pi %] for i in [0, 1, 2]: ?>
+      <li>i = #{i}</li>
+<?[%= pi %] #endfor ?>
+    </ul>
+{{*<?[%= pi %] stop_capture() ?>*}}
+% elsif RUBY
+{{*<?[%= pi %] start_capture(:content_part) ?>*}}
+    <ul>
+<?[%= pi %] for i in [0, 1, 2] ?>
+      <li>i = #{i}</li>
+<?[%= pi %] end ?>
+    </ul>
+{{*<?[%= pi %] stop_capture() ?>*}}
+% elsif PERL
+{{*<?[%= pi %] start_capture('content_part'); ?>*}}
+    <ul>
+<?[%= pi %] for my $i ((0, 1, 2)) { ?>
+      <li>i = [==$i=]</li>
+<?[%= pi %] } ?>
+    </ul>
+{{*<?[%= pi %] stop_capture(); ?>*}}
+% elsif JS
+{{*<?[%= pi %] startCapture('content_part'); ?>*}}
+    <ul>
+<?[%= pi %] for (var i = 0; i <= 2; i++) { ?>
+      <li>i = #{i}</li>
+<?[%= pi %] } ?>
+    </ul>
+{{*<?[%= pi %] stopCapture() ?>*}}
+% elsif PHP
+{{*<?[%= pi %] start_capture('content_part'); ?>*}}
+    <ul>
+<?[%= pi %] for ($i = 0; $i <= 2; $i++) { ?>
+      <li>i = {==$i=}</li>
+<?[%= pi %] } ?>
+    </ul>
+{{*<?[%= pi %] stop_capture() ?>*}}
+% else assert false 
+% end 
+
+% if PYTHON
+{{*<?[%= pi %] start_capture('footer_part') ?>*}}
+    <div class="footer">copyright&copy; 2007 kuwata-lab.com</div>
+{{*<?[%= pi %] stop_capture() ?>*}}
+% elsif RUBY
+{{*<?[%= pi %] start_capture('footer_part') ?>*}}
+    <div class="footer">copyright&copy; 2007 kuwata-lab.com</div>
+{{*<?[%= pi %] stop_capture() ?>*}}
+% elsif PERL
+{{*<?[%= pi %] start_capture('footer_part'); ?>*}}
+    <div class="footer">copyright&copy; 2007 kuwata-lab.com</div>
+{{*<?[%= pi %] stop_capture() ?>*}}
+% elsif JS
+{{*<?[%= pi %] startCapture('footer_part'); ?>*}}
+    <div class="footer">copyright&copy; 2007 kuwata-lab.com</div>
+{{*<?[%= pi %] stopCapture(); ?>*}}
+% elsif PHP
+{{*<?[%= pi %] start_capture('footer_part'); ?>*}}
+    <div class="footer">copyright&copy; 2007 kuwata-lab.com</div>
+{{*<?[%= pi %] stop_capture(); ?>*}}
+% else assert false 
+% end 
+
+  </body>
+</html>
+.--------------------
+
+Captured strings are accessable as local variables.
+For example, you can get captured string as a variable '{{,content_part,}}' in the above example.
+
+A template can contain several capturing.
+It is not able to nest capturing.
+
+In layout file, it is able to use strings captured in templates.
+
+.? File 'layout[%= n %].[%= suffix %]':
+.-------------------- layout[%= n %].[%= suffix %]
+<html lang="en">
+  <head>
+% if PYTHON
+    <title>${title}</title>
+% elsif RUBY
+    <title>${@title}</title>
+% elsif PERL
+    <title>[=$title=]</title>
+% elsif JS
+    <title>${title}</title>
+% elsif PHP
+    <title>{=$title=}</title>
+% else assert false 
+% end 
+  </head>
+  <body>
+
+    <!-- HEADER -->
+% if PYTHON
+{{*<?py if not captured_as('header_part'): ?>*}}
+    <h1>${title}</h1>
+{{*<?py #endif ?>*}}
+% elsif RUBY
+{{*<?rb unless captured_as('header_part') ?>*}}
+    <h1>${@title}</h1>
+{{*<?rb end ?>*}}
+% elsif PERL
+{{*<?pl start_placeholder('header_part'); ?>*}}
+    <h1>[=$title=]</h1>
+{{*<?pl stop_placeholder(); ?>*}}
+% elsif JS
+{{*<?js startPlaceholder('header_part'); ?>*}}
+    <h1>${title}</h1>
+{{*<?js stopPlaceholder(); ?>*}}
+% elsif PHP
+{{*<?php start_placeholder('header_part'); ?>*}}
+    <h1>{=$title=}</h1>
+{{*<?php stop_placeholder(); ?>*}}
+% else assert false 
+% end 
+    <!-- /HEADER -->
+
+    <!-- CONTENT -->
+% if PYTHON
+{{*#{[%= prefix %]content_part}*}}
+% elsif RUBY
+{{*#{[%= prefix %]content_part}*}}
+% elsif PERL
+{{*[== $content_part ==]*}}
+% elsif JS
+{{*#{[%= prefix %]content_part}*}}
+% elsif PHP
+{{*{==[%= prefix %]content_part=}*}}
+% else assert false 
+% end 
+    <!-- /CONTENT -->
+
+    <!-- FOOTER -->
+% if PYTHON
+{{*<?py if not captured_as('footer_part'): ?>*}}
+    <hr />
+    <address>webmaster@localhost</address>
+{{*<?py #endif ?>*}}
+% elsif RUBY
+{{*<?rb unless captured_as('footer_part') ?>*}}
+    <hr />
+    <address>webmaster@localhost</address>
+{{*<?rb end ?>*}}
+% elsif PERL
+{{*<?pl start_placeholder('footer_part'); ?>*}}
+    <hr />
+    <address>webmaster@localhost</address>
+{{*<?pl stop_placeholder(); ?>*}}
+% elsif JS
+{{*<?js startPlaceholder('footer_part'); ?>*}}
+    <hr />
+    <address>webmaster@localhost</address>
+{{*<?js stopPlaceholder(); ?>*}}
+% elsif PHP
+{{*<?php start_placeholder('footer_part'); ?>*}}
+    <hr />
+    <address>webmaster@localhost</address>
+{{*<?php stop_placeholder(); ?>*}}
+% else assert false 
+% end 
+    <!-- /FOOTER -->
+
+  </body>
+</html>
+.--------------------
+
+
+% if PYTHON
+.#'{{,stop_capture(True),}}' is equivarent to '{{,stop_capture(); _context["{{/varname/}}"] = {{/varname/}};,}}'.
+'{{,if not captured_as("name"): ... #endif,}}' is equivarent to the following.
+.--------------------
+<?py if _context.has_key('name'): ?>
+<?py     _buf.append(_context['name']) ?>
+<?py else: ?>
+         ...
+<?py #endif ?>
+.--------------------
+% elsif RUBY
+.#'{{,stop_capture(true),}}' is equivarent to '{{,@{{/varname/}} = stop_capture(),}}'.
+'{{,unless captured_as("name") ... end,}}' is equivarent to the following.
+.--------------------
+<?rb if @name ?>
+<?rb   _buf << @name ?>
+<?rb else ?>
+       ...
+<?rb end ?>
+.--------------------
+% elsif PERL
+.#'{{,stop_capture(1);,}}' is equivarent to '{{,$_context->{"{{/varname/}}"} = stop_capture();,}}'.
+'{{,start_placeholder("name") ... stop_placeholder(),}}' is quivarent to the following.
+.--------------------
+{{*<?pl if ($_context->{"name"}) { ?>*}}
+[== $_context->{"name"} ==]
+{{*<?pl } else { ?>*}}
+    ...
+{{*<?pl } ?>*}}
+.--------------------
+% elsif JS
+.#'{{,stopCapture(true);,}}' is equivarent to '{{,_context["{{/varname/}}"] = stopCapture();,}}'.
+'{{,startPlaceholder("name") ... stopPlaceholder(),}}' is quivarent to the following.
+.--------------------
+{{*<?js if (_context['name']) { ?>*}}
+#{_context['name']}
+{{*<?js } else { ?>*}}
+    ...
+{{*<?js } ?>*}}
+.--------------------
+% elsif PHP
+.#'{{,stop_capture(true);,}}' is equivarent to '{{,_context["{{/varname/}}"] = stopCapture();,}}'.
+'{{,start_placeholder("name") ... stop_placeholder(),}}' is quivarent to the following.
+.--------------------
+{{*<?php if ($_context['name']) { ?>*}}
+{==$_context['name']=}
+{{*<?php } else { ?>*}}
+    ...
+{{*<?php } ?>*}}
+.--------------------
+% else assert false 
+% end 
+
+The following result shows that content part and footer part are overrided by capturing in content template but header part is not.
+
+.? Result:
+.==================== example[%= n %]_capture.result
+$ [%= command %] --layout=layout[%= n %].[%= suffix %] example[%= n %].[%= suffix %]
+<html lang="en">
+  <head>
+    <title>Capture Test</title>
+  </head>
+  <body>
+
+    <!-- HEADER -->
+    <h1>Capture Test</h1>
+    <!-- /HEADER -->
+
+    <!-- CONTENT -->
+    {{*<ul>*}}
+      {{*<li>i = 0</li>*}}
+      {{*<li>i = 1</li>*}}
+      {{*<li>i = 2</li>*}}
+    {{*</ul>*}}
+% _buf << empty_line 
+    <!-- /CONTENT -->
+
+    <!-- FOOTER -->
+    {{*<div class="footer">copyright&copy; 2007 kuwata-lab.com</div>*}}
+    <!-- /FOOTER -->
+
+  </body>
+</html>
+.====================
+
+
+
+
+.$$ Template Arguments			| des-args
+
+It is able to specify template arguments in template files.
+Template arguments are variables which are passed by main program via context object.
+In the following example, '{{,title,}}' and '{{,name,}}' are template arguments.
+
+
+% n += 1 
+.? File 'example[%= n %].[%= suffix %]':
+.-------------------- example[%= n %].[%= suffix %]
+<?xml version="1.0"?>
+% if PYTHON
+{{*<?py #@ARGS title, name ?>*}}
+<h1>${title}</h1>
+<p>Hello ${name}!</p>
+% elsif RUBY
+{{*<?rb #@ARGS title, name ?>*}}
+<h1>${title}</h1>
+<p>Hello ${name}!</p>
+% elsif PERL
+{{*<?pl #@ARGS title, name ?>*}}
+<h1>[=$title=]</h1>
+<p>Hello [=$name=]!</p>
+% elsif JS
+{{*<?js //@ARGS title, name ?>*}}
+<h1>${title}</h1>
+<p>Hello ${name}!</p>
+% elsif PHP
+{{*<?php //@ARGS title, name ?>*}}
+<h1>{=$title=}</h1>
+<p>Hello {=$name=}!</p>
+% else assert false 
+% end 
+.--------------------
+
+Template arguments line is converted into assignment statements of local variables.
+
+.==================== example[%= n %]_template_args.result
+$ [%= command %] -s example[%= n %].[%= suffix %]
+% if PYTHON
+_buf = []; _buf.extend(('''<?xml version="1.0"?>\n''', ));
+{{*title = _context.get('title'); name = _context.get('name'); *}}
+_buf.extend(('''<h1>''', escape(to_str(title)), '''</h1>
+<p>Hello ''', escape(to_str(name)), '''!</p>\n''', ));
+print ''.join(_buf)
+% elsif RUBY
+_buf = '';  _buf << %Q`<?xml version="1.0"?>\n`
+{{* title = @title; name = @name;*}}
+ _buf << %Q`<h1>#{escape((title).to_s)}</h1>
+<p>Hello #{escape((name).to_s)}!</p>\n`
+_buf.to_s
+% elsif PERL
+my @_buf = (); push(@_buf, q`<?xml version="1.0"?>
+`, ); my $title = $_context->{title}; my $name = $_context->{name}; 
+push(@_buf, q`<h1>`, escape($title), q`</h1>
+<p>Hello `, escape($name), q`!</p>
+`, ); join('', @_buf);
+% elsif JS
+var _buf = [];  _buf.push('<?xml version="1.0"?>\n');
+{{* var title = _context['title']; var name = _context['name'];*}}
+ _buf.push('<h1>', escapeXml(title), '</h1>\n\
+<p>Hello ', escapeXml(name), '!</p>\n');
+_buf.join('')
+% elsif PHP
+<?php echo '<?xml version="1.0"?>
+'; {{*$title = @$_context['title']; $name = @$_context['name'];*}}
+echo '<h1>', htmlspecialchars($title), '</h1>
+<p>Hello ', htmlspecialchars($name), '!</p>
+';
+?>
+% else raise false 
+% end 
+.====================
+
+
+If template arguments are specified, other variables passed by context object are not set.
+
+% n += 1 
+.? File 'example[%= n %].[%= suffix %]':
+.-------------------- example[%= n %].[%= suffix %]
+<p>
+% if PYTHON
+{{*<?py #@ARGS x ?>*}}
+x = #{x}
+y = #{y}   # NameError
+% elsif RUBY
+{{*<?rb #@ARGS x ?>*}}
+x = #{x}
+y = #{y}   # NameError
+% elsif PERL
+{{*<?pl #@ARGS x ?>*}}
+x = [=$x=]
+y = [=$y=]   # error
+% elsif JS
+{{*<?js //@ARGS x ?>*}}
+x = ${x}
+y = ${y}   # error
+% elsif PHP
+{{*<?php //@ARGS x ?>*}}
+x = {=$x=}
+y = {=$y=}   # error
+% else assert false 
+% end 
+</p>
+.--------------------
+
+.? Result:
+% if PYTHON
+.==================== example[%= n %]_template_args_result
+$ [%= command %] {{*-c 'x=10;y=20'*}} example[%= n %].[%= suffix %]
+NameError: name 'y' is not defined
+.====================
+% elsif RUBY
+.==================== example[%= n %]_template_args_result
+$ [%= command %] {{*-c '@x=10;@y=20'*}} example[%= n %].[%= suffix %]
+example12.rbhtml:4:in `_render': undefined local variable or method `y' (NameError)
+.====================
+% elsif PERL
+.==================== example[%= n %]_template_args.result
+$ [%= command %] {{*-wc 'x=>10,y=>20'*}} example[%= n %].[%= suffix %]
+*** Error: example[%=n%].plhtml
+Global symbol "$y" requires explicit package name at (eval 4) line 4.
+.====================
+% elsif JS
+.==================== example[%= n %]_template_args_result
+$ [%= command %] {{*-wc 'x:10,y:20'*}} example[%= n %].[%= suffix %]
+*** ERROR:
+example11.jshtml: y is not defined
+.====================
+% elsif PHP
+.==================== example[%= n %]_template_args_result
+$ [%= command %] {{*-c '$x=10; $y=20'*}} example[%= n %].[%= suffix %]
+<p>
+x = 10
+y = 
+Notice: Undefined variable: y in /usr/local/lib/php/Tenjin.php(488) : eval()'d code on line 4
+   # error
+</p>
+.====================
+% else assert false 
+% end 
+
+% if ! RUBY
+Special variable '{{,[%= prefix %]_context,}}' which represents context object is always available whether template arguments are specified or not.
+% end 
+
+
+
+.$$ Preprocessing			| des-preprocess
+
+[%= name %] supports preprocessing of template.
+Preprocessing executes some logics when templates are loaded and that logics are not executed when rendering.
+Preprocessing makes your application much faster.
+
+Notation of preprocessing is the following.
+% if PERL
+.* {{,<?[%= PI %] ... ?>,}} represents preprocessing statement.
+.* {{,[*=...=*],}} represents preprocessing expression (with HTML escape).
+.* {{,[*==...=*],}} represents preprocessing expression (without HTML escape).
+% else
+.* {{,<?[%= PI %] ... ?>,}} represents preprocessing statement.
+.* {{,#{{...}},}} represents preprocessing expression (without HTML escape).
+.* {{,${{...}},}} represents preprocessing expression (with HTML escape).
+% end
+
+For example, assume the following template.
+
+% n += 1
+.? File 'example[%= n %].[%= suffix %]':
+.-------------------- example[%= n %].[%= suffix %]
+% if PYTHON
+{{*<?PY states = { "CA": "California", ?>*}}
+{{*<?PY            "NY": "New York", ?>*}}
+{{*<?PY            "FL": "Florida",  ?>*}}
+{{*<?PY            "TX": "Texas",  ?>*}}
+{{*<?PY            "HI": "Hawaii", } ?>*}}
+{{*<?PY # ?>*}}
+<?py chk = { params['state']: ' selected="selected"' } ?>
+{{*<?PY codes = states.keys() ?>*}}
+{{*<?PY codes.sort() ?>*}}
+<select name="state">
+  <option value="">-</option>
+{{*<?PY for code in codes: ?>*}}
+  <option value="{{*#{{code}}*}}"#{chk.get({{*#{{repr(code)}}*}}, '')}>{{*${{states[code]}}*}}</option>
+{{*<?PY #endfor ?>*}}
+</select>
+% elsif RUBY
+{{*<?RB states = { "CA" => "California", ?>*}}
+{{*<?RB            "NY" => "New York", ?>*}}
+{{*<?RB            "FL" => "Florida",  ?>*}}
+{{*<?RB            "TX" => "Texas",  ?>*}}
+{{*<?RB            "HI" => "Hawaii", } ?>*}}
+<?rb chk = { @params['state'] => ' selected="selected"' } ?>
+<select name="state">
+  <option value="">-</option>
+{{*<?RB for code in states.keys.sort ?>*}}
+  <option value="{{*#{{code}}*}}"#{chk[{{*#{{code.inspect}}*}}]}>{{*${{states[code]}}*}}</option>
+{{*<?RB end ?>*}}
+</select>
+% elsif PERL
+{{*<?PL %states = ( "CA" => "California", ?>*}}
+{{*<?PL             "NY" => "New York", ?>*}}
+{{*<?PL             "FL" => "Florida",  ?>*}}
+{{*<?PL             "TX" => "Texas",  ?>*}}
+{{*<?PL             "HI" => "Hawaii", ); ?>*}}
+<?pl %chk = ( $params->{state} => ' selected="selected"' ); ?>
+<select name="state">
+  <option value="">-</option>
+{{*<?PL for my $code (sort(keys(%states))) { ?>*}}
+  <option value="{{*[*==$code=*]*}}"[=$chk->{{{*[*==$code=*]*}}}=]>{{*[*==$states{$code}=*]*}}</option>
+{{*<?PL } ?>*}}
+</select>
+% elsif JS
+{{*<?JS var states = { CA: "California", ?>*}}
+{{*<?JS                NY: "New York", ?>*}}
+{{*<?JS                FL: "Florida",  ?>*}}
+{{*<?JS                TX: "Texas",  ?>*}}
+{{*<?JS                HI: "Hawaii" }; ?>*}}
+<?js var chk = {};  chk[params.state] = ' selected="selected"'; ?>
+{{*<?JS var codes = []; ?>*}}
+{{*<?JS for (var code in states) { codes.push(code); } ?>*}}
+{{*<?JS codes.sort(); ?>*}}
+<select name="state">
+  <option value="">-</option>
+{{*<?JS for (var i = 0, n = codes.length; i < n; i++) { ?>*}}
+{{*<?JS     var code = codes[i]; ?>*}}
+  <option value="{{*#{{code}}*}}"#{chk.{{*#{{code}}*}}||''}>{{*${{states[code]}}*}}</option>
+{{*<?JS } ?>*}}
+</select>
+% elsif PHP
+{{*<?PHP $states = array('CA'=>"California", ?>*}}
+{{*<?PHP                 'NY'=>"New York", ?>*}}
+{{*<?PHP                 'FL'=>"Florida",  ?>*}}
+{{*<?PHP                 'TX'=>"Texas",  ?>*}}
+{{*<?PHP                 'HI'=>"Hawaii"); ?>*}}
+<?php $state = $params['state']; ?>
+<?php $chk = array(true=>' selected="selected"', false=>''); ?>
+<select name="state">
+  <option value="">-</option>
+{{*<?PHP $codes = array_keys($states); ?>*}}
+{{*<?PHP sort($codes); ?>*}}
+{{*<?PHP foreach ($codes as $code) { ?>*}}
+  <option value="{{*{*==$code=*}*}}"{==$chk[$state=='{{*{*==$code=*}*}}']=}>{{*{*=$states[$code]=*}*}}</option>
+{{*<?PHP } ?>*}}
+</select>
+% else assert false
+% end
+.--------------------
+
+If preprocessing is activated, the above will be converted into the following when template is loaded.
+(Command-line option {{,-P,}} shows the result of preprocessing.)
+
+.? Result of preprocessing:
+.==================== example[%= n %]_preprocessed.result
+$ [%= command %] {{*-P*}} example[%= n %].[%= suffix %]
+% if PYTHON
+<?py chk = { params['state']: ' selected="selected"' } ?>
+<select name="state">
+  <option value="">-</option>
+  <option value="CA"#{chk.get('CA', '')}>California</option>
+  <option value="FL"#{chk.get('FL', '')}>Florida</option>
+  <option value="HI"#{chk.get('HI', '')}>Hawaii</option>
+  <option value="NY"#{chk.get('NY', '')}>New York</option>
+  <option value="TX"#{chk.get('TX', '')}>Texas</option>
+</select>
+% elsif RUBY
+<?rb chk = { @params['state'] => ' selected="selected"' } ?>
+<select name="state">
+  <option value="">-</option>
+  <option value="CA"#{chk["CA"]}>California</option>
+  <option value="FL"#{chk["FL"]}>Florida</option>
+  <option value="HI"#{chk["HI"]}>Hawaii</option>
+  <option value="NY"#{chk["NY"]}>New York</option>
+  <option value="TX"#{chk["TX"]}>Texas</option>
+</select>
+% elsif PERL
+<?pl %chk = ( $params->{state} => ' selected="selected"' ); ?>
+<select name="state">
+  <option value="">-</option>
+  <option value="CA"[=$chk->{CA}=]>California</option>
+  <option value="FL"[=$chk->{FL}=]>Florida</option>
+  <option value="HI"[=$chk->{HI}=]>Hawaii</option>
+  <option value="NY"[=$chk->{NY}=]>New York</option>
+  <option value="TX"[=$chk->{TX}=]>Texas</option>
+</select>
+% elsif JS
+<?js var chk = {};  chk[params.state] = ' selected="selected"'; ?>
+<select name="state">
+  <option value="">-</option>
+  <option value="CA"#{chk.CA||''}>California</option>
+  <option value="FL"#{chk.FL||''}>Florida</option>
+  <option value="HI"#{chk.HI||''}>Hawaii</option>
+  <option value="NY"#{chk.NY||''}>New York</option>
+  <option value="TX"#{chk.TX||''}>Texas</option>
+</select>
+% elsif PHP
+<?php $state = $params['state']; ?>
+<?php $chk = array(true=>' selected="selected"', false=>''); ?>
+<select name="state">
+  <option value="">-</option>
+  <option value="CA"{==$chk[$state=='CA']=}>California</option>
+  <option value="FL"{==$chk[$state=='FL']=}>Florida</option>
+  <option value="HI"{==$chk[$state=='HI']=}>Hawaii</option>
+  <option value="NY"{==$chk[$state=='NY']=}>New York</option>
+  <option value="TX"{==$chk[$state=='TX']=}>Texas</option>
+</select>
+% else assert false
+% end
+.====================
+
+This means that for-loop is executed only once when template is loaded and is not executed when rendering.
+In the result, rendering speed becomes to be much faster.
+
+And the [%= Lang %] code is here. This shows that there is no for-loop.
+
+.? Translated script code:
+.==================== example[%= n %]_preprocessed_source.result
+$ [%= command %] {{*--preprocess*}} -sb example[%= n %].[%= suffix %]
+% if PYTHON
+chk = { params['state']: ' selected="selected"' }
+_buf.extend(('''<select name="state">
+  <option value="">-</option>
+  <option value="CA"''', to_str(chk.get('CA', '')), '''>California</option>
+  <option value="FL"''', to_str(chk.get('FL', '')), '''>Florida</option>
+  <option value="HI"''', to_str(chk.get('HI', '')), '''>Hawaii</option>
+  <option value="NY"''', to_str(chk.get('NY', '')), '''>New York</option>
+  <option value="TX"''', to_str(chk.get('TX', '')), '''>Texas</option>
+</select>\n''', ));
+% elsif RUBY
+chk = { @params['state'] => ' selected="selected"' }
+ _buf << %Q`<select name="state">
+  <option value="">-</option>
+  <option value="CA"#{chk["CA"]}>California</option>
+  <option value="FL"#{chk["FL"]}>Florida</option>
+  <option value="HI"#{chk["HI"]}>Hawaii</option>
+  <option value="NY"#{chk["NY"]}>New York</option>
+  <option value="TX"#{chk["TX"]}>Texas</option>
+</select>\n`
+% elsif PERL
+%%chk = ( $params->{state} => ' selected="selected"' );
+push(@_buf, q`<select name="state">
+  <option value="">-</option>
+  <option value="CA"`, escape($chk->{CA}), q`>California</option>
+  <option value="FL"`, escape($chk->{FL}), q`>Florida</option>
+  <option value="HI"`, escape($chk->{HI}), q`>Hawaii</option>
+  <option value="NY"`, escape($chk->{NY}), q`>New York</option>
+  <option value="TX"`, escape($chk->{TX}), q`>Texas</option>
+</select>
+`, ); 
+% elsif JS
+ var chk = {};  chk[params.state] = ' selected="selected"';
+ _buf.push('<select name="state">\n\
+  <option value="">-</option>\n\
+  <option value="CA"', chk.CA||'', '>California</option>\n\
+  <option value="FL"', chk.FL||'', '>Florida</option>\n\
+  <option value="HI"', chk.HI||'', '>Hawaii</option>\n\
+  <option value="NY"', chk.NY||'', '>New York</option>\n\
+  <option value="TX"', chk.TX||'', '>Texas</option>\n\
+</select>\n');
+% elsif PHP
+ $state = $params['state']; 
+ $chk = array(true=>' selected="selected"', false=>''); 
+echo '<select name="state">
+  <option value="">-</option>
+  <option value="CA"', $chk[$state=='CA'], '>California</option>
+  <option value="FL"', $chk[$state=='FL'], '>Florida</option>
+  <option value="HI"', $chk[$state=='HI'], '>Hawaii</option>
+  <option value="NY"', $chk[$state=='NY'], '>New York</option>
+  <option value="TX"', $chk[$state=='TX'], '>Texas</option>
+</select>
+';
+% else assert false
+% end
+.====================
+
+If you have errors on preprocessing, you should check source script by {{,-Ps,}} option{{(Command-line option '-Ps' is available but '-PS' is not availabe. This is a current restriction of [%= command %]. )}}.
+
+
+% _p = '_p'
+% _P = '_P'
+% _P = '_ep' if PHP
+
+
+The following is an another example.
+Assume that {{,link_to(),}} is a helper method which takes label and url and generate
+{{,<a></a>,}} tag.
+In this case, label and url can be parameterized by {{,[%=_p%]("..."),}} and {{,[%=_P%]("..."),}}.
+The former is converted into {{,[%=embexpr1%],}} and the latter converted into {{,[%=embexpr2%],}}
+by preprocessor.
+
+% n += 1
+.? File 'example[%= n %].[%= suffix %]':
+.-------------------- example[%= n %].[%= suffix %]
+% if PYTHON
+<?PY ## ex. link_to('Show', '/show/1')  => <a href="/show/1">Show</a> ?>
+<?PY def link_to(label, url): ?>
+<?PY     import urllib ?>
+<?PY     return '<a href="%s">%s</a>' % (urllib.quote(url), label) ?>
+<?PY # ?>
+#{{link_to('Show '+{{*_P('params["name"]')*}}, '/items/show/'+{{*_p('params["id"]')*}})}}
+% elsif RUBY
+<?RB require 'cgi' ?>
+<?RB ## ex. link_to('Show', '/show/1')  => <a href="/show/1">Show</a> ?>
+<?RB def link_to(label, url) ?>
+<?RB     return "<a href=\"#{CGI.unescape(url)}\">#{label}</a>" ?>
+<?RB end ?>
+#{{link_to 'Show '+{{*_P('@params["name"]')*}}, '/items/show/'+{{*_p('@params["id"]')*}}}}
+% elsif PERL
+<?PL ## ex. link_to('Show', '/show/1')  => <a href="/show/1">Show</a> ?>
+<?PL sub link_to { ?>
+<?PL   my($label, $url) = @_; ?>
+<?PL   return sprintf('<a href="%s">%s</a>', Tenjin::Helper::Html::encode_url($url), $label); ?>
+<?PL } ?>
+[*==link_to('"Show '._P('$item->{"name"}').'"', '/items/show/'._p('$item->{"id"}'))=*]
+% elsif JS
+<?JS // ex. link_to('Show', '/show/1')  => <a href="/show/1">Show</a> ?>
+<?JS function link_to(label, url) { ?>
+<?JS     return '<a href="' + escape(url) + '">' + label + '</a>'; ?>
+<?JS } ?>
+#{{link_to('Show '+{{*_P('params["name"]')*}}, '/items/show/'+{{*_p('params["id"]')*}})}}
+% elsif PHP
+<?PHP // ex. link_to('Show', '/show/1')  => <a href="/show/1">Show</a> ?>
+<?PHP function link_to($label, $url) { ?>
+<?PHP     $url = preg_replace('/%2F/', '/', urlencode($url)); ?>
+<?PHP     return "<a href=\"$url\">$label</a>"; ?>
+<?PHP } ?>
+{*==link_to('Show '.{{*_ep('$params["name"]')*}}, '/items/show/'.{{*_p('$params["id"]')*}})=*}
+% else assert false
+% end
+.--------------------
+
+.? Preprocessed template:
+.==================== example[%= n %]_preprocessed.result
+$ [%= command %] {{*-P*}} example[%= n %].[%= suffix %]
+% if PYTHON
+<a href="/items/show/{{*#{params["id"]}"*}}>Show {{*${params["name"]}*}}</a>
+% elsif RUBY
+<a href="/items/show/{{*#{@params["id"]}"*}}>Show {{*${@params["name"]}*}}</a>
+% elsif PERL
+<a href="/items/show/{{*[==$item->{"id"}=]*}}">"Show {{*[=$item->{"name"}=]*}}"</a>
+% elsif JS
+<a href="/items/show/{{*#{params["id"]}"*}}>Show {{*${params["name"]}*}}</a>
+% elsif PHP
+<a href="/items/show/{{*{==$params["id"]=}"*}}>Show {{*{=$params["name"]=}*}}</a>
+% else assert false
+% end
+.====================
+
+.? Translated script code:
+.==================== example[%= n %]_preprocessed_source.result
+$ [%= command %] {{*--preprocess*}} -sb example[%= n %].[%= suffix %]
+% if PYTHON
+_buf.extend(('''<a href="/items/show/''', to_str(params["id"]), '''">Show ''', escape(to_str(params["name"])), '''</a>\n''', ));
+% elsif RUBY
+ _buf << %Q`<a href="/items/show/{{*#{@params["id"]}*}}">Show {{*#{escape((@params["name"]).to_s)}*}}</a>\n`
+% elsif PERL
+push(@_buf, q`<a href="/items/show/`, $item->{"id"}, q`">"Show `, escape($item->{"name"}), q`"</a>
+`, ); 
+% elsif JS
+ _buf.push('<a href="/items/show/', params["id"], '">Show ', escapeXml(params["name"]), '</a>\n');
+% elsif PHP
+echo '<a href="/items/show/', $params["id"], '">Show ', htmlspecialchars($params["name"]), '</a>
+';
+% else assert false
+% end
+.====================
+
+There are many web-application framework and they provides helper functions.
+These helper functions are divided into two groups.
+.* {{,link_to(),}} or {{,_(),}} (function for M17N) return the same result
+   when the same arguments are passed.
+   These functions can be expanded by preprocessor.
+.* Some functions return the different result even if the same arguments are passed.
+   These functions can't be expaned by preprocessor.
+
+Preprocessor has the power to make your application much faster,
+but it may make the debugging difficult.
+You should use it carefully.
+
+
+
+% if PYTHON
+
+.$$ Template Encoding			| des-encoding
+
+It is able to specify template encoding by command-line option '{{,-k {{/encoding/}},}}' or '{{,--encoding={{/encoding/}},}}'.
+
+Notice that these options are not equal.{{((Internally) If command-line option '-k {{/encoding/}}' is specified, pytenjin command executes '{{,to_str = tenjin.generate_tostrfunc("{{/encoding/}}"),}}'. If command-line option '--encoding={{/encoding/}}' is specified, pytenjin command pass 'encoding={{/encoding/}}' option to tenjin.Engine(). See {{<Developer's Guide|#devguide6>}} for details.)}}
+
+% n += 1 
+
+.? File 'example[%= n %].pyhtml':
+.--------------------
+## The following is OK for '-k {{/encoding/}}' option,
+## but is NG for '--encoding={{/encoding/}}' option.
+<?py val1 = '...non-ascii-characters...' ?>
+val1 = #{val1}
+
+## The following is OK for '--encoding={{/encoding/}}' option,
+## but is NG (UnicodeDecodeError) for '-k {{/encoding/}}' option.
+<?py val2 = {{*u*}}'...non-ascii-characters...' ?>
+val2 = #{val2}
+.--------------------
+
+% end 
+
+
+
+.$$ Other Options			| des-otheropts
+
+
+% if PYTHON
+
+.* Command-line option '{{,-i N,}}' or '{{,--indent=N,}}' changes indent depth to {{,N,}} (default 4).
+.* Command-line option '{{,-m mod1,mod2,mod3,}}' loads modules mod1, mod2, and mod3.
+  This option is equivarent to [%= Lang %] code '{{,import mod1, mod2, mod3,}}'.
+.* Command-line option '{{,--escapefunc=func1,}}' changes {{,escape(),}} function name to {{,func1,}}
+  and '{{,--tostrfunc=func2,}}' changes {{,to_str(),}} function name to {{,func2,}}.
+.* Command-line option '{{,--path=dir1,dir2,...,}}' sepcifies template directory path.
+.* Command-line option '{{,-k encoding,}}' or '{{,--encoding=encoding,}}' specifies encoding name (default None).
+.#.* If you want not to print out newline character, the following technique is what you want.
+.#    [% n += 1%]
+.#    .? File 'example[%= n %].pyhtml':
+.#    .-------------------- example[%= n %].pyhtml
+.#    <?py if url: ?>
+.#    <b><a href="${url}">Next</a></b>
+.#    <?py else: ?>
+.#    <b>Next</b>
+.#    <?py #endif ?>
+.#    
+.#    <b>{{*<?py
+.#    if url:
+.#    ?>*}}<a href="${url}">Next</a>{{*<?py
+.#    else:
+.#    ?>*}}Next{{*<?py
+.#    #endif
+.#    ?>*}}</b>
+.#    .--------------------
+.#   Here is the result of convertion to [%= Lang %] code.
+.#   Notice that {{,'''<b>''',}} and {{,'''</a>''',}} don't contain {{,'\n',}}.
+.#    .? Result:
+.#    .==================== example[%= n %].result
+.#    $ [%= command %] -s example[%= n %].pyhtml
+.#    _buf = []
+.#    if url:
+.#        _buf.extend(('''<b><a href="''', escape(to_str(url)), '''">Next</a></b>\n''', ));
+.#    else:
+.#        _buf.extend(('''<b>Next</b>\n''', ));
+.#    #endif
+.#    _buf.extend(('''
+.#    {{*<b>'''*}}, ));
+.#    if url:
+.#        _buf.extend(('''<a href="''', escape(to_str(url)), '''">Next{{*</a>'''*}}, ));
+.#    else:
+.#        _buf.extend(('''Next''', ));
+.#    #endif
+.#    _buf.extend(('''</b>\n''', ));
+.#    print ''.join(_buf)
+.#    .====================
+.#    .#.==================== example[%= n %].result
+.#    .#$ [%= command %] -s example[%= n %].pyhtml
+.#    .#_buf = []
+.#    .#for user in users:
+.#    .#    if user.email:
+.#    .#        _buf.extend(('''<li><a href="mailto:''', escape(to_str(user.email)), '''">''', escape(to_str(user.name)), '''</a></li>\n''');
+.#    .#    else:
+.#    .#        _buf.extend(('''<li>''', escape(to_str(user.name)), '''</li>\n''');
+.#    .#    #endif
+.#    .##endfor
+.#    .#_buf.extend(('''\n''');
+.#    .#for user in users:
+.#    .#    _buf.extend(({{*'''<li>'''*}});
+.#    .#    if user.email:
+.#    .#        _buf.extend(('''<a href="mailto:''', escape(to_str(user.email)), '''">''', escape(to_str(user.name)), {{*'''</a>'''*}});
+.#    .#    else:
+.#    .#        _buf.extend((escape(to_str(user.name)));
+.#    .#    #endif
+.#    .#    _buf.extend(('''</li>\n''');
+.#    .##endfor
+.#    .#print ''.join(_buf)
+.#    .#.====================
+
+% elsif RUBY
+
+.* Command-line option '{{,--escapefunc=func1,}}' changes {{,escape(),}} function name to {{,func1,}}.
+   For example, '{{,--escapefunc=h,}}' changes escape function from {{,escape(),}} to {{,h(),}}.
+.* It is not able to contain '{{,},}}' character in '{{,${...},}}'.
+   For example, '{{,${hash["}"]},}}' will be converted into '{{,_buf << %Q`#{escape((hash[").to_s)}"]},}}` and not '{{,_buf << %Q`#{escape((hash["}"]).to_s)}`,}}'.
+   There is no such restriction about '{{,#{...},}}'.
+.* It is not able to contain '{{,\,}}' and '{{,`,}}' characters in '{{,#{...},}}'
+   because these characters are escaped.
+   For example, '{{,#{hash["\n"]},}}' will be converted into '{{,_buf << %Q`hash["\n"]`,}}'.
+   There is no such restriction about '{{,${...},}}'.
+.* Command-line option '{{,--path=dir1,dir2,...,}}' sepcifies template directory path.
+
+% elsif PERL
+
+.* Command-line option '-w' uses strict package. This is useful for development.
+.* Command-line option '{{,--escapefunc=func1,}}' changes {{,escape(),}} function name to {{,func1,}}.
+   For example, '{{,--escapefunc=HTML::Entities::encode_entities,}}' changes escape function from {{,esca;e(),}} to {{,HTML::Entities::encode_entities(),}}.
+.* Command-line option '{{,--path=dir1,dir2,...,}}' sepcifies template directory path.
+
+% elsif JS
+
+.#.* Command-line option '-w' uses strict package. This is useful for development.
+.* Command-line option '{{,--escapefunc=func1,}}' changes {{,escape(),}} function name to {{,func1,}}.
+.#   For example, '{{,--escapefunc=HTML::Entities::encode_entities,}}' changes escape function from {{,esca;e(),}} to {{,HTML::Entities::encode_entities(),}}.
+.* Command-line option '{{,--path=dir1,dir2,...,}}' sepcifies template directory path.
+.* Rhino and SpiderMonkey are supported as JavaScript engine.
+
+% elsif PHP
+
+.#.* Command-line option '-w' uses strict package. This is useful for development.
+.#.* Command-line option '{{,--escapefunc=func1,}}' changes {{,escape(),}} function name to {{,func1,}}.
+.#   For example, '{{,--escapefunc=HTML::Entities::encode_entities,}}' changes escape function from {{,esca;e(),}} to {{,HTML::Entities::encode_entities(),}}.
+.* Command-line option '{{,--path=dir1,dir2,...,}}' sepcifies template directory path.
+
+% else assert false 
+% end 
+
+
+
+.$ Developer's Guide		| devguide
+
+
+This section shows how to use [%= name %] in your [%= Lang %] script.
+
+If you want to know the notation or features of [%= name %], see {{<Designer's Guide|#desguide>}} section.
+
+
+.$$ An Example			| dev-example
+
+The following is an example to use [%= name %] in [%= Lang %].
+
+% if PYTHON
+
+.? Example:
+.--------------------
+import tenjin
+from tenjin.helpers import *   # or escape, to_str
+engine = tenjin.Engine()
+context = { 'title': '[%=name%] Example', 'items': ['AAA', 'BBB', 'CCC'] }
+filename = 'file.[%=suffix%]'
+output = engine.render(filename, context)
+print output,
+.--------------------
+
+If you want to define helper functions for template, see {{<Add Your Helper Functions|#dev-helpers>}} section.
+
+% elsif RUBY
+
+.? Example:
+.--------------------
+require 'tenjin'
+engine = Tenjin::Engine.new()
+context = { :title=>'[%=name%] Example', :items=>['AAA', 'BBB', 'CCC'] }
+filename = 'file.[%=suffix%]'
+output = engine.render(filename, context)
+print output
+.--------------------
+
+If you want to define helper functions for template, see {{<Add Your Helper Functions|#dev-helpers>}} section.
+
+% elsif PERL
+
+.? Example:
+.--------------------
+use Tenjin;
+$Tenjin::USE_STRICT = 1;    # (optional but recommended)
+my $engine = new Tenjin::Engine();
+my $context = { title=>'[%= name %] Example', items=>['AAA', 'BBB', 'CCC'] };
+my $filename = 'file.[%= suffix %]';
+my $output = $engine->render($filename, $context);
+print $output;
+.--------------------
+
+If you want to define helper functions for template, see {{<Add Your Helper Functions|#dev-helpers>}} section.
+
+% elsif JS
+
+.? Example:
+.--------------------
+load('tenjin.js');
+var engine = new Tenjin.Engine();
+var context = { title:'[%=name%] Example', items:['AAA', 'BBB', 'CCC'] };
+var filename = 'file.[%=suffix%]';
+var output = engine.render(filename, context);
+print(output);
+.--------------------
+
+% elsif PHP
+
+.? Example:
+.--------------------
+require_once 'Tenjin.php';
+$engine = new Tenjin_Engine();
+$context = array('title'=>'[%=name%] Example', 'items'=>array('AAA','BBB','CCC'));
+$filename = 'file.[%=suffix%]';
+$output = $engine->render($filename, $context);
+echo $output;
+.--------------------
+
+% else assert false 
+% end 
+
+
+.$$ Classes and Functions in [%= name %]	| dev-classes
+
+
+[%= name %] has the follwoing classes.
+
+.[ [%= template_class %] ]
+    This class represents a template file.
+    An object of [%= template_class %] correspond to a template file.
+
+.[ [%= engine_class %] ]
+    This class represents some template objects.
+    It can handle nested template and layout template.
+    Using [%= engine_class %] class, you can use [%= name %] as a template engine for web application.
+
+% if context_class && !context_class.empty?
+.[ [%= context_class %] ]
+    This class represents context data.
+% end 
+
+
+% if PYTHON
+%   mod = 'tenjin.helpers.html.'
+%   htmlhelper = false # 'tenjin.helpers.html'
+% elsif RUBY
+%   mod = ''
+%   htmlhelper = false # 'Tenjin::Context'
+% elsif PERL
+%   mod = 'Tenjin::Context'
+%   htmlhelper = false # 'Tenjin::HtmlHelper'
+% elsif JS
+%   mod = 'Tenjin.Util'
+%   htmlhelper = nil
+% elsif PHP
+%   mod = 'XXXX'
+%   htmlhelper = nil
+% else assert false 
+% end 
+
+% if PYTHON
+[%= name %] has the following utility functions.
+These are defined at tenjin.helpers.html module.
+% elsif RUBY
+[%= name %] has the following utility functions.
+These are defined at Tenjin::HtmlHelper module and Tenjin::Context class includes it.
+% elsif PERL
+[%= name %] has the following utility functions.
+% elsif JS
+.#[%= name %] has the following utility functions.
+% elsif PHP
+.#[%= name %] has the following utility functions.
+% else assert false 
+% end 
+
+% if htmlhelper then #################### 
+% if PYTHON
+.[ [%= mod %]to_str(value) ]
+    Convert value into string.
+    Return empty string if value is None else return value of {{,str(value),}}.
+% end 
+
+.[ [%= mod %]escape(str) ]
+    Escape '{{,& < > ",}}' in string into '{{,&amp; &lt; &gt; &quot;,}}'.
+
+.[ [%= mod %]checked(expr) ]
+    Return {{,' checked="checked"',}} if expr is true.
+
+.[ [%= mod %]selected(expr) ]
+    Return {{,' selected="selected"',}} if expr is true.
+
+.[ [%= mod %]disabled(expr) ]
+    Return {{,' disabled="disabled"',}} if expr is true.
+
+.[ [%= mod %]nl2br(str) ]
+    Relplace "\n" in str into "<br />\n" and return it.
+
+.[ [%= mod %]tagattr(name, expr, value=[%= NULL %], escape=[%= TRUE %]) ]
+    {{*(experimental)*}}
+    Return '{{, name="value",}}' if expr is true.
+    If value is [%= NULL %] then expr is used as value.
+    If expr is false then this function returns empty string.
+
+% end                    #################### 
+
+
+
+
+.$$ Class [%= template_class %]		| dev-templateclass
+
+
+[%= template_class %] class represents a template file.
+An object of [%= template_class %] corresponds to a template file.
+It doesn't support nested template nor layout template (use [%= engine_class %] class instead).
+
+This class has the following methods and attributes.
+
+% if PYTHON
+
+.[ [%= template_class %](filename=None, encoding=None, escapefunc='escape', tostrfunc='to_str', indent=4) ]
+    Create template object. If filename is given, read and convert it to [%= Lang %] code.
+
+.[ [%= template_class %].convert(str input, str filename=None) ]
+    Convert input text into [%= Lang %] code and return it.
+
+.[ [%= template_class %].convert_file(str filename) ]
+    Convert file into [%= Lang %] code and return it.
+    This is equivarent to {{,[%= template_class %].convert(open(filename).read(), filename),}}
+
+.#.[ [%= template_class %].render(dict context=None, list _buf=None) ]
+.[ [%= template_class %].render(dict context=None) ]
+    Compile [%= Lang %] code, evaluate it with context data, and return the result of evaluation.
+    .#If {{,_buf,}} is [%= NULL %] then new [%= ARRAY %] is created as {{,_buf,}}
+    .#and returned as the result of evaluation.
+    .#If {{,_buf,}} is not [%= NULL %] then the result of evaluation is appended
+    .#into {{,_buf,}} and returns [%= NULL %].
+%     if PYTHON
+    If encoding name is specified when creating template object then
+    render() method will return unicode object, else return str object.
+%     end 
+
+.[ [%= template_class %].script ]
+    Converted [%= Lang %] code
+
+.[ [%= template_class %].bytecode ]
+    Compiled [%= Lang %] code
+
+% elsif RUBY
+
+.[ [%= template_class %].new(filename=nil, :escapefunc=>'escape') ]
+    Create template object. If filename is given, read and convert it to [%= Lang %] code.
+
+.[ [%= template_class %]#convert(input, filename=None) ]
+    Convert input text into [%= Lang %] code and return it.
+
+.[ [%= template_class %]#convert_file(filename) ]
+    Convert file into [%= Lang %] code and return it.
+    This is equivarent to {{,[%= template_class %]#convert(File.read(filename), filename),}}
+
+.#.[ [%= template_class %]#render(context=[%= NULL %], _buf=[%= NULL %]) ]
+.[ [%= template_class %]#render(context=[%= NULL %]) ]
+    Compile [%= Lang %] code, evaluate it with context data, and return the result of evaluation.
+    .#If {{,_buf,}} is [%= NULL %] then new String is created as {{,_buf,}} and returned.
+    .#If {{,_buf,}} is not [%= NULL %] then the result of evaluation is appended
+    .#into {{,_buf,}} and returns [%= NULL %].
+
+.[ [%= template_class %]#script ]
+    Converted [%= Lang %] code
+
+% elsif PERL
+
+.[ [%= template_class %]::new(filename=nil, :escapefunc=>'escape') ]
+    Create template object. If filename is given, read and convert it to [%= Lang %] code.
+
+.[ [%= template_class %]::convert(input, filename=None) ]
+    Convert input text into [%= Lang %] code and return it.
+
+.[ [%= template_class %]::convert_file(filename) ]
+    Convert file into [%= Lang %] code and return it.
+    This is equivarent to {{,[%= template_class %]#convert(Tenjin::Util::read_file(filename), filename),}}
+
+.[ [%= template_class %]::render(context=[%= NULL %]) ]
+    Compile [%= Lang %] code, evaluate it with context data, and return the result of evaluation.
+    .#If {{,_buf,}} is [%= NULL %] then new String is created as {{,_buf,}} and returned.
+    .#If {{,_buf,}} is not [%= NULL %] then the result of evaluation is appended
+    .#into {{,_buf,}} and returns [%= NULL %].
+
+.[ [%= template_class %]->{'script'} ]
+    Converted [%= Lang %] code
+
+% elsif JS
+
+.[ [%= template_class %](filename=undefined, properties={}) ]
+    Create template object. If filename is given, read and convert it to [%= Lang %] code.
+
+.[ [%= template_class %].convert(input, filename=undefined) ]
+    Convert input text into [%= Lang %] code and return it.
+
+.[ [%= template_class %].convert_file(filename) ]
+    Convert file into [%= Lang %] code and return it.
+    This is equivarent to {{,[%= template_class %].convert(Tenjin.readFile(filename), filename),}}
+
+.#.[ [%= template_class %]#render(context=[%= NULL %], _buf=[%= NULL %]) ]
+.[ [%= template_class %]#render(context=undefined) ]
+    Convert [%= Lang %] code, evaluate it with context data, and return the result of evaluation.
+    .#If {{,_buf,}} is [%= NULL %] then new String is created as {{,_buf,}} and returned.
+    .#If {{,_buf,}} is not [%= NULL %] then the result of evaluation is appended
+    .#into {{,_buf,}} and returns [%= NULL %].
+
+.[ [%= template_class %].script ]
+    Converted [%= Lang %] code
+
+% elsif PHP
+
+.[ [%= template_class %]($filename=null, properties=array()) ]
+    Create template object. If filename is given, read and convert it to [%= Lang %] code.
+
+.[ [%= template_class %]->convert($input, $filename=null) ]
+    Convert input text into [%= Lang %] code and return it.
+
+.[ [%= template_class %]->convert_file($filename) ]
+    Convert file into [%= Lang %] code and return it.
+    This is equivarent to {{,[%= template_class %]->convert(file_get_contents($filename), $filename),}}
+
+.[ [%= template_class %]->render($context=array()) ]
+    Convert [%= Lang %] code, evaluate it with context data, and return the result of evaluation.
+
+.[ [%= template_class %]->script ]
+    Converted [%= Lang %] code
+
+% else assert false 
+% end 
+
+
+The followings are examples to use [%= template_class %] in [%= Lang %] script.
+
+% n += 1
+% if PYTHON
+
+.? File 'example[%= n %].[%= suffix %]':
+.-------------------- example[%= n %].[%= suffix %]
+<h1>#{title}</h1>
+<ul>
+<?py for item in items: ?>
+ <li>${item}</li>
+<?py #end ?>
+</ul>
+.--------------------
+
+.? File 'example[%= n %].[%=pi%]':
+.-------------------- example[%= n %].[%=pi%]
+## template
+filename = 'example[%= n %].[%= suffix %]'
+
+## convert into [%= lang %] code
+import tenjin
+from tenjin.helpers import *   # or escape, to_str
+template = {{*tenjin.Template(filename)*}}
+script = {{*template.script*}}
+## or
+# template = tenjin.Template()
+# script = {{*template.convert_file(filename)*}}
+## or
+# template = tenjin.Template()
+# input = open(filename).read()
+# script = {{*template.convert(input, filename)*}}  # filename is optional
+
+## show converted [%= lang %] code
+print "---- [%= lang %] code ----"
+print script,
+
+## evaluate [%= lang %] code
+context = {'title': '[%= name %] Example', 'items': ['<AAA>','B&B','"CCC"']}
+output = {{*template.render(context)*}}
+print "---- output ----"
+print output,
+.--------------------
+
+.? Result:
+.==================== example[%= n %]_tmplclass.result
+$ [%= lang %] example[%= n %].[%=pi%]
+---- [%= lang %] code ----
+_buf.extend(('''<h1>''', to_str(title), '''</h1>
+<ul>\n''', ));
+for item in items:
+    _buf.extend((''' <li>''', escape(to_str(item)), '''</li>\n''', ));
+#end
+_buf.extend(('''</ul>\n''', ));
+---- output ----
+<h1>[%= name %] Example</h1>
+<ul>
+ <li>&lt;AAA&gt;</li>
+ <li>B&amp;B</li>
+ <li>&quot;CCC&quot;</li>
+</ul>
+.====================
+
+
+% elsif RUBY
+
+
+.? File 'example[%= n %].[%= suffix %]':
+.-------------------- example[%= n %].[%= suffix %]
+<h1>#{@title}</h1>
+<ul>
+<?rb for item in @items ?>
+ <li>${item}</li>
+<?rb end ?>
+</ul>
+.--------------------
+
+.? File 'example[%= n %].[%=pi%]':
+.-------------------- example[%= n %].[%=pi%]
+## template file
+filename = 'example[%= n %].[%= suffix %]'
+
+## convert into [%= lang %] code
+require 'tenjin'
+template = {{*Tenjin::Template.new(filename)*}}
+## or
+# template = Tenjin::Template.new()
+# script = {{*template.convert_file(filename)*}}
+## or
+# template = Tenjin::Template.new()
+# input = File.read(filename)
+# script = {{*template.convert(input, filename)*}}  # filename is optional
+
+## show converted [%= lang %] code
+puts "---- ruby code ----"
+puts {{*template.script*}}
+
+## evaluate [%= lang %] code
+hash = {:title=>'[%= name %] Example', :items=>['<AAA>','B&B','"CCC"']}
+output = {{*template.render(hash)*}}
+puts "---- output ----"
+puts output
+## or
+#hash = {:title=>'[%= name %] Example', :items=>['<AAA>','B&B','"CCC"']}
+#context = {{*Tenjin::Context.new(hash)*}}
+#output = {{*template.render(context)*}}
+## or
+# context = Tenjin::Context.new
+# context[:title] = '[%= name %] Example'
+# context[:items] = ['<AAA>','B&B','"CCC"']
+# output = template.render(context)
+.--------------------
+
+.? Result:
+.==================== example[%= n %]_tmplclass.result
+$ [%= lang %] example[%= n %].[%=pi%]
+---- ruby code ----
+ _buf << %Q`<h1>#{@title}</h1>
+<ul>\n`
+for item in @items
+ _buf << %Q` <li>#{escape((item).to_s)}</li>\n`
+end
+ _buf << %Q`</ul>\n`
+---- output ----
+<h1>[%= name %] Example</h1>
+<ul>
+ <li>&lt;AAA&gt;</li>
+ <li>B&amp;B</li>
+ <li>&quot;CCC&quot;</li>
+</ul>
+.====================
+
+
+% elsif PERL
+
+
+.? File 'example[%= n %].[%= suffix %]':
+.-------------------- example[%= n %].[%= suffix %]
+<h1>[=$title=]</h1>
+<ul>
+<?pl for my $item (@$items) { ?>
+ <li>[=$item=]</li>
+<?pl } ?>
+</ul>
+.--------------------
+
+.? File 'example[%= n %].[%=pi%]':
+.-------------------- example[%= n %].[%=pi%]
+## template file
+my $filename = 'example[%= n %].[%= suffix %]';
+
+## convert into [%= lang %] code
+use Tenjin;
+my $template = {{*new Tenjin::Template($filename)*}};
+## or
+# my $template = new Tenjin::Template();
+# my $script = {{*$template->convert_file{$filename}*}};
+## or
+# my $template = new Tenjin::Template();
+# my $input = Tenjin::Util::read_file($filename);
+# my $script = {{*$template->convert($input, $filename)*}};  # filename is optional
+
+## show converted [%= lang %] code
+print "---- [%= lang %] code ----\n";
+print {{*$template->{'script'}*}};
+
+## evaluate [%= lang %] code
+my $context = { title=>'[%= name %] Example', items=>['<AAA>','B&B','"CCC"'], };
+my $output = {{*$template->render($context)*}};
+print "---- output ----\n";
+print $output;
+## or
+#my $context = { title=>'[%= name %] Example', items=>['<AAA>','B&B','"CCC"'], };
+#$context = {{*new Tenjin::Context($context)*}};
+#my $output = {{*$template->render($context)*}};
+## or
+#my $context = new Tenjin::Context();
+#$context->{'title'} = '[%= name %] Example';
+#$context->{'items'} = ['<AAA>','B&B','"CCC"'];
+#my $output = $template->render(context);
+.--------------------
+
+.? Result:
+.==================== example[%= n %]_tmplclass.result
+$ [%= lang %] example[%= n %].[%=pi%]
+---- [%= lang %] code ----
+my @_buf = (); push(@_buf, q`<h1>`, escape($title), q`</h1>
+<ul>
+`, ); for my $item (@$items) {
+push(@_buf, q` <li>`, escape($item), q`</li>
+`, ); }
+push(@_buf, q`</ul>
+`, ); join('', @_buf);
+---- output ----
+<h1>[%= name %] Example</h1>
+<ul>
+ <li>&lt;AAA&gt;</li>
+ <li>B&amp;B</li>
+ <li>&quot;CCC&quot;</li>
+</ul>
+.====================
+
+
+% elsif JS
+
+.? File 'example[%= n %].[%= suffix %]':
+.-------------------- example[%= n %].[%= suffix %]
+<h1>#{title}</h1>
+<ul>
+<?js for (var i = 0, n = items.length; i < n; i++) { ?>
+ <li>${items[i]}</li>
+<?js } ?>
+</ul>
+.--------------------
+
+.? File 'example[%= n %].[%=pi%]':
+.-------------------- example[%= n %].[%=pi%]
+//// template file
+var filename = 'example[%= n %].[%= suffix %]';
+
+//// convert into [%= lang %] code
+load('tenjin.js');
+var template = {{*new Tenjin.Template(filename)*}};
+var script = {{*template.script*}};
+//// or
+// var template = new Tenjin.Template();
+// var script = {{*template.convert_file(filename)*}};
+//// or
+// var template = new Tenjin.Template();
+// var input = Tenjin.Util.readFile(filename);
+// var script = {{*template.convert(input, filename)*}};  # filename is optional
+
+//// show converted [%= lang %] code
+print("---- [%= lang %] code ----");
+print(script);
+
+//// evaluate [%= lang %] code
+var context = {title:'[%= name %] Example', items:['<AAA>','B&B','"CCC"']};
+var output = {{*template.render(context)*}};
+print("---- output ----");
+print(output);
+.--------------------
+
+.? Result:
+.==================== example[%= n %]_tmplclass.result
+$ [%= lang %] example[%= n %].[%=pi%]
+---- [%= lang %] code ----
+var _buf = [];  _buf.push('<h1>', title, '</h1>\n\
+<ul>\n');
+ for (var i = 0, n = items.length; i < n; i++) {
+ _buf.push(' <li>', escapeXml(items[i]), '</li>\n');
+ }
+ _buf.push('</ul>\n');
+_buf.join('')
+
+---- output ----
+<h1>[%= name %] Example</h1>
+<ul>
+ <li>&lt;AAA&gt;</li>
+ <li>B&amp;B</li>
+ <li>&quot;CCC&quot;</li>
+</ul>
+
+.====================
+
+
+% elsif PHP
+
+
+.? File 'example[%= n %].[%= suffix %]':
+.-------------------- example[%= n %].[%= suffix %]
+<h1>{=$title=}</h1>
+<ul>
+<?php foreach ($items as $item) { ?>
+ <li>{=$item=}</li>
+<?php } ?>
+</ul>
+.--------------------
+
+.? File 'example[%= n %].[%=pi%]':
+.-------------------- example[%= n %].[%=pi%]
+<?php
+/// template file
+$filename = 'example[%= n %].[%= suffix %]';
+
+/// convert into [%= lang %] code
+require_once 'Tenjin.php';
+$template = {{*new Tenjin_Template($filename);*}}
+/// or
+//$template = new Tenjin_Template();
+//$script = {{*$template->convert_file($filename);*}}
+/// or
+//$template = new Tenjin_Template();
+//$input = file_get_contents($filename);
+//$script = {{*$template->convert($input, $filename);*}}  # filename is optional
+
+/// show converted [%= lang %] code
+echo "---- [%=lang%] code ----\n";
+echo {{*$template->script*}};
+
+/// evaluate [%= lang %] code
+$context = array('title'=>'[%= name %] Example', 'items'=>array('<AAA>','B&B','"CCC"'));
+$output = {{*$template->render($context)*}};
+echo "---- output ----\n";
+echo $output;
+.--------------------
+
+.? Result:
+.==================== example[%= n %]_tmplclass.result
+$ [%= lang %] example[%= n %].[%=pi%]
+---- php code ----
+echo '<h1>', htmlspecialchars($title), '</h1>
+<ul>
+'; foreach ($items as $item) { 
+echo ' <li>', htmlspecialchars($item), '</li>
+'; } 
+echo '</ul>
+';
+---- output ----
+<h1>phpTenjin Example</h1>
+<ul>
+ <li>&lt;AAA&gt;</li>
+ <li>B&amp;B</li>
+ <li>&quot;CCC&quot;</li>
+</ul>
+.====================
+
+
+% else assert false 
+% end 
+
+
+
+
+.$$ Class [%= engine_class %]		| dev-engineclass
+
+
+[%= engine_class %] class contains some template objects.
+It can handle nested template and layout template.
+Using [%= engine_class %] class, you can use [%= name %] as a template engine for web application.
+
+This class has the following methods.
+
+
+% if PYTHON
+
+.[ tenjin.Engine(str prefix='', str postfix='', str layout=None, list path=None, bool cache=True, bool preprocess=False, type templateclass=Template, **init_opts_for_template) ]
+    Create Engine object.
+    Argument 'cache' controls caching policy (caches bytecode when True, caches python code when None, caches nothing when False).
+    Arguments {{,init_opts_for_template,}} are passed to [%= template_class %]() internally.
+
+.[ tenjin.Engine#render(str template_name, dict context=None, dict globals=None, str layout=None) ]
+    Convert template into [%= Lang %] code, evaluate it with context data, and return the result of it.
+    If {{,layout,}} is [%= TRUE %] or [%= NULL %] then layout template name specified by constructor option is
+    used as layout template, else if [%= FALSE %] then layout template is not used,
+    else if string then it is regarded as layout template name.
+
+.#.[ tenjin.Engine#include(str template_name, bool append_to_buf=True) ]
+.[ tenjin.Engine#include(str template_name) ]
+    Include and evaluate other template.
+    .#if second argument is [%= TRUE %] then result of it is appended into {{,_buf,}},
+    .#else returns result as string.
+
+
+Argument {{,template_name,}} in render() methods is filename or short name of template.
+Template short name is a string starting with colon (':').
+For example, '{{,render(":list", context),}}' is equivarent to '{{,render("user_list.[%= suffix %]", context),}}' if prefix option is '{{,user_,}}' and postfix option is '{{,.[%= suffix %],}}'.
+
+% elsif RUBY
+
+.[ Tenjin::Engine.new(:prefix=>'', :postfix=>'', :layout=>nil, :path=nil, :cache=>true, :preprocess=>false, :templateclass=>Tenjin::Template) ]
+    Create Engine object.
+    {{,:path,}} represents template search path and it should be an Array of directory name.
+    Other arguments are passed to [%= template_class %].new() internally.
+
+.[ Tenjin::Engine#render(template_name, context=nil, layout=nil) ]
+    Convert template into [%= Lang %] code, evaluate it with context data, and return the result of it.
+    If {{,layout,}} is [%= TRUE %] or [%= NULL %] then layout template name specified by constructor option is
+    used as layout template, else if [%= FALSE %] then layout template is not used,
+    else if string then it is regarded as layout template name.
+
+Argument {{,template_name,}} in render() methods is filename or short name of template.
+Template short name is a Symbol.
+For example, '{{,render(:list, context),}}' is equivarent to '{{,render("user_list.[%= suffix %]", context),}}' if prefix option is '{{,user_,}}' and postfix option is '{{,.[%= suffix %],}}'.
+
+% elsif PERL
+
+.[ Tenjin::Engine::new({prefix=>'', postfix=>'', layout=>undef, path=undef, cache=>1, preprocess=>0, templateclass=>'Tenjin::Template'}) ]
+    Create Engine object.
+    {{,path,}} represents template search path and it should be an Array of directory name.
+    Other arguments are passed to [%= template_class %]::new() internally.
+
+.[ Tenjin::Engine#render(template_name, context=undef, layout=1) ]
+    Convert template into [%= Lang %] code, evaluate it with context data, and return the result of it.
+    If {{,layout,}} is [%= TRUE %] then layout template name specified by constructor option is
+    used as layout template, else if [%= FALSE %] then layout template is not used,
+    else if string then it is regarded as layout template name.
+
+Argument {{,template_name,}} in render() methods is filename or short name of template.
+Template short name is a string starting with colon (':').
+For example, '{{,render(":list", $context),}}' is equivarent to '{{,render("user_list.[%= suffix %]", $context),}}' if prefix option is '{{,user_,}}' and postfix option is '{{,.[%= suffix %],}}'.
+
+% elsif JS
+
+.[ new Tenjin.Engine(properties={prefix:'', postfix:'', layout:undefined, path:undefined, cache:false, preprocess:false, templateclass:Tenjin.Template}) ]
+    Create Engine object.
+    {{,path,}} represents template search path and it should be an Array of directory name.
+    If other properties are passed then they are passed to [%= template_class %]() internally.
+
+.[ Tenjin.Engine.render(template_name, context=undefined, layout=null) ]
+    Convert template into [%= Lang %] code, evaluate it with context data, and return the result of it.
+    If {{,layout,}} is [%= TRUE %] or [%= NULL %] then layout template name specified by constructor option is
+    used as layout template, else if [%= FALSE %] then layout template is not used,
+    else if string then it is regarded as layout template name.
+
+Argument {{,template_name,}} in render() methods is filename or short name of template.
+Template short name is a string starting with colon (':').
+For example, '{{,render(":list", context),}}' is equivarent to '{{,render("user_list.[%= suffix %]", context),}}' if prefix option is '{{,user_,}}' and postfix option is '{{,.[%= suffix %],}}'.
+
+% elsif PHP
+
+.[ new Tenjin_Engine($properties=array('prefix'=>null, 'postfix'=>null, 'layout'=>null, 'path'=>null, 'cache'=>true, 'preprocess'=>false, 'templateclass'=>'Tenjin_Template')) ]
+    Create Engine object.
+    '{{,path,}}' represents template search path and it should be an array of directory name.
+    If other properties are passed then they are passed to [%= template_class %]() internally.
+
+.[ Tenjin_Engine->render($template_name, $context=array(), $layout=null) ]
+    Convert template into [%= Lang %] code, evaluate it with context data, and return the result of it.
+    If {{,layout,}} is [%= TRUE %] or [%= NULL %] then layout template name specified by constructor option is
+    used as layout template, else if [%= FALSE %] then layout template is not used,
+    else if string then it is regarded as layout template name.
+
+Argument {{,$template_name,}} in render() methods is filename or short name of template.
+Template short name is a string starting with colon (':').
+For example, '{{,render(":list", context),}}' is equivarent to '{{,render("user_list.[%= suffix %]", context),}}' if prefix option is '{{,user_,}}' and postfix option is '{{,.[%= suffix %],}}'.
+
+% else assert false 
+% end 
+
+
+In template file, the followings are available.
+
+.[ [%= prefix %]_content ]
+    This variable represents the result of evaluation of other template.
+    This is available only in layout template file.
+
+% if PYTHON
+.#.[ include(str template_name, append_to_buf=True) ]
+.[ include(str template_name) ]
+    .#This is an alias of [%= engine_class %].include().
+    .#See the above description.
+    Include and evaluate other template.
+    This is an alias of [%= engine_class %].include().
+
+% elsif RUBY
+.[ import(template_name) ]
+.#.[ import(template_name, append_to_buf=true) ]
+    Include and evaluate other template.
+    .#if second argument is [%= TRUE %] then result of it is appended into {{,_buf,}},
+    .#else returns result as string.
+    This method is an instance method of Tenjin::Context class.
+
+% elsif PERL
+.[ include($template_name) ]
+    Include other template file.
+
+% elsif JS
+.[ include(template_name) ]
+    Include other template file.
+
+% elsif PHP
+.[ import($template_name) ]
+    Include other template file.
+
+% else assert false 
+% end 
+
+% if PYTHON
+.[ start_capture(name) ]
+    Start capturing. Result will be stored into {{,_context['{{/name/}}'],}}.
+% elsif RUBY
+.[ start_capture(name) ]
+    Start capturing. Result will be stored into {{,[%=prefix%]{{/name/}},}}.
+% elsif PERL
+.[ start_capture(name) ]
+    Start capturing. Result will be stored into {{,$_context->{{{/name/}}},}}.
+% elsif JS
+.[ startCapture(name) ]
+    Start capturing. Result will be stored into {{,_context.{{/name/}},}}.
+% elsif PHP
+.[ start_capture(name) ]
+    Start capturing. Result will be stored into {{,$_context['{{/name/}}'],}}.
+% else assert false 
+% end 
+
+% if PYTHON
+.[ stop_capture() ]
+    Stop capturing.
+.#.[ stop_capture(store_to_context=[%= TRUE %]) ]
+.#    Stop capturing. If argument {{,store_to_context,}} is [%= TRUE %],
+.#    the result of capturing is stored into
+.#    {{,_context['{{/varname/}}'],}}.
+.#    .#It means that '{{,stop_capture(True),}}' is equivarent to '{{,stop_capture(); _context["{{/varname/}}"] = {{/varname/}},}}'.
+.#    Return the result of capturing.
+% elsif RUBY
+.[ stop_capture() ]
+    Stop capturing.
+.#.[ stop_capture(store_to_context=[%= TRUE %]) ]
+.#    Stop capturing. If argument {{,store_to_context,}} is [%= TRUE %],
+.#    the result of capturing is stored into
+.#    {{,@{{/varname/}},}}.
+.#    .#It means that '{{,stop_capture(true),}}' is equivarent to '{{,@{{/varname/}} = stop_capture(),}}'.
+.#    Return the result of capturing.
+% elsif PERL
+.[ stop_capture() ]
+    Stop capturing.
+% elsif JS
+.[ stopcapture() ]
+    Stop capturing.
+% elsif PHP
+.[ stop_capture() ]
+    Stop capturing.
+% else assert false 
+% end 
+
+% if PYTHON|| RUBY
+.[ captured_as(varname) ]
+    If captured string as {{/varname/}} is exist then append it into
+    {{,[%= prefix %]_buf,}} and return [%= TRUE %], else return [%= FALSE %].
+    This is a helper function for layout template.
+% elsif PERL
+.[ start_placeholder(varname), stop_placeholder() ]
+    Placeholder is a region from start_placeholder() to stop_placeholder().
+    If captured string as {{/varname/}} exists then use it as content,
+    else use content in placeholder as is.
+    For example,
+    .====================
+    <?pl start_placeholder('foo'); ?>
+      ...
+    <?pl stop_placeholder(); ?>
+    .====================
+    is equivarent to:
+    .====================
+    <?pl if (defined($_context->{'foo'})) { ?>
+    <?pl     push(@_buf, $_contet->{'foo'}); ?>
+    <?pl } else { ?>
+      ...
+    <?pl } ?>
+    .====================
+% elsif JS
+.[ startPlaceholder(varname), stopPlaceholder() ]
+    Placeholder is a region from startPlaceholder() to stopPlaceholder().
+    If captured string as {{/varname/}} exists then use it as content,
+    else use content in placeholder as is.
+    For example,
+    .====================
+    <?js startPlaceholder('foo'); ?>
+      ...
+    <?js stopPlaceholder(); ?>
+    .====================
+    is equivarent to:
+    .====================
+    <?js if (typeof(_context['foo']) != 'undefined') { ?>
+    <?js     _buf.push(_contet['foo']); ?>
+    <?js } else { ?>
+      ...
+    <?js } ?>
+    .====================
+% elsif PHP
+.[ start_placeholder(varname), stop_placeholder() ]
+    Placeholder is a region from start_placeholder() to stop_placeholder().
+    If captured string as {{/varname/}} exists then use it as content,
+    else use content in placeholder as is.
+    For example,
+    .====================
+    <?php start_placeholder('foo'); ?>
+      ...
+    <?php stop_placeholder(); ?>
+    .====================
+    is equivarent to:
+    .====================
+    <?php if (array_key_exists('foo', $_context['foo'])) { ?>
+    <?php     echo $_context['foo']; ?>
+    <?php } else { ?>
+      ...
+    <?php } ?>
+    .====================
+% else assert false 
+% end 
+
+% if PERL || PHP
+(Notice that include(), start_capture(), stop_capture(), start_placeholder(), and stop_placeholder() are built-in macros of [%= name %] and they are not subroutine of [%=Lang%].)
+% elsif JS
+(Notice that include(), startCapture(), stopCapture(), startPlaceholder(), and stopPlaceholder() are built-in macros
+of [%= name %] and they are not function of JavaScript.)
+% end 
+
+
+The followings are example of [%= engine_class %] class.
+
+
+% if PYTHON
+
+.? File 'user_form.[%= suffix %]':
+.-------------------- user_form.[%= suffix %]
+<?[%=pi%] [%=comment%]@ARGS params ?>
+<p>
+  Name:  <input type="text" name="name"  value="${params['name']}" /><br />
+  Email: <input type="text" name="email" value="${params['email']}" /><br />
+  Gender:
+<?py gender = params['gender'] ?>
+<?py chk = { True: ' checked="checked"', False: '' } ?>
+  <input type="radio" name="gender" value="m" #{chk[gender=='m']} />Male
+  <input type="radio" name="gender" value="f" #{chk[gender=='f']} />Female
+</p>
+.--------------------
+
+.? File 'user_create.[%= suffix %]':
+.-------------------- user_create.[%= suffix %]
+<?[%=pi%] [%=comment%]@ARGS ?>
+<form action="user_app.cgi" method="post">
+  <input type="hidden" name="action" value="create" />
+{{*<?[%= pi %] include(':form') ?>*}}
+  <input type="submit" value="Create" />
+</form>
+.--------------------
+
+.? File 'user_edit.[%= suffix %]':
+.-------------------- user_edit.[%= suffix %]
+<?[%=pi%] [%=comment%]@ARGS params ?>
+<form action="user_app.cgi" method="post">
+  <input type="hidden" name="action" value="edit" />
+  <input type="hidden" name="id" value="${params['id']}" />
+{{*<?[%= pi %] include(':form') ?>*}}
+  <input type="submit" value="Edit" />
+</form>
+.--------------------
+
+.? File 'user_layout.[%= suffix %]':
+.-------------------- user_layout.[%= suffix %]
+<?[%=pi%] [%=comment%]@ARGS _content, title ?>
+<html>
+  <body>
+
+    <h1>${title}</h1>
+
+    <div id="main-content">
+{{*#{_content}*}}
+    </div>
+
+    <div id="footer">
+{{*<?py include('footer.html') ?>*}}
+    </div>
+
+  </body>
+</html>
+.--------------------
+
+.? File 'footer.html':
+.-------------------- footer.html
+<?[%=pi%] [%=comment%]@ARGS ?>
+<hr />
+<address>
+  <a href="mailto:webmaster@example.com">webmaster@example.com</a>
+</address>
+.--------------------
+
+.? File 'user_app.cgi':
+.-------------------- user_app.cgi
+#!/usr/bin/env python
+
+## set action ('create' or 'edit')
+import sys, os, cgi
+action = None
+form = None
+if os.getenv('REQUEST_METHOD'):
+    form = cgi.FieldStorage()
+    action = form.getFirst('action')
+elif len(sys.argv) >= 2:
+    action = sys.argv[1]
+if action is None or action not in ['create', 'edit']:
+    action = 'create'
+
+## set context data
+if action == 'create':
+    title = 'Create User'
+    params = {'name': None, 'email': None, 'gender': None}
+else:
+    title = 'Edit User'
+    params = {'name': 'Margalette',
+              'email': 'meg@example.com',
+	      'gender': 'f',
+	      'id': 123 }
+context = {'title': title, 'params': params}
+
+## create engine object
+{{*import tenjin*}}
+{{*from tenjin.helpers import **}}
+{{*from tenjin.helpers.html import **}}
+layout = ':layout'   # or 'user_layout.pyhtml'
+{{*engine = tenjin.Engine(prefix='user_', postfix='.pyhtml', layout=layout)*}}
+
+## evaluate template
+template_name = ':' + action   # ':create' or ':edit'
+{{*output = engine.render(template_name, context)*}}
+if form:
+    print "Content-Type: text/html\r\n\r\n",
+print output,
+.--------------------
+
+% elsif RUBY
+
+.? File 'user_form.[%= suffix %]':
+.-------------------- user_form.[%= suffix %]
+<?[%=pi%] [%=comment%]@ARGS params ?>
+<p>
+  Name:  <input type="text" name="name"  value="${params['name']}" /><br />
+  Email: <input type="text" name="email" value="${params['email']}" /><br />
+  Gender:
+<?[%= pi %] gender = @params['gender'] ?>
+<?[%= pi %] chk = { true=>' checked="checked"', false=>'' } ?>
+  <input type="radio" name="gender" value="m" #{chk[gender=='m']} />Male
+  <input type="radio" name="gender" value="f" #{chk[gender=='f']} />Female
+</p>
+.--------------------
+
+.? File 'user_create.[%= suffix %]':
+.-------------------- user_create.[%= suffix %]
+<?[%=pi%] [%=comment%]@ARGS ?>
+<form action="user_app.cgi" method="post">
+  <input type="hidden" name="action" value="create" />
+{{*<?[%= pi %] import :form ?>*}}
+  <input type="submit" value="Create" />
+</form>
+.--------------------
+
+.? File 'user_edit.[%= suffix %]':
+.-------------------- user_edit.[%= suffix %]
+<?[%=pi%] [%=comment%]@ARGS params ?>
+<form action="user_app.cgi" method="post">
+  <input type="hidden" name="action" value="edit" />
+  <input type="hidden" name="id" value="${params['id']}" />
+{{*<?[%= pi %] import :form ?>*}}
+  <input type="submit" value="Edit" />
+</form>
+.--------------------
+
+.? File 'user_layout.[%= suffix %]':
+.-------------------- user_layout.[%= suffix %]
+<?[%=pi%] [%=comment%]@ARGS _content, title ?>
+<html>
+  <body>
+
+    <h1>${title}</h1>
+
+    <div id="main-content">
+{{*#{_content}*}}
+    </div>
+
+    <div id="footer">
+{{*<?rb import 'footer.html' ?>*}}
+    </div>
+
+  </body>
+</html>
+.--------------------
+
+.? File 'footer.html':
+.-------------------- footer.html
+<?[%=pi%] [%=comment%]@ARGS ?>
+<hr />
+<address>
+  <a href="mailto:webmaster@example.com">webmaster@example.com</a>
+</address>
+.--------------------
+
+.? File 'user_app.cgi':
+.-------------------- user_app.cgi
+#!/usr/bin/env ruby
+
+require 'cgi'
+{{*require 'tenjin'*}}
+
+## set action ('create' or 'edit')
+action = nil
+cgi = nil
+if ENV['REQUEST_METHOD']
+  cgi = CGI.new
+  action = cgi['action']
+elsif ARGV[0]
+  action = ARGV[0]
+end
+action = 'create' unless ['create', 'edit'].include?(action)
+
+## set context data
+if action == 'create'
+  title = 'Create User'
+  params = {}
+else
+  title = 'Edit User'
+  params = {:name=>'Margalette',
+            :email=>'meg@example.com',
+	    :gender=>'f',
+	    :id=>123 }
+end
+{{*context = { :title=>title, :params=>params }*}}
+{{*# or context = Tenjin::Context.new(:title=>title, :params=>params)*}}
+
+## create engine object
+layout = :layout   # or 'user_layout.[%=suffix%]'
+{{*engine = Tenjin::Engine.new(:prefix=>'user_', :postfix=>'.rbhtml', :layout=>layout)*}}
+
+## evaluate template
+template_name = action.intern   # :create or :edit
+{{*output = engine.render(template_name, context)*}}
+print cgi.header() if cgi
+print output
+.--------------------
+
+% elsif PERL
+
+.? File 'user_form.[%= suffix %]':
+.-------------------- user_form.[%= suffix %]
+<?[%=pi%] [%=comment%]@ARGS params ?>
+<p>
+  Name:  <input type="text" name="name"  value="[=$params->{name}=]" /><br />
+  Email: <input type="text" name="email" value="[=$params->{email}=]" /><br />
+  Gender:
+<?[%= pi %] my $gender = $params->{gender}; ?>
+<?[%= pi %] my %chk = (1==1 => ' checked="checked"', 1==0 => ''); ?>
+  <input type="radio" name="gender" value="m" [==$chk{$gender eq 'm'}=] />Male
+  <input type="radio" name="gender" value="f" [==$chk{$gender eq 'f'}=] />Female
+</p>
+.--------------------
+
+.? File 'user_create.[%= suffix %]':
+.-------------------- user_create.[%= suffix %]
+<?[%=pi%] [%=comment%]@ARGS ?>
+<form action="user_app.cgi" method="post">
+  <input type="hidden" name="action" value="create" />
+{{*<?[%= pi %] include(':form'); ?>*}}
+  <input type="submit" value="Create" />
+</form>
+.--------------------
+
+.? File 'user_edit.[%= suffix %]':
+.-------------------- user_edit.[%= suffix %]
+<?[%=pi%] [%=comment%]@ARGS params ?>
+<form action="user_app.cgi" method="post">
+  <input type="hidden" name="action" value="edit" />
+  <input type="hidden" name="id" value="[= $params->{id} =]" />
+{{*<?[%= pi %] include(':form'); ?>*}}
+  <input type="submit" value="Edit" />
+</form>
+.--------------------
+
+.? File 'user_layout.[%= suffix %]':
+.-------------------- user_layout.[%= suffix %]
+<?[%=pi%] [%=comment%]@ARGS _content, title ?>
+<html>
+  <body>
+
+    <h1>[=$title=]</h1>
+
+    <div id="main-content">
+{{*[==$_content==]*}}
+    </div>
+
+    <div id="footer">
+{{*<?pl include('footer.html'); ?>*}}
+    </div>
+
+  </body>
+</html>
+.--------------------
+
+.? File 'footer.html':
+.-------------------- footer.html
+<?[%=pi%] [%=comment%]@ARGS ?>
+<hr />
+<address>
+  <a href="mailto:webmaster@example.com">webmaster@example.com</a>
+</address>
+.--------------------
+
+.? File 'user_app.cgi':
+.-------------------- user_app.cgi
+#!/usr/bin/env perl
+
+use CGI;
+use strict;
+{{*use Tenjin*}};
+
+## set action ('create' or 'edit')
+my ($action, $cgi);
+if ($ENV{'REQUEST_METHOD'}) {
+    $cgi = new CGI();
+    $action = $cgi->param('action');
+}
+elsif ($ARGV[0]) {
+    $action = $ARGV[0];
+}
+$action = 'create' unless $action eq 'create' || $action eq 'edit';
+
+## set context data
+my ($title, $params);
+if ($action eq 'create') {
+    $title = 'Create User';
+    $params = { };
+}
+else {
+    $title = 'Edit User';
+    $params = {
+        name=>'Margalette',
+        email=>'meg@example.com',
+        gender=>'f',
+	id=>123,
+    };
+}
+{{*my $context = { title=>$title, params=>$params, }*}};
+{{*# or $context = new Tenjin::Context({title=>$title, $params=>params})*}}
+
+## create engine object
+my $layout = ':layout';   # or 'user_layout.[%= suffix %]'
+my $engine = {{*new Tenjin::Engine({prefix=>'user_', postfix=>'.[%= suffix %]', layout=>$layout})*}};
+
+## evaluate template
+my $template_name = ":$action";  # :create or :edit
+my $output = {{*$engine->render($template_name, $context)*}};
+print $cgi->header() if $cgi;
+print $output;
+.--------------------
+
+% elsif JS
+
+.? File 'user_form.[%= suffix %]':
+.-------------------- user_form.[%= suffix %]
+<?[%=pi%] [%=comment%]@ARGS params ?>
+<p>
+  Name:  <input type="text" name="name"  value="${params.name}" /><br />
+  Email: <input type="text" name="email" value="${params.email}" /><br />
+  Gender:
+<?[%= pi %] gender = params.gender; ?>
+<?[%= pi %] chk = {}; chk[true] = ' checked="checked"'; chk[false] = ''; ?>
+  <input type="radio" name="gender" value="m" #{chk[gender=='m']} />Male
+  <input type="radio" name="gender" value="f" #{chk[gender=='f']} />Female
+</p>
+.--------------------
+
+.? File 'user_create.[%= suffix %]':
+.-------------------- user_create.[%= suffix %]
+<?[%=pi%] [%=comment%]@ARGS ?>
+<form action="user_app.cgi" method="post">
+  <input type="hidden" name="action" value="create" />
+{{*<?[%= pi %] include(':form'); ?>*}}
+  <input type="submit" value="Create" />
+</form>
+.--------------------
+
+.? File 'user_edit.[%= suffix %]':
+.-------------------- user_edit.[%= suffix %]
+<?[%=pi%] [%=comment%]@ARGS params ?>
+<form action="user_app.cgi" method="post">
+  <input type="hidden" name="action" value="edit" />
+  <input type="hidden" name="id" value="${params.id}" />
+{{*<?[%= pi %] include(':form'); ?>*}}
+  <input type="submit" value="Edit" />
+</form>
+.--------------------
+
+.? File 'user_layout.[%= suffix %]':
+.-------------------- user_layout.[%= suffix %]
+<?[%=pi%] [%=comment%]@ARGS _content, title ?>
+<html>
+  <body>
+
+    <h1>${title}</h1>
+
+    <div id="main-content">
+{{*#{_content}*}}
+    </div>
+
+    <div id="footer">
+{{*<?js include('footer.html'); ?>*}}
+    </div>
+
+  </body>
+</html>
+.--------------------
+
+.? File 'footer.html':
+.-------------------- footer.html
+<?[%=pi%] [%=comment%]@ARGS ?>
+<hr />
+<address>
+  <a href="mailto:webmaster@example.com">webmaster@example.com</a>
+</address>
+.--------------------
+
+.? File 'user_app.cgi':
+.-------------------- user_app.cgi
+#!/usr/bin/env js -f
+
+{{*load('tenjin.js');*}}
+
+// set action ('create' or 'edit')
+var action = 'create';
+
+// set context data
+var title, params;
+if (action == 'create') {
+    title = 'Create User';
+    params = {};
+}
+else {
+    title = 'Edit User';
+    params = {
+        name: 'Margalette',
+        email: 'meg@example.com',
+        gender: 'f',
+        id: 123
+    };
+}
+{{*var context = { title: title, params: params }*}};
+
+// create engine object
+var layout = ':layout';   // or 'user_layout.[%=suffix%]'
+{{*var engine = new Tenjin.Engine({prefix:'user_', postfix:'.jshtml', layout:layout})*}};
+
+// evaluate template
+var template_name = ':'+action;   // ':create' or ':edit'
+{{*var output = engine.render(template_name, context)*}};
+print(output);
+.--------------------
+
+% elsif PHP
+
+.? File 'user_form.[%= suffix %]':
+.-------------------- user_form.[%= suffix %]
+<?[%=pi%] [%=comment%]@ARGS params ?>
+<p>
+  Name:  <input type="text" name="name"  value="{=$params['name']=}" /><br />
+  Email: <input type="text" name="email" value="{=$params['email']=}" /><br />
+  Gender:
+<?[%=pi%] $gender = $params['gender']; ?>
+<?[%=pi%] $chk = array(true=>' checked="checked"', false=>''); ?>
+  <input type="radio" name="gender" value="m" {=$chk[$gender=='m']=} />Male
+  <input type="radio" name="gender" value="f" {=$chk[$gender=='f']=} />Female
+</p>
+.--------------------
+
+.? File 'user_create.[%= suffix %]':
+.-------------------- user_create.[%= suffix %]
+<?[%=pi%] [%=comment%]@ARGS ?>
+<form action="user_app.cgi" method="post">
+  <input type="hidden" name="action" value="create" />
+{{*<?[%= pi %] import(':form'); ?>*}}
+  <input type="submit" value="Create" />
+</form>
+.--------------------
+
+.? File 'user_edit.[%= suffix %]':
+.-------------------- user_edit.[%= suffix %]
+<?[%=pi%] [%=comment%]@ARGS params ?>
+<form action="user_app.cgi" method="post">
+  <input type="hidden" name="action" value="edit" />
+  <input type="hidden" name="id" value="{=$params['id']=}" />
+{{*<?[%= pi %] import(':form'); ?>*}}
+  <input type="submit" value="Edit" />
+</form>
+.--------------------
+
+.? File 'user_layout.[%= suffix %]':
+.-------------------- user_layout.[%= suffix %]
+<?[%=pi%] [%=comment%]@ARGS _content, title ?>
+<html>
+  <body>
+
+    <h1>{=$title=}</h1>
+
+    <div id="main-content">
+{{*{==$_content=}*}}
+    </div>
+
+    <div id="footer">
+{{*<?[%=pi%] import('footer.html'); ?>*}}
+    </div>
+
+  </body>
+</html>
+.--------------------
+
+.? File 'footer.html':
+.-------------------- footer.html
+<?[%=pi%] [%=comment%]@ARGS ?>
+<hr />
+<address>
+  <a href="mailto:webmaster@example.com">webmaster@example.com</a>
+</address>
+.--------------------
+
+.? File 'user_app.cgi':
+.-------------------- user_app.cgi
+#!/usr/bin/env php
+<?php
+
+{{*require_once 'Tenjin.php';*}}
+
+/// set action ('create' or 'edit')
+$action = 'create';
+
+/// set context data
+if ($action == 'create') {
+    $title = 'Create User';
+    $params = array(
+        'name'=>null, 'email'=>null, 'gender'=>null, 'id'=>null,
+    );
+}
+else {
+    $title = 'Edit User';
+    $params = array(
+        'name'   => 'Margalette',
+        'email'  => 'meg@example.com',
+        'gender' => 'f',
+        'id'     => 123,
+    );
+}
+{{*$context = array('title'=>$title, 'params'=>$params)*}};
+
+/// create engine object
+$layout = ':layout';   // or 'user_layout.[%=suffix%]'
+{{*$properties = array('prefix'=>'user_', 'postfix'=>'.[%=suffix%]', 'layout'=>$layout)*}};
+{{*$engine = new Tenjin_Engine($properties)*}};
+
+/// evaluate template
+$template_name = ':'.$action;   // ':create' or ':edit'
+{{*$output = $engine->render($template_name, $context)*}};
+echo $output;
+.--------------------
+
+% else assert false 
+% end 
+
+
+.? Result:
+.==================== user_app.result
+$ [%= lang %] user_app.cgi create
+<html>
+  <body>
+
+    <h1>Create User</h1>
+
+    <div id="main-content">
+{{*<form action="user_app.cgi" method="post">*}}
+{{*  <input type="hidden" name="action" value="create" />*}}
+{{*<p>*}}
+{{*  Name:  <input type="text" name="name"  value="" /><br />*}}
+{{*  Email: <input type="text" name="email" value="" /><br />*}}
+{{*  Gender:*}}
+{{*  <input type="radio" name="gender" value="m"  />Male*}}
+{{*  <input type="radio" name="gender" value="f"  />Female*}}
+{{*</p>*}}
+{{*  <input type="submit" value="Create" />*}}
+{{*</form>*}}
+% _buf << empty_line 
+    </div>
+
+    <div id="footer">
+{{*<hr />*}}
+{{*<address>*}}
+{{*  <a href="mailto:webmaster@example.com">webmaster@example.com</a>*}}
+{{*</address>*}}
+    </div>
+
+  </body>
+</html>
+% _buf << "\n" if JS
+.====================
+
+
+
+.$$ Template Initialize Options		| dev-initopts
+
+[%= template_class %]() can take the follwoing options.
+
+% if PYTHON
+
+.* '{{,encoding,}}' (string) specifies encoding name of template file.
+  If you specifies encoding, template file string is converted into unicode object.
+  Template.render() will return unicode object if encoding is specified
+  else return str object.
+  Default is [%= NULL %].
+
+.* '{{,escapefunc,}}' (string) specifies function name to escape string.
+  Default is '{{,escape,}}' (= {{,tenjin.escape,}}).
+
+.* '{{,tostrfunc,}}' (string) specifies function name to convert value into string.
+  Default is '{{,to_str,}}' (= {{,tenjin.to_str,}}).
+
+.* '{{,indent,}}' (integer) specifies width of indentation.
+  Default is 4.
+
+% elsif RUBY
+
+.* '{{,escapefunc,}}' (string) specifies function name to escape string.
+  Default is '{{,escape,}}' (= {{,Tenjin::Context#escape,}}).
+
+% elsif PERL
+
+.* '{{,escapefunc,}}' (string) specifies function name to escape string.
+  Default is '{{,escape,}}' (= {{,Tenjin::Context::escape,}}).
+
+% elsif JS
+
+.* '{{,escapefunc,}}' (string) specifies function name to escape string.
+  Default is '{{,escapeXml,}}' (= {{,Tenjin.Util.escapeXml,}}).
+
+% elsif PHP
+
+.* '{{,escapefunc,}}' (string) specifies function name to escape string.
+  Default is '{{,htmlspecialchars,}}'.
+
+% else assert false 
+% end 
+
+Constructor of [%= engine_class %] can also take the same options as above.
+These options given to constructor of [%= engine_class %] are passed to constructor of [%= template_class %] internally.
+
+
+% n += 1
+% if PYTHON
+
+.? File 'example[%= n %].[%=pi%]':
+.-------------------- example[%= n %].[%=pi%]
+filename = 'example[%= n-1 %].[%= suffix %]'
+import tenjin
+from tenjin.helpers import escape, to_str
+template = tenjin.Template(filename, {{*escapefunc='cgi.escape'*}}, {{*tostrfunc='str'*}})
+print template.script
+
+import cgi
+title = '[%= name %] Example'
+items = ['<foo>', '&bar', '"baz"', None, True, False]
+output = template.render({'title':title, 'items':items})
+print output,
+.--------------------
+
+% elsif RUBY
+
+.? File 'example[%= n %].[%=pi%]':
+.-------------------- example[%= n %].[%=pi%]
+require 'tenjin'
+filename = 'example[%= n-1 %].rbhtml'
+template = Tenjin::Template.new(filename, {{*:escapefunc=>'CGI.escapeHTML'*}})
+print template.script, "\n"
+
+require 'cgi'
+title = '[%= name %] Example'
+items = ['<foo>', '&bar', '"baz"']
+output = template.render(:title=>title, :items=>items)
+print output
+.--------------------
+
+% elsif PERL
+
+.? File 'example[%= n %].[%=pi%]':
+.-------------------- example[%= n %].[%=pi%]
+use Tenjin;
+use strict;
+my $filename = 'example[%= n-1 %].[%= suffix %]';
+my $template = new Tenjin::Template($filename, {{*{escapefunc=>'HTML::Entities::encode_entities'}*}});
+print $template->{script}, "\n";
+
+use HTML::Entities;
+my $title = '[%= name %] Example';
+my $items = ['<foo>', '&bar', '"baz"'];
+my $output = $template->render({title=>$title, items=>$items});
+print $output;
+.--------------------
+
+% elsif JS
+
+.? File 'example[%= n %].[%=pi%]':
+.-------------------- example[%= n %].[%=pi%]
+load('tenjin.js');
+var filename = 'example[%= n-1 %].jshtml';
+var template = new Tenjin.Template(filename, {{*{escapefunc:'.escapeHTML'}*}});
+print(template.script);
+
+String.prototype.escapeHTML = function() {
+    return this.replace(/\&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+var title = '[%= name %] Example';
+var items = ['<foo>', '&bar', '"baz"'];
+var output = template.render({title:title, items:items});
+print(output);
+.--------------------
+
+% elsif PHP
+
+.? File 'example[%= n %].[%=pi%]':
+.-------------------- example[%= n %].[%=pi%]
+<?php
+require_once 'tenjin.php';
+$filename = 'example[%= n-1 %].[%=suffix%]';
+$template = new Tenjin_Template($filename, {{*array('escapefunc'=>'escapeHTML')*}});
+echo $template->script;
+
+function escapeHTML($s) {
+    $s = preg_replace('/\&/', '&amp;', $s);
+    $s = preg_replace('/</',  '&lt;',  $s);
+    $s = preg_replace('/>/',  '&gt;',  $s);
+    $s = preg_replace('/"/',  '&quot;', $s);
+    $s = preg_replace('/\'/', '&#039;', $s);
+    return $s;
+}
+$context = array(
+    'title' => '[%= name %] Example',
+    'items' => array('<foo>', '&bar', '"baz"'),
+);
+$output = $template->render($context);
+echo $output;
+?>
+.--------------------
+
+% else assert false 
+% end 
+
+
+% if PYTHON
+
+.? Result:
+.==================== example[%= n %]_escapefunc.result
+$ [%= lang %] example[%= n %].[%= pi %]
+_buf.extend(('''<h1>''', {{*str*}}(title), '''</h1>
+<ul>\n''', ));
+for item in items:
+    _buf.extend((''' <li>''', {{*cgi.escape*}}({{*str*}}(item)), '''</li>\n''', ));
+#end
+_buf.extend(('''</ul>\n''', ));
+
+<h1>[%= name %] Example</h1>
+<ul>
+ <li>&lt;foo&gt;</li>
+ <li>&amp;bar</li>
+ <li>"baz"</li>
+ <li>None</li>
+ <li>True</li>
+ <li>False</li>
+</ul>
+.====================
+
+% elsif RUBY
+
+.? Result:
+.==================== example[%= n %]_escapefunc.result
+$ [%= lang %] example[%= n %].[%= pi %]
+ _buf << %Q`<h1>#{@title}</h1>
+<ul>\n`
+for item in @items
+ _buf << %Q` <li>#{{{*CGI.escapeHTML*}}((item).to_s)}</li>\n`
+end
+ _buf << %Q`</ul>\n`
+
+<h1>rbTenjin Example</h1>
+<ul>
+ <li>&lt;foo&gt;</li>
+ <li>&amp;bar</li>
+ <li>&quot;baz&quot;</li>
+</ul>
+.====================
+
+% elsif PERL
+
+.? Result:
+.==================== example[%= n %]_escapefunc.result
+$ [%= lang %] example[%= n %].[%= pi %]
+my @_buf = (); push(@_buf, q`<h1>`, HTML::Entities::encode_entities($title), q`</h1>
+<ul>
+`, ); for my $item (@$items) {
+push(@_buf, q` <li>`, HTML::Entities::encode_entities($item), q`</li>
+`, ); }
+push(@_buf, q`</ul>
+`, ); join('', @_buf);
+
+<h1>plTenjin Example</h1>
+<ul>
+ <li>&lt;foo&gt;</li>
+ <li>&amp;bar</li>
+ <li>&quot;baz&quot;</li>
+</ul>
+.====================
+
+% elsif JS
+
+.? Result:
+.==================== example[%= n %]_escapefunc.result
+$ [%= lang %] example[%= n %].[%= pi %]
+var _buf = [];  _buf.push('<h1>', title, '</h1>\n\
+<ul>\n');
+ for (var i = 0, n = items.length; i < n; i++) {
+ _buf.push(' <li>', {{*(items[i]).escapeHTML()*}}, '</li>\n');
+ }
+ _buf.push('</ul>\n');
+_buf.join('')
+
+<h1>jsTenjin Example</h1>
+<ul>
+ <li>&lt;foo&gt;</li>
+ <li>&amp;bar</li>
+ <li>&quot;baz&quot;</li>
+</ul>
+
+.====================
+
+% elsif PHP
+
+.? Result:
+.==================== example[%= n %]_escapefunc.result
+$ [%= lang %] example[%= n %].[%= pi %]
+echo '<h1>', escapeHTML($title), '</h1>
+<ul>
+'; foreach ($items as $item) { 
+echo ' <li>', escapeHTML($item), '</li>
+'; } 
+echo '</ul>
+';
+<h1>phpTenjin Example</h1>
+<ul>
+ <li>&lt;foo&gt;</li>
+ <li>&amp;bar</li>
+ <li>&quot;baz&quot;</li>
+</ul>
+.====================
+
+% else assert false 
+% end 
+
+
+
+% if PYTHON
+
+.$$ Template Encoding		| dev-encoding
+
+[%= name %] provides two approaches for encoding.
+
+One approach is to handle template content as string (byte sequence),
+and convert context data into string by extended {{,to_str(),}} function
+if context data is unicode object.
+
+% n += 1 
+
+.? File 'example[%= n %]a.py':
+.-------------------- example[%= n %]a.py'
+import tenjin
+from tenjin.helpers import *
+
+## Create to_str() function which encodes unicode object into string
+## according to encoding.
+{{*to_str = tenjin.generate_tostrfunc('euc-jp')*}}
+         #  ex.  to_str(u'\u65e5\u672c\u8a9e')
+         #         =>  '\xc6\xfc\xcb\xdc\xb8\xec' (euc-jp string)
+
+engine = tenjin.Engine()
+context = { 'name': u'\u65e5\u672c\u8a9e' }  # non-ascii characters
+output = engine.render('encoding1.pyhtml', context)
+print output,
+.--------------------
+
+The other approach is to convert template content into unicode object.
+
+.? File 'example[%= n %]b.py':
+.-------------------- example[%= n %]b.py'
+import tenjin
+from tenjin.helpers import *
+
+## If you specify encoding option for Template() or Engine(),
+## content of template will be converted into unicode object.
+engine = tenjin.Engine({{*encoding='euc-jp'*}})
+## If you want to see python code, try the following:
+##   template = engine.get_template(filename)
+##   print template.script
+
+## You must encode output into string because output will be unicode.
+context = { 'name': u'\u65e5\u672c\u8a9e' }  # non-ascii characters
+output = engine.render('encoding1.pyhtml', context)
+{{*if isinstance(output, unicode):*}}
+   {{*output = output.encode('euc-jp')*}}
+print output,
+.--------------------
+
+.#+++
+
+.-------------------- encoding1.pyhtml
+<p>#{name}</p>
+.--------------------
+
+.==================== example[%= n %]_encoding.result2
+$ python example[%= n %]a.py
+<p>日本語</p>
+$ python example[%= n %]b.py
+<p>日本語</p>
+.====================
+
+.#---
+
+% end 
+
+
+
+% if !JS && !PHP       ############ m2
+
+.$$ Add Your Helper Functions	| dev-helpers
+
+There are several ways to use helper functions.
+
+% n+=1 
+
+% if PYTHON
+
+Assume the following template.
+
+.? File 'example[%=n%].[%=suffix%]':
+.-------------------- example[%=n%].[%=suffix%]
+<ul>
+  <li>#{{{*link_to(label, url)*}}}</li>
+</ul>
+.--------------------
+
+
+(A) Define helper functions as global.
+
+.? File 'example[%=n%]a.[%=pi%]':
+.-------------------- example[%=n%]a.[%=pi%]
+import tenjin
+from tenjin.helpers import *
+
+{{*def link_to(label, url):*}}
+    {{*return '<a href="%s">%s</a>' % (escape(url), escape(label))*}}
+
+engine = tenjin.Engine()
+context = { 'label': 'Top', 'url': '/' }
+output = engine.render('example[%=n%].[%=suffix%]', context)
+print output,
+.--------------------
+
+.? Result:
+.==================== example[%=n%]a.result
+$ [%=lang%] example[%=n%]a.[%=pi%]
+<ul>
+  <li><a href="/">Top</a></li>
+</ul>
+.====================
+
+
+(B) Add helper functions to context.
+
+.? File 'example[%=n%]b.[%=pi%]':
+.-------------------- example[%=n%]b.[%=pi%]
+import tenjin
+from tenjin.helpers import *
+
+def f1(label, url):
+    return '<a href="%s">%s</a>' % (escape(url), escape(label))
+
+engine = tenjin.Engine()
+context = { 'label': 'Top', 'url': '/', {{*'link_to': f1*}} }
+output = engine.render('example[%=n%].[%=suffix%]', context)
+print output,
+.--------------------
+
+.? Result:
+.==================== example[%=n%]b.result
+$ [%=lang%] example[%=n%]b.[%=pi%]
+<ul>
+  <li><a href="/">Top</a></li>
+</ul>
+.====================
+
+
+(C) Add functions to a dict object and pass it as global variables.
+
+.? File 'example[%=n%]c.[%=pi%]':
+.-------------------- example[%=n%]c.[%=pi%]
+import tenjin
+from tenjin.helpers import *
+
+def f1(label, url):
+    return '<a href="%s">%s</a>' % (escape(url), escape(label))
+
+engine = tenjin.Engine()
+context = { 'label': 'Top', 'url': '/' }
+globals = {'escape':escape, 'to_str':to_str, {{*'link_to':f1*}}}
+output = engine.render('example[%=n%].[%=suffix%]', context, globals=globals)
+print output,
+.--------------------
+
+.? Result:
+.==================== example[%=n%]c.result
+$ [%=lang%] example[%=n%]c.[%=pi%]
+<ul>
+  <li><a href="/">Top</a></li>
+</ul>
+.====================
+
+
+% elsif RUBY
+
+Assume the following template.
+
+.? File 'example[%=n%].[%=suffix%]':
+.-------------------- example[%=n%].[%=suffix%]
+<?rb #@ARGS label, url ?>
+<ul>
+  <li>#{{{*link_to(label, url)*}}}</li>
+</ul>
+.--------------------
+
+(A) Define helper functions as global function.
+
+.? File 'example[%=n%]a.[%=pi%]':
+.-------------------- example[%=n%]a.[%=pi%]
+require 'tenjin'
+
+def link_to(label, url)
+  return "<a href=\"#{escape_xml(url)}\">#{escape_xml(label)}</a>"
+end
+
+engine = Tenjin::Engine.new()
+context = { :label=>'Top', :url=>'/' }
+output = engine.render('example[%=n%].[%=suffix%]', context)
+print output
+.--------------------
+
+.? Result:
+.==================== example[%=n%]a.result
+$ [%=lang%] example[%=n%]a.[%=pi%]
+<ul>
+  <li><a href="/">Top</a></li>
+</ul>
+.====================
+
+
+(B) Define helper functions as module function of Tenjin::ContextHelper module.
+
+.? File 'example[%=n%]b.[%=pi%]':
+.-------------------- example[%=n%]b.[%=pi%]
+require 'tenjin'
+
+{{*module Tenjin::ContextHelper*}}
+  module_function
+  def link_to(label, url)
+    return "<a href=\"#{escape_xml(url)}\">#{escape_xml(label)}</a>"
+  end
+{{*end*}}
+
+engine = Tenjin::Engine.new()
+context = { :label=>'Top', :url=>'/' }
+output = engine.render('example[%=n%].[%=suffix%]', context)
+print output
+.--------------------
+
+.? Result:
+.==================== example[%=n%]b.result
+$ [%=lang%] example[%=n%]b.[%=pi%]
+<ul>
+  <li><a href="/">Top</a></li>
+</ul>
+.====================
+
+
+(C) Define subclass of Tenjin::Context and define helper functions as instance method.
+
+.? File 'example[%=n%]c.[%=pi%]':
+.-------------------- example[%=n%]c.[%=pi%]
+require 'tenjin'
+
+{{*class MyContext < Tenjin::Context*}}
+  def link_to(label, url)
+    return "<a href=\"#{escape_xml(url)}\">#{escape_xml(label)}</a>"
+  end
+{{*end*}}
+
+engine = Tenjin::Engine.new()
+{{*context = MyContext.new(:label=>'Top', :url=>'/')*}}
+output = engine.render('example[%=n%].[%=suffix%]', context)
+print output
+.--------------------
+
+.? Result:
+.==================== example[%=n%]c.result
+$ [%=lang%] example[%=n%]c.[%=pi%]
+<ul>
+  <li><a href="/">Top</a></li>
+</ul>
+.====================
+
+
+(D) Define helper functions in current class, set context data as instance variables, and pass self as context object
+
+.? File 'example[%=n%]d.[%=pi%]':
+.-------------------- example[%=n%]d.[%=pi%]
+require 'tenjin'
+
+class MyClass
+  {{*include Tenjin::ContextHelper*}}
+  {{*#include Tenjin::HtmlHelper*}}  # optional
+
+  def link_to(label, url)    # define helper functions in current class
+    return "<a href=\"#{escape(url)}\">#{escape(label)}</a>"
+  end
+
+  def render_template(template_name)
+    engine = Tenjin::Engine.new()
+    output = engine.render(template_name, {{*self*}})  # pass self as context object
+    return output
+  end
+
+  def main
+    ## set context data as instance variables
+    {{*@label = 'Top'*}}
+    {{*@url = '/'*}}
+    output = render_template('example[%=n%].[%=suffix%]')
+    print output
+  end
+
+end
+
+MyClass.new.main()
+.--------------------
+
+.? Result:
+.==================== example[%=n%]d.result
+$ [%=lang%] example[%=n%]d.[%=pi%]
+<ul>
+  <li><a href="/">Top</a></li>
+</ul>
+.====================
+
+
+% elsif PERL
+
+
+(A) Add package prefix for each helper functions.
+
+.? File 'example[%=n%]a.[%=suffix%]':
+.-------------------- example[%=n%]a.[%=suffix%]
+<?pl #@ARGS label, url ?>
+<ul>
+  <li>[=={{*::link_to($label, $url)*}}=]</li>
+</ul>
+.--------------------
+
+.? File 'example[%=n%]a.[%=pi%]':
+.-------------------- example[%=n%]a.[%=pi%]
+use Tenjin;
+
+sub link_to {
+    my ($label, $url) = @_;
+    $label = Tenjin::Helper::Html::escape_xml($label);
+    $url = Tenjin::Helper::Html::escape_xml($url);
+    return "<a href=\"$url\">$label</a>";
+}
+
+my $engine = new Tenjin::Engine();
+my $context = { 'label'=>'Top', 'url'=>'/' };
+my $output = $engine->render('example[%=n%]a.[%=suffix%]', $context);
+print $output;
+.--------------------
+
+.? Result:
+.==================== example[%=n%]a.result
+$ [%=lang%] example[%=n%]a.[%=pi%]
+<ul>
+  <li><a href="/">Top</a></li>
+</ul>
+.====================
+
+
+(B) Define submodule of Tenjin::Context and define helper functions in it.
+
+.? File 'example[%=n%]b.[%=suffix%]':
+.-------------------- example[%=n%]b.[%=suffix%]
+<?pl #@ARGS label, url ?>
+<ul>
+  <li>[=={{*link_to($label, $url)*}}=]</li>
+</ul>
+.--------------------
+
+.? File 'example[%=n%]b.[%=pi%]':
+.-------------------- example[%=n%]b.[%=pi%]
+use Tenjin;
+
+{{*package MyContext;*}}
+@ISA = ('Tenjin::Context');
+eval $Tenjin::Context::defun;  # define 'evaluate()' and 'to_func()'
+*escape = *Tenjin::Helper::Html::escape_xml;
+
+sub link_to {
+    my ($label, $url) = @_;
+    $label = escape($label);
+    $url = escape($url);
+    return "<a href=\"$url\">$label</a>";
+}
+
+package main;
+{{*$Tenjin::CONTEXT_CLASS = 'MyContext';*}}  # use MyContext instead of Tenjin::Context
+
+my $engine = new Tenjin::Engine();
+my $context = { 'label'=>'Top', 'url'=>'/' };
+my $output = $engine->render('example[%=n%]b.[%=suffix%]', $context);
+print $output;
+.--------------------
+
+.? Result:
+.==================== example[%=n%]b.result
+$ [%=lang%] example[%=n%]b.[%=pi%]
+<ul>
+  <li><a href="/">Top</a></li>
+</ul>
+.====================
+
+
+% elsif JS
+
+% elsif PHP
+
+% else raise false 
+% end 
+
+% end                    ############ m2
+
+
+
+.$$ Other Topics		| dev-othertopics
+
+% if PERL
+.* If you set '$Tenjin::USE_STRICT' to 1, Tenjin::Template::render() uses strict package.
+   This is useful for development.
+% end 
+% if JS
+.* [%= name %] is suitable for server-side JavaScript, but it may be too large for client-side JavaScript.
+   If you want to use [%= name %] in client-side, try 'shotenjin.js'.
+   'shotenjin.js' is a minimum subset of [%=name%].
+   .-------------------- example_shotenjin.js
+   var input = '\
+   <ul>\n\
+   <?js for (var i = 0, n = items.length; i < n; i++) { ?>\n\
+     <li>${items[i]}</li>\n\
+   <?js } ?>\n\
+   </ul>\n\
+   ';
+   load('shotenjin.js');
+   var context = {items: ['AAA','BBB','CCC']};
+   var output = {{*Shotenjin.render(input, context)*}};
+   .--------------------
+% end 
+
+.* [%= template_class %] detects newline character ("\n" or "\r\n") automatically.
+   If input file contains "\r\n", [%= name %] generates output which contains "\r\n".
+
+.* [%= template_class %][%= imsep %]render() can be called many times.
+   If you create a [%= template_class %] object, you can call render() method many times.
+
+.* [%= template_class %][%= imsep %]convert() also can be called many times.
+  If you create a [%= template_class %] object, you can call convert() (and also render()) method many times.
+
+.# * [%= template_class %] object is not thread-safe. It is not able to share Template objects with several threads.
+
