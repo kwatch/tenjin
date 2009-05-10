@@ -5,7 +5,6 @@
 ###
 
 import unittest
-from test import test_support
 import sys, os, re
 
 from testcase_helper import *
@@ -71,9 +70,6 @@ class HtmlHelperTest(unittest.TestCase, TestCaseHelper):
         expected = "foo<br />\n &nbsp; &nbsp;bar<br />\nba &nbsp; &nbsp; z<br />\n"
         self.assertEqual(expected, actual)
 
-def test_main():
-    test_support.run_unittest(HtmlHelperTest)
-
 
 if __name__ == '__main__':
-    test_main()
+    unittest.main()

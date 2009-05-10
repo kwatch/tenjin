@@ -5,7 +5,6 @@
 ###
 
 import unittest
-from test import test_support
 import sys, os, re, time
 from glob import glob
 
@@ -482,10 +481,5 @@ class EngineTest(unittest.TestCase, TestCaseHelper):
 
 
 
-def test_main():
-    test_support.run_unittest(EngineTest)
-
-
 if __name__ == '__main__':
-    test_main()
-
+    unittest.main()

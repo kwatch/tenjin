@@ -3,7 +3,6 @@
 #
 
 import unittest, os, re
-from test import test_support
 
 from testcase_helper import *
 
@@ -44,15 +43,13 @@ class ExamplesTest(unittest.TestCase, TestCaseHelper):
     for filename in filenames:
         #name = os.path.basename(filename).replace('.result', '')
         name = filename.replace(basedir+'/', '')
-        s = "\n".join((\
+        s = "\n".join((
              "def test_%s(self):" % re.sub('[^\w]', '_', name),
              "    self.filename = '%s'" % name,
              "    self._test()",
              ))
         exec s
 
-def test_main():
-    test_support.run_unittest(ExamplesTest)
 
 if __name__ == '__main__':
-    test_main()
+    unittest.main()

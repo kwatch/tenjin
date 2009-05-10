@@ -5,7 +5,6 @@
 ###
 
 import unittest
-from test import test_support
 import sys, os, re
 
 from testcase_helper import *
@@ -174,9 +173,6 @@ if name:
         if m.startswith('test_') and m != 'test_'+name:
             delattr(TemplateTest, m)
 
-def test_main():
-    test_support.run_unittest(TemplateTest)
-
 
 if __name__ == '__main__':
-    test_main()
+    unittest.main()
