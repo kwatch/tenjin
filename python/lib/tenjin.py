@@ -54,26 +54,37 @@ import re, sys, os, time, marshal
 
 try:
     import fcntl
-    def _lock_file(file, content):
-        fcntl.flock(file.fileno(), fcntl.LOCK_EX)
+    def _lock_file(file, content, arg):
+        if arg == 2:
+            fcntl.flock(file.fileno(), fcntl.LOCK_EX)
+        elif arg == 1:
+            fcntl.flock(file.fileno(), fcntl.LOCK_SH)
 except ImportError, ex:
     try:
         import msvcrt
-        def _lock_file(file, content):
+        def _lock_file(file, content, arg):
             msvcrt.locking(file.fileno(), msvcrt.LK_LOCK, len(content))
     except ImportError, ex:
-        def _lock_file(file, content):
+        def _lock_file(file, content, arg):
             pass
 
-def _write_file_with_lock(filename, content):
+def write_file(filename, content, lock=False, mode='wb'):
     f = None
     try:
-        f = open(filename, 'wb')
-        _lock_file(f, content)
+        f = open(filename, mode)
+        if lock: _lock_file(f, content, 2)
         f.write(content)
     finally:
-        if f:
-            f.close()
+        if f: f.close()
+
+def read_file(filename, lock=False, mode='rb'):
+    f = None
+    try:
+        f = open(filename, mode)
+        if lock: _lock_file(f, content, 1)
+        return f.read()
+    finally:
+        if f: f.close()
 
 def _create_module(module_name):
     """ex. mod = _create_module('tenjin.util')"""
@@ -464,7 +475,7 @@ class Template(object):
         """Convert file into python script and return it.
            This is equivarent to convert(open(filename).read(), filename).
         """
-        input = open(filename, 'rb').read()
+        input = read_file(filename)
         return self.convert(input, filename)
 
     def convert(self, input, filename=None):
@@ -933,7 +944,7 @@ class Engine(object):
         template.bytecode = dct['bytecode']
 
     def _load_cachefile_for_script(self, cache_filename, template):
-        s = open(cache_filename).read()
+        s = read_file(cache_filename, mode='r')
         if s.startswith('#@ARGS '):
             pos = s.find("\n")
             args_str = s[len('#@ARGS '):pos]
@@ -952,7 +963,7 @@ class Engine(object):
         dct = { 'args':     template.args,
                 'script':  template.script,
                 'bytecode': template.bytecode }
-        _write_file_with_lock(cache_filename, marshal.dumps(dct))
+        write_file(cache_filename, marshal.dumps(dct), True)
 
     def _store_cachefile_for_script(self, cache_filename, template):
         s = template.script
@@ -961,7 +972,7 @@ class Engine(object):
             #s = s.encode('utf-8')
         if template.args is not None:
             s = "#@ARGS %s\n%s" % (', '.join(template.args), s)
-        _write_file_with_lock(cache_filename, s)
+        write_file(cache_filename, s, True)
 
     def cachename(self, filename):
         return filename + '.cache'
@@ -992,7 +1003,7 @@ class Engine(object):
 
     def read_template_file(self, filename, _context, _globals):
         if not self.preprocess:
-            return open(filename).read()
+            return read_file(filename)
         if _context is None:
             _context = {}
         if not _context.has_key('_engine'):
