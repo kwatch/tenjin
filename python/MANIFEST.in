@@ -8,6 +8,6 @@ include test/*.py test/*.yaml
 #recursive-include test/data *.py *.yaml *.pyhtml *.result *.cgi *.html *.pycsv
 recursive-include test/data *.*
 recursive-exclude test/data *.cache *.pyc
-exclude test/Kookbook.yaml
-recursive-include examples *.py *.pyhtml Makefile
+#exclude test/Kookbook.py
+recursive-include examples *.py *.pyhtml Makefile Kookbook.py
 #exclude examples/test_examples.py
