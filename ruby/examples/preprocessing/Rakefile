@@ -1,0 +1,15 @@
+task 'default' do
+  load 'main.rb'
+end
+
+task 'all2' do
+  system 'rbx main.rb'	# Rubinius
+end
+
+task 'preprocess' do
+  system 'rbtenjin -a preprocess select.rbhtml'
+end
+
+task 'clean' do
+  rm_f Dir.glob('*.{cache,rbc}')
+end

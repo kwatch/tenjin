@@ -1,0 +1,16 @@
+<html>
+  <body>
+    <h1>${@title}</h1>
+    <table>
+<?rb i = 0 ?>
+<?rb for item in @items ?>
+<?rb    i += 1 ?>
+<?rb    color = i % 2 == 0 ? '#FFCCCC' : '#CCCCFF' ?>
+      <tr bgcolor="#{color}">
+        <td>#{i}</td>
+        <td>${item}</td>
+      </tr>
+<?rb end ?>
+    </table>
+  </body>
+</html>

@@ -1,0 +1,15 @@
+<?RB require 'helper' ?>
+<form>
+  <label>Select your language:</label>
+  <select name="lang">
+<?rb table = { @params[:lang] => ' selected="selected"' } ?>
+<?RB for val, name in LANGUAGES ?>
+    <option value="${{val}}" #{table[#{{val.inspect}}]}>${{name}}</option>
+<?RB end ?>
+  </select>
+  <input type="submit" value="OK" />
+</form>
+<p>
+  #{{link_to('Back', :action=>'index')}} |
+  #{{link_to('Show '+_P('@params[:name]'), :action=>'show', :id=>_p('@params[:id]'))}}
+</p>

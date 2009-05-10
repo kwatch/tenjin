@@ -1,0 +1,164 @@
+###
+### $Rev$
+### $Release: $
+### $Copyright$
+###
+
+properties:
+  - release    :  0.6.2
+
+
+parameters:
+  - project    :  rbtenjin
+  - gem_name   :  tenjin
+  - copyright  :  copyright(c) 2007-2008 kuwata-lab.com all rights reserved.
+  - text_files :  [README.txt, CHANGES.txt, MIT-LICENSE, setup.rb, $(gem_name).gemspec]
+  - doc_files  :  [doc/users-guide.html, doc/faq.html, doc/examples.html, doc/docstyle.css]
+  - apidocdir  :  doc-api
+  - home*      :  ENV['HOME']
+  #- benchmark_files* : Dir.glob('benchmark/tmpl_*')
+  - libfiles*  :  Dir.glob("lib/**/*")
+  - base       :  $(project)-$(release)
+  - gem_base   :  $(gem_name)-$(release)
+  #
+  #- exclude_libs : [ ]
+
+
+recipes:
+
+  - product:	:all
+    ingreds:	[ $(text_files), $(doc_files) ]
+
+  - product:	:packages
+    desc:       create packages
+    ingreds:	[ $(base).tar.gz, $(base).tar.bz2, $(base).zip, $(gem_base).gem ]
+
+  - product:	:test
+    method*: |
+    	chdir 'test' do
+	  sys "ruby test_template.rb"
+	  sys "ruby test_engine.rb"
+	  sys "ruby test_main.rb"
+	  sys "ruby test_htmlhelper.rb"
+	  sys "ruby test_users_guide.rb"
+	  sys "ruby test_faq.rb"
+	end
+
+  - product:	:clear
+    method*: |
+	rm_rf '$(project)-*.*', '$(gem_name)-*.gem', apidocdir
+
+  - product:	:apidoc
+    desc:	create api document by RDoc
+    ingreds:	[ $(apidocdir)/index.html ]
+
+  - product:	$(apidocdir)/index.html
+    ingreds:	[ $(libfiles), README.txt ]
+    method*: |
+        rm_rf '$(apidocdir)'
+	sys "rdoc -o $(apidocdir) -S -m README.txt README.txt lib/*"
+
+  - product:	:chmod
+    desc:	chmod files
+    method*: |
+        chmod 0644, '**/*', :filetype=>'file'
+	chmod 0755, 'bin/*'
+
+  - product:    $(project)-$(release).tar.bz2
+    desc:	create *.tar.bz2
+    ingreds:    [ $(project)-$(release) ]
+    method*: |
+        rm_f @product if test(?f, @product)
+        tar_cjf @product, @ingred
+
+  - product:	$(project)-$(release).tar.gz
+    desc:	create *.tar.gz
+    ingreds:	[ $(project)-$(release) ]
+    method*: |
+        rm_f @product if test(?f, @product)
+        tar_czf @product, @ingred
+
+  - product:	$(project)-$(release).zip
+    desc:	create *.zip
+    ingreds:	[ $(project)-$(release) ]
+    method*: |
+        rm_f @product if test(?f, @product)
+        zip_r @product, @ingred
+
+  - product:    $(gem_name)-$(release).gem
+    desc:	create *.gem
+    ingreds:	[ $(project)-$(release) ]
+    method*: |
+        dir = @ingred
+	#cd dir do
+        #  Gem.manage_gems
+        #  Gem::GemRunner.new.run ['build', '$(gem_name).gemspec']
+	#end
+        chdir dir do sys "gem build tenjin.gemspec" end
+	mv "#{dir}/#{@product}", "."
+
+#  - product:	$(guide)
+#    method*: |
+#	chdir "doc" do sys "rook :doc :retrieve" end
+
+  - product:    $(project)-$(release)
+    ingreds:	[ $(text_files), $(doc_files), :apidoc ]
+    method*: |
+        comment 'delete and create directory'
+	#release = @matches[1]
+        release = '$(release)'
+	dir = "$(project)-#{release}"
+	rm_rf dir if test(?d, dir)
+	mkdir_p dir
+	#
+	rm_rf 'lib/**/*.rbc'
+	store 'lib/**/*', 'bin/*', text_files, dir
+	#
+	rm_rf 'examples/**/*.rbc'
+	store 'examples/**/*', dir
+	rm_f "{dir}/examples/**/*.cache"
+	#
+	chdir 'doc' do sys 'rook :doc :retrieve' end
+	mkdir_p "#{dir}/doc"
+	cp_r doc_files, "#{dir}/doc"
+	#
+	rm_f 'test/**/*.{cache,rbc}'
+	store 'test/*.{rb,yaml}', 'test/data/**/*', dir
+	#
+	store 'benchmark/bench.rb', 'benchmark/bench_context.{rb,yaml}', 'benchmark/templates/*', dir
+	#
+	#rm_f 'examples/**/*.cache', 'examples/**/*.result'
+	#store 'examples/**/*', dir
+	#store 'examples/**/*{.rb,.rbhtml,.html,.cgi,Makefile}', dir
+	#rm_f "#{dir}/examples/**/*.expected", "#{dir}/examples/test_examples.rb"
+	#
+	store '$(apidocdir)/**/*', dir
+	#store 'lib/**/*', 'bin/*', 'test/**/*', text_files, dir do |f|
+	#  base = File.basename(f)
+	#  #!exclude_libs.include?(base)
+	#end
+	#
+	edit "#{dir}/**/*" do |content|
+	  content.gsub!(/\$Release:.*?\$/, "$Release: #{release} $")
+	  content.gsub!(/\$Release\$/, "#{release}")
+	  content.gsub!(/\$Copyright.*?\$/, '$(copyright)')
+	  content
+	end
+	#
+	chmod 0644, "#{dir}/**/*", :filetype=>'file'
+	chmod 0755, "#{dir}/bin/*", :filetype=>'file'
+
+  - product:	:dup
+    method*: |
+	files = []
+	files += Dir.glob('lib/**/*.rb')
+	files += Dir.glob('bin/*')
+	files += Dir.glob('benchmark/tmpl_*')
+	archive = "#{@product}.tar.gz"
+	tar_czf archive, files
+	dir = '/Volumes/WORKGROUP;DENEB/src/erubis/trunk'
+	cp archive, dir
+	chdir dir do
+	  tar_xzf archive
+	end
+

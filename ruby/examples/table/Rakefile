@@ -1,0 +1,11 @@
+task 'default' do
+  load 'table.rb'
+end
+
+task 'all2' do
+  system 'rbx table.rb'    # Rubinius
+end
+
+task 'clean' do
+  rm_f Dir.glob('*.{cache,rbc}')
+end

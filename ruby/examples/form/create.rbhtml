@@ -1,0 +1,4 @@
+<?rb @title = 'Create user' ?>
+<?rb @label = 'Create' ?>
+<?rb @action = 'action.cgi' ?>
+<?rb import(:form) ?>

@@ -1,0 +1,1734 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html">
+  <title>rbTenjin User's Guide</title>
+  <meta name="generator" content="kwaser">
+  <meta http-equiv="Content-Style-Type" content="text/css">
+  <link rel="stylesheet" href="docstyle.css" type="text/css">
+ </head>
+ <body>
+
+  <blockquote>
+   <div class="mainbody">
+
+    <div align="left"><h1>rbTenjin User's Guide</h1></div>
+    <div align="left">
+      last update: $Date$<br>
+    </div>
+
+<p>Release: $Release$
+</p>
+<p>Table of Contents:
+<ul>
+  <li><a href="#intro">Introduction</a>
+  <ul>
+    <li><a href="#overview">Overview</a>
+    </li>
+    <li><a href="#features">Features</a>
+    </li>
+    <li><a href="#benchmark">Benchmark</a>
+    </li>
+  </ul>
+  </li>
+  <li><a href="#installation">Installation</a>
+  </li>
+  <li><a href="#desguide">Designer's Guide</a>
+  <ul>
+    <li><a href="#des-notation">Notation</a>
+    </li>
+    <li><a href="#des-convert">Convert into Ruby Code</a>
+    </li>
+    <li><a href="#des-syntaxchk">Syntax Checking</a>
+    </li>
+    <li><a href="#des-contextdata">Context Data File</a>
+    </li>
+    <li><a href="#des-cmlinecontext">Command-line Context Data</a>
+    </li>
+    <li><a href="#des-nested-template">Nested Template</a>
+    </li>
+    <li><a href="#des-layout">Layout Template</a>
+    </li>
+    <li><a href="#des-capturing">Capturing</a>
+    </li>
+    <li><a href="#des-args">Template Arguments</a>
+    </li>
+    <li><a href="#des-preprocess">Preprocessing</a>
+    </li>
+    <li><a href="#des-otheropts">Other Options</a>
+    </li>
+  </ul>
+  </li>
+  <li><a href="#devguide">Developer's Guide</a>
+  <ul>
+    <li><a href="#dev-example">An Example</a>
+    </li>
+    <li><a href="#dev-classes">Classes and Functions in rbTenjin</a>
+    </li>
+    <li><a href="#dev-templateclass">Class Tenjin::Template</a>
+    </li>
+    <li><a href="#dev-engineclass">Class Tenjin::Engine</a>
+    </li>
+    <li><a href="#dev-initopts">Template Initialize Options</a>
+    </li>
+    <li><a href="#dev-helpers">Add Your Helper Functions</a>
+    </li>
+    <li><a href="#dev-othertopics">Other Topics</a>
+    </li>
+  </ul>
+  </li>
+</ul>
+</p>
+<a name="intro"></a>
+<h2 class="section1">Introduction</h2>
+<a name="overview"></a>
+<h3 class="section2">Overview</h3>
+<p>rbTenjin is a very fast and lightweight template engine based on embedded Ruby.
+You can embed Ruby statements and expressions into your text file.
+rbTenjin converts it into Ruby script and evaluate it.
+</p>
+<p>The following is an example of rbTenjin.
+</p>
+<a name="ex.rbhtml"></a>
+<div class="program_caption">
+File 'ex.rbhtml':</div>
+<pre class="program">Hello <strong>#{@name}</strong>!
+&lt;ul&gt;
+<strong>&lt;?rb for item in @items ?&gt;</strong>
+ &lt;li&gt;<strong>${item}</strong>&lt;/li&gt;
+<strong>&lt;?rb end ?&gt;</strong>
+&lt;/ul&gt;
+</pre>
+<p>Here is the notation:
+</p>
+<ul type="disc">
+<li><code>&lt;?rb ... ?&gt;</code> represents embedded Ruby statements.
+</li>
+<li><code>#{...}</code> represents embedded Ruby expression.
+</li>
+<li><code>${...}</code> represents embedded escaped (sanitized) Ruby expression.
+</li>
+</ul>
+<a name="ex_source.result"></a>
+<div class="terminal_caption">
+Result of covertion into Ruby script:</div>
+<pre class="terminal">$ rbtenjin -s ex.rbhtml
+_buf = '';  _buf &lt;&lt; %Q`Hello <strong>#{@name}</strong>!
+&lt;ul&gt;\n`
+<strong>for item in @items</strong>
+ _buf &lt;&lt; %Q` &lt;li&gt;<strong>#{escape((item).to_s)}</strong>&lt;/li&gt;\n`
+<strong>end</strong>
+ _buf &lt;&lt; %Q`&lt;/ul&gt;\n`
+_buf.to_s
+</pre>
+<a name="ex.result"></a>
+<div class="terminal_caption">
+Output of execution with context data:</div>
+<pre class="terminal">$ rbtenjin -c "@name='World'; @items=['&lt;AAA&gt;','B&amp;B','\"CCC\"']" ex.rbhtml
+Hello World!
+&lt;ul&gt;
+ &lt;li&gt;&amp;lt;AAA&amp;gt;&lt;/li&gt;
+ &lt;li&gt;B&amp;amp;B&lt;/li&gt;
+ &lt;li&gt;&amp;quot;CCC&amp;quot;&lt;/li&gt;
+&lt;/ul&gt;
+</pre>
+<a name="ex.script"></a>
+<div class="program_caption">
+Example of Ruby script</div>
+<pre class="program">require 'tenjin'
+engine = Tenjin::Engine.new()
+context = { :name=&gt;'World', :items=&gt;['&lt;AAA&gt;', 'B&amp;B', '"CCC"'] }
+output = engine.render('ex.rbhtml', context)
+print output
+</pre>
+<br>
+
+
+<a name="features"></a>
+<h3 class="section2">Features</h3>
+<p>rbTenjin has the following features:
+</p>
+<ul type="disc">
+<li>rbTenjin runs very fast. It works about three times as fast as ERB.
+</li>
+<li>rbTenjin doesn't break HTML design because it uses XML Processing
+  Instructions (PI) as embedded notation for Ruby statements.
+</li>
+<li>rbTenjin is secure because it supports escaping expression value by default.
+</li>
+<li>rbTenjin is small and lightweight. It is very easy to include rbTenjin
+  into your application.
+</li>
+<li>rbTenjin supports auto caching of converted Ruby code.
+</li>
+<li>rbTenjin supports partial template and layout template.
+  These are very useful especially for web application.
+</li>
+<li>rbTenjin supports partial capturing of template.
+</li>
+<li>rbTenjin can load YAML file as context data. Using rbTenjin, it is able to
+  separate template file and data file.
+</li>
+</ul>
+<br>
+
+
+<a name="benchmark"></a>
+<h3 class="section2">Benchmark</h3>
+<p>Benchmark script is contained in rbTenjin archive.
+The following is an example of benchmark.
+</p>
+<div class="terminal_caption">
+MacOS X 10.4 Tiger, Intel CoreDuo 1.83GHz, Memory 2GB</div>
+<pre class="terminal">$ cd rbtenjin-X.X.X/benchmark
+$ ruby -v
+ruby 1.8.6 (2007-03-13 patchlevel 0) [i686-darwin8.9.1]
+$ ruby bench.rb -n 10000
+                          user     system      total        real
+eruby                 12.02000    0.27000   12.29000 (  12.34855)
+eruby-cache           11.09000    0.43000   11.53000 (  11.58262)
+erb                   36.32000    0.41000   36.73000 (  36.89404)
+erb-cache             11.13000    0.45000   11.57000 (  11.62259)
+erb-reuse             10.78000    0.03000   10.81000 (  10.85908)
+erb-defmethod          5.82000    0.02000    5.84000 (   5.86168)
+erubis                10.31000    0.32000   10.64000 (  10.68644)
+erubis-cache           7.02000    0.43000    7.45000 (   7.50923)
+erubis-reuse           4.43000    0.01000    4.44000 (   4.45338)
+tenjin                 6.87000    0.47000    7.34000 (   7.37263)
+tenjin-nocache         8.73000    0.36000    9.10000 (   9.14337)
+tenjin-reuse           4.45000    0.07000    4.52000 (   4.53931)
+</pre>
+<p>This shows that rbTenjin is much faster than any other eRuby implementations.
+</p>
+<br>
+
+
+<br>
+
+
+<a name="installation"></a>
+<h2 class="section1">Installation</h2>
+<p>rbTenjin requires Ruby 1.8 or later.
+</p>
+<ul type="disc">
+<li>If you have installed RubyGems, just type '<code>gem install rbtenjin</code>'.
+</li>
+<li>Or if you have administrator privilegde, install with setup.rb.
+<pre class="terminal">$ tar xjf rbtenjin_X.X.X.tar.bz
+$ cd rbtenjin_X.X.X/
+$ ruby setup.rb --help | more
+$ ruby setup.rb config
+$ ruby setup.rb setup
+$ sudo ruby setup.rb install
+</pre>
+</li>
+<li>Or copy 'lib/tenjin.rb' and 'bin/rbtenjin' to proper directories.
+<pre class="terminal">$ tar xjf rbtenjin_X.X.X.tar.bz
+$ cd rbtenjin_X.X.X/
+$ cp lib/tenjin.rb $HOME/lib/ruby/
+$ cp bin/rbtenjin $HOME/bin/
+</pre>
+</li>
+</ul>
+<br>
+
+
+<a name="desguide"></a>
+<h2 class="section1">Designer's Guide</h2>
+<p>This section shows how to use rbTenjin for designer.
+</p>
+<p>If you want to know how to use rbTenjin in your program, see <a href="#devguide">Developer's Guide</a> section.
+</p>
+<a name="des-notation"></a>
+<h3 class="section2">Notation</h3>
+<p>The following is the notation of rbTenjin.
+</p>
+<ul type="disc">
+<li>'<code>&lt;?rb ... ?&gt;</code>' represents embedded Ruby statement.
+</li>
+<li>'<code>#{...}</code>' represents embedded Ruby expression.
+</li>
+<li>'<code>${...}</code>' represents embedded Ruby expression which is to be escaped (for example, '<code>&amp; &lt; &gt; "</code>' is escaped to '<code>&amp;amp; &amp;lt; &amp;gt; &amp;quot;</code>').
+</li>
+</ul>
+<a name="example1.rbhtml"></a>
+<div class="program_caption">
+File 'example1.rbhtml':</div>
+<pre class="program">&lt;table&gt;
+  &lt;tbody&gt;
+<strong>&lt;?rb i = 0 ?&gt;</strong>
+<strong>&lt;?rb for item in ['&lt;foo&gt;', 'bar&amp;bar', '"baz"'] ?&gt;</strong>
+<strong>&lt;?rb     i += 1 ?&gt;</strong>
+    &lt;tr&gt;
+      &lt;td&gt;<strong>#{item}</strong>&lt;/td&gt;
+      &lt;td&gt;<strong>${item}</strong>&lt;/td&gt;
+    &lt;/tr&gt;
+<strong>&lt;?rb end ?&gt;</strong>
+  &lt;tbody&gt;
+&lt;/table&gt;
+</pre>
+<p>The following is the result of executing 'example1.rbhtml'.
+</p>
+<a name="example1.result"></a>
+<div class="terminal_caption">
+Result:</div>
+<pre class="terminal">$ rbtenjin example1.rbhtml
+&lt;table&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;td&gt;<strong>&lt;foo&gt;</strong>&lt;/td&gt;
+      &lt;td&gt;<strong>&amp;lt;foo&amp;gt;</strong>&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;<strong>bar&amp;bar</strong>&lt;/td&gt;
+      &lt;td&gt;<strong>bar&amp;amp;bar</strong>&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;<strong>"baz"</strong>&lt;/td&gt;
+      &lt;td&gt;<strong>&amp;quot;baz&amp;quot;</strong>&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;tbody&gt;
+&lt;/table&gt;
+</pre>
+<br>
+
+
+<a name="des-convert"></a>
+<h3 class="section2">Convert into Ruby Code</h3>
+<p>Command-line option '-s' converts embedded files into Ruby code.
+</p>
+<a name="example1_source.result"></a>
+<div class="terminal_caption">
+Result:</div>
+<pre class="terminal">$ rbtenjin <strong>-s</strong> example1.rbhtml
+_buf = '';  _buf &lt;&lt; %Q`&lt;table&gt;
+  &lt;tbody&gt;\n`
+<strong>i = 0</strong>
+<strong>for item in ['&lt;foo&gt;', 'bar&amp;bar', '"baz"']</strong>
+    <strong>i += 1</strong>
+ _buf &lt;&lt; %Q`    &lt;tr&gt;
+      &lt;td&gt;<strong>#{item}</strong>&lt;/td&gt;
+      &lt;td&gt;<strong>#{escape((item).to_s)}</strong>&lt;/td&gt;
+    &lt;/tr&gt;\n`
+<strong>end</strong>
+ _buf &lt;&lt; %Q`  &lt;tbody&gt;
+&lt;/table&gt;\n`
+_buf.to_s
+</pre>
+<ul type="disc">
+<li>Variable <code>@_buf</code> is a String.
+</li>
+<li>Function <code>escape()</code> (= <code>Tenjin::Context.escape()</code>) escapes <code>'&amp; &lt; &gt; "'</code> into <code>'&amp;amp; &amp;lt; &amp;gt; &amp;quot;'</code>.
+  Command-line option <code>--escapefunc=func</code> makes rbtenjin to use <code>func()</code> instead of <code>escape()</code>.
+</li>
+<li>Newline character ("\n" or "\r\n") is automatically detected by rbTenjin.
+</li>
+</ul>
+<p>'<code>_buf = '';</code>' is called as preamble and '<code>_buf.to_s</code>' is called as postamble.
+Command-line option '<code>-b</code>' removes preamble and postamble.
+</p>
+<a name="example2.rbhtml"></a>
+<div class="program_caption">
+File 'example2.rbhtml'</div>
+<pre class="program">&lt;?rb for i in [1, 2, 3] ?&gt;
+&lt;p&gt;#{item}&lt;/p&gt;
+&lt;?rb end ?&gt;
+</pre>
+<a name="example2_sb.result2"></a>
+<div class="terminal_caption">
+Result:</div>
+<pre class="terminal">$ rbtenjin -s example2.rbhtml
+<strong>_buf = '';</strong> for i in [1, 2, 3]
+ _buf &lt;&lt; %Q`&lt;p&gt;#{item}&lt;/p&gt;\n`
+end
+<strong>_buf.to_s</strong>
+$ rbtenjin -s<strong>b</strong> example2.rbhtml
+for i in [1, 2, 3]
+ _buf &lt;&lt; %Q`&lt;p&gt;#{item}&lt;/p&gt;\n`
+end
+</pre>
+<p>Command-line option '-S' also show converted Ruby code but it doesn't print text part.
+This is useful to check Ruby code for debugging.
+</p>
+<a name="example1_S.result"></a>
+<div class="terminal_caption">
+Result:</div>
+<pre class="terminal">$ rbtenjin <strong>-S</strong> example1.rbhtml
+_buf = ''; 
+
+i = 0
+for item in ['&lt;foo&gt;', 'bar&amp;bar', '"baz"']
+    i += 1
+
+
+          escape((item).to_s); 
+
+end
+
+
+_buf.to_s
+</pre>
+<p>In addition, the following command-line options are available.
+</p>
+<dl class="dl3" compact>
+<dt class="dt3"><b>
+-N </b></dt>
+<dd class="dd3">
+	     Add line number.
+</dd>
+<dt class="dt3"><b>
+-X </b></dt>
+<dd class="dd3">
+	     Delete expressions.
+</dd>
+<dt class="dt3"><b>
+-C </b></dt>
+<dd class="dd3">
+	     Remove empty lines (compact-mode).
+</dd>
+<dt class="dt3"><b>
+-U </b></dt>
+<dd class="dd3">
+	     Compress empty lines to a line (uniq-mode).
+</dd>
+</dl>
+<a name="example1_SXNC.result"></a>
+<div class="terminal_caption">
+Result:</div>
+<pre class="terminal">$ rbtenjin <strong>-SUNX</strong> example1.rbhtml
+    1:  _buf = ''; 
+
+    3:  i = 0
+    4:  for item in ['&lt;foo&gt;', 'bar&amp;bar', '"baz"']
+    5:      i += 1
+
+   10:  end
+
+   13:  _buf.to_s
+</pre>
+<br>
+
+
+<a name="des-syntaxchk"></a>
+<h3 class="section2">Syntax Checking</h3>
+<p>Command-line option '<code>-z</code>' checks syntax error in embedded Ruby code
+and command-line option '<code>-w</code>' sets warning level to 2.
+It is recommended to use '-w' when you specify '-z'.
+</p>
+<a name="example3.rbhtml"></a>
+<div class="program_caption">
+File example3.rbhtml:</div>
+<pre class="program">&lt;ul&gt;
+&lt;?rb for item in items ?&gt;
+  &lt;li&gt;${item}&lt;/li&gt;
+&lt;?rb <strong>ende</strong> ?&gt;
+&lt;/ul&gt;
+</pre>
+<a name="example3_syntaxcheck.result"></a>
+<div class="terminal_caption">
+Result:</div>
+<pre class="terminal">$ rbtenjin <strong>-wz</strong> example3.rbhtml
+example3.rbhtml:5: syntax error, unexpected $end, expecting kEND
+</pre>
+<p>Command-line option '-wz' is more convenient than '<code>rbtenjin -s file | ruby -wc</code>'
+because the former can take several filenames.
+</p>
+<p>Command-line option '-q' (quiet-mode) prints nothing if it has no errors.
+</p>
+<br>
+
+
+<a name="des-contextdata"></a>
+<h3 class="section2">Context Data File</h3>
+<p>rbTenjin allows you to specify context data by YAML file or Ruby script.
+</p>
+<a name="example4.rbhtml"></a>
+<div class="program_caption">
+File 'example4.rbhtml':</div>
+<pre class="program">&lt;p&gt;
+  ${@text}
+  #{@num}
+  #{@flag}
+&lt;/p&gt;
+
+&lt;?rb for item in @items ?&gt;
+&lt;p&gt;${item}&lt;/p&gt;
+&lt;?rb end ?&gt;
+
+&lt;?rb for key, value in @hash ?&gt;
+&lt;p&gt;#{key} = ${value}&lt;/p&gt;
+&lt;?rb end ?&gt;
+</pre>
+<a name="datafile.yaml"></a>
+<div class="program_caption">
+File 'datafile.yaml':</div>
+<pre class="program">text:   foo
+num:    3.14
+flag:   yes
+items:
+  - foo
+  - bar
+  - baz
+hash:
+  x: 1
+  y: 2
+</pre>
+<a name="example4_yaml.result"></a>
+<div class="terminal_caption">
+Result:</div>
+<pre class="terminal">$ rbtenjin <strong>-f datafile.yaml</strong> example4.rbhtml
+&lt;p&gt;
+  foo
+  3.14
+  true
+&lt;/p&gt;
+
+&lt;p&gt;foo&lt;/p&gt;
+&lt;p&gt;bar&lt;/p&gt;
+&lt;p&gt;baz&lt;/p&gt;
+
+&lt;p&gt;x = 1&lt;/p&gt;
+&lt;p&gt;y = 2&lt;/p&gt;
+</pre>
+<a name="datafile.rb"></a>
+<div class="program_caption">
+File 'datafile.rb':</div>
+<pre class="program">@text  = "foo"
+@num   = 3.14
+@flag  = true
+@items = ["foo", "bar", "baz"]
+@hash  = {:x=&gt;1, :y=&gt;2}
+</pre>
+<a name="example4_datafile_rb.result"></a>
+<div class="terminal_caption">
+Result:</div>
+<pre class="terminal">$ rbtenjin <strong>-f datafile.rb</strong> example4.rbhtml
+&lt;p&gt;
+  foo
+  3.14
+  true
+&lt;/p&gt;
+
+&lt;p&gt;foo&lt;/p&gt;
+&lt;p&gt;bar&lt;/p&gt;
+&lt;p&gt;baz&lt;/p&gt;
+
+&lt;p&gt;x = 1&lt;/p&gt;
+&lt;p&gt;y = 2&lt;/p&gt;
+</pre>
+<br>
+
+
+<a name="des-cmlinecontext"></a>
+<h3 class="section2">Command-line Context Data</h3>
+<p>Command-line option '<code>-c</code>' specifies context data in YAML format or Ruby code.
+</p>
+<a name="example5.rbhtml"></a>
+<div class="program_caption">
+File 'example5.rbhtml':</div>
+<pre class="program">text:  #{@text}
+items:
+&lt;?rb for item in @items ?&gt;
+  - #{item}
+&lt;?rb end ?&gt;
+hash:
+&lt;?rb for key, val in @hash ?&gt;
+  #{key}: #{val}
+&lt;?rb end ?&gt;
+</pre>
+<a name="example5_datastr_rb.result"></a>
+<div class="terminal_caption">
+Result of context data in ruby code:</div>
+<pre class="terminal">$ rbtenjin <strong>-c '@text="foo"; @items=%w[a b c]; @hash={"x"=&gt;1,"y"=&gt;2}'</strong> example5.rbhtml
+text:  foo
+items:
+  - a
+  - b
+  - c
+hash:
+  x: 1
+  y: 2
+</pre>
+<a name="example5_datastr_yaml.result"></a>
+<div class="terminal_caption">
+Result of context data in yaml format:</div>
+<pre class="terminal">$ rbtenjin <strong>-c '{text: foo, items: [a, b, c], hash: {x: 1, y: 2} }'</strong> example5.rbhtml
+text:  foo
+items:
+  - a
+  - b
+  - c
+hash:
+  x: 1
+  y: 2
+</pre>
+<br>
+
+
+<a name="des-nested-template"></a>
+<h3 class="section2">Nested Template</h3>
+<p>Template can include other templates.
+Included templates can also include other templates.
+</p>
+<p>The following function is available to include other templates.
+</p>
+<dl class="dl3">
+<dt class="dt3"><b>
+import(template_name) </b></dt>
+<dd class="dd3">
+    Include other template.
+</dd>
+</dl>
+<a name="example6.rbhtml"></a>
+<div class="program_caption">
+File 'example6.rbhtml':</div>
+<pre class="program">&lt;html&gt;
+  &lt;body&gt;
+
+    &lt;div id="sidemenu"&gt;
+<strong>&lt;?rb import 'sidemenu.rbhtml' ?&gt;</strong>
+    &lt;/div&gt;
+
+    &lt;div id="main-content"&gt;
+&lt;?rb for item in @items ?&gt;
+      &lt;p&gt;${item}&lt;/p&gt;
+&lt;?rb end ?&gt;
+    &lt;/div&gt;
+
+    &lt;div id="footer"&gt;
+<strong>#{import 'footer.rbhtml', false}</strong>
+    &lt;/div&gt;
+
+  &lt;/body&gt;
+&lt;/table&gt;
+</pre>
+<a name="sidemenu.rbhtml"></a>
+<div class="program_caption">
+File 'sidemenu.rbhtml':</div>
+<pre class="program">&lt;ul&gt;
+&lt;?rb for item in @menu ?&gt;
+  &lt;li&gt;&lt;a href="${item['url']}"&gt;${item['name']}&lt;/a&gt;&lt;/li&gt;
+&lt;?rb end ?&gt;
+&lt;/ul&gt;
+</pre>
+<a name="footer.rbhtml"></a>
+<div class="program_caption">
+File 'footer.rbhtml':</div>
+<pre class="program">&lt;hr /&gt;
+&lt;address&gt;
+  &lt;a href="mailto:${@webmaster_email}"&gt;${@webmaster_email}&lt;/a&gt;
+&lt;/address&gt;
+</pre>
+<a name="contextdata.rb"></a>
+<div class="program_caption">
+File 'contextdata.rb':</div>
+<pre class="program">@items = [ '&lt;FOO&gt;', '&amp;BAR', '"BAZ"' ]
+@webmaster_email = 'webmaster@example.com'
+@menu  = [
+    {'name'=&gt; 'Top',      'url'=&gt; '/' },
+    {'name'=&gt; 'Products', 'url'=&gt; '/prod' },
+    {'name'=&gt; 'Support',  'url'=&gt; '/support' },
+]
+</pre>
+<a name="example6_nested.result"></a>
+<div class="terminal_caption">
+Result:</div>
+<pre class="terminal">$ rbtenjin -f contextdata.rb example6.rbhtml
+&lt;html&gt;
+  &lt;body&gt;
+
+    &lt;div id="sidemenu"&gt;
+<strong>&lt;ul&gt;</strong>
+  <strong>&lt;li&gt;&lt;a href="/"&gt;Top&lt;/a&gt;&lt;/li&gt;</strong>
+  <strong>&lt;li&gt;&lt;a href="/prod"&gt;Products&lt;/a&gt;&lt;/li&gt;</strong>
+  <strong>&lt;li&gt;&lt;a href="/support"&gt;Support&lt;/a&gt;&lt;/li&gt;</strong>
+<strong>&lt;/ul&gt;</strong>
+    &lt;/div&gt;
+
+    &lt;div id="main-content"&gt;
+      &lt;p&gt;&amp;lt;FOO&amp;gt;&lt;/p&gt;
+      &lt;p&gt;&amp;amp;BAR&lt;/p&gt;
+      &lt;p&gt;&amp;quot;BAZ&amp;quot;&lt;/p&gt;
+    &lt;/div&gt;
+
+    &lt;div id="footer"&gt;
+<strong>&lt;hr /&gt;</strong>
+<strong>&lt;address&gt;</strong>
+<strong>  &lt;a href="mailto:webmaster@example.com"&gt;webmaster@example.com&lt;/a&gt;</strong>
+<strong>&lt;/address&gt;</strong>
+
+    &lt;/div&gt;
+
+  &lt;/body&gt;
+&lt;/table&gt;
+</pre>
+<p>Function '<code>import()</code>' can take template filename
+(ex. 'user_main.rbhtml') or template short name (ex. :main).
+Template short name is a Symbol.
+</p>
+<p>To make template short name available, command-line option '<code>--prefix</code>' and
+'<code>--postfix</code>' are required.
+For example, '<code>include("user_main.rbhtml")</code>' can be described as '<code>include(:main)</code>'
+when '<code>--prefix="user_"</code>' and '<code>--postfix=".rbhtml"</code>' are specified in command-line.
+</p>
+<br>
+
+
+<a name="des-layout"></a>
+<h3 class="section2">Layout Template</h3>
+<p>Command-line option '<code>--layout=templatename</code>' specifies layout template name.
+</p>
+<p>For example, 'exmample6.rbhtml' template in the previous section can be divided
+into layout file 'layout6.rbhtml' and content file 'content6.rbhtml'.
+Variable '<code>@_content</code>' in layout template represents the result of content file.
+</p>
+<a name="layout6.rbhtml"></a>
+<div class="program_caption">
+File 'layout6.rbhtml':</div>
+<pre class="program">&lt;html&gt;
+  &lt;body&gt;
+
+    &lt;div id="sidemenu"&gt;
+&lt;?rb import 'sidemenu.rbhtml' ?&gt;
+    &lt;/div&gt;
+
+    &lt;div id="main-content"&gt;
+<strong>#{@_content}</strong>
+    &lt;/div&gt;
+
+    &lt;div id="footer"&gt;
+#{import 'footer.rbhtml', false}
+    &lt;/div&gt;
+
+  &lt;/body&gt;
+&lt;/table&gt;
+</pre>
+<a name="content6.rbhtml"></a>
+<div class="program_caption">
+File 'content6.rbhtml':</div>
+<pre class="program">&lt;?rb for item in @items ?&gt;
+  &lt;p&gt;${item}&lt;/p&gt;
+&lt;?rb end ?&gt;
+</pre>
+<a name="example6_layout.result"></a>
+<div class="terminal_caption">
+Result:</div>
+<pre class="terminal">$ rbtenjin -f contextdata.rb <strong>--layout=layout6.rbhtml</strong> content6.rbhtml
+&lt;html&gt;
+  &lt;body&gt;
+
+    &lt;div id="sidemenu"&gt;
+&lt;ul&gt;
+  &lt;li&gt;&lt;a href="/"&gt;Top&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href="/prod"&gt;Products&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href="/support"&gt;Support&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+    &lt;/div&gt;
+
+    &lt;div id="main-content"&gt;
+<strong>  &lt;p&gt;&amp;lt;FOO&amp;gt;&lt;/p&gt;</strong>
+<strong>  &lt;p&gt;&amp;amp;BAR&lt;/p&gt;</strong>
+<strong>  &lt;p&gt;&amp;quot;BAZ&amp;quot;&lt;/p&gt;</strong>
+
+    &lt;/div&gt;
+
+    &lt;div id="footer"&gt;
+&lt;hr /&gt;
+&lt;address&gt;
+  &lt;a href="mailto:webmaster@example.com"&gt;webmaster@example.com&lt;/a&gt;
+&lt;/address&gt;
+
+    &lt;/div&gt;
+
+  &lt;/body&gt;
+&lt;/table&gt;
+</pre>
+<p>Target template and layout template don't share local variables.
+It means that local variables set in a template are not available in layout template.
+</p>
+<p>If you want variables set in a temlate to be available in layout template,
+use instance variables instead of local variables.
+</p>
+<a name="layout7.rbhtml"></a>
+<div class="program_caption">
+File 'layout7.rbhtml':</div>
+<pre class="program">...
+&lt;h1&gt;<strong>${@title}</strong>&lt;/h1&gt;
+
+&lt;div id="main-content"&gt;
+#{@_content}
+&lt;div&gt;
+
+&lt;a href="<strong>${@url}</strong>"&gt;Next page&lt;/a&gt;
+...
+</pre>
+<a name="content7.rbhtml"></a>
+<div class="program_caption">
+File 'content7.rbhtml':</div>
+<pre class="program"><strong>&lt;?rb @title = 'Document Title' ?&gt;</strong>
+<strong>&lt;?rb @url = '/next/page' ?&gt;</strong>
+&lt;table&gt;
+  ...content...
+&lt;/table&gt;
+</pre>
+<a name="example7_layout2.result"></a>
+<div class="terminal_caption">
+Result:</div>
+<pre class="terminal">$ rbtenjin --layout=layout7.rbhtml content7.rbhtml
+...
+&lt;h1&gt;<strong>Document Title</strong>&lt;/h1&gt;
+
+&lt;div id="main-content"&gt;
+&lt;table&gt;
+  ...content...
+&lt;/table&gt;
+
+&lt;div&gt;
+
+&lt;a href="<strong>/next/page</strong>"&gt;Next page&lt;/a&gt;
+...
+</pre>
+<p>Using '@_layout' variable, it is able to specify layout template name in each template file.
+If you assigned false to '@_layout' variable, no layout template is used.
+</p>
+<a name="content8.rbhtml"></a>
+<div class="program_caption">
+File 'content8.rbhtml':</div>
+<pre class="program"><strong>&lt;?rb @_layout = :layout8_xhtml ?&gt;</strong>
+&lt;h1&gt;Hello World!&lt;/h1&gt;
+</pre>
+<a name="layout8_html.rbhtml"></a>
+<div class="program_caption">
+File 'layout8_html.rbhtml':</div>
+<pre class="program">&lt;html&gt;
+  &lt;body&gt;
+#{@_content}
+  &lt;/body&gt;
+&lt;/html&gt;
+</pre>
+<a name="layout8_xhtml.rbhtml"></a>
+<div class="program_caption">
+File 'layout8_xhtml.rbhtml':</div>
+<pre class="program">&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en"&gt;
+  &lt;body&gt;
+#{@_content}
+  &lt;/body&gt;
+&lt;/html&gt;
+</pre>
+<a name="example8_layout3.result"></a>
+<div class="terminal_caption">
+Result: ':layout8_html' is specified in command-line option but ':layout8_xhtml' is used</div>
+<pre class="terminal">$ rbtenjin --postfix='.rbhtml' <strong>--layout=':layout8_html'</strong> content8.rbhtml
+&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en"&gt;
+  &lt;body&gt;
+&lt;h1&gt;Hello World!&lt;/h1&gt;
+
+  &lt;/body&gt;
+&lt;/html&gt;
+</pre>
+<br>
+
+
+<a name="des-capturing"></a>
+<h3 class="section2">Capturing</h3>
+<p>It is able to capture any part of template.
+</p>
+<a name="example9.rbhtml"></a>
+<div class="program_caption">
+File 'example9.rbhtml':</div>
+<pre class="program">&lt;?rb @title = 'Capture Test' ?&gt;
+&lt;html&gt;
+  &lt;body&gt;
+
+<strong>&lt;?rb start_capture(:content_part) ?&gt;</strong>
+    &lt;ul&gt;
+&lt;?rb for i in [0, 1, 2] ?&gt;
+      &lt;li&gt;i = #{i}&lt;/li&gt;
+&lt;?rb end ?&gt;
+    &lt;/ul&gt;
+<strong>&lt;?rb stop_capture() ?&gt;</strong>
+
+<strong>&lt;?rb start_capture('footer_part') ?&gt;</strong>
+    &lt;div class="footer"&gt;copyright&amp;copy; 2007 kuwata-lab.com&lt;/div&gt;
+<strong>&lt;?rb stop_capture() ?&gt;</strong>
+
+  &lt;/body&gt;
+&lt;/html&gt;
+</pre>
+<p>Captured strings are accessable as local variables.
+For example, you can get captured string as a variable '<code>content_part</code>' in the above example.
+</p>
+<p>A template can contain several capturing.
+It is not able to nest capturing.
+</p>
+<p>In layout file, it is able to use strings captured in templates.
+</p>
+<a name="layout9.rbhtml"></a>
+<div class="program_caption">
+File 'layout9.rbhtml':</div>
+<pre class="program">&lt;html lang="en"&gt;
+  &lt;head&gt;
+    &lt;title&gt;${@title}&lt;/title&gt;
+  &lt;/head&gt;
+  &lt;body&gt;
+
+    &lt;!-- HEADER --&gt;
+<strong>&lt;?rb unless captured_as('header_part') ?&gt;</strong>
+    &lt;h1&gt;${@title}&lt;/h1&gt;
+<strong>&lt;?rb end ?&gt;</strong>
+    &lt;!-- /HEADER --&gt;
+
+    &lt;!-- CONTENT --&gt;
+<strong>#{@content_part}</strong>
+    &lt;!-- /CONTENT --&gt;
+
+    &lt;!-- FOOTER --&gt;
+<strong>&lt;?rb unless captured_as('footer_part') ?&gt;</strong>
+    &lt;hr /&gt;
+    &lt;address&gt;webmaster@localhost&lt;/address&gt;
+<strong>&lt;?rb end ?&gt;</strong>
+    &lt;!-- /FOOTER --&gt;
+
+  &lt;/body&gt;
+&lt;/html&gt;
+</pre>
+<p>'<code>unless captured_as("name") ... end</code>' is equivarent to the following.
+</p>
+<pre class="program">&lt;?rb if @name ?&gt;
+&lt;?rb   _buf &lt;&lt; @name ?&gt;
+&lt;?rb else ?&gt;
+       ...
+&lt;?rb end ?&gt;
+</pre>
+<p>The following result shows that content part and footer part are overrided by capturing in content template but header part is not.
+</p>
+<a name="example9_capture.result"></a>
+<div class="terminal_caption">
+Result:</div>
+<pre class="terminal">$ rbtenjin --layout=layout9.rbhtml example9.rbhtml
+&lt;html lang="en"&gt;
+  &lt;head&gt;
+    &lt;title&gt;Capture Test&lt;/title&gt;
+  &lt;/head&gt;
+  &lt;body&gt;
+
+    &lt;!-- HEADER --&gt;
+    &lt;h1&gt;Capture Test&lt;/h1&gt;
+    &lt;!-- /HEADER --&gt;
+
+    &lt;!-- CONTENT --&gt;
+    <strong>&lt;ul&gt;</strong>
+      <strong>&lt;li&gt;i = 0&lt;/li&gt;</strong>
+      <strong>&lt;li&gt;i = 1&lt;/li&gt;</strong>
+      <strong>&lt;li&gt;i = 2&lt;/li&gt;</strong>
+    <strong>&lt;/ul&gt;</strong>
+
+    &lt;!-- /CONTENT --&gt;
+
+    &lt;!-- FOOTER --&gt;
+    <strong>&lt;div class="footer"&gt;copyright&amp;copy; 2007 kuwata-lab.com&lt;/div&gt;</strong>
+    &lt;!-- /FOOTER --&gt;
+
+  &lt;/body&gt;
+&lt;/html&gt;
+</pre>
+<br>
+
+
+<a name="des-args"></a>
+<h3 class="section2">Template Arguments</h3>
+<p>It is able to specify template arguments in template files.
+Template arguments are variables which are passed by main program via context object.
+In the following example, '<code>title</code>' and '<code>name</code>' are template arguments.
+</p>
+<a name="example10.rbhtml"></a>
+<div class="program_caption">
+File 'example10.rbhtml':</div>
+<pre class="program">&lt;?xml version="1.0"?&gt;
+<strong>&lt;?rb #@ARGS title, name ?&gt;</strong>
+&lt;h1&gt;${title}&lt;/h1&gt;
+&lt;p&gt;Hello ${name}!&lt;/p&gt;
+</pre>
+<p>Template arguments line is converted into assignment statements of local variables.
+</p>
+<a name="example10_template_args.result"></a>
+<pre class="terminal">$ rbtenjin -s example10.rbhtml
+_buf = '';  _buf &lt;&lt; %Q`&lt;?xml version="1.0"?&gt;\n`
+<strong> title = @title; name = @name;</strong>
+ _buf &lt;&lt; %Q`&lt;h1&gt;#{escape((title).to_s)}&lt;/h1&gt;
+&lt;p&gt;Hello #{escape((name).to_s)}!&lt;/p&gt;\n`
+_buf.to_s
+</pre>
+<p>If template arguments are specified, other variables passed by context object are not set.
+</p>
+<a name="example11.rbhtml"></a>
+<div class="program_caption">
+File 'example11.rbhtml':</div>
+<pre class="program">&lt;p&gt;
+<strong>&lt;?rb #@ARGS x ?&gt;</strong>
+x = #{x}
+y = #{y}   # NameError
+&lt;/p&gt;
+</pre>
+<a name="example11_template_args_result"></a>
+<div class="terminal_caption">
+Result:</div>
+<pre class="terminal">$ rbtenjin <strong>-c '@x=10;@y=20'</strong> example11.rbhtml
+example12.rbhtml:4:in `_render': undefined local variable or method `y' (NameError)
+</pre>
+<br>
+
+
+<a name="des-preprocess"></a>
+<h3 class="section2">Preprocessing</h3>
+<p>rbTenjin supports preprocessing of template.
+Preprocessing executes some logics when templates are loaded and that logics are not executed when rendering.
+Preprocessing makes your application much faster.
+</p>
+<p>Notation of preprocessing is the following.
+</p>
+<ul type="disc">
+<li><code>&lt;?RB ... ?&gt;</code> represents preprocessing statement.
+</li>
+<li><code>#{{...}}</code> represents preprocessing expression (without HTML escape).
+</li>
+<li><code>${{...}}</code> represents preprocessing expression (with HTML escape).
+</li>
+</ul>
+<p>For example, assume the following template.
+</p>
+<a name="example12.rbhtml"></a>
+<div class="program_caption">
+File 'example12.rbhtml':</div>
+<pre class="program"><strong>&lt;?RB states = { "CA" =&gt; "California", ?&gt;</strong>
+<strong>&lt;?RB            "NY" =&gt; "New York", ?&gt;</strong>
+<strong>&lt;?RB            "FL" =&gt; "Florida",  ?&gt;</strong>
+<strong>&lt;?RB            "TX" =&gt; "Texas",  ?&gt;</strong>
+<strong>&lt;?RB            "HI" =&gt; "Hawaii", } ?&gt;</strong>
+&lt;?rb chk = { @params['state'] =&gt; ' selected="selected"' } ?&gt;
+&lt;select name="state"&gt;
+  &lt;option value=""&gt;-&lt;/option&gt;
+<strong>&lt;?RB for code in states.keys.sort ?&gt;</strong>
+  &lt;option value="<strong>#{{code}}</strong>"#{chk[<strong>#{{code.inspect}}</strong>]}&gt;<strong>${{states[code]}}</strong>&lt;/option&gt;
+<strong>&lt;?RB end ?&gt;</strong>
+&lt;/select&gt;
+</pre>
+<p>If preprocessing is activated, the above will be converted into the following when template is loaded.
+(Command-line option <code>-P</code> shows the result of preprocessing.)
+</p>
+<a name="example12_preprocessed.result"></a>
+<div class="terminal_caption">
+Result of preprocessing:</div>
+<pre class="terminal">$ rbtenjin <strong>-P</strong> example12.rbhtml
+&lt;?rb chk = { @params['state'] =&gt; ' selected="selected"' } ?&gt;
+&lt;select name="state"&gt;
+  &lt;option value=""&gt;-&lt;/option&gt;
+  &lt;option value="CA"#{chk["CA"]}&gt;California&lt;/option&gt;
+  &lt;option value="FL"#{chk["FL"]}&gt;Florida&lt;/option&gt;
+  &lt;option value="HI"#{chk["HI"]}&gt;Hawaii&lt;/option&gt;
+  &lt;option value="NY"#{chk["NY"]}&gt;New York&lt;/option&gt;
+  &lt;option value="TX"#{chk["TX"]}&gt;Texas&lt;/option&gt;
+&lt;/select&gt;
+</pre>
+<p>This means that for-loop is executed only once when template is loaded and is not executed when rendering.
+In the result, rendering speed becomes to be much faster.
+</p>
+<p>And the Ruby code is here. This shows that there is no for-loop.
+</p>
+<a name="example12_preprocessed_source.result"></a>
+<div class="terminal_caption">
+Translated script code:</div>
+<pre class="terminal">$ rbtenjin <strong>--preprocess</strong> -sb example12.rbhtml
+chk = { @params['state'] =&gt; ' selected="selected"' }
+ _buf &lt;&lt; %Q`&lt;select name="state"&gt;
+  &lt;option value=""&gt;-&lt;/option&gt;
+  &lt;option value="CA"#{chk["CA"]}&gt;California&lt;/option&gt;
+  &lt;option value="FL"#{chk["FL"]}&gt;Florida&lt;/option&gt;
+  &lt;option value="HI"#{chk["HI"]}&gt;Hawaii&lt;/option&gt;
+  &lt;option value="NY"#{chk["NY"]}&gt;New York&lt;/option&gt;
+  &lt;option value="TX"#{chk["TX"]}&gt;Texas&lt;/option&gt;
+&lt;/select&gt;\n`
+</pre>
+<p>If you have errors on preprocessing, you should check source script by <code>-Ps</code> option<sup>(<a href="#fnref:1" name="fnlink:1">*1</a>)</sup>.
+</p>
+<p>The following is an another example.
+Assume that <code>link_to()</code> is a helper method which takes label and url and generate
+<code>&lt;a&gt;&lt;/a&gt;</code> tag.
+In this case, label and url can be parameterized by <code>_p("...")</code> and <code>_P("...")</code>.
+The former is converted into <code>#{...}</code> and the latter converted into <code>${...}</code>
+by preprocessor.
+</p>
+<a name="example13.rbhtml"></a>
+<div class="program_caption">
+File 'example13.rbhtml':</div>
+<pre class="program">&lt;?RB require 'cgi' ?&gt;
+&lt;?RB ## ex. link_to('Show', '/show/1')  =&gt; &lt;a href="/show/1"&gt;Show&lt;/a&gt; ?&gt;
+&lt;?RB def link_to(label, url) ?&gt;
+&lt;?RB     return "&lt;a href=\"#{CGI.unescape(url)}\"&gt;#{label}&lt;/a&gt;" ?&gt;
+&lt;?RB end ?&gt;
+#{{link_to 'Show '+<strong>_P('@params["name"]')</strong>, '/items/show/'+<strong>_p('@params["id"]')</strong>}}
+</pre>
+<a name="example13_preprocessed.result"></a>
+<div class="terminal_caption">
+Preprocessed template:</div>
+<pre class="terminal">$ rbtenjin <strong>-P</strong> example13.rbhtml
+&lt;a href="/items/show/<strong>#{@params["id"]}"</strong>&gt;Show <strong>${@params["name"]}</strong>&lt;/a&gt;
+</pre>
+<a name="example13_preprocessed_source.result"></a>
+<div class="terminal_caption">
+Translated script code:</div>
+<pre class="terminal">$ rbtenjin <strong>--preprocess</strong> -sb example13.rbhtml
+ _buf &lt;&lt; %Q`&lt;a href="/items/show/<strong>#{@params["id"]}</strong>"&gt;Show <strong>#{escape((@params["name"]).to_s)}</strong>&lt;/a&gt;\n`
+</pre>
+<p>There are many web-application framework and they provides helper functions.
+These helper functions are divided into two groups.
+</p>
+<ul type="disc">
+<li><code>link_to()</code> or <code>_()</code> (function for M17N) return the same result
+   when the same arguments are passed.
+   These functions can be expanded by preprocessor.
+</li>
+<li>Some functions return the different result even if the same arguments are passed.
+   These functions can't be expaned by preprocessor.
+</li>
+</ul>
+<p>Preprocessor has the power to make your application much faster,
+but it may make the debugging difficult.
+You should use it carefully.
+</p>
+<div class="footnote">
+ <dl compact>
+  <dt>(<a name="fnref:1" href="#fnlink:1">*1</a>)</dt>
+  <dd>Command-line option '-Ps' is available but '-PS' is not availabe. This is a current restriction of rbtenjin. </dd>
+ </dl>
+</div>
+<br>
+
+
+<a name="des-otheropts"></a>
+<h3 class="section2">Other Options</h3>
+<ul type="disc">
+<li>Command-line option '<code>--escapefunc=func1</code>' changes <code>escape()</code> function name to <code>func1</code>.
+   For example, '<code>--escapefunc=h</code>' changes escape function from <code>escape()</code> to <code>h()</code>.
+</li>
+<li>It is not able to contain '<code>}</code>' character in '<code>${...}</code>'.
+   For example, '<code>${hash["}"]}</code>' will be converted into '<code>_buf &lt;&lt; %Q`#{escape((hash[").to_s)}"]}</code>` and not '<code>_buf &lt;&lt; %Q`#{escape((hash["}"]).to_s)}`</code>'.
+   There is no such restriction about '<code>#{...}</code>'.
+</li>
+<li>It is not able to contain '<code>\</code>' and '<code>`</code>' characters in '<code>#{...}</code>'
+   because these characters are escaped.
+   For example, '<code>#{hash["\n"]}</code>' will be converted into '<code>_buf &lt;&lt; %Q`hash["\n"]`</code>'.
+   There is no such restriction about '<code>${...}</code>'.
+</li>
+<li>Command-line option '<code>--path=dir1,dir2,...</code>' sepcifies template directory path.
+</li>
+</ul>
+<br>
+
+
+<br>
+
+
+<a name="devguide"></a>
+<h2 class="section1">Developer's Guide</h2>
+<p>This section shows how to use rbTenjin in your Ruby script.
+</p>
+<p>If you want to know the notation or features of rbTenjin, see <a href="#desguide">Designer's Guide</a> section.
+</p>
+<a name="dev-example"></a>
+<h3 class="section2">An Example</h3>
+<p>The following is an example to use rbTenjin in Ruby.
+</p>
+<div class="program_caption">
+Example:</div>
+<pre class="program">require 'tenjin'
+engine = Tenjin::Engine.new()
+context = { :title=&gt;'rbTenjin Example', :items=&gt;['AAA', 'BBB', 'CCC'] }
+filename = 'file.rbhtml'
+output = engine.render(filename, context)
+print output
+</pre>
+<p>If you want to define helper functions for template, see <a href="#dev-helpers">Add Your Helper Functions</a> section.
+</p>
+<br>
+
+
+<a name="dev-classes"></a>
+<h3 class="section2">Classes and Functions in rbTenjin</h3>
+<p>rbTenjin has the follwoing classes.
+</p>
+<dl class="dl3">
+<dt class="dt3"><b>
+Tenjin::Template </b></dt>
+<dd class="dd3">
+    This class represents a template file.
+    An object of Tenjin::Template correspond to a template file.
+</dd>
+</dl>
+<dl class="dl3">
+<dt class="dt3"><b>
+Tenjin::Engine </b></dt>
+<dd class="dd3">
+    This class represents some template objects.
+    It can handle nested template and layout template.
+    Using Tenjin::Engine class, you can use rbTenjin as a template engine for web application.
+</dd>
+</dl>
+<dl class="dl3">
+<dt class="dt3"><b>
+Tenjin::Context </b></dt>
+<dd class="dd3">
+    This class represents context data.
+</dd>
+</dl>
+<p>rbTenjin has the following utility functions.
+These are defined at Tenjin::HtmlHelper module and Tenjin::Context class includes it.
+</p>
+<br>
+
+
+<a name="dev-templateclass"></a>
+<h3 class="section2">Class Tenjin::Template</h3>
+<p>Tenjin::Template class represents a template file.
+An object of Tenjin::Template corresponds to a template file.
+It doesn't support nested template nor layout template (use Tenjin::Engine class instead).
+</p>
+<p>This class has the following methods and attributes.
+</p>
+<dl class="dl3">
+<dt class="dt3"><b>
+Tenjin::Template.new(filename=nil, :escapefunc=&gt;'escape') </b></dt>
+<dd class="dd3">
+    Create template object. If filename is given, read and convert it to Ruby code.
+</dd>
+</dl>
+<dl class="dl3">
+<dt class="dt3"><b>
+Tenjin::Template#convert(input, filename=None) </b></dt>
+<dd class="dd3">
+    Convert input text into Ruby code and return it.
+</dd>
+</dl>
+<dl class="dl3">
+<dt class="dt3"><b>
+Tenjin::Template#convert_file(filename) </b></dt>
+<dd class="dd3">
+    Convert file into Ruby code and return it.
+    This is equivarent to <code>Tenjin::Template#convert(File.read(filename), filename)</code>
+</dd>
+</dl>
+<dl class="dl3">
+<dt class="dt3"><b>
+Tenjin::Template#render(context=nil) </b></dt>
+<dd class="dd3">
+    Compile Ruby code, evaluate it with context data, and return the result of evaluation.
+</dd>
+</dl>
+<dl class="dl3">
+<dt class="dt3"><b>
+Tenjin::Template#script </b></dt>
+<dd class="dd3">
+    Converted Ruby code
+</dd>
+</dl>
+<p>The followings are examples to use Tenjin::Template in Ruby script.
+</p>
+<a name="example14.rbhtml"></a>
+<div class="program_caption">
+File 'example14.rbhtml':</div>
+<pre class="program">&lt;h1&gt;#{@title}&lt;/h1&gt;
+&lt;ul&gt;
+&lt;?rb for item in @items ?&gt;
+ &lt;li&gt;${item}&lt;/li&gt;
+&lt;?rb end ?&gt;
+&lt;/ul&gt;
+</pre>
+<a name="example14.rb"></a>
+<div class="program_caption">
+File 'example14.rb':</div>
+<pre class="program">## template file
+filename = 'example14.rbhtml'
+
+## convert into ruby code
+require 'tenjin'
+template = <strong>Tenjin::Template.new(filename)</strong>
+## or
+# template = Tenjin::Template.new()
+# script = <strong>template.convert_file(filename)</strong>
+## or
+# template = Tenjin::Template.new()
+# input = File.read(filename)
+# script = <strong>template.convert(input, filename)</strong>  # filename is optional
+
+## show converted ruby code
+puts "---- ruby code ----"
+puts <strong>template.script</strong>
+
+## evaluate ruby code
+hash = {:title=&gt;'rbTenjin Example', :items=&gt;['&lt;AAA&gt;','B&amp;B','"CCC"']}
+output = <strong>template.render(hash)</strong>
+puts "---- output ----"
+puts output
+## or
+#hash = {:title=&gt;'rbTenjin Example', :items=&gt;['&lt;AAA&gt;','B&amp;B','"CCC"']}
+#context = <strong>Tenjin::Context.new(hash)</strong>
+#output = <strong>template.render(context)</strong>
+## or
+# context = Tenjin::Context.new
+# context[:title] = 'rbTenjin Example'
+# context[:items] = ['&lt;AAA&gt;','B&amp;B','"CCC"']
+# output = template.render(context)
+</pre>
+<a name="example14_tmplclass.result"></a>
+<div class="terminal_caption">
+Result:</div>
+<pre class="terminal">$ ruby example14.rb
+---- ruby code ----
+ _buf &lt;&lt; %Q`&lt;h1&gt;#{@title}&lt;/h1&gt;
+&lt;ul&gt;\n`
+for item in @items
+ _buf &lt;&lt; %Q` &lt;li&gt;#{escape((item).to_s)}&lt;/li&gt;\n`
+end
+ _buf &lt;&lt; %Q`&lt;/ul&gt;\n`
+---- output ----
+&lt;h1&gt;rbTenjin Example&lt;/h1&gt;
+&lt;ul&gt;
+ &lt;li&gt;&amp;lt;AAA&amp;gt;&lt;/li&gt;
+ &lt;li&gt;B&amp;amp;B&lt;/li&gt;
+ &lt;li&gt;&amp;quot;CCC&amp;quot;&lt;/li&gt;
+&lt;/ul&gt;
+</pre>
+<br>
+
+
+<a name="dev-engineclass"></a>
+<h3 class="section2">Class Tenjin::Engine</h3>
+<p>Tenjin::Engine class contains some template objects.
+It can handle nested template and layout template.
+Using Tenjin::Engine class, you can use rbTenjin as a template engine for web application.
+</p>
+<p>This class has the following methods.
+</p>
+<dl class="dl3">
+<dt class="dt3"><b>
+Tenjin::Engine.new(:prefix=&gt;'', :postfix=&gt;'', :layout=&gt;nil, :path=nil, :cache=&gt;true, :preprocess=&gt;false, :templateclass=&gt;Tenjin::Template) </b></dt>
+<dd class="dd3">
+    Create Engine object.
+    <code>:path</code> represents template search path and it should be an Array of directory name.
+    Other arguments are passed to Tenjin::Template.new() internally.
+</dd>
+</dl>
+<dl class="dl3">
+<dt class="dt3"><b>
+Tenjin::Engine#render(template_name, context=nil, layout=nil) </b></dt>
+<dd class="dd3">
+    Convert template into Ruby code, evaluate it with context data, and return the result of it.
+    If <code>layout</code> is true or nil then layout template name specified by constructor option is
+    used as layout template, else if false then layout template is not used,
+    else if string then it is regarded as layout template name.
+</dd>
+</dl>
+<p>Argument <code>template_name</code> in render() methods is filename or short name of template.
+Template short name is a Symbol.
+For example, '<code>render(:list, context)</code>' is equivarent to '<code>render("user_list.rbhtml", context)</code>' if prefix option is '<code>user_</code>' and postfix option is '<code>.rbhtml</code>'.
+</p>
+<p>In template file, the followings are available.
+</p>
+<dl class="dl3">
+<dt class="dt3"><b>
+@_content </b></dt>
+<dd class="dd3">
+    This variable represents the result of evaluation of other template.
+    This is available only in layout template file.
+</dd>
+</dl>
+<dl class="dl3">
+<dt class="dt3"><b>
+import(template_name) </b></dt>
+<dd class="dd3">
+    Include and evaluate other template.
+    This method is an instance method of Tenjin::Context class.
+</dd>
+</dl>
+<dl class="dl3">
+<dt class="dt3"><b>
+start_capture(name) </b></dt>
+<dd class="dd3">
+    Start capturing. Result will be stored into <code>@<em>name</em></code>.
+</dd>
+</dl>
+<dl class="dl3">
+<dt class="dt3"><b>
+stop_capture() </b></dt>
+<dd class="dd3">
+    Stop capturing.
+</dd>
+</dl>
+<dl class="dl3">
+<dt class="dt3"><b>
+captured_as(varname) </b></dt>
+<dd class="dd3">
+    If captured string as <em>varname</em> is exist then append it into
+    <code>@_buf</code> and return true, else return false.
+    This is a helper function for layout template.
+</dd>
+</dl>
+<p>The followings are example of Tenjin::Engine class.
+</p>
+<a name="user_form.rbhtml"></a>
+<div class="program_caption">
+File 'user_form.rbhtml':</div>
+<pre class="program">&lt;?rb #@ARGS params ?&gt;
+&lt;p&gt;
+  Name:  &lt;input type="text" name="name"  value="${params['name']}" /&gt;&lt;br /&gt;
+  Email: &lt;input type="text" name="email" value="${params['email']}" /&gt;&lt;br /&gt;
+  Gender:
+&lt;?rb gender = @params['gender'] ?&gt;
+&lt;?rb chk = { true=&gt;' checked="checked"', false=&gt;'' } ?&gt;
+  &lt;input type="radio" name="gender" value="m" #{chk[gender=='m']} /&gt;Male
+  &lt;input type="radio" name="gender" value="f" #{chk[gender=='f']} /&gt;Female
+&lt;/p&gt;
+</pre>
+<a name="user_create.rbhtml"></a>
+<div class="program_caption">
+File 'user_create.rbhtml':</div>
+<pre class="program">&lt;?rb #@ARGS ?&gt;
+&lt;form action="user_app.cgi" method="post"&gt;
+  &lt;input type="hidden" name="action" value="create" /&gt;
+<strong>&lt;?rb import :form ?&gt;</strong>
+  &lt;input type="submit" value="Create" /&gt;
+&lt;/form&gt;
+</pre>
+<a name="user_edit.rbhtml"></a>
+<div class="program_caption">
+File 'user_edit.rbhtml':</div>
+<pre class="program">&lt;?rb #@ARGS params ?&gt;
+&lt;form action="user_app.cgi" method="post"&gt;
+  &lt;input type="hidden" name="action" value="edit" /&gt;
+  &lt;input type="hidden" name="id" value="${params['id']}" /&gt;
+<strong>&lt;?rb import :form ?&gt;</strong>
+  &lt;input type="submit" value="Edit" /&gt;
+&lt;/form&gt;
+</pre>
+<a name="user_layout.rbhtml"></a>
+<div class="program_caption">
+File 'user_layout.rbhtml':</div>
+<pre class="program">&lt;?rb #@ARGS _content, title ?&gt;
+&lt;html&gt;
+  &lt;body&gt;
+
+    &lt;h1&gt;${title}&lt;/h1&gt;
+
+    &lt;div id="main-content"&gt;
+<strong>#{_content}</strong>
+    &lt;/div&gt;
+
+    &lt;div id="footer"&gt;
+<strong>&lt;?rb import 'footer.html' ?&gt;</strong>
+    &lt;/div&gt;
+
+  &lt;/body&gt;
+&lt;/html&gt;
+</pre>
+<a name="footer.html"></a>
+<div class="program_caption">
+File 'footer.html':</div>
+<pre class="program">&lt;?rb #@ARGS ?&gt;
+&lt;hr /&gt;
+&lt;address&gt;
+  &lt;a href="mailto:webmaster@example.com"&gt;webmaster@example.com&lt;/a&gt;
+&lt;/address&gt;
+</pre>
+<a name="user_app.cgi"></a>
+<div class="program_caption">
+File 'user_app.cgi':</div>
+<pre class="program">#!/usr/bin/env ruby
+
+require 'cgi'
+<strong>require 'tenjin'</strong>
+
+## set action ('create' or 'edit')
+action = nil
+cgi = nil
+if ENV['REQUEST_METHOD']
+  cgi = CGI.new
+  action = cgi['action']
+elsif ARGV[0]
+  action = ARGV[0]
+end
+action = 'create' unless ['create', 'edit'].include?(action)
+
+## set context data
+if action == 'create'
+  title = 'Create User'
+  params = {}
+else
+  title = 'Edit User'
+  params = {:name=&gt;'Margalette',
+            :email=&gt;'meg@example.com',
+	    :gender=&gt;'f',
+	    :id=&gt;123 }
+end
+<strong>context = { :title=&gt;title, :params=&gt;params }</strong>
+<strong># or context = Tenjin::Context.new(:title=&gt;title, :params=&gt;params)</strong>
+
+## create engine object
+layout = :layout   # or 'user_layout.rbhtml'
+<strong>engine = Tenjin::Engine.new(:prefix=&gt;'user_', :postfix=&gt;'.rbhtml', :layout=&gt;layout)</strong>
+
+## evaluate template
+template_name = action.intern   # :create or :edit
+<strong>output = engine.render(template_name, context)</strong>
+print cgi.header() if cgi
+print output
+</pre>
+<a name="user_app.result"></a>
+<div class="terminal_caption">
+Result:</div>
+<pre class="terminal">$ ruby user_app.cgi create
+&lt;html&gt;
+  &lt;body&gt;
+
+    &lt;h1&gt;Create User&lt;/h1&gt;
+
+    &lt;div id="main-content"&gt;
+<strong>&lt;form action="user_app.cgi" method="post"&gt;</strong>
+<strong>  &lt;input type="hidden" name="action" value="create" /&gt;</strong>
+<strong>&lt;p&gt;</strong>
+<strong>  Name:  &lt;input type="text" name="name"  value="" /&gt;&lt;br /&gt;</strong>
+<strong>  Email: &lt;input type="text" name="email" value="" /&gt;&lt;br /&gt;</strong>
+<strong>  Gender:</strong>
+<strong>  &lt;input type="radio" name="gender" value="m"  /&gt;Male</strong>
+<strong>  &lt;input type="radio" name="gender" value="f"  /&gt;Female</strong>
+<strong>&lt;/p&gt;</strong>
+<strong>  &lt;input type="submit" value="Create" /&gt;</strong>
+<strong>&lt;/form&gt;</strong>
+
+    &lt;/div&gt;
+
+    &lt;div id="footer"&gt;
+<strong>&lt;hr /&gt;</strong>
+<strong>&lt;address&gt;</strong>
+<strong>  &lt;a href="mailto:webmaster@example.com"&gt;webmaster@example.com&lt;/a&gt;</strong>
+<strong>&lt;/address&gt;</strong>
+    &lt;/div&gt;
+
+  &lt;/body&gt;
+&lt;/html&gt;
+</pre>
+<br>
+
+
+<a name="dev-initopts"></a>
+<h3 class="section2">Template Initialize Options</h3>
+<p>Tenjin::Template() can take the follwoing options.
+</p>
+<ul type="disc">
+<li>'<code>escapefunc</code>' (string) specifies function name to escape string.
+  Default is '<code>escape</code>' (= <code>Tenjin::Context#escape</code>).
+</li>
+</ul>
+<p>Constructor of Tenjin::Engine can also take the same options as above.
+These options given to constructor of Tenjin::Engine are passed to constructor of Tenjin::Template internally.
+</p>
+<a name="example15.rb"></a>
+<div class="program_caption">
+File 'example15.rb':</div>
+<pre class="program">require 'tenjin'
+filename = 'example14.rbhtml'
+template = Tenjin::Template.new(filename, <strong>:escapefunc=&gt;'CGI.escapeHTML'</strong>)
+print template.script, "\n"
+
+require 'cgi'
+title = 'rbTenjin Example'
+items = ['&lt;foo&gt;', '&amp;bar', '"baz"']
+output = template.render(:title=&gt;title, :items=&gt;items)
+print output
+</pre>
+<a name="example15_escapefunc.result"></a>
+<div class="terminal_caption">
+Result:</div>
+<pre class="terminal">$ ruby example15.rb
+ _buf &lt;&lt; %Q`&lt;h1&gt;#{@title}&lt;/h1&gt;
+&lt;ul&gt;\n`
+for item in @items
+ _buf &lt;&lt; %Q` &lt;li&gt;#{<strong>CGI.escapeHTML</strong>((item).to_s)}&lt;/li&gt;\n`
+end
+ _buf &lt;&lt; %Q`&lt;/ul&gt;\n`
+
+&lt;h1&gt;rbTenjin Example&lt;/h1&gt;
+&lt;ul&gt;
+ &lt;li&gt;&amp;lt;foo&amp;gt;&lt;/li&gt;
+ &lt;li&gt;&amp;amp;bar&lt;/li&gt;
+ &lt;li&gt;&amp;quot;baz&amp;quot;&lt;/li&gt;
+&lt;/ul&gt;
+</pre>
+<br>
+
+
+<a name="dev-helpers"></a>
+<h3 class="section2">Add Your Helper Functions</h3>
+<p>There are several ways to use helper functions.
+</p>
+<p>Assume the following template.
+</p>
+<a name="example16.rbhtml"></a>
+<div class="program_caption">
+File 'example16.rbhtml':</div>
+<pre class="program">&lt;?rb #@ARGS label, url ?&gt;
+&lt;ul&gt;
+  &lt;li&gt;#{<strong>link_to(label, url)</strong>}&lt;/li&gt;
+&lt;/ul&gt;
+</pre>
+<p>(A) Define helper functions as global function.
+</p>
+<a name="example16a.rb"></a>
+<div class="program_caption">
+File 'example16a.rb':</div>
+<pre class="program">require 'tenjin'
+
+def link_to(label, url)
+  return "&lt;a href=\"#{escape_xml(url)}\"&gt;#{escape_xml(label)}&lt;/a&gt;"
+end
+
+engine = Tenjin::Engine.new()
+context = { :label=&gt;'Top', :url=&gt;'/' }
+output = engine.render('example16.rbhtml', context)
+print output
+</pre>
+<a name="example16a.result"></a>
+<div class="terminal_caption">
+Result:</div>
+<pre class="terminal">$ ruby example16a.rb
+&lt;ul&gt;
+  &lt;li&gt;&lt;a href="/"&gt;Top&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</pre>
+<p>(B) Define helper functions as module function of Tenjin::ContextHelper module.
+</p>
+<a name="example16b.rb"></a>
+<div class="program_caption">
+File 'example16b.rb':</div>
+<pre class="program">require 'tenjin'
+
+<strong>module Tenjin::ContextHelper</strong>
+  module_function
+  def link_to(label, url)
+    return "&lt;a href=\"#{escape_xml(url)}\"&gt;#{escape_xml(label)}&lt;/a&gt;"
+  end
+<strong>end</strong>
+
+engine = Tenjin::Engine.new()
+context = { :label=&gt;'Top', :url=&gt;'/' }
+output = engine.render('example16.rbhtml', context)
+print output
+</pre>
+<a name="example16b.result"></a>
+<div class="terminal_caption">
+Result:</div>
+<pre class="terminal">$ ruby example16b.rb
+&lt;ul&gt;
+  &lt;li&gt;&lt;a href="/"&gt;Top&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</pre>
+<p>(C) Define subclass of Tenjin::Context and define helper functions as instance method.
+</p>
+<a name="example16c.rb"></a>
+<div class="program_caption">
+File 'example16c.rb':</div>
+<pre class="program">require 'tenjin'
+
+<strong>class MyContext &lt; Tenjin::Context</strong>
+  def link_to(label, url)
+    return "&lt;a href=\"#{escape_xml(url)}\"&gt;#{escape_xml(label)}&lt;/a&gt;"
+  end
+<strong>end</strong>
+
+engine = Tenjin::Engine.new()
+<strong>context = MyContext.new(:label=&gt;'Top', :url=&gt;'/')</strong>
+output = engine.render('example16.rbhtml', context)
+print output
+</pre>
+<a name="example16c.result"></a>
+<div class="terminal_caption">
+Result:</div>
+<pre class="terminal">$ ruby example16c.rb
+&lt;ul&gt;
+  &lt;li&gt;&lt;a href="/"&gt;Top&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</pre>
+<p>(D) Define helper functions in current class, set context data as instance variables, and pass self as context object
+</p>
+<a name="example16d.rb"></a>
+<div class="program_caption">
+File 'example16d.rb':</div>
+<pre class="program">require 'tenjin'
+
+class MyClass
+  <strong>include Tenjin::ContextHelper</strong>
+  <strong>#include Tenjin::HtmlHelper</strong>  # optional
+
+  def link_to(label, url)    # define helper functions in current class
+    return "&lt;a href=\"#{escape(url)}\"&gt;#{escape(label)}&lt;/a&gt;"
+  end
+
+  def render_template(template_name)
+    engine = Tenjin::Engine.new()
+    output = engine.render(template_name, <strong>self</strong>)  # pass self as context object
+    return output
+  end
+
+  def main
+    ## set context data as instance variables
+    <strong>@label = 'Top'</strong>
+    <strong>@url = '/'</strong>
+    output = render_template('example16.rbhtml')
+    print output
+  end
+
+end
+
+MyClass.new.main()
+</pre>
+<a name="example16d.result"></a>
+<div class="terminal_caption">
+Result:</div>
+<pre class="terminal">$ ruby example16d.rb
+&lt;ul&gt;
+  &lt;li&gt;&lt;a href="/"&gt;Top&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</pre>
+<br>
+
+
+<a name="dev-othertopics"></a>
+<h3 class="section2">Other Topics</h3>
+<ul type="disc">
+<li>Tenjin::Template detects newline character ("\n" or "\r\n") automatically.
+   If input file contains "\r\n", rbTenjin generates output which contains "\r\n".
+</li>
+</ul>
+<ul type="disc">
+<li>Tenjin::Template#render() can be called many times.
+   If you create a Tenjin::Template object, you can call render() method many times.
+</li>
+</ul>
+<ul type="disc">
+<li>Tenjin::Template#convert() also can be called many times.
+  If you create a Tenjin::Template object, you can call convert() (and also render()) method many times.
+</li>
+</ul>
+<br>
+
+
+<br>
+
+
+
+   </div>
+  </blockquote>
+
+ </body>
+</html>

@@ -1,0 +1,454 @@
+#!/usr/bin/env ruby
+
+##
+## $Copyright$
+##
+## Permission is hereby granted, free of charge, to any person obtaining
+## a copy of this software and associated documentation files (the
+## "Software"), to deal in the Software without restriction, including
+## without limitation the rights to use, copy, modify, merge, publish,
+## distribute, sublicense, and/or sell copies of the Software, and to
+## permit persons to whom the Software is furnished to do so, subject to
+## the following conditions:
+##
+## The above copyright notice and this permission notice shall be
+## included in all copies or substantial portions of the Software.
+##
+## THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+## EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+## MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+## NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+## LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+## OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+## WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+##
+
+## $Rev$
+## $Release:$
+
+require 'tenjin'
+
+module Tenjin
+
+
+  module NoTextModule
+
+    def initialize(*args)
+      @noexpr = args[-1].is_a?(Hash) ? args[-1].delete(:noexpr) : nil
+      super
+    end
+
+    def start_text_part()
+      nil
+    end
+
+    def stop_text_part()
+      nil
+    end
+
+    def add_text(text, encode_newline=false)
+      return unless text && !text.empty?
+      n = text.count("\n")
+      n -= 1 if encode_newline && text[-1] == ?\n
+      @script << (@newline * n)
+      if text[-1] != ?\n
+        pos = text.rindex(?\n)
+        s = pos ? text[(pos+1)..-1] : text
+        @script << s.gsub(/[^\t]/, ' ')
+      end
+    end
+
+    ## add expression code
+    def add_expr(code, flag_escape=nil)
+      return if !code || code.empty?
+      if @noexpr
+        @script << (@newline * code.count("\n"))
+      elsif flag_escape
+        #@script << "_buf << %Q`\#{#{@escapefunc}((#{code}).to_s)}`"
+        @script << "#{@escapefunc}((#{code}).to_s); "
+      else
+        #@script << "_buf << %Q`\#{#{code}}`"
+        @script << "#{code}; "
+      end
+    end
+
+  end
+
+
+  class NoTextTemplate < Template
+    include NoTextModule
+  end
+
+
+  class CommandOptionError < StandardError
+  end
+
+
+  class Main
+
+
+    def self.main()
+      begin
+        output = self.new().execute()
+        print output if output
+        exit(0)
+      rescue CommandOptionError => ex
+        $stderr.puts ex.message
+        exit(1)
+      end
+    end
+
+
+    def initialize(argv=nil)
+      @command = File.basename($0)
+      @argv = argv || ARGV
+    end
+
+
+    def execute()
+      command = @command
+
+      ## parse options
+      noargopts = 'hvsSNXCUbxzqwTPdD'
+      argopts   = 'fckra'
+      argopts2  = ''
+      command   = File.basename($0)
+      options, properties, filenames = parse_argv(@argv, noargopts, argopts, argopts2)
+      debug = options[:D]
+      debug and $stderr.puts "*** debug: options=#{options.inspect}"
+      debug and $stderr.puts "*** debug: properties=#{properties.inspect}"
+      debug and $stderr.puts "*** debug: filenames=#{filenames.inspect}"
+
+      ## help, version
+      return usage() if options[:h] || properties[:help]
+      return version()+"\n" if options[:v] || properties[:version]
+
+      ## check options
+      datafile = options[:f]
+      if datafile && !test(?f, datafile)
+        raise _error("-f %s: file not found." % datafile)
+      end
+
+      ## action
+      action = options[:a]
+      actions = %w[render convert retrieve statements syntax dump preprocess]
+      if action
+        unless actions.include?(action)
+          raise _error("-a #{action}: unknown action.")
+        end
+        action = action.intern
+      else
+        action = options[:s] && :convert    ||
+                 options[:X] && :statements ||
+                 options[:S] && :retrieve   ||
+                 options[:z] && :syntax     ||
+                 options[:P] && :preprocess ||
+                 true        && :render
+      end
+
+      ## ruby global options
+      $KCODE = options[:k] if options[:k]
+      $VERBOSE = 2 if options[:w]
+
+      ## lib
+      if options[:r]
+        begin
+          for lib in options[:r].split(/,/)
+            require lib
+          end
+        rescue LoadError => ex
+          raise _error("-r %s: library not found." % lib)
+        end
+      end
+
+      ## context data file
+      context = Tenjin::Context.new
+      if options[:f]
+        datafile = options[:f]
+        content = File.read(datafile)
+        if datafile =~ /\.ya?ml\z/
+          content = _expandtabs(content) unless options[:T]
+          hash = load_yaml(content, datafile)
+          context.update(hash)
+        elsif datafile =~ /\.rb\z/
+          load_rubycode_as_contextdata(content, context, datafile)
+        else
+          raise _error("-f %s: unknown file type ('*.yaml' or '*.rb' expected)." % datafile)
+        end
+      end
+
+      ## context data
+      if options[:c]
+        if options[:c][0] == ?{
+          yamlstr = options[:c]
+          hash = load_yaml(yamlstr, '-c')
+          context.update(hash)
+        else
+          ruby_code = options[:c]
+          load_rubycode_as_contextdata(ruby_code, context, '-c')
+        end
+      end
+
+      ## set initalizer option for Tenjin::Template.new()
+      if options[:b]
+        properties[:preamble] = properties[:postamble] = nil
+      elsif action == :convert || action == :retrieve || action == :statements
+        properties[:preamble]  = true unless properties.key?(:preamble)
+        properties[:postamble] = true unless properties.key?(:postamble)
+      end
+
+      ## set initalizer option for Tenjin::Engine.new()
+      properties[:cache] = false unless properties.key?(:cache)
+      properties[:path]  = properties[:path].split(/,/) if properties[:path]
+      if properties.key?(:templateclass)
+        classname = properties[:templateclass]
+        klass = _to_class(classname)
+        properties[:templateclass] = klass
+      elsif action == :preprocess || options[:P]
+        properties[:templateclass] = Tenjin::Preprocessor
+        properties[:preprocess] = false
+      elsif action == :retrieve
+        properties[:templateclass] = Tenjin::NoTextTemplate
+      elsif action == :statements
+        properties[:templateclass] = Tenjin::NoTextTemplate
+        properties[:noexpr] = true
+      end
+
+      ## create Engine instance
+      engine = Tenjin::Engine.new(properties)
+
+      ## execute
+      filenames = [nil] if filenames.empty?
+      output_buf = ''
+      for template_name in filenames
+        if template_name.nil?
+          input = $stdin.read()
+          template_class = properties.fetch(:templateclass, Tenjin::Template)
+          template = template_class.new(properties)
+          engine.register_template(template_name, template)
+        end
+        case action
+        when :convert, :retrieve, :statements
+          template = engine.get_template(template_name)
+          output = template.script
+        when :syntax
+          template = engine.get_template(template_name)
+          output = check_syntax(template.script, template.filename, options[:q], options[:w])
+        when :render, :preprocess
+          output = engine.render(template_name, context)
+        else
+          assert unreachable
+        end
+        output_buf << manipulate_output(output, options)
+      end
+      return output_buf
+    end
+
+
+    def check_syntax(script, filename, quiet, warning)
+      command = warning ? "ruby -wc" : "ruby -c"
+      require 'open3'
+      stdin, stdout, stderr = *Open3.popen3(command)
+      stdin.write(script)     ; stdin.close()
+      result = stdout.read()  ; stdout.close()
+      errmsg = stderr.read()  ; stderr.close()
+      if errmsg && !errmsg.empty?
+        errmsg.gsub!(/^-(:\d+: )/, "#{filename}\\1")
+        return errmsg
+      else
+        return quiet ? '' : "#{filename}: #{result}"
+      end
+    end
+
+
+    def manipulate_output(output, options)
+      flag_linenum = options[:N]    # add line numbers
+      flag_compact = options[:C]    # remove empty lines
+      flag_unique  = options[:U]    # compress empty lines to a line
+      if flag_linenum
+        n = 0
+        output.gsub!(/^/) { n += 1; "%5d:  " % n }
+        output.gsub!(/^ *\d+:\s+?\n/, '')      if flag_compact
+        output.gsub!(/(^ *\d+:\s+?\n)+/, "\n") if flag_unique
+      else
+        output.gsub!(/^\s*?\n/, '')      if flag_compact
+        output.gsub!(/(^\s*?\n)+/, "\n") if flag_unique
+      end
+      return output
+    end
+
+
+    def load_yaml(yamlstr, filename)
+      require 'yaml'
+      hash = YAML.load(yamlstr)
+      unless hash.is_a?(Hash)
+        raise _error("%s: not a mapping (hash)." % filename)
+      end
+      return hash
+    end
+
+
+    def load_rubycode_as_contextdata(_rubycode, _context, _filename)
+      _context.instance_eval(_rubycode, _filename)
+    end
+
+
+    def usage(command=nil)
+      command ||= @command
+      s = <<"END"
+Usage: #{command} [..options..] [file1 [file2...]]
+  -h, --help          : help
+  -v, --version       : version
+  -a action           : action
+     -a render        : render template (default)
+     -a convert       : convert template into script
+     -a retrieve      : retrieve statements and expressons
+     -a statements    : retrieve only statements
+     -a syntax        : syntax check
+     -a preprocess    : show preprocessed template
+  -s                  :  alias of '-a convert'
+  -S                  :  alias of '-a retrieve'
+  -z                  :  alias of '-a syntax'
+  -X                  :  alias of '-a statements'
+# -d                  :  alias of '-a dump'
+  -P                  :  alias of '-a preprocess'
+  -N                  :  add line number
+  -C                  :  compact: remove empty lines
+  -U                  :  uniq: compress empty lines into a line
+  -b                  :  remove "_buf='';" and "_buf.to_s"
+  -q                  :  quet mode (for '-a syntax')
+# -w                  :  use strict package
+  -c string           :  context data string (yaml or ruby)
+  -f file             :  context data file (*.yaml or *.rb)
+  -T                  :  unexpand tab chars in datafile
+  -r lib1,lib2,..     :  require libraries
+  -k code             :  kanji code for $KCODE
+# --encoding=encoding :  encoding name, with converting into unicode
+  --escapefunc=name   :  'escape' function name
+# --tostrfunc=name    :  'to_str' function name
+  --preamble=text     :  preamble which is insreted into ruby script
+  --postamble=text    :  postamble which is insreted into ruby script
+# --smarttrim         :  trim "\\n{expr}\\n" into "\\n{expr}".
+  --prefix=str        :  prefix string for template shortname
+  --postfix=str       :  postfix string for template shortname
+  --layout=filename   :  layout template name
+  --path=dir1,dir2,.. :  template lookup path
+  --preprocess        :  activate preprocessing
+  --templateclass=name:  template class (default: Tenjin::Template)
+Examples:
+ ex1. render template
+   $ #{command} file.rbhtml
+ ex2. convert template into ruby script
+   $ #{command} -a convert file.rbhtml
+   $ #{command} -a retrieve -UN file.rbhtml  # for debug
+ ex3. render with context data file (*.yaml or *.rb)
+   $ #{command} -f datafile.yaml file.rbhtml
+ ex4. render with context data string
+   $ #{command} -c '{title: tenjin example, items: [1, 2, 3]}' file.rbhtml # yaml
+   $ #{command} -c '@title="tenjin example"; @items=[1,2,3]'   file.rbhtml # ruby
+ ex5. syntax check
+   $ #{command} -wa syntax *.rbhtml     # or '-wz'
+END
+      return s.gsub(/^\#.*\n/, '')
+    end
+
+
+    def version()
+      return RELEASE
+    end
+
+
+    def parse_argv(argv, noargopts, argopts, argopts2='')
+      options = {}
+      properties = {}
+      while argv[0] && argv[0][0] == ?-
+        optstr = argv.shift
+        if optstr == '-'
+          break
+        elsif optstr =~ /\A--([-\w]+)(=.*)?/
+          name = $1
+          value = $2 && !$2.empty? ? _to_value($2[1..-1]) : true
+          properties[name.intern] = value
+        else
+          optstr = optstr[1..-1]
+          while !optstr.empty?
+            ch = optstr[0].chr
+            optstr = optstr[1..-1]
+            if noargopts.include?(ch)
+              options[ch.intern] = true
+            elsif argopts.include?(ch)
+              if !optstr.empty?
+                options[ch.intern] = optstr
+                optstr = ''
+              elsif !argv.empty?
+                options[ch.intern] = argv.shift
+              else
+                raise _error("-#{ch}: argument required.")
+              end
+            elsif argopts2.include?(ch)
+              options[ch.intern] = !optstr.empty? ? optstr : true
+              optstr = ''
+            else
+              raise _error("-#{ch}: unknown option.")
+            end
+          end
+        end
+      end
+      filenames = argv
+      return options, properties, filenames
+    end
+
+
+    def _to_value(s)
+      case s
+      when 'true', 'yes'    ;  return true
+      when 'false', 'no'    ;  return false
+      when 'null', 'nil'    ;  return nil
+      when /\A\d+\z/        ;  return s.to_i
+      when /\A\d+\.\d+\z/   ;  return s.to_f
+      when /\A:[-\w]+\z/    ;  return s[1..-1].intern
+      else                  ;  return s
+      end
+    end
+
+
+    def _to_class(classname)
+      klass = Object
+      begin
+        classname.split(/::/).each { |m| klass = klass.const_get(m) }
+      rescue NameError => ex
+        raise _error("%s: class not found." % classname)
+      end
+      return klass
+    end
+
+
+    def _error(message)
+      return CommandOptionError.new(message)
+    end
+
+
+    def _expandtabs(input, width=8)
+      arr = input.split(/\t/)
+      last = arr.pop
+      buf = ''
+      arr.each do |s|
+        column = (n = s.rindex(?\n)) ? s.length - n - 1 : s.length
+        n = width - (column % width)
+        buf << s << (' ' * n)
+      end
+      buf << last
+      return buf
+    end
+
+
+  end
+
+
+end
+
+
+#if __FILE__ == $0
+unless defined?(DONT_INVOKE)
+  Tenjin::Main.main()
+end

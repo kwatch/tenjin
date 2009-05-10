@@ -1,0 +1,99 @@
+
+parameters:
+  - u:		 users-guide
+  - tagfile:	 html-css
+  - dir:	 data
+  - basenames:   [ users-guide, faq, examples ]
+  - textfiles*:  basenames.collect {|name| name + '.txt'}
+  - htmlfiles*:	 basenames.collect {|name| name + '.html' }
+
+
+recipes:
+
+  - product:	:all
+    ingreds:	[ :doc, :test ]
+
+  - product:	:doc
+    ingreds:	[ $(htmlfiles) ]
+
+  - product:	*.html
+    ingreds:	[ $(1).txt ]
+    byprods:	[ $(1).toc.html ]
+    method*: |
+	sys "kwaser -t $(tagfile) -T #{@ingred} > #{@byprod}"
+	sys "kwaser -t $(tagfile)    #{@ingred} > #{@product}"
+
+  - product:	*.txt
+    ingreds:	[ $(1).eruby ]
+    method*: |
+	sys "erubis -E PercentLine -p '\\[% %\\]' -c '@lang=%q|ruby|' #{@ingred} > #{@product}"
+	name = '$(1)'.gsub(/-/, '_')
+	datadir = "$(dir)/#{name}"
+	mkdir_p datadir unless test(?d, datadir)
+	rm_rf "#{datadir}/*"
+	sys "retrieve -Fd #{datadir} #{@product}"
+	for filename in Dir.glob("#{datadir}/*.result2")
+	  content = File.read(filename)
+	  File.unlink(filename)
+	  contents = content.split(/^\$ /).select {|s| ! s.empty? }.collect {|s| '$ ' + s }
+	  i = 0
+	  for content in contents
+	    i += 1
+	    File.open(filename.sub(/\.result2$/, "#{i}.result"), 'w') {|f| f.write(content) }
+	  end
+	end
+
+  - product:	:retrieve
+    ingreds:	[ $(textfiles) ]
+    method*: |
+        root = '../test/data'
+	mkdir root unless test(?d, root)
+        %w[users-guide faq examples].each do |name|
+	  name2 = name.gsub(/-/, '_')
+	  datadir = "#{root}/#{name2}"
+	  if test(?d, datadir)
+	    rm_f "#{datadir}/*"
+	  else
+	    mkdir datadir
+	  end
+	  sys "retrieve -Fd #{datadir} #{name}.txt"
+	end
+
+  - product:	:test
+    ingreds:	[ :test_users_guide, :test_faq, :test_examples ]
+
+  - product:	:test_users_guide
+    ingreds:	[ users-guide.txt ]
+    method*: &test_method |
+        name = (@product.to_s =~ /test_(.*)/) && $1
+	datadir = "../test/$(dir)/#{name}"
+	cwd = Dir.pwd
+	mkdir_p datadir unless test(?d, datadir)
+	rm_f "#{datadir}/*"
+	sys "retrieve -Fd #{datadir} #{@ingred}"
+	if File.basename(cwd) == 'doc'
+	  testdir = File.expand_path("#{cwd}/../test")
+	else
+	  testdir = File.expand_path("#{cwd}/test")
+	end
+	datadir = File.expand_path(datadir)
+	chdir testdir do
+	  sys "ruby test_#{name}.rb"
+	end
+
+  - product:	:test_faq
+    ingreds:	[ faq.txt ]
+    method*:	*test_method
+
+  - product:	:test_examples
+    ingreds:	[ examples.txt ]
+    method*:	*test_method
+
+  - product:	:clean
+    method*: |
+	rm_rf '*.toc.html', 'users-guide.txt', 'faq.txt', 'data'
+
+  - product:	:clear
+    ingreds:	[ :clean ]
+    method*: |
+	rm_f htmlfiles

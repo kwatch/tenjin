@@ -1,0 +1,14 @@
+
+recipes:
+
+  - product:	:clean
+    method*: |
+	rm_rf '**/*.rbc', 'test.log'
+
+  - product:	:ruby_test
+    method*: |
+	sys 'ruby test_all.rb 2>&1 | tee test.log'
+
+  - product:	:rubinius_test
+    method*: |
+	sys 'rubinius test_all.rb 2>&1 | tee test.log'

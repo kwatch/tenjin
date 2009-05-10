@@ -1,0 +1,76 @@
+=begin
+= CHANGES
+
+
+== Release 0.6.2 (2008-02-24)
+
+* Rubinius supported.
+
+* Changed to convert texts before expressions into spaces when
+  command-line option '-S' specified.
+
+  ex. hoge.rbhtml
+    <?rb for item in @list ?>
+      <p>${item}</p>
+    <?rb end ?>
+
+  ex. result of '-S'
+    ## 0.6.1
+    $ rbtenjin -S hoge.rbhtml
+    _buf = ''; for item in @list
+    escape((item).to_s); 
+    end
+    _buf.to_s
+
+    ## 0.6.2
+    $ rbtenjin -S hoge.rbhtml
+    _buf = ''; for item in @list
+         escape((item).to_s); 
+    end
+    _buf.to_s
+
+
+
+== Release 0.6.1 (2007-02-07)
+
+=== Enhancements
+
+* It is able to make any class which includes
+  Tenjin::ContextHelper module as context object class.
+  This is useful if you want to define helper functions
+  as instance method of that class.
+  See section 'Add Your Helper Functions' for details.
+  http://www.kuwata-lab.com/tenjin/rbtenjin-users-guide.html#dev-helpers
+
+  ex.
+	require 'tenjin'
+	
+	class MyClass
+	  include Tenjin::ContextHelper
+	  #include Tenjin::HtmlHelper   # optional
+
+	  ## define helper functions in current class
+	  def link_to(label, url)
+	    return "<a href=\"#{escape(url)}\">#{escape(label)}</a>"
+	  end
+	
+	  def render_template(template_name)
+	    engine = Tenjin::Engine.new()
+	    ## pass self as context object
+	    output = engine.render(template_name, self)
+	    return output
+	  end
+	
+	  def main
+	    ## set context data as instance variables
+	    @label = 'Top'
+	    @url   = '/'
+	    output = render_template('example.rbhtml')
+	    print output
+	  end
+	
+	end
+	
+	MyClass.new.main()
+
+=end

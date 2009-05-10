@@ -1,0 +1,312 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html">
+  <title>rbTenjin Examples</title>
+  <meta name="generator" content="kwaser">
+  <meta http-equiv="Content-Style-Type" content="text/css">
+  <link rel="stylesheet" href="docstyle.css" type="text/css">
+ </head>
+ <body>
+
+  <blockquote>
+   <div class="mainbody">
+
+    <div align="left"><h1>rbTenjin Examples</h1></div>
+    <div align="left">
+      last update: $Date$<br>
+    </div>
+
+<p>Release: $Release$
+</p>
+<p>Table of Contents:
+<ul>
+  <li><a href="#bordered-table">Bordered Table</a>
+  </li>
+  <li><a href="#form">Form</a>
+  </li>
+  <li><a href="#preprocessing">Preprocessing</a>
+  </li>
+</ul>
+</p>
+<a name="bordered-table"></a>
+<h2 class="section1">Bordered Table</h2>
+<a name="table/table.rbhtml"></a>
+<div class="program_caption">
+Template: 'table.rbhtml'</div>
+<pre class="program">&lt;html&gt;
+  &lt;body&gt;
+    &lt;h1&gt;<strong>${@title}</strong>&lt;/h1&gt;
+    &lt;table&gt;
+<strong>&lt;?rb i = 0 ?&gt;</strong>
+<strong>&lt;?rb for item in @items ?&gt;</strong>
+<strong>&lt;?rb    i += 1 ?&gt;</strong>
+<strong>&lt;?rb    color = i % 2 == 0 ? '#FFCCCC' : '#CCCCFF' ?&gt;</strong>
+      &lt;tr bgcolor="<strong>#{color}</strong>"&gt;
+        &lt;td&gt;<strong>#{i}</strong>&lt;/td&gt;
+        &lt;td&gt;<strong>${item}</strong>&lt;/td&gt;
+      &lt;/tr&gt;
+<strong>&lt;?rb end ?&gt;</strong>
+    &lt;/table&gt;
+  &lt;/body&gt;
+&lt;/html&gt;
+</pre>
+<a name="table/table_s.result"></a>
+<div class="terminal_caption">
+Convert into Ruby script:</div>
+<pre class="terminal">$ rbtenjin -a convert table.rbhtml
+_buf = '';  _buf &lt;&lt; %Q`&lt;html&gt;
+  &lt;body&gt;
+    &lt;h1&gt;<strong>#{escape((@title).to_s)}</strong>&lt;/h1&gt;
+    &lt;table&gt;\n`
+<strong>i = 0</strong>
+<strong>for item in @items</strong>
+   <strong>i += 1</strong>
+   <strong>color = i % 2 == 0 ? '#FFCCCC' : '#CCCCFF'</strong>
+ _buf &lt;&lt; %Q`      &lt;tr bgcolor="<strong>#{color}</strong>"&gt;
+        &lt;td&gt;<strong>#{i}</strong>&lt;/td&gt;
+        &lt;td&gt;<strong>#{escape((item).to_s)}</strong>&lt;/td&gt;
+      &lt;/tr&gt;\n`
+<strong>end</strong>
+ _buf &lt;&lt; %Q`    &lt;/table&gt;
+  &lt;/body&gt;
+&lt;/html&gt;\n`
+_buf.to_s
+</pre>
+<a name="table/table.rb"></a>
+<div class="program_caption">
+Main program: 'table.rb'</div>
+<pre class="program">## create Engine object
+require 'tenjin'
+<strong>engine = Tenjin::Engine.new()</strong>
+
+## render template with context data
+context = { :title =&gt; 'Bordered Table Example',
+            :items =&gt; [ '&lt;AAA&gt;', 'B&amp;B', '"CCC"' ] }
+<strong>output = engine.render('table.rbhtml', context)</strong>
+puts output
+</pre>
+<a name="table/table.result"></a>
+<div class="terminal_caption">
+Result:</div>
+<pre class="terminal">$ ruby table.rb
+&lt;html&gt;
+  &lt;body&gt;
+    &lt;h1&gt;Bordered Table Example&lt;/h1&gt;
+    &lt;table&gt;
+      &lt;tr bgcolor="<strong>#CCCCFF</strong>"&gt;
+        &lt;td&gt;<strong>1</strong>&lt;/td&gt;
+        &lt;td&gt;<strong>&amp;lt;AAA&amp;gt;</strong>&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr bgcolor="<strong>#FFCCCC</strong>"&gt;
+        &lt;td&gt;<strong>2</strong>&lt;/td&gt;
+        &lt;td&gt;<strong>B&amp;amp;B</strong>&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr bgcolor="<strong>#CCCCFF</strong>"&gt;
+        &lt;td&gt;<strong>3</strong>&lt;/td&gt;
+        &lt;td&gt;<strong>&amp;quot;CCC&amp;quot;</strong>&lt;/td&gt;
+      &lt;/tr&gt;
+    &lt;/table&gt;
+  &lt;/body&gt;
+&lt;/html&gt;
+</pre>
+<br>
+
+
+<a name="form"></a>
+<h2 class="section1">Form</h2>
+<a name="form/form.rbhtml"></a>
+<div class="program_caption">
+Template: 'form.rbhtml':</div>
+<pre class="program"><strong>&lt;?rb #@ARGS action, params, label ?&gt;</strong>
+&lt;form action="<strong>${@action}</strong>" method="post"&gt;
+  &lt;p&gt;
+    &lt;label&gt;Name:&lt;/label&gt;
+    &lt;input type="text" name="name" value="<strong>${@params[:name]}</strong>" /&gt;
+  &lt;/p&gt;
+  &lt;p&gt;
+    &lt;label&gt;Gender:&lt;/label&gt;
+<strong>&lt;?rb gender = @params[:gender] ?&gt;</strong>
+    &lt;input type="radio" name="gender" value="M" <strong>#{checked(gender=='M')}</strong> /&gt;Man
+    &lt;input type="radio" name="gender" value="W" <strong>#{checked(gender=='W')}</strong> /&gt;Woman
+  &lt;/p&gt;
+  &lt;input type="submit" value="<strong>${@label}</strong>" /&gt;
+&lt;/form&gt;
+</pre>
+<a name="form/create.rbhtml"></a>
+<div class="program_caption">
+Template: 'create.rbhtml':</div>
+<pre class="program">&lt;?rb @title = 'Create user' ?&gt;
+&lt;?rb @label = 'Create' ?&gt;
+&lt;?rb @action = 'action.cgi' ?&gt;
+<strong>&lt;?rb import(:form) ?&gt;</strong>
+</pre>
+<a name="form/update.rbhtml"></a>
+<div class="program_caption">
+Template: 'update.rbhtml':</div>
+<pre class="program">&lt;?rb @title = 'Update user' ?&gt;
+&lt;?rb @label = 'Update' ?&gt;
+&lt;?rb @action = 'update.cgi' ?&gt;
+<strong>&lt;?rb import(:form) ?&gt;</strong>
+</pre>
+<a name="form/layout.rbhtml"></a>
+<div class="program_caption">
+Layout template: 'layout.rbhtml'</div>
+<pre class="program">&lt;html&gt;
+ &lt;body&gt;
+  &lt;h1&gt;${@title}&lt;/h1&gt;
+  &lt;div class="main-content"&gt;
+<strong>#{@_content}</strong>
+  &lt;/div&gt;
+ &lt;/body&gt;
+&lt;/html&gt;
+</pre>
+<a name="form/main.rb"></a>
+<div class="program_caption">
+Main program: 'main.rb':</div>
+<pre class="program">## create Engine object
+require 'tenjin'
+<strong>engine = Tenjin::Engine.new(:postfix=&gt;'.rbhtml', :layout=&gt;'layout.rbhtml')</strong>
+
+## render template with context data
+params = { :name=&gt;'Foo', :gender=&gt;'M' }
+context = { :params=&gt;params }
+<strong>output = engine.render(:update, context)</strong>   # :update == 'update'+postfix
+puts output
+</pre>
+<a name="form/main.result"></a>
+<div class="terminal_caption">
+Result:</div>
+<pre class="terminal">$ ruby main.rb
+&lt;html&gt;
+ &lt;body&gt;
+  &lt;h1&gt;<strong>Update user</strong>&lt;/h1&gt;
+  &lt;div class="main-content"&gt;
+&lt;form action="<strong>update.cgi</strong>" method="post"&gt;
+  &lt;p&gt;
+    &lt;label&gt;Name:&lt;/label&gt;
+    &lt;input type="text" name="name" value="<strong>Foo</strong>" /&gt;
+  &lt;/p&gt;
+  &lt;p&gt;
+    &lt;label&gt;Gender:&lt;/label&gt;
+    &lt;input type="radio" name="gender" value="M" <strong> checked="checked"</strong> /&gt;Man
+    &lt;input type="radio" name="gender" value="W"  /&gt;Woman
+  &lt;/p&gt;
+  &lt;input type="submit" value="<strong>Update</strong>" /&gt;
+&lt;/form&gt;
+
+  &lt;/div&gt;
+ &lt;/body&gt;
+&lt;/html&gt;
+</pre>
+<br>
+
+
+<a name="preprocessing"></a>
+<h2 class="section1">Preprocessing</h2>
+<a name="preprocessing/helper.rb"></a>
+<div class="program_caption">
+Library: 'helper.rb'</div>
+<pre class="program">LANGUAGES = [
+  ['en', 'Engilish'],
+  ['fr', 'French'],
+  ['de', 'German'],
+  ['es', 'Spanish'],
+  ['ch', 'Chinese'],
+  ['ja', 'Japanese'],
+]
+
+def link_to(label, options={})
+  action, id = options[:action], options[:id]
+  url = '/app'
+  url &lt;&lt; '/' &lt;&lt; action if action &amp;&amp; !action.empty?
+  url &lt;&lt; '/' &lt;&lt; id     if id
+  return "&lt;a href=\"#{CGI::escape(url).gsub(/%2F/i, '/')}\"&gt;#{label}&lt;/a&gt;"
+end
+</pre>
+<a name="preprocessing/select.rbhtml"></a>
+<div class="program_caption">
+Template: 'select.rbhtml'</div>
+<pre class="program">&lt;?RB require 'helper' ?&gt;
+&lt;form&gt;
+  &lt;label&gt;Select your language:&lt;/label&gt;
+  &lt;select name="lang"&gt;
+&lt;?rb table = { @params[:lang] =&gt; ' selected="selected"' } ?&gt;
+<strong>&lt;?RB for val, name in LANGUAGES ?&gt;</strong>
+    &lt;option value="${{val}}" #{table[#{{val.inspect}}]}&gt;${{name}}&lt;/option&gt;
+<strong>&lt;?RB end ?&gt;</strong>
+  &lt;/select&gt;
+  &lt;input type="submit" value="OK" /&gt;
+&lt;/form&gt;
+&lt;p&gt;
+  <strong>#{{</strong>link_to('Back', :action=&gt;'index')<strong>}}</strong> |
+  <strong>#{{</strong>link_to('Show '+<strong>_P('@params[:name]')</strong>, :action=&gt;'show', :id=&gt;<strong>_p('@params[:id]')</strong>)<strong>}}</strong>
+&lt;/p&gt;
+</pre>
+<a name="preprocessing/select_P.result"></a>
+<div class="terminal_caption">
+Preprocessed code:</div>
+<pre class="terminal">$ rbtenjin -a preprocess select.rbhtml
+&lt;form&gt;
+  &lt;label&gt;Select your language:&lt;/label&gt;
+  &lt;select name="lang"&gt;
+&lt;?rb table = { @params[:lang] =&gt; ' selected="selected"' } ?&gt;
+    &lt;option value="en" #{table["en"]}&gt;Engilish&lt;/option&gt;
+    &lt;option value="fr" #{table["fr"]}&gt;French&lt;/option&gt;
+    &lt;option value="de" #{table["de"]}&gt;German&lt;/option&gt;
+    &lt;option value="es" #{table["es"]}&gt;Spanish&lt;/option&gt;
+    &lt;option value="ch" #{table["ch"]}&gt;Chinese&lt;/option&gt;
+    &lt;option value="ja" #{table["ja"]}&gt;Japanese&lt;/option&gt;
+  &lt;/select&gt;
+  &lt;input type="submit" value="OK" /&gt;
+&lt;/form&gt;
+&lt;p&gt;
+  &lt;a href="/app/index"&gt;Back&lt;/a&gt; |
+  &lt;a href="/app/show/<strong>#{@params[:id]}</strong>"&gt;Show <strong>${@params[:name]}</strong>&lt;/a&gt;
+&lt;/p&gt;
+</pre>
+<a name="preprocessing/main.rb"></a>
+<div class="program_caption">
+Main program: 'main.rb'</div>
+<pre class="program">require 'helper'
+
+## create engine
+require 'tenjin'
+engine = Tenjin::Engine.new(:postfix=&gt;'.rbhtml', <strong>:preprocess=&gt;true</strong>)
+
+## render template with context data
+params = { :id=&gt;1234, :name=&gt;'Foo', :lang=&gt;'ch' }
+context = { :params =&gt; params }
+output = engine.render(:select, context)
+puts output
+</pre>
+<a name="preprocessing/main.result"></a>
+<div class="terminal_caption">
+Result:</div>
+<pre class="terminal">$ ruby main.rb
+&lt;form&gt;
+  &lt;label&gt;Select your language:&lt;/label&gt;
+  &lt;select name="lang"&gt;
+    &lt;option value="en" &gt;Engilish&lt;/option&gt;
+    &lt;option value="fr" &gt;French&lt;/option&gt;
+    &lt;option value="de" &gt;German&lt;/option&gt;
+    &lt;option value="es" &gt;Spanish&lt;/option&gt;
+    &lt;option value="ch"  selected="selected"&gt;Chinese&lt;/option&gt;
+    &lt;option value="ja" &gt;Japanese&lt;/option&gt;
+  &lt;/select&gt;
+  &lt;input type="submit" value="OK" /&gt;
+&lt;/form&gt;
+&lt;p&gt;
+  &lt;a href="/app/index"&gt;Back&lt;/a&gt; |
+  &lt;a href="/app/show/1234"&gt;Show Foo&lt;/a&gt;
+&lt;/p&gt;
+</pre>
+<br>
+
+
+
+   </div>
+  </blockquote>
+
+ </body>
+</html>

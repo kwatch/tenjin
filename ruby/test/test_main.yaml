@@ -1,0 +1,174 @@
+###
+### $Rev$
+### $Date$
+###
+
+###
+- name:		lint1
+  desc:		valid syntax
+  options: '-wz'
+  input: |
+	<ul>
+	<?rb i = 0 ?>
+	<?rb for item in items ?>
+	<?rb     i += 1 ?>
+	<?rb     color = i % 2 == 0 ? 'FFF' : 'FCF' ?>
+	 <li>${item}</li>
+	<?rb end ?>
+	</ul>
+  expected: |
+	.test.rbhtml: Syntax OK
+
+###
+- name:		lint2
+  desc:		invalid foreach
+  options: '-wz'
+  input: |
+	<ul>
+	<?rb i = 0 ?>
+	<?rb foreach item in @items ?>
+	<?rb     i += 1 ?>
+	<?rb     color = i % 2 == 0 ? 'FFF' : 'FCF' ?>
+	 <li>${item}</li>
+	<?rb end ?>
+	</ul>
+  expected: |
+	.test.rbhtml:3: syntax error, unexpected kIN, expecting $end
+	foreach item in @items
+	               ^
+
+###
+- name:		lint3
+  desc:		tail ':' is missed
+  options: '-wz'
+  input: |
+	<ul>
+	<?rb i = 0 ?>
+	<?rb for item in @items ?>
+	<?rb     i += 1 ?>
+	<?rb     color = i % 2 == 0 ? 'FFF' : 'FCF' ?>
+	 <li>${item}</li>
+	<?rb ende ?>
+	</ul>
+  expected: |
+	.test.rbhtml:8: syntax error, unexpected $end, expecting kEND
+
+####
+#- name:		lint1
+#  desc:		valid syntax
+#  options: '-wz'
+#  input: |
+#	<ul>
+#	<?py i = 0 ?>
+#	<?py for item in items: ?>
+#	<?py     i += 1 ?>
+#	<?py     color = i % 2 == 0 and 'FFF' or 'FCF' ?>
+#	 <li>${item}</li>
+#	<?py #end ?>
+#	</ul>
+#  expected: |
+#	.test.epyc - ok.
+#
+####
+#- name:		lint2
+#  desc:		tail ':' is missed
+#  options: '-wz'
+#  input: |
+#	<ul>
+#	<?py i = 0 ?>
+#	<?py for item in items ?>
+#	<?py     i += 1 ?>
+#	<?py     color = i % 2 == 0 and 'FFF' or 'FCF' ?>
+#	 <li>${item}</li>
+#	<?py #end ?>
+#	</ul>
+#  expected: |
+#	.test.epyc:3:18: invalid syntax
+#	  3: for item in items
+#	                      ^
+####
+#- name:		lint3
+#  desc:		"invalid indent of '#end'"
+#  options: '-wz'
+#  input: |
+#	<ul>
+#	<?py i = 0 ?>
+#	<?py for item in items: ?>
+#	<?py     i += 1 ?>
+#	<?py     color = i % 2 == 0 and 'FFF' or 'FCF' ?>
+#	 <li>${item}</li>
+#	<?py   #end ?>
+#	</ul>
+#  expected: |
+#	.test.epyc:7:3: unindent does not match any outer indentation level
+#	  7:   #end
+#	       ^
+####
+#- name:		lint4
+#  desc:		invalid indent of pass statement
+#  options: '-wz'
+#  input: |
+#	<ul>
+#	<?py i = 0 ?>
+#	<?py for item in items: ?>
+#	<?py     i += 1 ?>
+#	<?py     color = i % 2 == 0 and 'FFF' or 'FCF' ?>
+#	 <li>${item}</li>
+#	<?py   pass ?>
+#	</ul>
+#  expected: |
+#	.test.epyc:7:3: unindent does not match any outer indentation level
+#	  7:   pass
+#	       ^
+####
+#- name:		lint5
+#  desc:		invalid indent of statement
+#  options: '-wz'
+#  input: |
+#	<ul>
+#	<?py i = 0 ?>
+#	<?py for item in items: ?>
+#	<?py     i += 1 ?>
+#	<?py        color = i % 2 == 0 and 'FFF' or 'FCF' ?>
+#	 <li>${item}</li>
+#	<?py #end ?>
+#	</ul>
+#  expected: |
+#	.test.epyc:5:7: invalid syntax
+#	  5:        color = i % 2 == 0 and 'FFF' or 'FCF'
+#	           ^
+####
+#- name:		lint6
+#  desc:		invalid indent of statement
+#  options: '-wz'
+#  input: |
+#	<ul>
+#	<?py i = 0 ?>
+#	<?py for item in items: ?>
+#	<?py     i += 1 ?>
+#	<?py   color = i % 2 == 0 and 'FFF' or 'FCF' ?>
+#	 <li>${item}</li>
+#	<?py #end ?>
+#	</ul>
+#  expected: |
+#	.test.epyc:5:3: unindent does not match any outer indentation level
+#	  5:   color = i % 2 == 0 and 'FFF' or 'FCF'
+#	       ^
+#
+####
+#- name:		lint7
+#  desc:		invalid indent of statement
+#  options: '-wz'
+#  input: |
+#	<ul>
+#	<?py  i = 0 ?>
+#	<?py  for item in items: ?>
+#	<?py      i += 1 ?>
+#	<?py      color = i % 2 == 0 and 'FFF' or 'FCF' ?>
+#	 <li>${item}</li>
+#	<?py  #end ?>
+#	</ul>
+#  expected: |
+#	.test.epyc:2:1: invalid syntax
+#	  2:  i = 0
+#	     ^

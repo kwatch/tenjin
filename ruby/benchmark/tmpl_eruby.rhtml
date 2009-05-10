@@ -1,0 +1,93 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+          "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html lang="en">
+  <head>
+    <title><%= CGI.escapeHTML(title) %></title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta http-equiv="Content-Script-Type" content="text/javascript" />
+    <meta http-equiv="Content-Style-Type" content="text/css" />
+    <link rel="shortcut icon" href="/favicon.ico" />
+    <link rel="alternate" type="application/rss+xml" title="RSS"
+          href="http://www.example.com/rss/index.rdf" />
+    <link rel="stylesheet" type="text/css" href="/css/common.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="/user/<%= CGI.escapeHTML(action) %>.css" media="screen" />
+    <style type="text/css">
+      <!--
+          body {
+              margin: 0;
+              padding: 0;
+              background-color: #FFF;
+          }
+          a {
+              text-decoration: none;
+          }
+          .odd {
+              background-color: #FFF;
+          }
+          .even {
+              background-color: #FCF;
+          }
+      -->
+    </style>
+    <script type="text/javascript" src="/js/prototype.js"></script>
+    <script type="text/javascript" src="/js/example.js"></script>
+  </head>
+  <body>
+
+    <div id="center">
+      <h1><%= CGI.escapeHTML(title) %></h1>
+
+      <div id="maincontent">
+        <table class="list">
+          <thead>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Age</th>
+            <th>Gender</th>
+            <th></th>
+          </thead>
+          <tbody>
+<%
+ genders = {'m'=>'Male', 'f'=>'Female'} 
+ is_odd = false 
+ for user in users 
+     is_odd = ! is_odd 
+     klass = is_odd ? 'odd' : 'even' 
+ %>
+            <tr class="<%= klass %>" id="user-<%= user.id %>">
+              <td><%= user.id %></td>
+              <td><%= CGI.escapeHTML(user.name) %></td>
+              <td>
+<%     if user.email %>
+                <a href="mailto:<%= CGI.escapeHTML(user.email) %>"><%= CGI.escapeHTML(user.email) %></a>
+<%     else %>
+                -
+<%     end %>
+              </td>
+              <td><%= user.age || '-' %></td>
+              <td><%= CGI.escapeHTML(genders.fetch(user.gender, '-')) %></td>
+              <td>
+                <a href="?action=show&amp;id=<%= user.id %>">show</a>
+                <a href="?action=edit&amp;id=<%= user.id %>">edit</a>
+              </td>
+            </tr>
+<%
+ end
+ %>
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+
+    <div id="footer">
+      <hr />
+      <address>
+        <a href="mailto:webmaster@example.com">webmaster@example.com</a>
+      </address>
+    </div>
+
+  </body>
+</html>
+<!-- template: tmpl_eruby.rhtml -->

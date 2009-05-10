@@ -1,0 +1,14 @@
+<?rb #@ARGS action, params, label ?>
+<form action="${@action}" method="post">
+  <p>
+    <label>Name:</label>
+    <input type="text" name="name" value="${@params[:name]}" />
+  </p>
+  <p>
+    <label>Gender:</label>
+<?rb gender = @params[:gender] ?>
+    <input type="radio" name="gender" value="M" #{checked(gender=='M')} />Man
+    <input type="radio" name="gender" value="W" #{checked(gender=='W')} />Woman
+  </p>
+  <input type="submit" value="${@label}" />
+</form>

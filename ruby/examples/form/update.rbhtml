@@ -1,0 +1,4 @@
+<?rb @title = 'Update user' ?>
+<?rb @label = 'Update' ?>
+<?rb @action = 'update.cgi' ?>
+<?rb import(:form) ?>
