@@ -8,6 +8,22 @@
 import os, difflib, re, traceback
 import yaml
 
+def read_file(filename):
+    f = None
+    try:
+        f = open(filename)
+        return f.read()
+    finally:
+        if f: f.close()
+
+def write_file(filename, content):
+    f = None
+    try:
+        f = open(filename, 'w')
+        f.write(content)
+    finally:
+        if f: f.close()
+
 
 class TestCaseHelper:
 
@@ -44,8 +60,8 @@ class TestCaseHelper:
                     text1 = text1.encode(encoding)
                 if isinstance(text2, unicode):
                     text2 = text2.encode(encoding)
-            open(file1, 'w').write(text1)
-            open(file2, 'w').write(text2)
+            write_file(file1, text1)
+            write_file(file2, text2)
             f = os.popen("diff -u %s %s" % (file1, file2))
             output = f.read()
             f.close()
@@ -58,7 +74,7 @@ class TestCaseHelper:
         i = filename.rfind('.')
         if filename[i:] != '.yaml' and filename[i:] != '.yml':
             filename = filename[:i] + '.yaml'
-        input = file(filename).read()
+        input = read_file(filename)
         if untabify:
             input = input.expandtabs()
         ydoc = yaml.load(input)
