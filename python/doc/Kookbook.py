@@ -35,7 +35,7 @@ stylesheet = 'users-guide.css'
 tidy_opts = 'tidy_opts', '-q -i -wrap 9999 --hide-comments yes'
 
 #users_guide_eruby = 'users-guide.eruby'
-original_docdir = '../../../rbtenjin/trunk/doc/'
+original_docdir = '../../common/doc/'
 users_guide_eruby = original_docdir + 'users-guide.eruby'
 faq_eruby         = original_docdir + 'faq.eruby'
 examples_eruby    = original_docdir + 'examples.eruby'
@@ -89,11 +89,12 @@ def file_html(c):
 
 
 @product('*.txt')
-@ingreds('$(1).eruby', if_exists(original_docdir + '/$(1).eruby'))
+@ingreds(original_docdir + '$(1).eruby')
+#@ingreds('$(1).eruby', if_exists(original_docdir + '/$(1).eruby')
 def file_txt(c):
     """create *.txt from *.eruby and retrieve testdata from *.txt"""
-    if os.path.exists(c.ingreds[1]):
-        cp(c.ingreds[1], c.ingred)
+    #if os.path.exists(c.ingreds[1]):
+    #    cp(c.ingreds[1], c.ingred)
     system(c%"erubis -E PercentLine -c '@lang=%q|python|' -p '\\[% %\\]' $(ingred) > $(product)");
     #
     name = re.sub(r'\.txt$', '', c.product.replace('-', '_'))
