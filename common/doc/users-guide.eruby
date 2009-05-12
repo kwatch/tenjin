@@ -1661,8 +1661,8 @@ my $i = 0;
 for my $item (('<foo>', 'bar&bar', '"baz"')) {
     $i++;
 
- $item ; 
-escape( $item ); 
+           $item ; 
+          escape( $item ); 
 
 }
 
