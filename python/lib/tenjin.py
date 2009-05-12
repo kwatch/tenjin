@@ -905,6 +905,9 @@ class Engine(object):
         if templateclass: self.templateclass = templateclass
         if path  is not None:  self.path = path
         if cache is not None:  self.cache = cache
+        if cache == 'text':
+            self.load_cachefile  = self._load_text_cachefile
+            self.store_cachefile = self._store_text_cachefile
         if preprocess is not None: self.preprocess = preprocess
         self.kwargs = kwargs
         self.templates = {}   # template_name => Template object
@@ -945,11 +948,25 @@ class Engine(object):
 
     def load_cachefile(self, cache_filename, template):
         """load marshaled cache file"""
-        #template.bytecode = marshal.load(open(cache_filename, 'rb'))
         dct = marshal.load(open(cache_filename, 'rb'))
         template.args     = dct['args']
         template.script   = dct['script']
         template.bytecode = dct['bytecode']
+
+    def _load_text_cachefile(self, cache_filename, template):
+        s = read_file(cache_filename, mode='r')
+        if s.startswith('#@ARGS '):
+            pos = s.find("\n")
+            args_str = s[len('#@ARGS '):pos]
+            template.args = args_str and args_str.split(', ') or []
+            s = s[pos+1:]
+        else:
+            template.args = None
+        if template.encoding:
+            s = s.decode(template.encoding)
+            #s = s.decode('utf-8')
+        template.script = s
+        template.compile()
 
     def store_cachefile(self, cache_filename, template):
         """store template into marshal file"""
@@ -958,7 +975,7 @@ class Engine(object):
                 'bytecode': template.bytecode }
         write_file(cache_filename, marshal.dumps(dct), True)
 
-    def _store_cachefile_for_script(self, cache_filename, template):
+    def _store_text_cachefile(self, cache_filename, template):
         s = template.script
         if template.encoding and isinstance(s, unicode):
             s = s.encode(template.encoding)
