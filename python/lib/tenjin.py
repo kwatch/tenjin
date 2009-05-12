@@ -946,12 +946,22 @@ class Engine(object):
             template.timestamp = None  # or time.time()
         self.templates[template_name] = template
 
-    def load_cachefile(self, cache_filename, template):
+    def _load_marshal_cachefile(self, cache_filename, template):
         """load marshaled cache file"""
         dct = marshal.load(open(cache_filename, 'rb'))
         template.args     = dct['args']
         template.script   = dct['script']
         template.bytecode = dct['bytecode']
+
+    def _store_marshal_cachefile(self, cache_filename, template):
+        """store template into marshal file"""
+        dct = { 'args':     template.args,
+                'script':  template.script,
+                'bytecode': template.bytecode }
+        write_file(cache_filename, marshal.dumps(dct), True)
+
+    load_cachefile  = _load_marshal_cachefile
+    store_cachefile = _store_marshal_cachefile
 
     def _load_text_cachefile(self, cache_filename, template):
         s = read_file(cache_filename, mode='r')
@@ -967,13 +977,6 @@ class Engine(object):
             #s = s.decode('utf-8')
         template.script = s
         template.compile()
-
-    def store_cachefile(self, cache_filename, template):
-        """store template into marshal file"""
-        dct = { 'args':     template.args,
-                'script':  template.script,
-                'bytecode': template.bytecode }
-        write_file(cache_filename, marshal.dumps(dct), True)
 
     def _store_text_cachefile(self, cache_filename, template):
         s = template.script
