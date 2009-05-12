@@ -1,3 +1,4 @@
+
 #
 # auto generated
 #
@@ -33,6 +34,8 @@ class UsersGuideTest(unittest.TestCase, TestCaseHelper):
         result = os.popen(command).read()
         self.assertTextEqual(expected, result)
 
+
+
     from glob import glob
     import os
     filenames = []
@@ -43,12 +46,14 @@ class UsersGuideTest(unittest.TestCase, TestCaseHelper):
     for filename in filenames:
         #name = os.path.basename(filename).replace('.result', '')
         name = filename.replace(basedir+'/', '')
-        s = "\n".join((\
+        s = "\n".join((
              "def test_%s(self):" % re.sub('[^\w]', '_', name),
              "    self.filename = '%s'" % name,
              "    self._test()",
              ))
-        exec s
+        exec(s)
+
+
 
 if __name__ == '__main__':
     unittest.main()

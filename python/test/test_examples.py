@@ -1,3 +1,4 @@
+
 #
 # auto generated
 #
@@ -33,6 +34,8 @@ class ExamplesTest(unittest.TestCase, TestCaseHelper):
         result = os.popen(command).read()
         self.assertTextEqual(expected, result)
 
+
+
     from glob import glob
     import os
     filenames = []
@@ -48,7 +51,8 @@ class ExamplesTest(unittest.TestCase, TestCaseHelper):
              "    self.filename = '%s'" % name,
              "    self._test()",
              ))
-        exec s
+        exec(s)
+
 
 
 if __name__ == '__main__':
