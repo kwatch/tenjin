@@ -276,6 +276,25 @@ class EngineTest(unittest.TestCase, TestCaseHelper):
             engine = tenjin.Engine(**props)
             output = engine.render(':create', context)
             self.assertTextEqual(expected, output)               # reloadable?
+            #
+            for fname in glob('*.pyhtml.cache'): os.unlink(fname)
+            for fname in cache_filenames:
+                self.assertFalse(os.path.exists(fname))
+            ## text caching
+            props['cache'] = 'text'
+            engine = tenjin.Engine(**props)
+            output = engine.render(':create', context)
+            self.assertTextEqual(expected, output)
+            for fname in cache_filenames:
+                self.assertTrue(os.path.exists(fname))           # file created?
+                s = open(fname, 'rb').read()
+                self.assertTrue(s.find('\0') < 0)                # text file?
+                f = lambda: marshal.load(open(fname, 'rb'))
+                ex = self.assertRaise(ValueError, f)             # non-marshal?
+                self.assertEquals("bad marshal data", str(ex))
+            engine = tenjin.Engine(**props)
+            output = engine.render(':create', context)
+            self.assertTextEqual(expected, output)               # reloadable?
         finally:
             _remove_files(filenames.values())
 
