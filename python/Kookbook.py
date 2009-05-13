@@ -50,15 +50,15 @@ def task_package(c):
         dir = re.sub(r'\.tar\.gz$', '', pkg)
         #echo("*** debug: pkg=%s, dir=%s" % (pkg, dir))
         edit(c%"$(dir)/**/*", by=repl)
-        with chdir(dir) as d2:
-            system("python setup.py egg_info --egg-base .")
-            rm("*.pyc")
+        #with chdir(dir):
+        #    system("python setup.py egg_info --egg-base .")
+        #    rm("*.pyc")
         mv(pkg, c%"$(pkg).bkup")
         #tar_czf(c%"$(dir).tar.gz", dir)
         system(c%"tar -cf $(dir).tar $(dir)")
         system(c%"gzip -f9 $(dir).tar")
         ## create *.egg file
-        with chdir(dir) as d3:
+        with chdir(dir):
             system("python setup.py bdist_egg")
             mv("dist/*.egg", "..")
             rm_rf("build", "dist")
@@ -80,7 +80,7 @@ def task_examples(c):
         if d: dirs[d] = d
     #print "*** debug: dirs=%s" % dirs
     ## create directories
-    rm_r("examples")
+    rm_rf("examples")
     mkdir("examples")
     for d in dirs:
         mkdir("examples/" + d)
