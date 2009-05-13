@@ -8,18 +8,18 @@
 import os, difflib, re, traceback
 import yaml
 
-def read_file(filename):
+def read_file(filename, mode='rb'):
     f = None
     try:
-        f = open(filename)
+        f = open(filename, mode)
         return f.read()
     finally:
         if f: f.close()
 
-def write_file(filename, content):
+def write_file(filename, content, mode='wb'):
     f = None
     try:
-        f = open(filename, 'w')
+        f = open(filename, mode)
         f.write(content)
     finally:
         if f: f.close()
