@@ -295,7 +295,7 @@ class MainTest(unittest.TestCase, TestCaseHelper):
         cachename = self.filename + '.cache'
         try:
             self._test()
-            self.assertTrue(os.path.exists(cachename))
+            self.assertExists(cachename)
             import marshal
             dct = marshal.load(open(cachename, 'rb'))
             self.assertTextEqual(['title', 'items'], dct.get('args'))
@@ -483,7 +483,7 @@ class MainTest(unittest.TestCase, TestCaseHelper):
         self.expected = EXECUTED
         self.options = '-a render --cache=true'
         self._test()
-        self.assertTrue(os.path.exists(cachename))
+        self.assertExists(cachename)
         # dump test
         try:
             self.filename = False

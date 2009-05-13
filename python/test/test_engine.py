@@ -261,14 +261,14 @@ class EngineTest(unittest.TestCase, TestCaseHelper):
             engine = tenjin.Engine(**props)
             output = engine.render(':create', context)
             self.assertTextEqual(expected, output)
-            for fname in cache_filenames: self.assertFalse(os.path.exists(fname))
+            for fname in cache_filenames: self.assertNotExist(fname)
             ## marshal caching
             props['cache'] = True
             engine = tenjin.Engine(**props)
             output = engine.render(':create', context)
             self.assertTextEqual(expected, output)
             for fname in cache_filenames:
-                self.assertTrue(os.path.exists(fname))           # file created?
+                self.assertExists(fname)                         # file created?
                 s = open(fname, 'rb').read()
                 self.assertTrue(s.find('\0') >= 0)               # binary file?
                 f = lambda: marshal.load(open(fname, 'rb'))
@@ -279,14 +279,14 @@ class EngineTest(unittest.TestCase, TestCaseHelper):
             #
             for fname in glob('*.pyhtml.cache'): os.unlink(fname)
             for fname in cache_filenames:
-                self.assertFalse(os.path.exists(fname))
+                self.assertNotExist(fname)
             ## text caching
             props['cache'] = 'text'
             engine = tenjin.Engine(**props)
             output = engine.render(':create', context)
             self.assertTextEqual(expected, output)
             for fname in cache_filenames:
-                self.assertTrue(os.path.exists(fname))           # file created?
+                self.assertExists(fname)                         # file created?
                 s = open(fname, 'rb').read()
                 self.assertTrue(s.find('\0') < 0)                # text file?
                 f = lambda: marshal.load(open(fname, 'rb'))
@@ -388,9 +388,9 @@ class EngineTest(unittest.TestCase, TestCaseHelper):
             args  = data['args1']
             input = data['input1']
             cachename = filename+'.cache'
-            self.assertFalse(os.path.exists(cachename))
+            self.assertNotExist(cachename)
             _test(filename, cachename, 1, input, script, args)
-            self.assertTrue(os.path.exists(cachename))
+            self.assertExists(cachename)
             _test(filename, cachename, 1, None, script, args)
             ## args=[], cache=1
             cachename = filename+'.cache'
@@ -398,9 +398,9 @@ class EngineTest(unittest.TestCase, TestCaseHelper):
             script = data['script2']  # re.sub(r'#@ARGS.*?\n', '#@ARGS \n', cache)
             args  = data['args2']   # []
             time.sleep(1)
-            #self.assertTrue(os.path.exists(cachename))
+            #self.assertExists(cachename)
             _test(filename, cachename, 1, input, script, args)
-            #self.assertTrue(os.path.exists(cachename))
+            #self.assertExists(cachename)
             _test(filename, cachename, 1, None, script, args)
         finally:
             _remove_files(['input.pyhtml'])
