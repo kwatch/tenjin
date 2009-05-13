@@ -5,9 +5,10 @@ include doc/users-guide.html doc/faq.html doc/examples.html doc/docstyle.css
 include benchmark/bench.py benchmark/bench_context.* benchmark/Makefile
 include benchmark/templates/*.*
 include test/*.py test/*.yaml
+include Kookbook.py doc/Kookbook.py test/Kookbook.py
 #recursive-include test/data *.py *.yaml *.pyhtml *.result *.cgi *.html *.pycsv
 recursive-include test/data *.*
 recursive-exclude test/data *.cache *.pyc
 #exclude test/Kookbook.py
-recursive-include examples *.py *.pyhtml Makefile Kookbook.py
+recursive-include examples *.py *.pyhtml Makefile
 #exclude examples/test_examples.py
