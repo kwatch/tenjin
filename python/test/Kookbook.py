@@ -20,8 +20,10 @@ def file_test_engine_yaml(c):
 def task_test(c, *args):
     options, rest = c.parse_cmdopts(args)
     opts = options.get('v') and ' -v ' or ''
-    system(c%'python test_all.py $(opts) 2>&1 | tee $(byprod)')
+    #system(c%'python test_all.py $(opts) 2>&1 | tee $(byprod)')
+    system(c%'python test_all.py $(opts)')
     #system(c%'python test_all.py $(opts) 2>&1 > $(byprod)')
+    task_clean(c)
 
 
 def task_clean(c):
