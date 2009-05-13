@@ -79,6 +79,12 @@ class TestCaseHelper:
             exc_class_name = getattr(exc_class, '__name__', None) or str(exc_class)
             self.fail("%s not raised" % exc_class_name)
 
+    def assertNotRaise(self, callable_, *args, **kwargs):
+        try:
+            callable_(*args, **kwargs)
+        except Exception, ex:
+            self.fail("unexpected exception raised: " + repr(ex))
+
     def load_testdata(filename, untabify=True):
         i = filename.rfind('.')
         if filename[i:] != '.yaml' and filename[i:] != '.yml':
