@@ -1,3 +1,11 @@
+
+##
+## cookbook for pykook -- you must install pykook at first.
+## pykook is a build tool like Rake. you can define your task in Python.
+## http://pypi.python.org/pypi/Kook/0.0.1
+## http://www.kuwata-lab.com/kook/pykook-users-guide.html
+##
+
 from __future__ import with_statement
 
 import os, re
