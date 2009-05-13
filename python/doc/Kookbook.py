@@ -103,11 +103,15 @@ def file_txt(c):
         rm_rf(datadir + '/*')
     else:
         mkdir(datadir)
+    system(c%"which retrieve");
+    system(c%"retrieve -Fd $(datadir) $(product)");
+    pat = datadir + '/*.result2'
     filenames = glob.glob(datadir + '/*.result2')
     for filename in filenames:
         content = open(filename).read()
         os.unlink(filename)
-        contents = re.split(r'^\$ ', content)
+        rexp = re.compile(r'^\$ ', re.M)
+        contents = rexp.split(content)
         i = 0
         for cont in contents:
             if not cont: continue
