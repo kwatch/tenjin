@@ -57,7 +57,7 @@ class EngineTest(unittest.TestCase, TestCaseHelper):
     #def setUp(self):
     #    testdata = EngineTest.testdata['basic']
     #    for hash in testdata['templates']:
-    #        open(hash['filename'], 'w').write(hash['content'])
+    #        write_file(hash['filename'], hash['content'])
 
 
     #def tearDown(self):
@@ -75,7 +75,7 @@ class EngineTest(unittest.TestCase, TestCaseHelper):
         try:
             testdata = EngineTest.testdata['basic']
             for hash in testdata['templates']:
-                open(hash['filename'], 'w').write(hash['content'])
+                write_file(hash['filename'], hash['content'])
             #
             testname = self.testname()
             lst = testname[len('test_basic'):].split('_')
@@ -178,8 +178,8 @@ class EngineTest(unittest.TestCase, TestCaseHelper):
         content_filename = 'user_content.pyhtml'
         context = { 'items': ['AAA', 'BBB', 'CCC'] }
         try:
-            open(layout_filename, 'w').write(layout)
-            open(content_filename, 'w').write(content)
+            write_file(layout_filename, layout)
+            write_file(content_filename, content)
             engine = tenjin.Engine(prefix='user_', postfix='.pyhtml', layout=':layout')
             output = engine.render(':content', context)
             self.assertTextEqual(expected, output)
@@ -199,7 +199,7 @@ class EngineTest(unittest.TestCase, TestCaseHelper):
         expected = hash['expected']
         try:
             for filename, content in files:
-                open(filename, 'w').write(content)
+                write_file(filename, content)
             engine = tenjin.Engine(postfix='.pyhtml')
             output = engine.render(':content', context)
             self.assertTextEqual(expected, output)
@@ -217,12 +217,12 @@ class EngineTest(unittest.TestCase, TestCaseHelper):
             return 'local_%s.pyhtml' % base
         try:
             for name in names:
-                open(fname(name), 'w').write(hash[name])
+                write_file(fname(name), hash[name])
             engine = tenjin.Engine(prefix='local_', postfix='.pyhtml', layout=':layout_html')
             ##
             def _test(expected, statement):
                 content_html = hash['content_html'] + statement
-                open(fname('content_html'), 'w').write(content_html)
+                write_file(fname('content_html'), content_html)
                 actual = engine.render(':content_html', context)
                 self.assertTextEqual(expected, actual)
             ##
@@ -254,7 +254,7 @@ class EngineTest(unittest.TestCase, TestCaseHelper):
         cache_filenames = ['account_create.pyhtml.cache', 'account_form.pyhtml.cache']
         try:
             for key, filename in filenames.iteritems():
-                open(filename, 'w').write(data[key])
+                write_file(filename, data[key])
             props = { 'prefix':'account_', 'postfix':'.pyhtml', 'layout':'layout.pyhtml' }
             ## no caching
             props['cache'] = False
@@ -269,7 +269,7 @@ class EngineTest(unittest.TestCase, TestCaseHelper):
             self.assertTextEqual(expected, output)
             for fname in cache_filenames:
                 self.assertExists(fname)                         # file created?
-                s = open(fname, 'rb').read()
+                s = read_file(fname, 'rb')
                 self.assertTrue(s.find('\0') >= 0)               # binary file?
                 f = lambda: marshal.load(open(fname, 'rb'))
                 self.assertNotRaise(f)                           # marshal?
@@ -287,7 +287,7 @@ class EngineTest(unittest.TestCase, TestCaseHelper):
             self.assertTextEqual(expected, output)
             for fname in cache_filenames:
                 self.assertExists(fname)                         # file created?
-                s = open(fname, 'rb').read()
+                s = read_file(fname, 'rb')
                 self.assertTrue(s.find('\0') < 0)                # text file?
                 f = lambda: marshal.load(open(fname, 'rb'))
                 ex = self.assertRaise(ValueError, f)             # non-marshal?
@@ -306,7 +306,7 @@ class EngineTest(unittest.TestCase, TestCaseHelper):
         ## setup
         basenames = ['baselayout', 'customlayout', 'content']
         for basename in basenames:
-            open('%s.pyhtml' % basename, 'w').write(data[basename])
+            write_file('%s.pyhtml' % basename, data[basename])
         ## body
         try:
             engine = tenjin.Engine(layout='baselayout.pyhtml')
@@ -326,7 +326,7 @@ class EngineTest(unittest.TestCase, TestCaseHelper):
         part = data['part']
         expected = data['expected']
         for basename in ('base', 'part'):
-            open('%s.pyhtml' % basename, 'w').write(data[basename])
+            write_file('%s.pyhtml' % basename, data[basename])
         #
         try:
             engine = tenjin.Engine()
@@ -346,7 +346,7 @@ class EngineTest(unittest.TestCase, TestCaseHelper):
         expected = data['expected']
         context = data['context']
         for basename in ('content', ):
-            open('%s.pyhtml' % basename, 'w').write(data[basename])
+            write_file('%s.pyhtml' % basename, data[basename])
         #
         try:
             def f1():
@@ -370,7 +370,7 @@ class EngineTest(unittest.TestCase, TestCaseHelper):
         data = EngineTest.testdata['test_cached_contents']
         def _test(filename, cachename, cachemode, input, expected_script, expected_args):
             if input:
-                open(filename, 'w').write(input)
+                write_file(filename, input)
             engine = tenjin.Engine(cache=cachemode)
             t = engine.get_template(filename)
             self.assertEqual(expected_args, t.args)
@@ -418,10 +418,10 @@ class EngineTest(unittest.TestCase, TestCaseHelper):
             d = { 'layout':keys[0], 'body':keys[1], 'footer':keys[2], }
             for key in ('layout', 'body', 'footer'):
                 filename = '%s/common/%s.pyhtml' % (basedir, key)
-                open(filename, 'w').write(data['common_'+key])
+                write_file(filename, data['common_'+key])
                 if d[key] == 'user':
                     filename = '%s/user/%s.pyhtml' % (basedir, key)
-                    open(filename, 'w').write(data['user_'+key])
+                    write_file(filename, data['user_'+key])
             #
             path = [basedir+'/user', basedir+'/common']
             engine = tenjin.Engine(postfix='.pyhtml', path=path, layout=':layout')
@@ -467,7 +467,7 @@ class EngineTest(unittest.TestCase, TestCaseHelper):
             for name in basenames:
                 filename = 'prep_%s.pyhtml' % name
                 filenames.append(filename)
-                open(filename, 'w').write(data[name])
+                write_file(filename, data[name])
             engine = tenjin.Engine(prefix='prep_', postfix='.pyhtml', layout=':layout', preprocess=True)
             #
             context = {

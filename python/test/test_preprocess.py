@@ -49,7 +49,7 @@ class PreprocessTest(unittest.TestCase, TestCaseHelper):
 	"""[1:].replace("\t", "")
         filename = 'test_preprocess1.pyhtml'
         try:
-            open(filename, 'w').write(input)
+            write_file(filename, input)
             preprocessor = tenjin.Preprocessor(filename)
             self.assertTextEqual(script, preprocessor.script)
             self.assertTextEqual(preprocessed, preprocessor.render())

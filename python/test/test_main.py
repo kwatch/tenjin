@@ -140,11 +140,11 @@ class MainTest(unittest.TestCase, TestCaseHelper):
         if filename is not False:
             if filename is None:
                 filename = '.test.pyhtml'
-            #open(filename, 'w').write(input)
+            #write_file(filename, input)
             for fname, s in zip(to_list(filename), to_list(input)):
                 if encoding and isinstance(s, unicode):
                     s = s.encode(encoding)
-                open(fname, 'w').write(s)
+                write_file(fname, s)
         #
         if isinstance(options, list):
             argv = options
@@ -160,7 +160,7 @@ class MainTest(unittest.TestCase, TestCaseHelper):
             s = context_data
             if encoding and instance(s, unicode):
                 s = s.encode(encoding)
-            open(context_file, 'w').write(s)
+            write_file(context_file, s)
         #
         try:
             app = Main(argv)
@@ -748,11 +748,11 @@ class MainTest(unittest.TestCase, TestCaseHelper):
         try:
             os.mkdir("tmpl9")
             os.mkdir("tmpl9/user")
-            open("tmpl9/layout.pyhtml", 'w').write(layout)
-            open("tmpl9/body.pyhtml", 'w').write('')
-            open("tmpl9/footer.pyhtml", 'w').write('')
-            open("tmpl9/user/body.pyhtml", 'w').write(body)
-            open("tmpl9/user/footer.pyhtml", 'w').write(footer)
+            write_file("tmpl9/layout.pyhtml", layout)
+            write_file("tmpl9/body.pyhtml", '')
+            write_file("tmpl9/footer.pyhtml", '')
+            write_file("tmpl9/user/body.pyhtml", body)
+            write_file("tmpl9/user/footer.pyhtml", footer)
             self.options  = "--path=.,tmpl9/user,tmpl9 --postfix=.pyhtml --layout=:layout"
             self.input = "<?py include(':body') ?>"
             self.expected = expected

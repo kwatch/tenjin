@@ -115,7 +115,7 @@ class TemplateTest(unittest.TestCase, TestCaseHelper):
 """
         filename = 'test_filename1.tenjin'
         try:
-            open(filename, 'w').write(input)
+            write_file(filename, input)
             template1 = tenjin.Template(filename)
             template2 = tenjin.Template()
             self.assertTextEqual(template1.script, template2.convert(input))
