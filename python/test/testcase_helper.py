@@ -85,6 +85,14 @@ class TestCaseHelper:
         except Exception, ex:
             self.fail("unexpected exception raised: " + repr(ex))
 
+    def assertExists(self, filename):
+        if not os.path.exists(filename):
+            self.fail("file not exist: " + repr(filename))
+
+    def assertNotExist(self, filename):
+        if os.path.exists(filename):
+            self.fail("file exists: " + repr(filename))
+
     def load_testdata(filename, untabify=True):
         i = filename.rfind('.')
         if filename[i:] != '.yaml' and filename[i:] != '.yml':
