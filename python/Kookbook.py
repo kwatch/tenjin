@@ -19,9 +19,9 @@ package = prop('package', 'Tenjin')
 
 copyright       = "copyright(c) 2007-2009 kuwata-lab.com all rights reserved."
 license         = "MIT License"
-python_basepath = "/Library/Frameworks/Python.framework/Versions/2.4"
-python_basepath = "/usr/local/lib/python2.5"
+#python_basepath = "/Library/Frameworks/Python.framework/Versions/2.4"
 #site_packages_path = "%s/lib/python2.4/site-packages" % python_basepath
+python_basepath = "/usr/local/lib/python2.5"
 site_packages_path = "%s/site-packages" % python_basepath
 script_file     = "pytenjin"
 library_files   = [ "tenjin.py" ]
@@ -116,7 +116,7 @@ def task_uninstall(c):
     #library_files  = [ os.path.join(site_packages_path, item) for item in library_files ]
     #compiled_files = [ item + '.c' for item in library_files ]
     script_file = "/usr/local/bin/pytenjin"
-    dir = "/usr/local/lib/python2.5/site-packages"
+    dir = site_packages_dir
     library_files = "$dir/$(package)*"
     rm(script_file, library_files)
     filename = "$dir/easy-install.pth"
