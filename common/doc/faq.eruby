@@ -3346,7 +3346,7 @@ print engine.render('helpers1.pyhtml'),
 
 .? result:
 .==================== helpers1.result
-$ [%=command%] helpers1.[%=ext%]
+$ [%=lang%] helpers1.[%=ext%]
 ***** preprocessed *****
 _buf.extend(('''<p>
 ''', to_str(link_to('Create', action='new')), '''
@@ -3398,7 +3398,7 @@ print engine.render('helpers2.pyhtml'{{*, context*}}),
 
 .? result:
 .==================== helpers2.result
-$ [%=command%] helpers2.[%=ext%]
+$ [%=lang%] helpers2.[%=ext%]
 ***** preprocessed *****
 _buf.extend(('''<p>
 ''', to_str(link_to(escape(user['name']), action='show', id=user['id'])), '''
