@@ -70,6 +70,15 @@ class TestCaseHelper:
             mesg = re.sub(r'.*?\n', '', output, 2)
             self.assertEqual(text1, text2, mesg)
 
+    def assertRaise(self, exc_class, callable_, *args, **kwargs):
+        try:
+            callable_(*args, **kwargs)
+        except exc_class, ex:
+            return ex
+        else:
+            exc_class_name = getattr(exc_class, '__name__', None) or str(exc_class)
+            self.fail("%s not raised" % exc_class_name)
+
     def load_testdata(filename, untabify=True):
         i = filename.rfind('.')
         if filename[i:] != '.yaml' and filename[i:] != '.yml':
