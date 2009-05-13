@@ -5,7 +5,7 @@
 ###
 
 import unittest
-import sys, os, re, time
+import sys, os, re, time, marshal
 from glob import glob
 
 from testcase_helper import *
@@ -251,6 +251,7 @@ class EngineTest(unittest.TestCase, TestCaseHelper):
                     }
         expected = data['expected']
         context = { 'params': { } }
+        cache_filenames = ['account_create.pyhtml.cache', 'account_form.pyhtml.cache']
         try:
             for key, filename in filenames.iteritems():
                 open(filename, 'w').write(data[key])
@@ -260,18 +261,21 @@ class EngineTest(unittest.TestCase, TestCaseHelper):
             engine = tenjin.Engine(**props)
             output = engine.render(':create', context)
             self.assertTextEqual(expected, output)
-            self.assertFalse(os.path.exists('account_create.pyhtml.cache'))
-            self.assertFalse(os.path.exists('account_form.pyhtml.cache'))
-            ## bytecode caching
+            for fname in cache_filenames: self.assertFalse(os.path.exists(fname))
+            ## marshal caching
             props['cache'] = True
             engine = tenjin.Engine(**props)
             output = engine.render(':create', context)
             self.assertTextEqual(expected, output)
-            self.assertTrue(os.path.exists('account_create.pyhtml.cache'))
-            self.assertTrue(os.path.exists('account_form.pyhtml.cache'))
+            for fname in cache_filenames:
+                self.assertTrue(os.path.exists(fname))           # file created?
+                s = open(fname, 'rb').read()
+                self.assertTrue(s.find('\0') >= 0)               # binary file?
+                f = lambda: marshal.load(open(fname, 'rb'))
+                self.assertNotRaise(f)                           # marshal?
             engine = tenjin.Engine(**props)
             output = engine.render(':create', context)
-            self.assertTextEqual(expected, output)
+            self.assertTextEqual(expected, output)               # reloadable?
         finally:
             _remove_files(filenames.values())
 
@@ -345,7 +349,6 @@ class EngineTest(unittest.TestCase, TestCaseHelper):
         if not self.is_target():
             return
         data = EngineTest.testdata['test_cached_contents']
-        from glob import glob
         def _test(filename, cachename, cachemode, input, expected_script, expected_args):
             if input:
                 open(filename, 'w').write(input)
