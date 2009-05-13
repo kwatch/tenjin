@@ -1401,7 +1401,7 @@
    "js": |
   errormsg*:
    "python": name 'b' is not defined
-   "ruby": "undefined local variable or method `b' for #<Tenjin::Context>"
+   "ruby": "undefined local variable or method `b' for #<Tenjin::Context:0x12345>"
    "perl": |
 	*** Error: content.plhtml
 	Global symbol "$y" requires explicit package name at (eval 999) line 3.

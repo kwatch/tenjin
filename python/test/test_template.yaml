@@ -416,7 +416,7 @@
   desc:         lspaces
   testopts:  { spacechar: '^' }
   input*:
-   "python": |5
+    python: |4
           <?py
         i = 0
         for item in ['a', 'b', 'c']:
@@ -430,7 +430,7 @@
           <?py
         #endfor
            ?>
-   "ruby": |5
+    ruby: |4
           <?rb
         i = 0
         for item in ['a', 'b', 'c']
@@ -459,7 +459,7 @@
           
         #endfor
           
-   "ruby": |5+
+   "ruby": |5
         ^^
         i = 0
         for item in ['a', 'b', 'c']
@@ -889,7 +889,8 @@
    "ruby":  NameError
   errormsg*:
    "python": "name 'name2' is not defined"
-   "ruby":   "undefined local variable or method `name2' for #<Tenjin::Context>"
+   "ruby":   "undefined local variable or method `name2' for #<Tenjin::Context:0x12345>"
+   #"rubinius": 'undefined local variable or method `name2\' for #<Tenjin::Context:0x12345 @name="world" @_buf="<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\">\\n">'
 
 
 ##
@@ -1112,7 +1113,7 @@
 	#{{link_to('"Show '+_P("item['name']")+'"', '/items/show/'+_p("item['id']"))}}
 	#{{escape('<b>'+_P('item["name"]')+'</b>')}}
     "ruby": |
-        <?RB def link_to(label, url) ?>
+        <?RB def self.link_to(label, url) ?>
 	<?RB     require 'cgi' ?>
 	<?RB     return '<a href="%s">%s</a>' % [CGI::escape(url).gsub(/%2F/,'/'), label] ?>
 	<?RB end ?>
@@ -1144,7 +1145,7 @@
 	''', to_str(_decode_params(link_to('"Show '+_P("item['name']")+'"', '/items/show/'+_p("item['id']")))), '''
 	''', to_str(_decode_params(escape('<b>'+_P('item["name"]')+'</b>'))), '''\n''', ));
     "ruby": |
-	def link_to(label, url)
+	def self.link_to(label, url)
 	    require 'cgi'
 	    return '<a href="%s">%s</a>' % [CGI::escape(url).gsub(/%2F/,'/'), label]
 	end
