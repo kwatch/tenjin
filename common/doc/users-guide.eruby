@@ -157,7 +157,7 @@
 .?release:	$Release$
 .?stylesheet:	docstyle.css
 
-Release: $Release$
+.#Release: $Release$
 
 
 Table of Contents:
