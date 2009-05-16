@@ -14,7 +14,7 @@ from tenjin.helpers import escape, to_str
 
 class HtmlHelperTest(unittest.TestCase, TestCaseHelper):
 
-    def test_attr(self):
+    def test_tagattr(self):
         actual = tenjin.helpers.html.tagattr('size', 20)
         expected = ' size="20"'
         self.assertEqual(expected, actual)
