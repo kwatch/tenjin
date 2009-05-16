@@ -146,31 +146,28 @@ def _create_helpers_module():
         context['_buf'].append(string)
 
     def start_capture(varname=None):
-        """
-        start capturing with name.
-
-        ex. list.rbhtml
-          <html><body>
-          <?py start_capture('itemlist') ?>
-            <ul>
-              <?py for item in list: ?>
-              <li>${item}</li>
-              <?py #end ?>
-            </ul>
-          <?py stop_capture() ?>
-          </body></html>
-
-        ex. layout.rbhtml
-          <html xml:lang="en" lang="en">
-           <head>
-            <title>Capture Example</title>
-           </head>
-           <body>
-            <!-- content -->
-          #{itemlist}
-            <!-- /content -->
-           </body>
-          </html>
+        """start capturing with name.
+           * ex. list.rbhtml
+               <html><body>
+               <?py start_capture('itemlist') ?>
+                 <ul>
+                   <?py for item in list: ?>
+                   <li>${item}</li>
+                   <?py #end ?>
+                 </ul>
+               <?py stop_capture() ?>
+               </body></html>
+           * ex. layout.rbhtml
+               <html xml:lang="en" lang="en">
+                <head>
+                 <title>Capture Example</title>
+                </head>
+                <body>
+                 <!-- content -->
+               #{itemlist}
+                 <!-- /content -->
+                </body>
+               </html>
         """
         frame = sys._getframe(1)
         context = frame.f_locals
@@ -179,9 +176,8 @@ def _create_helpers_module():
         context['_buf'] = []
 
     def stop_capture(store_to_context=True):
-        """
-        stop capturing and return the result of capturing.
-        if store_to_context is True then the result is stored into _context[varname].
+        """stop capturing and return the result of capturing.
+           if store_to_context is True then the result is stored into _context[varname].
         """
         frame = sys._getframe(1)
         context = frame.f_locals
@@ -195,10 +191,9 @@ def _create_helpers_module():
         return result
 
     def captured_as(name):
-        """
-        helper method for layout template.
-        if captured string is found then append it to _buf and return True,
-        else return False.
+        """helper method for layout template.
+           if captured string is found then append it to _buf and return True,
+           else return False.
         """
         frame = sys._getframe(1)
         context = frame.f_locals
@@ -272,18 +267,17 @@ def _create_html_module():
         #return s.replace('&','&amp;').replace('<','&lt;').replace('>','&gt;').replace('"','&quot;')
 
     def tagattr(name, expr, value=None, escape=True):
-        """return empty string when expr is false value, ' name="value"' when
-           value is specified, or ' name="expr"' when value is None.
-           ex.
-           >>> tagattr('size', 20)
+        """(experimental) return 'name="expr"' string if expr is true value.
+           if value is specified then it is used as attribute value instead expr.
+           if expr is false value then '' will be returned.
+           ex. ## simpler than #{size and ' size="%s"' % size or ''}
+           >>> size = 20
+           >>> tagattr('size', size)
            ' size="20"'
-           >>> tagattr('size', 0)
+           >>> size = 0
+           >>> tagattr('size', size)
            ''
-           >>> tagattr('checked', True, 'checked')
-           ' checked="checked"'
-           >>> tagattr('checked', False, 'checked')
-           ''
-           """
+        """
         if not expr:
             return ''
         if value is None:
@@ -307,7 +301,7 @@ def _create_html_module():
     def disabled(expr):
         """return ' disabled="disabled"' if expr is true."""
         return expr and ' disabled="disabled"' or ''
-        #return attr('disabled, expr, 'disabled')
+        #return attr('disabled', expr, 'disabled')
 
     def nl2br(text):
         """replace "\n" to "<br />\n" and return it."""
@@ -831,7 +825,7 @@ class Preprocessor(Template):
 ##
 
 class Engine(object):
-    """Engine class of templates.
+    """Template Engine class.
 
        ex.
          >>> ## create engine
