@@ -129,8 +129,7 @@ def _create_helpers_module():
               to_str = tenjin.generate_tostrfunc('utf-8')
               engine = tenjin.Engine()
               context = { 'items': [u'AAA', u'BBB', u'CCC'] }
-              output = engine.render('example.pyhtml')
-              print output
+              print engine.render('example.pyhtml')
         """
         def to_str(val):
             if val is None:               return ''
@@ -370,13 +369,13 @@ class Template(object):
           <tr bgcolor="#{color}">
            <td>${item}</td>
           </tr>
-         <?py #end ?>
+         <?py #endfor ?>
          </table>
 
        ex.
          >>> filename = 'example.pyhtml'
          >>> import tenjin
-         >>> from tenjin.helpers import escape, to_str
+         >>> from tenjin.helpers import * # or escape, to_str
          >>> template = tenjin.Template(filename)
          >>> script = template.script
          >>> ## or
@@ -766,7 +765,7 @@ class Template(object):
 
            ex.
              >>> import tenjin
-             >>> from tenjin.helpers import escape, to_str
+             >>> from tenjin.helpers import *
              >>> template = tenjin.Template('example.pyhtml')
              >>> context = {'items': ['foo','bar','baz'], 'title': 'example'}
              >>> output = template.evaluate(context)
@@ -898,8 +897,11 @@ class Engine(object):
              Default layout template name.
            path:list of str(=None)
              List of directory names which contain template files.
-           cache:bool (=True)
+           cache:bool or 'text' (=True)
              Cache converted python code into file.
+             If True, marshal-base cache files are created.
+             If 'text', text-base cache files are created.
+             If False, no cache files are created.
            preprocess:bool(=False)
              Activate preprocessing or not.
            templateclass:class (=Template)
