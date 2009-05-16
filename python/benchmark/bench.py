@@ -63,7 +63,8 @@ class Entry(object):
 
     def class_setup(cls):
         cls.create_template()
-        cls.load_library()
+        ret = cls.load_library()
+        return bool(ret)
     class_setup = classmethod(class_setup)
 
     def execute(self, context, ntimes):
@@ -94,6 +95,7 @@ class TenjinEntry(Entry):
             from tenjin.helpers import escape, to_str
         except ImportError:
             tenjin = None
+        return tenjin
 
     load_library = classmethod(load_library)
 
@@ -207,6 +209,7 @@ class DjangoEntry(Entry):
             #django.template.defaultfilters.register.filter(oddeven)
         except ImportError:
             django = None
+        return django
     load_library = classmethod(load_library)
 
     def available(self):
@@ -268,6 +271,7 @@ class CheetahEntry(Entry):
             bench_cheetah = import_module(filename.replace('.tmpl', ''))
         except ImportError:
             Cheetah = None
+        return Cheetah
     load_library = classmethod(load_library)
 
     def available(self):
@@ -326,6 +330,7 @@ class MyghtyEntry(Entry):
             import_module('myghty.interp')
         except ImportError:
             myghty = None
+        return myghty
     load_library = classmethod(load_library)
 
     def available(self):
@@ -385,6 +390,7 @@ class KidEntry(Entry):
                                lambda: kid.Template(filename))   # compile
         except ImportError:
             kid = None
+        return kid
     load_library = classmethod(load_library)
 
     def available(self):
@@ -447,6 +453,7 @@ class GenshiEntry(Entry):
             genshi = import_module('genshi.template')
         except ImportError:
             genshi = None
+        return genshi
     load_library = classmethod(load_library)
 
     def available(self):
@@ -501,6 +508,7 @@ class MakoEntry(Entry):
                 os.mkdir(cls.mako_module_dir)
         except ImportError:
             mako = None
+        return mako
     load_library = classmethod(load_library)
 
     def available(self):
@@ -565,6 +573,7 @@ class TempletorEntry(Entry):
             web = import_module('web')
         except ImportError:
             web = None
+        return web
     load_library = classmethod(load_library)
 
     def available(self):
@@ -680,6 +689,7 @@ def main(ntimes=1000):
             target_list.append(target)
 
     targets = filter_targets(targets, target_list, options.get('x'))
+    sys.stderr.write("*** debug: targets=%s\n" % (repr(targets)))
     entries = get_entries(targets)
     datafile = options.get('f')
     context = load_context_data(datafile)
@@ -757,16 +767,19 @@ def get_entries(targets, **kwargs):
         L = re.split(r'[-_]', target)
         base = L[0]
         salt = len(L) > 1 and L[1] or None
-        classobj = classtable.get(base)
-        if not classobj:
+        if base in classtable:
+            classobj = classtable.get(base)
+        else:
             classname = base.capitalize() + 'Entry'
             classobj = globals().get(classname)
             if not classobj:
                 raise "%s: invalid target name." % target
+            ret = classobj.class_setup(**kwargs)
+            if not ret: classobj = None
             classtable[base] = classobj
-            classobj.class_setup(**kwargs)
-        entry = classobj(salt)
-        entries.append(entry)
+        if classobj:
+            entry = classobj(salt)
+            entries.append(entry)
     return entries
 
 
