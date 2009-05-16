@@ -70,6 +70,12 @@ class HtmlHelperTest(unittest.TestCase, TestCaseHelper):
         expected = "foo<br />\n &nbsp; &nbsp;bar<br />\nba &nbsp; &nbsp; z<br />\n"
         self.assertEqual(expected, actual)
 
+    def test_nv(self):
+        nv = tenjin.helpers.html.nv
+        self.assertEqual('name="rank" value="A"',                   nv('rank', 'A'))
+        self.assertEqual('name="rank" value="A" id="rank.A"',       nv('rank', 'A', '.'))
+        self.assertEqual('name="rank" value="A" checked="checked"', nv('rank', 'A', checked=True))
+
 
 if __name__ == '__main__':
     unittest.main()

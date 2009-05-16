@@ -315,6 +315,20 @@ def _create_html_module():
             return ''
         return nl2br(escape_xml(text).replace('  ', ' &nbsp;'))
 
+    def nv(name, value, sep=None, checked=None):
+        """(experimental) Build name and value attributes.
+           ex.
+           >>> nv('gender', 'F')
+           'name="gender" value="F"'
+           >>> nv('gender', 'F', '.')
+           'name="gender" value="F" id="gender.F"'
+           >>> nv('gender', 'F', '.', checked=True)
+           'name="gender" value="F" id="gender.F" checked="checked"'
+        """
+        s = sep and 'name="%s" value="%s" id="%s"' % (name, value, name+sep+value) \
+                or  'name="%s" value="%s"'         % (name, escape_xml(value))
+        return checked and s + ' checked="checked"' or s
+
     mod = _create_module('tenjin.helpers.html')
     mod._escape_table = _escape_table
     mod.escape_xml = escape_xml
@@ -325,6 +339,7 @@ def _create_html_module():
     mod.disabled   = disabled
     mod.nl2br      = nl2br
     mod.text2html  = text2html
+    mod.nv         = nv
     return mod
 
 helpers.html = _create_html_module()
