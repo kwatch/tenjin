@@ -48,9 +48,16 @@ class HtmlHelperTest(unittest.TestCase, TestCaseHelper):
 
     def test_nv(self):
         nv = tenjin.helpers.html.nv
-        self.assertEqual('name="rank" value="A"',                   nv('rank', 'A'))
-        self.assertEqual('name="rank" value="A" id="rank.A"',       nv('rank', 'A', '.'))
-        self.assertEqual('name="rank" value="A" checked="checked"', nv('rank', 'A', checked=True))
+        self.assertEqual('name="rank" value="A"',              nv('rank', 'A'))
+        self.assertEqual('name="rank" value="A" id="rank.A"',  nv('rank', 'A', '.'))
+        self.assertEqual('name="rank" value="A" class="error"',
+                         nv('rank', 'A', klass='error'))
+        self.assertEqual('name="rank" value="A" checked="checked"',
+                         nv('rank', 'A', checked=True))
+        self.assertEqual('name="rank" value="A" disabled="disabled"',
+                         nv('rank', 'A', disabled=10))
+        self.assertEqual('name="rank" value="A" style="color:red"',
+                         nv('rank', 'A', style="color:red"))
 
 
 if __name__ == '__main__':

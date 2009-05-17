@@ -300,19 +300,24 @@ def _create_html_module():
             return ''
         return nl2br(escape_xml(text).replace('  ', ' &nbsp;'))
 
-    def nv(name, value, sep=None, checked=None):
+    def nv(name, value, sep=None, klass=None, checked=None, disabled=None, **kwargs):
         """(experimental) Build name and value attributes.
            ex.
-           >>> nv('gender', 'F')
-           'name="gender" value="F"'
-           >>> nv('gender', 'F', '.')
-           'name="gender" value="F" id="gender.F"'
-           >>> nv('gender', 'F', '.', checked=True)
-           'name="gender" value="F" id="gender.F" checked="checked"'
+           >>> nv('rank', 'A')
+           'name="rank" value="A"'
+           >>> nv('rank', 'A', '.')
+           'name="rank" value="A" id="rank.A"'
+           >>> nv('rank', 'A', '.', checked=True)
+           'name="rank" value="A" id="rank.A" checked="checked"'
+           >>> nv('rank', 'A', '.', klass='error', style='color:red')
+           'name="rank" value="A" id="rank.A" class="error" style="color:red"'
         """
         s = sep and 'name="%s" value="%s" id="%s"' % (name, value, name+sep+value) \
                 or  'name="%s" value="%s"'         % (name, escape_xml(value))
-        return checked and s + ' checked="checked"' or s
+        if klass:    kwargs['class'] = klass
+        if checked:  kwargs['checked'] = 'checked'
+        if disabled: kwargs['disabled'] = 'disabled'
+        return kwargs and s + ' ' + tagattr(**kwargs) or s
 
     mod = _create_module('tenjin.helpers.html')
     mod._escape_table = _escape_table
