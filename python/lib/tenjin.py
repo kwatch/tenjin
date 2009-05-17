@@ -1,6 +1,5 @@
 ##
-## $Rev$
-## $Release:$
+## $Release: $
 ## $Copyright$
 ##
 ## Permission is hereby granted, free of charge, to any person obtaining
