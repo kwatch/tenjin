@@ -4896,6 +4896,261 @@ echo '</ul>
 % end 
 
 
+Constructor of [%= template_class %] can take the follwoing options.
+
+% if PYTHON
+
+.* '{{,encoding,}}' (string) specifies encoding name of template file.
+  If you specifies encoding, template file string is converted into unicode object.
+  Template.render() will return unicode object if encoding is specified
+  else return str object.
+  Default is [%= NULL %].
+
+.* '{{,escapefunc,}}' (string) specifies function name to escape string.
+  Default is '{{,escape,}}' (= {{,tenjin.escape,}}).
+
+.* '{{,tostrfunc,}}' (string) specifies function name to convert value into string.
+  Default is '{{,to_str,}}' (= {{,tenjin.to_str,}}).
+
+.* '{{,indent,}}' (integer) specifies width of indentation.
+  Default is 4.
+
+% elsif RUBY
+
+.* '{{,escapefunc,}}' (string) specifies function name to escape string.
+  Default is '{{,escape,}}' (= {{,Tenjin::Context#escape,}}).
+
+% elsif PERL
+
+.* '{{,escapefunc,}}' (string) specifies function name to escape string.
+  Default is '{{,escape,}}' (= {{,Tenjin::Context::escape,}}).
+
+% elsif JS
+
+.* '{{,escapefunc,}}' (string) specifies function name to escape string.
+  Default is '{{,escapeXml,}}' (= {{,Tenjin.Util.escapeXml,}}).
+
+% elsif PHP
+
+.* '{{,escapefunc,}}' (string) specifies function name to escape string.
+  Default is '{{,htmlspecialchars,}}'.
+
+% else assert false 
+% end 
+
+Constructor of [%= engine_class %] can also take the same options as above.
+These options given to constructor of [%= engine_class %] are passed to constructor of [%= template_class %] internally.
+
+
+% n += 1
+% if PYTHON
+
+.? File 'example[%= n %].[%=pi%]':
+.-------------------- example[%= n %].[%=pi%]
+filename = 'example[%= n-1 %].[%= suffix %]'
+import tenjin
+from tenjin.helpers import escape, to_str
+template = tenjin.Template(filename, {{*escapefunc='cgi.escape'*}}, {{*tostrfunc='str'*}})
+print template.script
+
+import cgi
+title = '[%= name %] Example'
+items = ['<foo>', '&bar', '"baz"', None, True, False]
+output = template.render({'title':title, 'items':items})
+print output,
+.--------------------
+
+% elsif RUBY
+
+.? File 'example[%= n %].[%=pi%]':
+.-------------------- example[%= n %].[%=pi%]
+require 'tenjin'
+filename = 'example[%= n-1 %].rbhtml'
+template = Tenjin::Template.new(filename, {{*:escapefunc=>'CGI.escapeHTML'*}})
+print template.script, "\n"
+
+require 'cgi'
+title = '[%= name %] Example'
+items = ['<foo>', '&bar', '"baz"']
+output = template.render(:title=>title, :items=>items)
+print output
+.--------------------
+
+% elsif PERL
+
+.? File 'example[%= n %].[%=pi%]':
+.-------------------- example[%= n %].[%=pi%]
+use Tenjin;
+use strict;
+my $filename = 'example[%= n-1 %].[%= suffix %]';
+my $template = new Tenjin::Template($filename, {{*{escapefunc=>'HTML::Entities::encode_entities'}*}});
+print $template->{script}, "\n";
+
+use HTML::Entities;
+my $title = '[%= name %] Example';
+my $items = ['<foo>', '&bar', '"baz"'];
+my $output = $template->render({title=>$title, items=>$items});
+print $output;
+.--------------------
+
+% elsif JS
+
+.? File 'example[%= n %].[%=pi%]':
+.-------------------- example[%= n %].[%=pi%]
+load('tenjin.js');
+var filename = 'example[%= n-1 %].jshtml';
+var template = new Tenjin.Template(filename, {{*{escapefunc:'.escapeHTML'}*}});
+print(template.script);
+
+String.prototype.escapeHTML = function() {
+    return this.replace(/\&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+var title = '[%= name %] Example';
+var items = ['<foo>', '&bar', '"baz"'];
+var output = template.render({title:title, items:items});
+print(output);
+.--------------------
+
+% elsif PHP
+
+.? File 'example[%= n %].[%=pi%]':
+.-------------------- example[%= n %].[%=pi%]
+<?php
+require_once 'tenjin.php';
+$filename = 'example[%= n-1 %].[%=suffix%]';
+$template = new Tenjin_Template($filename, {{*array('escapefunc'=>'escapeHTML')*}});
+echo $template->script;
+
+function escapeHTML($s) {
+    $s = preg_replace('/\&/', '&amp;', $s);
+    $s = preg_replace('/</',  '&lt;',  $s);
+    $s = preg_replace('/>/',  '&gt;',  $s);
+    $s = preg_replace('/"/',  '&quot;', $s);
+    $s = preg_replace('/\'/', '&#039;', $s);
+    return $s;
+}
+$context = array(
+    'title' => '[%= name %] Example',
+    'items' => array('<foo>', '&bar', '"baz"'),
+);
+$output = $template->render($context);
+echo $output;
+?>
+.--------------------
+
+% else assert false 
+% end 
+
+
+% if PYTHON
+
+.? Result:
+.==================== example[%= n %]_escapefunc.result
+$ [%= lang %] example[%= n %].[%= pi %]
+_buf.extend(('''<h1>''', {{*str*}}(title), '''</h1>
+<ul>\n''', ));
+for item in items:
+    _buf.extend((''' <li>''', {{*cgi.escape*}}({{*str*}}(item)), '''</li>\n''', ));
+#end
+_buf.extend(('''</ul>\n''', ));
+
+<h1>[%= name %] Example</h1>
+<ul>
+ <li>&lt;foo&gt;</li>
+ <li>&amp;bar</li>
+ <li>"baz"</li>
+ <li>None</li>
+ <li>True</li>
+ <li>False</li>
+</ul>
+.====================
+
+% elsif RUBY
+
+.? Result:
+.==================== example[%= n %]_escapefunc.result
+$ [%= lang %] example[%= n %].[%= pi %]
+ _buf << %Q`<h1>#{@title}</h1>
+<ul>\n`
+for item in @items
+ _buf << %Q` <li>#{{{*CGI.escapeHTML*}}((item).to_s)}</li>\n`
+end
+ _buf << %Q`</ul>\n`
+
+<h1>rbTenjin Example</h1>
+<ul>
+ <li>&lt;foo&gt;</li>
+ <li>&amp;bar</li>
+ <li>&quot;baz&quot;</li>
+</ul>
+.====================
+
+% elsif PERL
+
+.? Result:
+.==================== example[%= n %]_escapefunc.result
+$ [%= lang %] example[%= n %].[%= pi %]
+my @_buf = (); push(@_buf, q`<h1>`, HTML::Entities::encode_entities($title), q`</h1>
+<ul>
+`, ); for my $item (@$items) {
+push(@_buf, q` <li>`, HTML::Entities::encode_entities($item), q`</li>
+`, ); }
+push(@_buf, q`</ul>
+`, ); join('', @_buf);
+
+<h1>plTenjin Example</h1>
+<ul>
+ <li>&lt;foo&gt;</li>
+ <li>&amp;bar</li>
+ <li>&quot;baz&quot;</li>
+</ul>
+.====================
+
+% elsif JS
+
+.? Result:
+.==================== example[%= n %]_escapefunc.result
+$ [%= lang %] example[%= n %].[%= pi %]
+var _buf = [];  _buf.push('<h1>', title, '</h1>\n\
+<ul>\n');
+ for (var i = 0, n = items.length; i < n; i++) {
+ _buf.push(' <li>', {{*(items[i]).escapeHTML()*}}, '</li>\n');
+ }
+ _buf.push('</ul>\n');
+_buf.join('')
+
+<h1>jsTenjin Example</h1>
+<ul>
+ <li>&lt;foo&gt;</li>
+ <li>&amp;bar</li>
+ <li>&quot;baz&quot;</li>
+</ul>
+
+.====================
+
+% elsif PHP
+
+.? Result:
+.==================== example[%= n %]_escapefunc.result
+$ [%= lang %] example[%= n %].[%= pi %]
+echo '<h1>', escapeHTML($title), '</h1>
+<ul>
+'; foreach ($items as $item) { 
+echo ' <li>', escapeHTML($item), '</li>
+'; } 
+echo '</ul>
+';
+<h1>phpTenjin Example</h1>
+<ul>
+ <li>&lt;foo&gt;</li>
+ <li>&amp;bar</li>
+ <li>&quot;baz&quot;</li>
+</ul>
+.====================
+
+% else assert false 
+% end 
+
 
 
 .$$ Class [%= engine_class %]		| dev-engineclass
@@ -5781,7 +6036,7 @@ These are defined in [%=htmlhelper%] module.
     Relplace "\n" in {{/str/}} into "<br />\n" and return it.
 
 .[ [%= mod %]nv({{/name/}}, {{/value/}}, {{/id_sep/}}=[%=NULL%], {{/klass/}}=[%=NULL%], {{/checked/}}=[%=NULL%], {{/disabled/}}=[%=NULL%], **{{/kwargs/}}) ]
-    Return ' name="{{/name/}}" value={{/value/}}' string.
+    Return ' name="{{/name/}}" value="{{/value/}}"' string.
     .- If {{/id_sep/}} is specified, ' id="{{/name/}}{{/id_sep/}}{{/value/}}' will be added.
     .- If {{/klass/}} is specified, ' class="{{/klass/}}"' will be added.
     .- If {{/checked/}} is true value, ' checked="checked"' will be added.
@@ -5832,264 +6087,6 @@ These are defined in [%=htmlhelper%] module.
 
 % end                    #################### 
 
-
-
-.$$ Template Initialize Options		| dev-initopts
-
-[%= template_class %]() can take the follwoing options.
-
-% if PYTHON
-
-.* '{{,encoding,}}' (string) specifies encoding name of template file.
-  If you specifies encoding, template file string is converted into unicode object.
-  Template.render() will return unicode object if encoding is specified
-  else return str object.
-  Default is [%= NULL %].
-
-.* '{{,escapefunc,}}' (string) specifies function name to escape string.
-  Default is '{{,escape,}}' (= {{,tenjin.escape,}}).
-
-.* '{{,tostrfunc,}}' (string) specifies function name to convert value into string.
-  Default is '{{,to_str,}}' (= {{,tenjin.to_str,}}).
-
-.* '{{,indent,}}' (integer) specifies width of indentation.
-  Default is 4.
-
-% elsif RUBY
-
-.* '{{,escapefunc,}}' (string) specifies function name to escape string.
-  Default is '{{,escape,}}' (= {{,Tenjin::Context#escape,}}).
-
-% elsif PERL
-
-.* '{{,escapefunc,}}' (string) specifies function name to escape string.
-  Default is '{{,escape,}}' (= {{,Tenjin::Context::escape,}}).
-
-% elsif JS
-
-.* '{{,escapefunc,}}' (string) specifies function name to escape string.
-  Default is '{{,escapeXml,}}' (= {{,Tenjin.Util.escapeXml,}}).
-
-% elsif PHP
-
-.* '{{,escapefunc,}}' (string) specifies function name to escape string.
-  Default is '{{,htmlspecialchars,}}'.
-
-% else assert false 
-% end 
-
-Constructor of [%= engine_class %] can also take the same options as above.
-These options given to constructor of [%= engine_class %] are passed to constructor of [%= template_class %] internally.
-
-
-% n += 1
-% if PYTHON
-
-.? File 'example[%= n %].[%=pi%]':
-.-------------------- example[%= n %].[%=pi%]
-filename = 'example[%= n-1 %].[%= suffix %]'
-import tenjin
-from tenjin.helpers import escape, to_str
-template = tenjin.Template(filename, {{*escapefunc='cgi.escape'*}}, {{*tostrfunc='str'*}})
-print template.script
-
-import cgi
-title = '[%= name %] Example'
-items = ['<foo>', '&bar', '"baz"', None, True, False]
-output = template.render({'title':title, 'items':items})
-print output,
-.--------------------
-
-% elsif RUBY
-
-.? File 'example[%= n %].[%=pi%]':
-.-------------------- example[%= n %].[%=pi%]
-require 'tenjin'
-filename = 'example[%= n-1 %].rbhtml'
-template = Tenjin::Template.new(filename, {{*:escapefunc=>'CGI.escapeHTML'*}})
-print template.script, "\n"
-
-require 'cgi'
-title = '[%= name %] Example'
-items = ['<foo>', '&bar', '"baz"']
-output = template.render(:title=>title, :items=>items)
-print output
-.--------------------
-
-% elsif PERL
-
-.? File 'example[%= n %].[%=pi%]':
-.-------------------- example[%= n %].[%=pi%]
-use Tenjin;
-use strict;
-my $filename = 'example[%= n-1 %].[%= suffix %]';
-my $template = new Tenjin::Template($filename, {{*{escapefunc=>'HTML::Entities::encode_entities'}*}});
-print $template->{script}, "\n";
-
-use HTML::Entities;
-my $title = '[%= name %] Example';
-my $items = ['<foo>', '&bar', '"baz"'];
-my $output = $template->render({title=>$title, items=>$items});
-print $output;
-.--------------------
-
-% elsif JS
-
-.? File 'example[%= n %].[%=pi%]':
-.-------------------- example[%= n %].[%=pi%]
-load('tenjin.js');
-var filename = 'example[%= n-1 %].jshtml';
-var template = new Tenjin.Template(filename, {{*{escapefunc:'.escapeHTML'}*}});
-print(template.script);
-
-String.prototype.escapeHTML = function() {
-    return this.replace(/\&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-var title = '[%= name %] Example';
-var items = ['<foo>', '&bar', '"baz"'];
-var output = template.render({title:title, items:items});
-print(output);
-.--------------------
-
-% elsif PHP
-
-.? File 'example[%= n %].[%=pi%]':
-.-------------------- example[%= n %].[%=pi%]
-<?php
-require_once 'tenjin.php';
-$filename = 'example[%= n-1 %].[%=suffix%]';
-$template = new Tenjin_Template($filename, {{*array('escapefunc'=>'escapeHTML')*}});
-echo $template->script;
-
-function escapeHTML($s) {
-    $s = preg_replace('/\&/', '&amp;', $s);
-    $s = preg_replace('/</',  '&lt;',  $s);
-    $s = preg_replace('/>/',  '&gt;',  $s);
-    $s = preg_replace('/"/',  '&quot;', $s);
-    $s = preg_replace('/\'/', '&#039;', $s);
-    return $s;
-}
-$context = array(
-    'title' => '[%= name %] Example',
-    'items' => array('<foo>', '&bar', '"baz"'),
-);
-$output = $template->render($context);
-echo $output;
-?>
-.--------------------
-
-% else assert false 
-% end 
-
-
-% if PYTHON
-
-.? Result:
-.==================== example[%= n %]_escapefunc.result
-$ [%= lang %] example[%= n %].[%= pi %]
-_buf.extend(('''<h1>''', {{*str*}}(title), '''</h1>
-<ul>\n''', ));
-for item in items:
-    _buf.extend((''' <li>''', {{*cgi.escape*}}({{*str*}}(item)), '''</li>\n''', ));
-#end
-_buf.extend(('''</ul>\n''', ));
-
-<h1>[%= name %] Example</h1>
-<ul>
- <li>&lt;foo&gt;</li>
- <li>&amp;bar</li>
- <li>"baz"</li>
- <li>None</li>
- <li>True</li>
- <li>False</li>
-</ul>
-.====================
-
-% elsif RUBY
-
-.? Result:
-.==================== example[%= n %]_escapefunc.result
-$ [%= lang %] example[%= n %].[%= pi %]
- _buf << %Q`<h1>#{@title}</h1>
-<ul>\n`
-for item in @items
- _buf << %Q` <li>#{{{*CGI.escapeHTML*}}((item).to_s)}</li>\n`
-end
- _buf << %Q`</ul>\n`
-
-<h1>rbTenjin Example</h1>
-<ul>
- <li>&lt;foo&gt;</li>
- <li>&amp;bar</li>
- <li>&quot;baz&quot;</li>
-</ul>
-.====================
-
-% elsif PERL
-
-.? Result:
-.==================== example[%= n %]_escapefunc.result
-$ [%= lang %] example[%= n %].[%= pi %]
-my @_buf = (); push(@_buf, q`<h1>`, HTML::Entities::encode_entities($title), q`</h1>
-<ul>
-`, ); for my $item (@$items) {
-push(@_buf, q` <li>`, HTML::Entities::encode_entities($item), q`</li>
-`, ); }
-push(@_buf, q`</ul>
-`, ); join('', @_buf);
-
-<h1>plTenjin Example</h1>
-<ul>
- <li>&lt;foo&gt;</li>
- <li>&amp;bar</li>
- <li>&quot;baz&quot;</li>
-</ul>
-.====================
-
-% elsif JS
-
-.? Result:
-.==================== example[%= n %]_escapefunc.result
-$ [%= lang %] example[%= n %].[%= pi %]
-var _buf = [];  _buf.push('<h1>', title, '</h1>\n\
-<ul>\n');
- for (var i = 0, n = items.length; i < n; i++) {
- _buf.push(' <li>', {{*(items[i]).escapeHTML()*}}, '</li>\n');
- }
- _buf.push('</ul>\n');
-_buf.join('')
-
-<h1>jsTenjin Example</h1>
-<ul>
- <li>&lt;foo&gt;</li>
- <li>&amp;bar</li>
- <li>&quot;baz&quot;</li>
-</ul>
-
-.====================
-
-% elsif PHP
-
-.? Result:
-.==================== example[%= n %]_escapefunc.result
-$ [%= lang %] example[%= n %].[%= pi %]
-echo '<h1>', escapeHTML($title), '</h1>
-<ul>
-'; foreach ($items as $item) { 
-echo ' <li>', escapeHTML($item), '</li>
-'; } 
-echo '</ul>
-';
-<h1>phpTenjin Example</h1>
-<ul>
- <li>&lt;foo&gt;</li>
- <li>&amp;bar</li>
- <li>&quot;baz&quot;</li>
-</ul>
-.====================
-
-% else assert false 
-% end 
 
 
 
@@ -6208,7 +6205,7 @@ $ [%=lang%] example[%=n%]a.[%=pi%]
 .====================
 
 
-(B) Add helper functions to context.
+(B) Add helper functions into context.
 
 .? File 'example[%=n%]b.[%=pi%]':
 .-------------------- example[%=n%]b.[%=pi%]
