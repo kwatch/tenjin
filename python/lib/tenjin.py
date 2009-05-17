@@ -265,17 +265,15 @@ def _create_html_module():
         return _escape_pattern.sub(_escape_callable, s)
         #return s.replace('&','&amp;').replace('<','&lt;').replace('>','&gt;').replace('"','&quot;')
 
-    def tagattr(name, value):
-        """(experimental) return 'name="value"' string if value is true.
-           ex. ## simpler than #{size and ' size="%s"' % size or ''}
-           >>> size = 20
-           >>> tagattr('size', size)
-           ' size="20"'
-           >>> size = 0
-           >>> tagattr('size', size)
+    def tagattr(**kwargs):
+        """(experimental) built html tag attribtes.
+           ex.
+           >>> tagattr(src='img.png', size=20)
+           ' src="img.png" size="20"'
+           >>> tagattr(src='', size=0)
            ''
         """
-        return value and ' %s="%s"' % (name, escape_xml(to_str(value))) or ''
+        return ' '.join(['%s="%s"' % (k, escape_xml(to_str(v))) for k, v in kwargs.iteritems() if v])
 
     def checked(expr):
         """return ' checked="checked"' if expr is true."""
