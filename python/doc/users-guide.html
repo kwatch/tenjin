@@ -18,8 +18,6 @@
       last update: $Date$<br>
     </div>
 
-<p>Release: $Release$
-</p>
 <p>Table of Contents:
 <ul>
   <li><a href="#intro">Introduction</a>
@@ -76,7 +74,7 @@
     </li>
     <li><a href="#dev-engineclass">Class tenjin.Engine</a>
     </li>
-    <li><a href="#dev-initopts">Template Initialize Options</a>
+    <li><a href="#dev-htmlhelpers">HTML Helper Functions</a>
     </li>
     <li><a href="#dev-encoding">Template Encoding</a>
     </li>
@@ -178,6 +176,8 @@ print output,
 </li>
 <li>pyTenjin can load YAML file as context data. Using pyTenjin, it is able to
   separate template file and data file.
+</li>
+<li>pyTenjin now supports Goole AppEngine. See <a href="faq.html#faq-google-appengine">FAQ</a> for details.
 </li>
 </ul>
 <br>
@@ -1342,6 +1342,10 @@ val2 = #{val2}
 </p>
 <p>If you want to know the notation or features of pyTenjin, see <a href="#desguide">Designer's Guide</a> section.
 </p>
+<p>If you want to handle non-ascii characters, see <a href="#dev-encoding">Template Encoding</a> section.
+</p>
+<p>If you are interested in Google AppEngine, see <a href="faq.html#faq-google-appengine">FAQ</a>.
+</p>
 <a name="dev-example"></a>
 <h3 class="section2">An Example</h3>
 <p>The following is an example to use pyTenjin in Python.
@@ -1370,21 +1374,63 @@ print output,
 tenjin.Template </b></dt>
 <dd class="dd3">
     This class represents a template file.
-    An object of tenjin.Template correspond to a template file.
+    Main responsibilities of this class are:
+    <ul type="circle">
+    <li>Convert template file into python script
+    </li>
+    <li>Render converted python script with context data
+    </li>
+    </ul>
 </dd>
 </dl>
 <dl class="dl3">
 <dt class="dt3"><b>
 tenjin.Engine </b></dt>
 <dd class="dd3">
-    This class represents some template objects.
-    It can handle nested template and layout template.
-    Using tenjin.Engine class, you can use pyTenjin as a template engine for web application.
+    This class provides many features such as:
+    <ul type="circle">
+    <li>Search template files
+    </li>
+    <li>Nestable layout template
+    </li>
+    <li>Partial template
+    </li>
+    <li>File caching
+    </li>
+    <li>Preprocessing
+    </li>
+    <li>and so on
+    </li>
+    </ul>
 </dd>
 </dl>
 <p>pyTenjin has the following utility functions.
-These are defined at tenjin.helpers.html module.
+These are defined at tenjin.helpers module.
 </p>
+<dl class="dl3">
+<dt class="dt3"><b>
+tenjin.helpers.to_str(value) </b></dt>
+<dd class="dd3">
+    Convert value into string.
+    Return empty string if value is None else return value of <code>str(value)</code>.
+</dd>
+</dl>
+<dl class="dl3">
+<dt class="dt3"><b>
+tenjin.helpers.escape(str) </b></dt>
+<dd class="dd3">
+    Escape '<code>&amp; &lt; &gt; "</code>' in string into '<code>&amp;amp; &amp;lt; &amp;gt; &amp;quot;</code>'.
+</dd>
+</dl>
+<dl class="dl3">
+<dt class="dt3"><b>
+tenjin.helpers.generate_tostrfunc(str) </b></dt>
+<dd class="dd3">
+    Generate 'to_str' function which encodes unicode to str.
+    This is used when handling non-ascii characters in template file.
+    See <a href="#dev-encoding">Template Encoding</a> section for details.
+</dd>
+</dl>
 <br>
 
 
@@ -1501,6 +1547,70 @@ _buf.extend(('''&lt;/ul&gt;\n''', ));
  &lt;li&gt;&amp;quot;CCC&amp;quot;&lt;/li&gt;
 &lt;/ul&gt;
 </pre>
+<p>Constructor of tenjin.Template can take the follwoing options.
+</p>
+<ul type="disc">
+<li>'<code>encoding</code>' (string) specifies encoding name of template file.
+  If you specifies encoding, template file string is converted into unicode object.
+  Template.render() will return unicode object if encoding is specified
+  else return str object.
+  Default is None.
+</li>
+</ul>
+<ul type="disc">
+<li>'<code>escapefunc</code>' (string) specifies function name to escape string.
+  Default is '<code>escape</code>' (= <code>tenjin.escape</code>).
+</li>
+</ul>
+<ul type="disc">
+<li>'<code>tostrfunc</code>' (string) specifies function name to convert value into string.
+  Default is '<code>to_str</code>' (= <code>tenjin.to_str</code>).
+</li>
+</ul>
+<ul type="disc">
+<li>'<code>indent</code>' (integer) specifies width of indentation.
+  Default is 4.
+</li>
+</ul>
+<p>Constructor of tenjin.Engine can also take the same options as above.
+These options given to constructor of tenjin.Engine are passed to constructor of tenjin.Template internally.
+</p>
+<a name="example17.py"></a>
+<div class="program_caption">
+File 'example17.py':</div>
+<pre class="program">filename = 'example16.pyhtml'
+import tenjin
+from tenjin.helpers import escape, to_str
+template = tenjin.Template(filename, <strong>escapefunc='cgi.escape'</strong>, <strong>tostrfunc='str'</strong>)
+print template.script
+
+import cgi
+title = 'pyTenjin Example'
+items = ['&lt;foo&gt;', '&amp;bar', '"baz"', None, True, False]
+output = template.render({'title':title, 'items':items})
+print output,
+</pre>
+<a name="example17_escapefunc.result"></a>
+<div class="terminal_caption">
+Result:</div>
+<pre class="terminal">$ python example17.py
+_buf.extend(('''&lt;h1&gt;''', <strong>str</strong>(title), '''&lt;/h1&gt;
+&lt;ul&gt;\n''', ));
+for item in items:
+    _buf.extend((''' &lt;li&gt;''', <strong>cgi.escape</strong>(<strong>str</strong>(item)), '''&lt;/li&gt;\n''', ));
+#end
+_buf.extend(('''&lt;/ul&gt;\n''', ));
+
+&lt;h1&gt;pyTenjin Example&lt;/h1&gt;
+&lt;ul&gt;
+ &lt;li&gt;&amp;lt;foo&amp;gt;&lt;/li&gt;
+ &lt;li&gt;&amp;amp;bar&lt;/li&gt;
+ &lt;li&gt;"baz"&lt;/li&gt;
+ &lt;li&gt;None&lt;/li&gt;
+ &lt;li&gt;True&lt;/li&gt;
+ &lt;li&gt;False&lt;/li&gt;
+&lt;/ul&gt;
+</pre>
 <br>
 
 
@@ -1514,11 +1624,11 @@ Using tenjin.Engine class, you can use pyTenjin as a template engine for web app
 </p>
 <dl class="dl3">
 <dt class="dt3"><b>
-tenjin.Engine(str prefix='', str postfix='', str layout=None, list path=None, bool cache=True, bool preprocess=False, type templateclass=Template, **init_opts_for_template) </b></dt>
+tenjin.Engine(str prefix='', str postfix='', str layout=None, list path=None, bool cache=True, bool preprocess=False, type templateclass=Template, **kwargs) </b></dt>
 <dd class="dd3">
     Create Engine object.
-    Argument 'cache' controls caching policy (caches bytecode when True, caches python code when None, caches nothing when False).
-    Arguments <code>init_opts_for_template</code> are passed to tenjin.Template() internally.
+    Argument 'cache' controls caching policy. If True, marshal-base cache files will be created. If '<code>"text"</code>', text-base cache files will be created. If False, no cache files are created.
+    Arguments <code>kwargs</code> are passed to tenjin.Template() internally.
 </dd>
 </dl>
 <dl class="dl3">
@@ -1729,72 +1839,92 @@ Result:</div>
 <br>
 
 
-<a name="dev-initopts"></a>
-<h3 class="section2">Template Initialize Options</h3>
-<p>tenjin.Template() can take the follwoing options.
+<a name="dev-htmlhelpers"></a>
+<h3 class="section2">HTML Helper Functions</h3>
+<p>pyTenjin provides some useful helper functions for HTML.
+These are defined in tenjin.helpers.html module.
 </p>
-<ul type="disc">
-<li>'<code>encoding</code>' (string) specifies encoding name of template file.
-  If you specifies encoding, template file string is converted into unicode object.
-  Template.render() will return unicode object if encoding is specified
-  else return str object.
-  Default is None.
-</li>
-</ul>
-<ul type="disc">
-<li>'<code>escapefunc</code>' (string) specifies function name to escape string.
-  Default is '<code>escape</code>' (= <code>tenjin.escape</code>).
-</li>
-</ul>
-<ul type="disc">
-<li>'<code>tostrfunc</code>' (string) specifies function name to convert value into string.
-  Default is '<code>to_str</code>' (= <code>tenjin.to_str</code>).
-</li>
-</ul>
-<ul type="disc">
-<li>'<code>indent</code>' (integer) specifies width of indentation.
-  Default is 4.
-</li>
-</ul>
-<p>Constructor of tenjin.Engine can also take the same options as above.
-These options given to constructor of tenjin.Engine are passed to constructor of tenjin.Template internally.
-</p>
-<a name="example17.py"></a>
+<dl class="dl3">
+<dt class="dt3"><b>
+tenjin.helpers.checked(<em>expr</em>) </b></dt>
+<dd class="dd3">
+    Return <code>' checked="checked"'</code> if <em>expr</em> is true.
+</dd>
+</dl>
+<dl class="dl3">
+<dt class="dt3"><b>
+tenjin.helpers.selected(<em>expr</em>) </b></dt>
+<dd class="dd3">
+    Return <code>' selected="selected"'</code> if <em>expr</em> is true.
+</dd>
+</dl>
+<dl class="dl3">
+<dt class="dt3"><b>
+tenjin.helpers.disabled(<em>expr</em>) </b></dt>
+<dd class="dd3">
+    Return <code>' disabled="disabled"'</code> if <em>expr</em> is true.
+</dd>
+</dl>
+<dl class="dl3">
+<dt class="dt3"><b>
+tenjin.helpers.nl2br(<em>str</em>) </b></dt>
+<dd class="dd3">
+    Relplace "\n" in <em>str</em> into "&lt;br /&gt;\n" and return it.
+</dd>
+</dl>
+<dl class="dl3">
+<dt class="dt3"><b>
+tenjin.helpers.nv(<em>name</em>, <em>value</em>, <em>id_sep</em>=None, <em>klass</em>=None, <em>checked</em>=None, <em>disabled</em>=None, **<em>kwargs</em>) </b></dt>
+<dd class="dd3">
+    Return ' name="<em>name</em>" value="<em>value</em>"' string.
+    <ul type="circle">
+    <li>If <em>id_sep</em> is specified, ' id="<em>name</em><em>id_sep</em><em>value</em>' will be added.
+    </li>
+    <li>If <em>klass</em> is specified, ' class="<em>klass</em>"' will be added.
+    </li>
+    <li>If <em>checked</em> is true value, ' checked="checked"' will be added.
+    </li>
+    <li>If <em>disabled</em> is true value, ' disabled="disabled"' will be added.
+    </li>
+    </ul>
 <div class="program_caption">
-File 'example17.py':</div>
-<pre class="program">filename = 'example16.pyhtml'
-import tenjin
-from tenjin.helpers import escape, to_str
-template = tenjin.Template(filename, <strong>escapefunc='cgi.escape'</strong>, <strong>tostrfunc='str'</strong>)
-print template.script
-
-import cgi
-title = 'pyTenjin Example'
-items = ['&lt;foo&gt;', '&amp;bar', '"baz"', None, True, False]
-output = template.render({'title':title, 'items':items})
-print output,
+ex:</div>
+<pre class="program">&gt;&gt;&gt; nv('gender', 'F')
+' name="gender" value="F"'
+&gt;&gt;&gt; nv('gender', 'F', '.')
+' name="gender" value="F" id="gender.F"'
+&gt;&gt;&gt; nv('gender', 'F', '.', klass='error')
+' name="gender" value="F" id="gender.F" class="error"'
+&gt;&gt;&gt; nv('gender', 'F', '.', checked=True)
+' name="gender" value="F" id="gender.F" checked="checked"'
+&gt;&gt;&gt; nv('gender', 'F', '.', style="color:red")
+' name="gender" value="F" id="gender.F" style="color:red"'
 </pre>
-<a name="example17_escapefunc.result"></a>
-<div class="terminal_caption">
-Result:</div>
-<pre class="terminal">$ python example17.py
-_buf.extend(('''&lt;h1&gt;''', <strong>str</strong>(title), '''&lt;/h1&gt;
-&lt;ul&gt;\n''', ));
-for item in items:
-    _buf.extend((''' &lt;li&gt;''', <strong>cgi.escape</strong>(<strong>str</strong>(item)), '''&lt;/li&gt;\n''', ));
-#end
-_buf.extend(('''&lt;/ul&gt;\n''', ));
-
-&lt;h1&gt;pyTenjin Example&lt;/h1&gt;
-&lt;ul&gt;
- &lt;li&gt;&amp;lt;foo&amp;gt;&lt;/li&gt;
- &lt;li&gt;&amp;amp;bar&lt;/li&gt;
- &lt;li&gt;"baz"&lt;/li&gt;
- &lt;li&gt;None&lt;/li&gt;
- &lt;li&gt;True&lt;/li&gt;
- &lt;li&gt;False&lt;/li&gt;
-&lt;/ul&gt;
+</dd>
+</dl>
+<dl class="dl3">
+<dt class="dt3"><b>
+tenjin.helpers.tagattr(<em>name1</em>=<em>value1</em>, <em>name2</em>=<em>value2</em>, <em>...</em>) </b></dt>
+<dd class="dd3">
+    <strong>(experimental)</strong>
+    Return '<code><em>name1</em>="<em>value1</em>" <em>name2</em>="<em>value2</em>"</code>'.
+    <ul type="circle">
+    <li>If <em>valueN</em> is false value, that pair is ignored.
+    </li>
+    <li>If <em>nameN</em> is 'klass', then 'class="<em>valueN</em>"' will be added.
+    </li>
+    </ul>
+<div class="program_caption">
+ex:</div>
+<pre class="program">&gt;&gt;&gt; tagattr(colspan=40, rowspan=4)
+'colspan="40" rowspan="4"'
+&gt;&gt;&gt; tagattr(colspan=0, rowspan=False)
+''
+&gt;&gt;&gt; tagattr(klass='error')    # 'klass' will be renamed to 'class'
+'class="error"'
 </pre>
+</dd>
+</dl>
 <br>
 
 
@@ -1883,7 +2013,7 @@ Result:</div>
   &lt;li&gt;&lt;a href="/"&gt;Top&lt;/a&gt;&lt;/li&gt;
 &lt;/ul&gt;
 </pre>
-<p>(B) Add helper functions to context.
+<p>(B) Add helper functions into context.
 </p>
 <a name="example19b.py"></a>
 <div class="program_caption">

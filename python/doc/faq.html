@@ -18,8 +18,6 @@
       last update: $Date$<br>
     </div>
 
-<p>Release:	$Release$
-</p>
 <p>Table of contents:
 <ul>
   <li><a href="#faq-basic">Basic</a>
@@ -35,6 +33,8 @@
     <li><a href="#faq-change-bufname">Can I change '_buf' variable name?</a>
     </li>
     <li><a href="#faq-default-value">Is it able to specify default value if a variable is not set?</a>
+    </li>
+    <li><a href="#faq-google-appengine">Is pyTenjin ready for Google App Engine?</a>
     </li>
   </ul>
   </li>
@@ -384,6 +384,84 @@ Hello Tenjin!
 $ pytenjin ex5.pyhtml
 Hello Guest!
 </pre>
+<br>
+
+
+<a name="faq-google-appengine"></a>
+<h3 class="section2">Is pyTenjin ready for Google App Engine?</h3>
+<p>Yes. You can use pyTenjin in Google App Engine (GAE).
+</p>
+<p>Compared to Django template engine, there are some merits to use pyTenjin in Google AppEngine:
+</p>
+<ul type="disc">
+<li>pyTenjin runs much faster than Django template engine.
+   If you are facing with CPU quota, it is recommended to try pyTenjin.
+</li>
+</ul>
+<ul type="disc">
+<li>pyTenjin library is consist of only one file.
+   If you are facing with number of files quota, it is recommended to try pyTenjin.
+</li>
+</ul>
+<p>But there are two points what you should know:
+</p>
+<ul type="disc">
+<li>GAE doesn't allow you to create files dinamically,
+   so you should turn template caching off, or create template cache file in advance.
+</li>
+<li>GAE doesn't allow you to use marshal moduel,
+   so you should use text-base caching instead of marshal-base caching if you want to template caching.
+</li>
+</ul>
+<p>The following is an example to use Tenjin in Google AppEngine, with template caching turned off.
+(Notice that pyTenjin is enough fast even when template caching turned off, because template objects are kept in memory due to GAE's persistent process.)
+</p>
+<a name="gae-example1.py"></a>
+<div class="program_caption">
+gae-example1.py</div>
+<pre class="program">from google.appengine.ext import webapp
+from google.appengine.ext.webapp.util import run_wsgi_app
+
+<strong>import tenjin</strong>
+<strong>from tenjin.helpers import *</strong>
+<strong>engine = tenjin.Engine(cache=False)  # or cache='text'</strong>
+
+class MainPage(webapp.RequestHandler):
+  def get(self):
+    context = {'title': 'Tenjin Example',
+               'items': ['&lt;AAA&gt;','B&amp;B','"CCC"'] }
+    <strong>html = engine.render("index.pyhtml", context)</strong>
+    self.response.out.write(html)
+
+application = webapp.WSGIApplication([('/', MainPage)], debug=True)
+
+def main():
+  run_wsgi_app(application)
+
+if __name__ == "__main__":
+  main()
+</pre>
+<p>If you want to use text-base cacheing, set <code>"text"</code> to <code>cache</code> parameter,
+and create template cache files by:
+</p>
+<pre class="terminal">$ pytenjin -a cache *.pyhtml
+</pre>
+<p>This command will generate *.pyhtml.cache files.
+Don't forget to upload *.pyhtml.cache as well as *.pyhtml.
+</p>
+<p>It is good idea to set <code>cache</code> parameter only on production environment.
+</p>
+<pre class="program">import os
+is_dev_mode = (os.getenv("SERVER_SOFTWARE") or "").startswith("Development")
+if is_dev_mode:      # when development mode,
+    cache = False    # turn template-caching off.
+else:                # when production mode,
+    cache = 'text'   # use text-base caching.
+engine = tenjin.Engine(cache=cache)
+....
+</pre>
+<p>It should be said again that pyTenjin is enough fast even when template caching turned off. You should make template-based caching on only when you can't get enough performance.
+</p>
 <br>
 
 
@@ -1203,7 +1281,7 @@ print engine.render('helpers1.pyhtml'),
 <a name="helpers1.result"></a>
 <div class="terminal_caption">
 result:</div>
-<pre class="terminal">$ pytenjin helpers1.py
+<pre class="terminal">$ python helpers1.py
 ***** preprocessed *****
 _buf.extend(('''&lt;p&gt;
 ''', to_str(link_to('Create', action='new')), '''
@@ -1259,7 +1337,7 @@ print engine.render('helpers2.pyhtml'<strong>, context</strong>),
 <a name="helpers2.result"></a>
 <div class="terminal_caption">
 result:</div>
-<pre class="terminal">$ pytenjin helpers2.py
+<pre class="terminal">$ python helpers2.py
 ***** preprocessed *****
 _buf.extend(('''&lt;p&gt;
 ''', to_str(link_to(escape(user['name']), action='show', id=user['id'])), '''

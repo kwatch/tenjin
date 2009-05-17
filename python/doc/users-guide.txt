@@ -3,7 +3,7 @@
 .?release:	$Release$
 .?stylesheet:	docstyle.css
 
-Release: $Release$
+.#Release: $Release$
 
 
 Table of Contents:
@@ -109,6 +109,7 @@ pyTenjin has the following features:
 .* pyTenjin supports partial capturing of template.
 .* pyTenjin can load YAML file as context data. Using pyTenjin, it is able to
   separate template file and data file.
+.* pyTenjin now supports Goole AppEngine. See {{<FAQ|faq.html#faq-google-appengine>}} for details.
 
 
 
@@ -1451,6 +1452,10 @@ This section shows how to use pyTenjin in your Python script.
 
 If you want to know the notation or features of pyTenjin, see {{<Designer's Guide|#desguide>}} section.
 
+If you want to handle non-ascii characters, see {{<Template Encoding|#dev-encoding>}} section.
+
+If you are interested in Google AppEngine, see {{<FAQ|faq.html#faq-google-appengine>}}.
+
 
 .$$ An Example			| dev-example
 
@@ -1479,20 +1484,37 @@ pyTenjin has the follwoing classes.
 
 .[ tenjin.Template ]
     This class represents a template file.
-    An object of tenjin.Template correspond to a template file.
+    Main responsibilities of this class are:
+    .- Convert template file into python script
+    .- Render converted python script with context data
 
 .[ tenjin.Engine ]
-    This class represents some template objects.
-    It can handle nested template and layout template.
-    Using tenjin.Engine class, you can use pyTenjin as a template engine for web application.
+    This class provides many features such as:
+    .- Search template files
+    .- Nestable layout template
+    .- Partial template
+    .- File caching
+    .- Preprocessing
+    .- and so on
+
 
 
 
 
 pyTenjin has the following utility functions.
-These are defined at tenjin.helpers.html module.
+These are defined at tenjin.helpers module.
 
+.[ tenjin.helpers.to_str(value) ]
+    Convert value into string.
+    Return empty string if value is None else return value of {{,str(value),}}.
 
+.[ tenjin.helpers.escape(str) ]
+    Escape '{{,& < > ",}}' in string into '{{,&amp; &lt; &gt; &quot;,}}'.
+
+.[ tenjin.helpers.generate_tostrfunc(str) ]
+    Generate 'to_str' function which encodes unicode to str.
+    This is used when handling non-ascii characters in template file.
+    See {{<Template Encoding|#dev-encoding>}} section for details.
 
 
 
@@ -1598,6 +1620,70 @@ _buf.extend(('''</ul>\n''', ));
 
 
 
+Constructor of tenjin.Template can take the follwoing options.
+
+
+.* '{{,encoding,}}' (string) specifies encoding name of template file.
+  If you specifies encoding, template file string is converted into unicode object.
+  Template.render() will return unicode object if encoding is specified
+  else return str object.
+  Default is None.
+
+.* '{{,escapefunc,}}' (string) specifies function name to escape string.
+  Default is '{{,escape,}}' (= {{,tenjin.escape,}}).
+
+.* '{{,tostrfunc,}}' (string) specifies function name to convert value into string.
+  Default is '{{,to_str,}}' (= {{,tenjin.to_str,}}).
+
+.* '{{,indent,}}' (integer) specifies width of indentation.
+  Default is 4.
+
+
+Constructor of tenjin.Engine can also take the same options as above.
+These options given to constructor of tenjin.Engine are passed to constructor of tenjin.Template internally.
+
+
+
+.? File 'example17.py':
+.-------------------- example17.py
+filename = 'example16.pyhtml'
+import tenjin
+from tenjin.helpers import escape, to_str
+template = tenjin.Template(filename, {{*escapefunc='cgi.escape'*}}, {{*tostrfunc='str'*}})
+print template.script
+
+import cgi
+title = 'pyTenjin Example'
+items = ['<foo>', '&bar', '"baz"', None, True, False]
+output = template.render({'title':title, 'items':items})
+print output,
+.--------------------
+
+
+
+
+.? Result:
+.==================== example17_escapefunc.result
+$ python example17.py
+_buf.extend(('''<h1>''', {{*str*}}(title), '''</h1>
+<ul>\n''', ));
+for item in items:
+    _buf.extend((''' <li>''', {{*cgi.escape*}}({{*str*}}(item)), '''</li>\n''', ));
+#end
+_buf.extend(('''</ul>\n''', ));
+
+<h1>pyTenjin Example</h1>
+<ul>
+ <li>&lt;foo&gt;</li>
+ <li>&amp;bar</li>
+ <li>"baz"</li>
+ <li>None</li>
+ <li>True</li>
+ <li>False</li>
+</ul>
+.====================
+
+
 
 
 .$$ Class tenjin.Engine		| dev-engineclass
@@ -1611,10 +1697,10 @@ This class has the following methods.
 
 
 
-.[ tenjin.Engine(str prefix='', str postfix='', str layout=None, list path=None, bool cache=True, bool preprocess=False, type templateclass=Template, **init_opts_for_template) ]
+.[ tenjin.Engine(str prefix='', str postfix='', str layout=None, list path=None, bool cache=True, bool preprocess=False, type templateclass=Template, **kwargs) ]
     Create Engine object.
-    Argument 'cache' controls caching policy (caches bytecode when True, caches python code when None, caches nothing when False).
-    Arguments {{,init_opts_for_template,}} are passed to tenjin.Template() internally.
+    Argument 'cache' controls caching policy. If True, marshal-base cache files will be created. If '{{,"text",}}', text-base cache files will be created. If False, no cache files are created.
+    Arguments {{,kwargs,}} are passed to tenjin.Template() internally.
 
 .[ tenjin.Engine#render(str template_name, dict context=None, dict globals=None, str layout=None) ]
     Convert template into Python code, evaluate it with context data, and return the result of it.
@@ -1817,70 +1903,62 @@ $ python user_app.cgi create
 
 
 
-.$$ Template Initialize Options		| dev-initopts
-
-tenjin.Template() can take the follwoing options.
 
 
-.* '{{,encoding,}}' (string) specifies encoding name of template file.
-  If you specifies encoding, template file string is converted into unicode object.
-  Template.render() will return unicode object if encoding is specified
-  else return str object.
-  Default is None.
+.$$ HTML Helper Functions	| dev-htmlhelpers
 
-.* '{{,escapefunc,}}' (string) specifies function name to escape string.
-  Default is '{{,escape,}}' (= {{,tenjin.escape,}}).
-
-.* '{{,tostrfunc,}}' (string) specifies function name to convert value into string.
-  Default is '{{,to_str,}}' (= {{,tenjin.to_str,}}).
-
-.* '{{,indent,}}' (integer) specifies width of indentation.
-  Default is 4.
+pyTenjin provides some useful helper functions for HTML.
+These are defined in tenjin.helpers.html module.
 
 
-Constructor of tenjin.Engine can also take the same options as above.
-These options given to constructor of tenjin.Engine are passed to constructor of tenjin.Template internally.
+.[ tenjin.helpers.checked({{/expr/}}) ]
+    Return {{,' checked="checked"',}} if {{/expr/}} is true.
+
+.[ tenjin.helpers.selected({{/expr/}}) ]
+    Return {{,' selected="selected"',}} if {{/expr/}} is true.
+
+.[ tenjin.helpers.disabled({{/expr/}}) ]
+    Return {{,' disabled="disabled"',}} if {{/expr/}} is true.
+
+.[ tenjin.helpers.nl2br({{/str/}}) ]
+    Relplace "\n" in {{/str/}} into "<br />\n" and return it.
+
+.[ tenjin.helpers.nv({{/name/}}, {{/value/}}, {{/id_sep/}}=None, {{/klass/}}=None, {{/checked/}}=None, {{/disabled/}}=None, **{{/kwargs/}}) ]
+    Return ' name="{{/name/}}" value="{{/value/}}"' string.
+    .- If {{/id_sep/}} is specified, ' id="{{/name/}}{{/id_sep/}}{{/value/}}' will be added.
+    .- If {{/klass/}} is specified, ' class="{{/klass/}}"' will be added.
+    .- If {{/checked/}} is true value, ' checked="checked"' will be added.
+    .- If {{/disabled/}} is true value, ' disabled="disabled"' will be added.
+    .? ex:
+    .--------------------
+    >>> nv('gender', 'F')
+    ' name="gender" value="F"'
+    >>> nv('gender', 'F', '.')
+    ' name="gender" value="F" id="gender.F"'
+    >>> nv('gender', 'F', '.', klass='error')
+    ' name="gender" value="F" id="gender.F" class="error"'
+    >>> nv('gender', 'F', '.', checked=True)
+    ' name="gender" value="F" id="gender.F" checked="checked"'
+    >>> nv('gender', 'F', '.', style="color:red")
+    ' name="gender" value="F" id="gender.F" style="color:red"'
+    .--------------------
+
+.[ tenjin.helpers.tagattr({{/name1/}}={{/value1/}}, {{/name2/}}={{/value2/}}, {{/.../}}) ]
+    {{*(experimental)*}}
+    Return '{{,{{/name1/}}="{{/value1/}}" {{/name2/}}="{{/value2/}}",}}'.
+    .- If {{/valueN/}} is false value, that pair is ignored.
+    .- If {{/nameN/}} is 'klass', then 'class="{{/valueN/}}"' will be added.
+    .? ex:
+    .--------------------
+    >>> tagattr(colspan=40, rowspan=4)
+    'colspan="40" rowspan="4"'
+    >>> tagattr(colspan=0, rowspan=False)
+    ''
+    >>> tagattr(klass='error')    # 'klass' will be renamed to 'class'
+    'class="error"'
+    .--------------------
 
 
-
-.? File 'example17.py':
-.-------------------- example17.py
-filename = 'example16.pyhtml'
-import tenjin
-from tenjin.helpers import escape, to_str
-template = tenjin.Template(filename, {{*escapefunc='cgi.escape'*}}, {{*tostrfunc='str'*}})
-print template.script
-
-import cgi
-title = 'pyTenjin Example'
-items = ['<foo>', '&bar', '"baz"', None, True, False]
-output = template.render({'title':title, 'items':items})
-print output,
-.--------------------
-
-
-
-
-.? Result:
-.==================== example17_escapefunc.result
-$ python example17.py
-_buf.extend(('''<h1>''', {{*str*}}(title), '''</h1>
-<ul>\n''', ));
-for item in items:
-    _buf.extend((''' <li>''', {{*cgi.escape*}}({{*str*}}(item)), '''</li>\n''', ));
-#end
-_buf.extend(('''</ul>\n''', ));
-
-<h1>pyTenjin Example</h1>
-<ul>
- <li>&lt;foo&gt;</li>
- <li>&amp;bar</li>
- <li>"baz"</li>
- <li>None</li>
- <li>True</li>
- <li>False</li>
-</ul>
-.====================
 
 
 
@@ -1994,7 +2072,7 @@ $ python example19a.py
 .====================
 
 
-(B) Add helper functions to context.
+(B) Add helper functions into context.
 
 .? File 'example19b.py':
 .-------------------- example19b.py
