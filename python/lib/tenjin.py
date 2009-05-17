@@ -265,10 +265,8 @@ def _create_html_module():
         return _escape_pattern.sub(_escape_callable, s)
         #return s.replace('&','&amp;').replace('<','&lt;').replace('>','&gt;').replace('"','&quot;')
 
-    def tagattr(name, expr, value=None, escape=True):
-        """(experimental) return 'name="expr"' string if expr is true value.
-           if value is specified then it is used as attribute value instead expr.
-           if expr is false value then '' will be returned.
+    def tagattr(name, value):
+        """(experimental) return 'name="value"' string if value is true.
            ex. ## simpler than #{size and ' size="%s"' % size or ''}
            >>> size = 20
            >>> tagattr('size', size)
@@ -277,15 +275,7 @@ def _create_html_module():
            >>> tagattr('size', size)
            ''
         """
-        if not expr:
-            return ''
-        if value is None:
-            value = to_str(expr)
-        else:
-            value = to_str(value)
-        if escape:
-            value = escape_xml(value)
-        return ' %s="%s"' % (name, value)
+        return value and ' %s="%s"' % (name, escape_xml(to_str(value))) or ''
 
     def checked(expr):
         """return ' checked="checked"' if expr is true."""

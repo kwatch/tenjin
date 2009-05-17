@@ -22,14 +22,6 @@ class HtmlHelperTest(unittest.TestCase, TestCaseHelper):
         actual = tenjin.helpers.html.tagattr('size', 0)
         expected = ''
         self.assertEqual(expected, actual)
-        #
-        actual = tenjin.helpers.html.tagattr('checked', True, 'checked')
-        expected = ' checked="checked"'
-        self.assertEqual(expected, actual)
-        #
-        actual = tenjin.helpers.html.tagattr('checked', False, 'checked')
-        expected = ''
-        self.assertEqual(expected, actual)
 
     def test_checked(self):
         actual = tenjin.helpers.html.checked(1==1)
