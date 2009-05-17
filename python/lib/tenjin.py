@@ -280,17 +280,14 @@ def _create_html_module():
     def checked(expr):
         """return ' checked="checked"' if expr is true."""
         return expr and ' checked="checked"' or ''
-        #return attr('checked', expr, 'checked')
 
     def selected(expr):
         """return ' selected="selected"' if expr is true."""
         return expr and ' selected="selected"' or ''
-        #return attr('selected', expr, 'selected')
 
     def disabled(expr):
         """return ' disabled="disabled"' if expr is true."""
         return expr and ' disabled="disabled"' or ''
-        #return attr('disabled', expr, 'disabled')
 
     def nl2br(text):
         """replace "\n" to "<br />\n" and return it."""
