@@ -526,6 +526,9 @@ Hello World!
 .* [%= name %] supports partial capturing of template.
 .* [%= name %] can load YAML file as context data. Using [%= name %], it is able to
   separate template file and data file.
+% if PYTHON
+.* [%= name %] now supports Goole AppEngine. See {{<FAQ|faq.html#faq-google-appengine>}} for details.
+% end
 
 
 
@@ -4279,6 +4282,12 @@ This section shows how to use [%= name %] in your [%= Lang %] script.
 
 If you want to know the notation or features of [%= name %], see {{<Designer's Guide|#desguide>}} section.
 
+% if PYTHON
+If you want to handle non-ascii characters, see {{<Template Encoding|#dev-encoding>}} section.
+
+If you are interested in Google AppEngine, see {{<FAQ|faq.html#faq-google-appengine>}}.
+% end
+
 
 .$$ An Example			| dev-example
 
@@ -4363,12 +4372,18 @@ echo $output;
 
 .[ [%= template_class %] ]
     This class represents a template file.
-    An object of [%= template_class %] correspond to a template file.
+    Main responsibilities of this class are:
+    .- Convert template file into [%=lang%] script
+    .- Render converted [%=lang%] script with context data
 
 .[ [%= engine_class %] ]
-    This class represents some template objects.
-    It can handle nested template and layout template.
-    Using [%= engine_class %] class, you can use [%= name %] as a template engine for web application.
+    This class provides many features such as:
+    .- Search template files
+    .- Nestable layout template
+    .- Partial template
+    .- File caching
+    .- Preprocessing
+    .- and so on
 
 % if context_class && !context_class.empty?
 .[ [%= context_class %] ]
@@ -4377,26 +4392,22 @@ echo $output;
 
 
 % if PYTHON
-%   mod = 'tenjin.helpers.html.'
-%   htmlhelper = false # 'tenjin.helpers.html'
+%   mod = 'tenjin.helpers.'
 % elsif RUBY
 %   mod = ''
-%   htmlhelper = false # 'Tenjin::Context'
 % elsif PERL
 %   mod = 'Tenjin::Context'
-%   htmlhelper = false # 'Tenjin::HtmlHelper'
 % elsif JS
 %   mod = 'Tenjin.Util'
-%   htmlhelper = nil
 % elsif PHP
 %   mod = 'XXXX'
-%   htmlhelper = nil
 % else assert false 
 % end 
 
+
 % if PYTHON
 [%= name %] has the following utility functions.
-These are defined at tenjin.helpers.html module.
+These are defined at tenjin.helpers module.
 % elsif RUBY
 [%= name %] has the following utility functions.
 These are defined at Tenjin::HtmlHelper module and Tenjin::Context class includes it.
@@ -4409,7 +4420,6 @@ These are defined at Tenjin::HtmlHelper module and Tenjin::Context class include
 % else assert false 
 % end 
 
-% if htmlhelper then #################### 
 % if PYTHON
 .[ [%= mod %]to_str(value) ]
     Convert value into string.
@@ -4419,26 +4429,12 @@ These are defined at Tenjin::HtmlHelper module and Tenjin::Context class include
 .[ [%= mod %]escape(str) ]
     Escape '{{,& < > ",}}' in string into '{{,&amp; &lt; &gt; &quot;,}}'.
 
-.[ [%= mod %]checked(expr) ]
-    Return {{,' checked="checked"',}} if expr is true.
-
-.[ [%= mod %]selected(expr) ]
-    Return {{,' selected="selected"',}} if expr is true.
-
-.[ [%= mod %]disabled(expr) ]
-    Return {{,' disabled="disabled"',}} if expr is true.
-
-.[ [%= mod %]nl2br(str) ]
-    Relplace "\n" in str into "<br />\n" and return it.
-
-.[ [%= mod %]tagattr(name, expr, value=[%= NULL %], escape=[%= TRUE %]) ]
-    {{*(experimental)*}}
-    Return '{{, name="value",}}' if expr is true.
-    If value is [%= NULL %] then expr is used as value.
-    If expr is false then this function returns empty string.
-
-% end                    #################### 
-
+% if PYTHON
+.[ [%= mod %]generate_tostrfunc(str) ]
+    Generate 'to_str' function which encodes unicode to str.
+    This is used when handling non-ascii characters in template file.
+    See {{<Template Encoding|#dev-encoding>}} section for details.
+% end
 
 
 
@@ -4914,10 +4910,10 @@ This class has the following methods.
 
 % if PYTHON
 
-.[ tenjin.Engine(str prefix='', str postfix='', str layout=None, list path=None, bool cache=True, bool preprocess=False, type templateclass=Template, **init_opts_for_template) ]
+.[ tenjin.Engine(str prefix='', str postfix='', str layout=None, list path=None, bool cache=True, bool preprocess=False, type templateclass=Template, **kwargs) ]
     Create Engine object.
-    Argument 'cache' controls caching policy (caches bytecode when True, caches python code when None, caches nothing when False).
-    Arguments {{,init_opts_for_template,}} are passed to [%= template_class %]() internally.
+    Argument 'cache' controls caching policy. If True, marshal-base cache files will be created. If '{{,"text",}}', text-base cache files will be created. If False, no cache files are created.
+    Arguments {{,kwargs,}} are passed to [%= template_class %]() internally.
 
 .[ tenjin.Engine#render(str template_name, dict context=None, dict globals=None, str layout=None) ]
     Convert template into [%= Lang %] code, evaluate it with context data, and return the result of it.
@@ -5746,6 +5742,95 @@ $ [%= lang %] user_app.cgi create
 </html>
 % _buf << "\n" if JS
 .====================
+
+
+
+% if PYTHON
+%   htmlhelper = 'tenjin.helpers.html'
+% elsif RUBY
+%   htmlhelper = false # 'Tenjin::Context'
+% elsif PERL
+%   htmlhelper = false # 'Tenjin::HtmlHelper'
+% elsif JS
+%   htmlhelper = nil
+% elsif PHP
+%   htmlhelper = nil
+% else assert false 
+% end 
+
+% if htmlhelper then #################### 
+
+.$$ HTML Helper Functions	| dev-htmlhelpers
+
+[%=name%] provides some useful helper functions for HTML.
+% if PYTHON
+These are defined in [%=htmlhelper%] module.
+% end
+
+
+.[ [%= mod %]checked({{/expr/}}) ]
+    Return {{,' checked="checked"',}} if {{/expr/}} is true.
+
+.[ [%= mod %]selected({{/expr/}}) ]
+    Return {{,' selected="selected"',}} if {{/expr/}} is true.
+
+.[ [%= mod %]disabled({{/expr/}}) ]
+    Return {{,' disabled="disabled"',}} if {{/expr/}} is true.
+
+.[ [%= mod %]nl2br({{/str/}}) ]
+    Relplace "\n" in {{/str/}} into "<br />\n" and return it.
+
+.[ [%= mod %]nv({{/name/}}, {{/value/}}, {{/id_sep/}}=[%=NULL%], {{/klass/}}=[%=NULL%], {{/checked/}}=[%=NULL%], {{/disabled/}}=[%=NULL%], **{{/kwargs/}}) ]
+    Return ' name="{{/name/}}" value={{/value/}}' string.
+    .- If {{/id_sep/}} is specified, ' id="{{/name/}}{{/id_sep/}}{{/value/}}' will be added.
+    .- If {{/klass/}} is specified, ' class="{{/klass/}}"' will be added.
+    .- If {{/checked/}} is true value, ' checked="checked"' will be added.
+    .- If {{/disabled/}} is true value, ' disabled="disabled"' will be added.
+% if PYTHON
+    .? ex:
+    .--------------------
+    >>> nv('gender', 'F')
+    ' name="gender" value="F"'
+    >>> nv('gender', 'F', '.')
+    ' name="gender" value="F" id="gender.F"'
+    >>> nv('gender', 'F', '.', klass='error')
+    ' name="gender" value="F" id="gender.F" class="error"'
+    >>> nv('gender', 'F', '.', checked=True)
+    ' name="gender" value="F" id="gender.F" checked="checked"'
+    >>> nv('gender', 'F', '.', style="color:red")
+    ' name="gender" value="F" id="gender.F" style="color:red"'
+    .--------------------
+% elsif RUBY
+% elsif PERL
+% elsif JS
+% elsif PHP
+% else assert false 
+% end
+
+.[ [%= mod %]tagattr({{/name1/}}={{/value1/}}, {{/name2/}}={{/value2/}}, {{/.../}}) ]
+    {{*(experimental)*}}
+    Return '{{,{{/name1/}}="{{/value1/}}" {{/name2/}}="{{/value2/}}",}}'.
+    .- If {{/valueN/}} is false value, that pair is ignored.
+    .- If {{/nameN/}} is 'klass', then 'class="{{/valueN/}}"' will be added.
+% if PYTHON
+    .? ex:
+    .--------------------
+    >>> tagattr(colspan=40, rowspan=4)
+    'colspan="40" rowspan="4"'
+    >>> tagattr(colspan=0, rowspan=False)
+    ''
+    >>> tagattr(klass='error')    # 'klass' will be renamed to 'class'
+    'class="error"'
+    .--------------------
+% elsif RUBY
+% elsif PERL
+% elsif JS
+% elsif PHP
+% else assert false 
+% end
+
+
+% end                    #################### 
 
 
 
