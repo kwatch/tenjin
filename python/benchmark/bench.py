@@ -689,7 +689,6 @@ def main(ntimes=1000):
             target_list.append(target)
 
     targets = filter_targets(targets, target_list, options.get('x'))
-    sys.stderr.write("*** debug: targets=%s\n" % (repr(targets)))
     entries = get_entries(targets)
     datafile = options.get('f')
     context = load_context_data(datafile)
