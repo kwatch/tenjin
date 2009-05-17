@@ -12,12 +12,11 @@ import os, re
 from glob import glob
 from kook.utils import read_file, write_file
 
-release = prop('release', '0.6.2')
+release = prop('release', '0.7.0')
 #package = prop('package', 'pyTenjin')
 package = prop('package', 'Tenjin')
+copyright = prop('copyright', "copyright(c) 2007-2009 kuwata-lab.com all rights reserved.")
 
-
-copyright       = "copyright(c) 2007-2009 kuwata-lab.com all rights reserved."
 license         = "MIT License"
 #python_basepath = "/Library/Frameworks/Python.framework/Versions/2.4"
 #site_packages_path = "%s/lib/python2.4/site-packages" % python_basepath
