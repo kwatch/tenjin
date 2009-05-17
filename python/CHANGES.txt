@@ -2,6 +2,56 @@
 CHANGES
 =======
 
+Release 0.7.0 (2009-05-17)
+
+* [Enhancements]
+
+  * Google AppEngine (GAE) supported.
+    You can use pyTenjin on Google AppEngine.
+    See FAQ: 'Is pyTenjin ready for Google App Engine?' section.
+    http://www.kuwata-lab.com/tenjin/pytenjin-faq.html#faq-google-appengine
+
+  * Text-base template caching support.
+    If you pass 'cache="text"' option to template.Engine(),
+    pyTenjin creates text-base cache files instead of marshal-base caches.
+    (This is required to support GAE because marshal is not available in GAE.)
+
+  * New command-line option '-a cache' supported.
+    This option enables you to generate template cache files in advance.
+    (This is required to support GAE because GAE doesn't allow you to
+     create cache files dinamically.)
+
+  * (Experimental) HTML helper functions are now provided.
+    ex:
+
+       >>> import tenjin
+       >>> from tenjin.helpers.html import *
+       >>> checked(1==1)
+       ' checked="checked"'
+       >>> checked(1==0)
+       ''
+       >>> selected(1==1)
+       ' selected="selected"'
+       >>> tagattr(klass='error', style='color:red')
+       'class="error" style="color:red"'
+       >>> tagattr(width='', height=0)
+       ''
+       >>> nv('rank', 'A')      # name and value
+       'name="rank" value="A"'
+       >>> nv('rank', 'A', '.')
+       'name="rank" value="A" id="rank.A"'
+
+* [Changes]
+
+  * Benchmark script now skips to do benchmark template libraries
+    which are failed to import.
+
+* [BugFix]
+
+  * In preprocessing, error was raised when expression is not string.
+    Now fixed.
+
+
 Release 0.6.2 (2008-02-27)
 --------------------------
 
