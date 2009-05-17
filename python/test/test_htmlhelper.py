@@ -18,6 +18,7 @@ class HtmlHelperTest(unittest.TestCase, TestCaseHelper):
         tagattr = tenjin.helpers.html.tagattr
         self.assertEquals('src="img.png" size="20"', tagattr(src="img.png", size=20))
         self.assertEquals('',                        tagattr(src='', size=0))
+        self.assertEquals('class="error"',           tagattr(klass='error'))
 
     def test_checked(self):
         checked = tenjin.helpers.html.checked

@@ -265,7 +265,7 @@ def _create_html_module():
         return _escape_pattern.sub(_escape_callable, s)
         #return s.replace('&','&amp;').replace('<','&lt;').replace('>','&gt;').replace('"','&quot;')
 
-    def tagattr(**kwargs):
+    def tagattr(klass=None, **kwargs):
         """(experimental) built html tag attribtes.
            ex.
            >>> tagattr(src='img.png', size=20)
@@ -273,6 +273,7 @@ def _create_html_module():
            >>> tagattr(src='', size=0)
            ''
         """
+        if klass: kwargs['class'] = klass
         return ' '.join(['%s="%s"' % (k, escape_xml(to_str(v))) for k, v in kwargs.iteritems() if v])
 
     def checked(expr):
