@@ -86,6 +86,11 @@ def _read_cache_file(filename, encoding=None):
     if encoding: s = s.decode(encoding)      ## unicode
     return s
 
+def _write_cache_file(filename, content, encoding=None):
+    if encoding and isinstance(content, unicode):
+        content = content.encode(encoding)
+    write_file(filename, content)            ## binary(=str)
+
 def _create_module(module_name):
     """ex. mod = _create_module('tenjin.util')"""
     import types
@@ -958,7 +963,7 @@ class Engine(object):
         dct = { 'args':     template.args,
                 'script':  template.script,
                 'bytecode': template.bytecode }
-        write_file(cache_filename, marshal.dumps(dct), True)
+        _write_cache_file(cache_filename, marshal.dumps(dct))
 
     load_cachefile  = _load_marshal_cachefile
     store_cachefile = _store_marshal_cachefile
@@ -985,7 +990,7 @@ class Engine(object):
             #s = s.encode('utf-8')
         if template.args is not None:
             s = "#@ARGS %s\n%s" % (', '.join(template.args), s)
-        write_file(cache_filename, s, True)
+        _write_cache_file(cache_filename, s)
 
     def cachename(self, filename):
         return filename + '.cache'
