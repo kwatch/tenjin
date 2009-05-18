@@ -1026,6 +1026,7 @@ class Engine(object):
         if templateclass: self.templateclass = templateclass
         if path  is not None:  self.path = path
         if preprocess is not None: self.preprocess = preprocess
+        self.cache = cache
         self.kwargs = kwargs
         self.encoding = kwargs.get('encoding')
         self._filepaths = {}   # template_name => filename and fullpath
@@ -1118,7 +1119,7 @@ class Engine(object):
                 if _globals is None: _globals = sys._getframe(1).f_globals
             template = self._create_template(filename, _context, _globals)
             template.timestamp = curr_time
-            if not template.bytecode: template.compile()
+            if not template.bytecode and self.cache is not False: template.compile()
             self.cache_storage.set(fullpath, template)
             d = template.__dict__
             dct = { 'args'  : d.get('args'),  'bytecode' : d.get('bytecode'),
