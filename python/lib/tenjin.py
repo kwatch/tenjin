@@ -53,26 +53,15 @@ import re, sys, os, time, marshal
 
 try:
     import fcntl
-    def _lock_file(file, content, lock):
-        if lock == 2:
-            fcntl.flock(file.fileno(), fcntl.LOCK_EX)
-        elif lock == 1:
-            fcntl.flock(file.fileno(), fcntl.LOCK_SH)
-except ImportError, ex:
-    try:
-        import msvcrt
-        def _lock_file(file, content, lock):
-            msvcrt.locking(file.fileno(), msvcrt.LK_LOCK, len(content))
-    except ImportError, ex:
-        def _lock_file(file, content, lock):
-            pass
+except ImportError:
+    fcntl = None
 
 def write_file(filename, content, lock=False, mode='wb'):
     """Write string into file, with closing file certainly (necessary for Jython)."""
     f = None
     try:
         f = open(filename, mode)
-        if lock: _lock_file(f, content, 2)
+        if fcntl: fcntl.flock(f.fileno(), fcntl.LOCK_EX)
         f.write(content)
     finally:
         if f: f.close()
@@ -82,7 +71,7 @@ def read_file(filename, lock=False, mode='rb'):
     f = None
     try:
         f = open(filename, mode)
-        if lock: _lock_file(f, content, 1)
+        #if fcntl: fcntl.flock(f.fileno(), fcntl.LOCK_SH)
         return f.read()
     finally:
         if f: f.close()
