@@ -76,6 +76,11 @@ def read_file(filename, lock=False, mode='rb'):
     finally:
         if f: f.close()
 
+def _read_template_file(filename, encoding=None):
+    s = read_file(filename)                  ## binary(=str)
+    if encoding: s = s.decode(encoding)      ## unicode
+    return s
+
 def _create_module(module_name):
     """ex. mod = _create_module('tenjin.util')"""
     import types
@@ -464,7 +469,7 @@ class Template(object):
         """Convert file into python script and return it.
            This is equivarent to convert(open(filename).read(), filename).
         """
-        input = read_file(filename)
+        input = _read_template_file(filename)
         return self.convert(input, filename)
 
     def convert(self, input, filename=None):
@@ -1006,7 +1011,7 @@ class Engine(object):
 
     def read_template_file(self, filename, _context, _globals):
         if not self.preprocess:
-            return read_file(filename)
+            return _read_template_file(filename)
         if _context is None:
             _context = {}
         if not _context.has_key('_engine'):
