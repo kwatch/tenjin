@@ -81,6 +81,11 @@ def _read_template_file(filename, encoding=None):
     if encoding: s = s.decode(encoding)      ## unicode
     return s
 
+def _read_cache_file(filename, encoding=None):
+    s = read_file(filename)                  ## binary(=str)
+    if encoding: s = s.decode(encoding)      ## unicode
+    return s
+
 def _create_module(module_name):
     """ex. mod = _create_module('tenjin.util')"""
     import types
@@ -959,7 +964,7 @@ class Engine(object):
     store_cachefile = _store_marshal_cachefile
 
     def _load_text_cachefile(self, cache_filename, template):
-        s = read_file(cache_filename, mode='r')
+        s = _read_cache_file(cache_filename)
         if s.startswith('#@ARGS '):
             pos = s.find("\n")
             args_str = s[len('#@ARGS '):pos]
