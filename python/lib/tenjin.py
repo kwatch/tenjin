@@ -830,6 +830,120 @@ class Preprocessor(Template):
 
 
 ##
+## cache storages
+##
+
+class CacheStorage(object):
+
+    def __init__(self):
+        self.items = {}
+
+    def get(self, fullpath):
+        template = self.items.get(fullpath)
+        #if not template:
+        #    template = self._load_from(fullpath)
+        #    if template:
+        #        self.items[fullpath] = template
+        return template
+
+    def set(self, fullpath, template):
+        self.items[fullpath] = template
+        #return self._store_into(fullpath, template)
+
+    def unset(self, fullpath):
+        self.items.delete(self)
+        return self._delete(fullpath)
+
+    def clear(self):
+        self.items.clear()
+
+    def _load_from(self, fullpath):
+        raise NotImplementedError.new("%s#_load_from(): not implemented yet." % self.__class__.__name__)
+
+    def _store_into(self, fullpath, template):
+        raise NotImplementedError.new("%s#_store_into(): not implemented yet." % self.__class__.__name__)
+
+    def _delete(self, fullpath, template):
+        raise NotImplementedError.new("%s#_delete(): not implemented yet." % self.__class__.__name__)
+
+
+class MemoryCacheStorage(CacheStorage):
+
+    def _load_from(self, fullpath):
+        return None
+
+    def _store_into(self, fullpath, template):
+        pass
+
+    def _delete(self, fullpath):
+        pass
+
+
+class MarshalCacheStorage(CacheStorage):
+
+    def clear(self):
+        for k, v in self.items.iteritems():
+            self._delete(k)
+        CacheStorage.clear(self)
+
+    def _load_from(self, fullpath):
+        cachepath = fullpath + '.cache'
+        if not os.path.isfile(cachepath): return None
+        dump = _read_binary_file(cachepath)
+        return marshal.loads(dump)
+        #dct = marshal.loads(_read_cache_file(cache_filename))
+        #template.args     = dct['args']
+        #template.script   = dct['script']
+        #template.bytecode = dct['bytecode']
+
+    def _store_into(self, fullpath, dict):
+        _write_binary_file(fullpath + '.cache', marshal.dumps(dict))
+        #dct = { 'args':     template.args,
+        #        'script':   template.script,
+        #        'bytecode': template.bytecode }
+        #_write_cache_file(cache_filename, marshal.dumps(dct))
+
+    def _delete(self, fullpath):
+        cachepath = fullpath + '.cache'
+        if os.path.isfile(cachepath):
+            os.path.unlink(cachepath)
+
+
+class TextCacheStorage(CacheStorage):
+
+    def __init__(self, encoding, template_class):
+        CacheStorage.__init__(self)
+        self.encoding = encoding
+        self.template_class = template_class
+
+    def _load_from(self, fullpath):
+        cachepath = fullpath + '.cache'
+        if not os.path.isfile(cachepath): return None
+        s = _read_cache_file(cachepath)
+        if self.encoding: s = s.decode(self.encoding)
+        if s.startswith('#@ARGS '):
+            pos = s.find("\n")
+            args_str = s[len('#@ARGS '):pos]
+            args = args_str and args_str.split(', ') or []
+            s = s[pos+1:]
+        else:
+            args = None
+        return {'args': args, 'script': s, 'timestamp': os.path.getmtime(cachepath)}
+
+    def _store_into(self, fullpath, dict):
+        s = dict['script']
+        if self.encoding and isinstance(s, unicode):
+            s = s.encode(self.encoding)
+        if dict.get('args') is not None:
+            s = "#@ARGS %s\n%s" % (', '.join(dict['args']), s)
+        _write_cache_file(fullpath + '.cache', s)
+
+    def _delete(self, fullpath):
+        os.path.unlink(fullpath + '.cache')
+
+
+
+##
 ## template engine class
 ##
 
@@ -880,6 +994,7 @@ class Engine(object):
     path       = None
     cache      = True
     preprocess = False
+    cache_storage = None #MarshalCacheStorage()
 
     def __init__(self, prefix=None, postfix=None, layout=None, path=None, cache=None, preprocess=None, templateclass=None, **kwargs):
         """Initializer of Engine class.
@@ -910,13 +1025,21 @@ class Engine(object):
         if layout:  self.layout = layout
         if templateclass: self.templateclass = templateclass
         if path  is not None:  self.path = path
-        if cache is not None:  self.cache = cache
-        if cache == 'text':
-            self.load_cachefile  = self._load_text_cachefile
-            self.store_cachefile = self._store_text_cachefile
         if preprocess is not None: self.preprocess = preprocess
         self.kwargs = kwargs
-        self.templates = {}   # template_name => Template object
+        self.encoding = kwargs.get('encoding')
+        self._filepaths = {}   # template_name => filename and fullpath
+        self._set_cache_storage(cache)
+
+    def _set_cache_storage(self, cache):
+        if   cache is True:  self.cache_storage = MarshalCacheStorage() #pass
+        elif cache is None:  self.cache_storage = MarshalCacheStorage() #pass
+        elif cache is False: self.cache_storage = MemoryCacheStorage()
+        elif isinstance(cache, CacheStorage):  self.cache_storage = cache
+        elif '__call__' in cache:              self.cache_storage = cache()
+        elif cache == 'text':  self.cache_storage = TextCacheStorage(self.encoding, self.templateclass)
+        else:
+            raise Argumenterror("%s: invalid cache." % str(cache))
 
     def to_filename(self, template_name):
         """Convert template short name to filename.
@@ -931,105 +1054,43 @@ class Engine(object):
             return self.prefix + template_name[1:] + self.postfix
         return template_name
 
-    def find_template_file(self, template_name):
-        """Find template file and return it's filename.
-           When template file is not found, IOError is raised.
-        """
+    def _relative_and_absolute_path(self, template_name):
+        pair = self._filepaths.get(template_name)
+        if pair: return pair
         filename = self.to_filename(template_name)
+        filepath = self._find_file(filename)
+        if not filepath:
+            raise IOError('%s: filename not found (path=%s).' % (filename, repr(self.path)))
+        fullpath = os.path.abspath(filepath)
+        self._filepaths[template_name] = pair = (filepath, fullpath)
+        return pair
+
+    def _find_file(self, filename):
         if self.path:
             for dirname in self.path:
-                filepath = dirname + os.path.sep + filename
+                filepath = os.path.join(dirname, filename)
                 if os.path.isfile(filepath):
                     return filepath
         else:
             if os.path.isfile(filename):
                 return filename
-        raise IOError('%s: filename not found (path=%s).' % (filename, repr(self.path)))
+        return None
 
-    def register_template(self, template_name, template):
-        """Register an template object."""
-        if not hasattr(template, 'timestamp'):
-            template.timestamp = None  # or time.time()
-        self.templates[template_name] = template
-
-    def _load_marshal_cachefile(self, cache_filename, template):
-        """load marshaled cache file"""
-        dct = marshal.loads(_read_cache_file(cache_filename))
-        template.args     = dct['args']
-        template.script   = dct['script']
-        template.bytecode = dct['bytecode']
-
-    def _store_marshal_cachefile(self, cache_filename, template):
-        """store template into marshal file"""
-        dct = { 'args':     template.args,
-                'script':  template.script,
-                'bytecode': template.bytecode }
-        _write_cache_file(cache_filename, marshal.dumps(dct))
-
-    load_cachefile  = _load_marshal_cachefile
-    store_cachefile = _store_marshal_cachefile
-
-    def _load_text_cachefile(self, cache_filename, template):
-        s = _read_cache_file(cache_filename)
-        if s.startswith('#@ARGS '):
-            pos = s.find("\n")
-            args_str = s[len('#@ARGS '):pos]
-            template.args = args_str and args_str.split(', ') or []
-            s = s[pos+1:]
+    def _create_template(self, filepath, _context, _globals):
+        if filepath and self.preprocess:
+            s = self._preprocess(filepath, _context, _globals)
+            template = self.templateclass(None, **self.kwargs)
+            template.convert(s, filepath)
         else:
-            template.args = None
-        if template.encoding:
-            s = s.decode(template.encoding)
-            #s = s.decode('utf-8')
-        template.script = s
-        template.compile()
-
-    def _store_text_cachefile(self, cache_filename, template):
-        s = template.script
-        if template.encoding and isinstance(s, unicode):
-            s = s.encode(template.encoding)
-            #s = s.encode('utf-8')
-        if template.args is not None:
-            s = "#@ARGS %s\n%s" % (', '.join(template.args), s)
-        _write_cache_file(cache_filename, s)
-
-    def cachename(self, filename):
-        return filename + '.cache'
-
-    def create_template(self, filename, _context, _globals):
-        """Read template file and create template object."""
-        template = self.templateclass(None, **self.kwargs)
-        template.timestamp = time.time()
-        cache_filename = self.cachename(filename)
-        getmtime = os.path.getmtime
-        if not self.cache:
-            input = self.read_template_file(filename, _context, _globals)
-            template.convert(input, filename)
-            #template.compile()
-        elif os.path.exists(cache_filename) and getmtime(cache_filename) >= getmtime(filename):
-            #Tenjin.logger.info("** debug: %s: cache found." % filename)
-            template.filename = filename
-            self.load_cachefile(cache_filename, template)
-            if template.bytecode is None:
-                template.compile()
-        else:
-            #Tenjin.logger.info("** debug: %s: cache not found." % filename)
-            input = self.read_template_file(filename, _context, _globals)
-            template.convert(input, filename)
-            template.compile()
-            self.store_cachefile(cache_filename, template)
+            template = self.templateclass(filepath, **self.kwargs)
         return template
 
-    def read_template_file(self, filename, _context, _globals):
-        if not self.preprocess:
-            return _read_template_file(filename)
-        if _context is None:
-            _context = {}
+    def _preprocess(self, filepath, _context, _globals):
+        #if _context is None: _context = {}
+        #if _globals is None: _globals = sys._getframe(3).f_globals
         if not _context.has_key('_engine'):
             self.hook_context(_context)
-        if _globals is None:
-            _globals = sys._getframe(2).f_globals
-        preprocessor = Preprocessor(filename)
+        preprocessor = Preprocessor(filepath)
         return preprocessor.render(_context, globals=_globals)
 
     def get_template(self, template_name, _context=None, _globals=None):
@@ -1037,15 +1098,36 @@ class Engine(object):
            If template object has not registered, template engine creates
            and registers template object automatically.
         """
-        template = self.templates.get(template_name)
-        t = template
-        if t is None or t.timestamp and t.filename and t.timestamp < os.path.getmtime(t.filename):
-            filename = self.find_template_file(template_name)
-            # context and globals are passed only for preprocessing
-            if _globals is None:
-                _globals = sys._getframe(1).f_globals
-            template = self.create_template(filename, _context, _globals)
-            self.register_template(template_name, template)
+        filename, fullpath = self._relative_and_absolute_path(template_name)
+        assert filename and fullpath
+        template = self.cache_storage.get(fullpath)
+        if not template:
+            dct = self.cache_storage._load_from(fullpath)
+            if dct:
+                template = self._create_template(None, None, None)
+                for k, v in dct.iteritems():
+                    setattr(template, k, v)
+        if template and template.timestamp and template.timestamp < os.path.getmtime(filename):
+            #self.cache_storage.delete(path)
+            template = None
+            #Engine.logger.info("cache file is old: filename=%s, template=%s" % (repr(filename), repr(t)))
+        if not template:
+            curr_time = time.time()
+            if self.preprocess:   ## required for preprocess
+                if _context is None: _context = {}
+                if _globals is None: _globals = sys._getframe(1).f_globals
+            template = self._create_template(filename, _context, _globals)
+            template.timestamp = curr_time
+            if not template.bytecode: template.compile()
+            self.cache_storage.set(fullpath, template)
+            d = template.__dict__
+            dct = { 'args'  : d.get('args'),  'bytecode' : d.get('bytecode'),
+                    'script': d.get('script'),'timestamp': d.get('timestamp') }
+            ret = self.cache_storage._store_into(fullpath, dct)
+            #if not ret:
+            #    Engine.logger.info("failed to store cache: path=%s, template=%s" % (repr(path), repr(template)))
+        #else:
+        #    template.compile()
         return template
 
     def include(self, template_name, append_to_buf=True):
@@ -1069,10 +1151,8 @@ class Engine(object):
         context = locals['_context']
         # context and globals are passed to get_template() only for preprocessing.
         template = self.get_template(template_name, context, globals)
-        if append_to_buf:
-            _buf = locals['_buf']
-        else:
-            _buf = None
+        if append_to_buf:  _buf = locals['_buf']
+        else:              _buf = None
         return template.render(context, globals, _buf=_buf)
 
     def render(self, template_name, context=None, globals=None, layout=True):
@@ -1099,7 +1179,7 @@ class Engine(object):
         self.hook_context(context)
         while True:
             # context and globals are passed to get_template() only for preprocessing
-            template = self.get_template(template_name,  context, globals)
+            template = self.get_template(template_name, context, globals)
             content  = template.render(context, globals)
             layout   = context.pop('_layout', layout)
             if layout is True or layout is None:
