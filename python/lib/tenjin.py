@@ -56,40 +56,38 @@ try:
 except ImportError:
     fcntl = None
 
-def write_file(filename, content, lock=False, mode='wb'):
-    """Write string into file, with closing file certainly (necessary for Jython)."""
+def _write_binary_file(filename, content):
     f = None
     try:
-        f = open(filename, mode)
+        f = open(filename, 'wb')
         if fcntl: fcntl.flock(f.fileno(), fcntl.LOCK_EX)
         f.write(content)
     finally:
         if f: f.close()
 
-def read_file(filename, lock=False, mode='rb'):
-    """Read all string from file, with closing file certainly (necessary for Jython)."""
+def _read_binary_file(filename):
     f = None
     try:
-        f = open(filename, mode)
+        f = open(filename, 'rb')
         #if fcntl: fcntl.flock(f.fileno(), fcntl.LOCK_SH)
         return f.read()
     finally:
         if f: f.close()
 
 def _read_template_file(filename, encoding=None):
-    s = read_file(filename)                  ## binary(=str)
+    s = _read_binary_file(filename)          ## binary(=str)
     if encoding: s = s.decode(encoding)      ## unicode
     return s
 
 def _read_cache_file(filename, encoding=None):
-    s = read_file(filename)                  ## binary(=str)
+    s = _read_binary_file(filename)          ## binary(=str)
     if encoding: s = s.decode(encoding)      ## unicode
     return s
 
 def _write_cache_file(filename, content, encoding=None):
     if encoding and isinstance(content, unicode):
         content = content.encode(encoding)
-    write_file(filename, content)            ## binary(=str)
+    _write_binary_file(filename, content)    ## binary(=str)
 
 def _create_module(module_name):
     """ex. mod = _create_module('tenjin.util')"""
