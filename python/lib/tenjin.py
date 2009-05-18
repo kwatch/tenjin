@@ -59,9 +59,12 @@ except ImportError:
 def _write_binary_file(filename, content):
     f = None
     try:
-        f = open(filename, 'wb')
+        f = open(filename, 'ab')
         if fcntl: fcntl.flock(f.fileno(), fcntl.LOCK_EX)
+        f.seek(0)
+        f.truncate(0)
         f.write(content)
+        #or f.write(content); f.truncate(f.tell())
     finally:
         if f: f.close()
 
