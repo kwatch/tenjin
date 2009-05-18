@@ -951,7 +951,7 @@ class Engine(object):
 
     def _load_marshal_cachefile(self, cache_filename, template):
         """load marshaled cache file"""
-        dct = marshal.load(open(cache_filename, 'rb'))
+        dct = marshal.loads(_read_cache_file(cache_filename))
         template.args     = dct['args']
         template.script   = dct['script']
         template.bytecode = dct['bytecode']
