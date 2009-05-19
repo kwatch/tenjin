@@ -997,11 +997,11 @@ class Engine(object):
     layout     = None
     templateclass = Template
     path       = None
-    cache      = True
+    cache      = None
     preprocess = False
-    cache_storage = MarshalCacheStorage()   ## shared cache storage
+    cache_storage = None
 
-    def __init__(self, prefix=None, postfix=None, layout=None, path=None, cache=None, preprocess=None, templateclass=None, **kwargs):
+    def __init__(self, prefix=None, postfix=None, layout=None, path=None, cache=True, preprocess=None, templateclass=None, **kwargs):
         """Initializer of Engine class.
 
            prefix:str (='')
@@ -1039,8 +1039,8 @@ class Engine(object):
 
     def _set_cache_storage(self, cache):
         if   cache is True:  self.cache_storage = MarshalCacheStorage() #pass
-        elif cache is None:  pass   ## use shared cache storage
-        elif cache is False: self.cache_storage = MemoryCacheStorage()
+        elif cache is None:  self.cache_storage = MemoryCacheStorage()
+        elif cache is False: self.cache_storage = None
         elif isinstance(cache, CacheStorage):  self.cache_storage = cache
         elif '__call__' in cache:              self.cache_storage = cache()
         elif cache == 'text':  self.cache_storage = TextCacheStorage(self.encoding, self.templateclass)
@@ -1106,9 +1106,9 @@ class Engine(object):
         """
         filename, fullpath = self._relative_and_absolute_path(template_name)
         assert filename and fullpath
-        template = self.cache_storage.get(fullpath, self.templateclass)
+        template = self.cache_storage and self.cache_storage.get(fullpath, self.templateclass) or None
         if template and template.timestamp and template.timestamp < os.path.getmtime(filename):
-            #self.cache_storage.delete(path)
+            #if self.cache_storage: self.cache_storage.delete(path)
             template = None
             #Engine.logger.info("cache file is old: filename=%s, template=%s" % (repr(filename), repr(t)))
         if not template:
@@ -1118,10 +1118,11 @@ class Engine(object):
                 if _globals is None: _globals = sys._getframe(1).f_globals
             template = self._create_template(filename, _context, _globals)
             template.timestamp = curr_time
-            if not template.bytecode and self.cache is not False: template.compile()
-            ret = self.cache_storage.set(fullpath, template)
-            #if not ret:
-            #    Engine.logger.info("failed to store cache: path=%s, template=%s" % (repr(path), repr(template)))
+            if self.cache_storage:
+                if not template.bytecode: template.compile()
+                ret = self.cache_storage.set(fullpath, template)
+                #if not ret:
+                #    Engine.logger.info("failed to store cache: path=%s, template=%s" % (repr(path), repr(template)))
         #else:
         #    template.compile()
         return template
