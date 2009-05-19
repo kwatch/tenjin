@@ -836,7 +836,8 @@ class Preprocessor(Template):
 
 class CacheStorage(object):
 
-    def __init__(self):
+    def __init__(self, postfix='.cache'):
+        self.postfix = postfix
         self.items = {}
 
     def get(self, fullpath, create_template):
@@ -884,7 +885,7 @@ class CacheStorage(object):
 
     def _cachename(self, fullpath):
         """change fullpath into cache file path."""
-        return fullpath + '.cache'
+        return fullpath + self.postfix
 
 
 class MemoryCacheStorage(CacheStorage):
@@ -917,8 +918,8 @@ class MarshalCacheStorage(CacheStorage):
 
 class TextCacheStorage(CacheStorage):
 
-    def __init__(self, encoding, template_class):
-        CacheStorage.__init__(self)
+    def __init__(self, encoding, template_class, postfix='.cache'):
+        CacheStorage.__init__(self, postfix)
         self.encoding = encoding
         self.template_class = template_class
 
@@ -953,8 +954,8 @@ class GaeMemcacheCacheStorage(CacheStorage):
 
     lifetime = 0     # 0 means unlimited
 
-    def __init__(self, lifetime=None):
-        CacheStorage.__init__(self)
+    def __init__(self, lifetime=None, postfix='.cache'):
+        CacheStorage.__init__(self, postfix)
         if lifetime is not None:  self.lifetime = lifetime
 
     def _load(self, fullpath):
