@@ -309,7 +309,7 @@ class EngineTest(unittest.TestCase, TestCaseHelper):
             write_file('%s.pyhtml' % basename, data[basename])
         ## body
         try:
-            engine = tenjin.Engine(layout='baselayout.pyhtml')
+            engine = tenjin.Engine(layout='baselayout.pyhtml', cache=True)
             output = engine.render('content.pyhtml')
             expected = data['expected']
             self.assertTextEqual(expected, output)

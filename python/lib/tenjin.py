@@ -999,7 +999,7 @@ class Engine(object):
     path       = None
     cache      = True
     preprocess = False
-    cache_storage = None #MarshalCacheStorage()
+    cache_storage = MarshalCacheStorage()   ## shared cache storage
 
     def __init__(self, prefix=None, postfix=None, layout=None, path=None, cache=None, preprocess=None, templateclass=None, **kwargs):
         """Initializer of Engine class.
@@ -1039,7 +1039,7 @@ class Engine(object):
 
     def _set_cache_storage(self, cache):
         if   cache is True:  self.cache_storage = MarshalCacheStorage() #pass
-        elif cache is None:  self.cache_storage = MarshalCacheStorage() #pass
+        elif cache is None:  pass   ## use shared cache storage
         elif cache is False: self.cache_storage = MemoryCacheStorage()
         elif isinstance(cache, CacheStorage):  self.cache_storage = cache
         elif '__call__' in cache:              self.cache_storage = cache()
