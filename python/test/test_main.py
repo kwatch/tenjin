@@ -20,7 +20,7 @@ for filename in ['../bin/pytenjin', 'bin/pytenjin']:
 
 _name_orig = __name__
 __name__ = 'dummy'
-execfile(filename)
+exec(tenjin._read_binary_file(filename).decode('utf-8'))
 __name__ = _name_orig
 
 
