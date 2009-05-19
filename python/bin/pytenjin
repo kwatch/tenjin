@@ -107,11 +107,11 @@ class Main(object):
             return self.version() + "\n"
 
         ## check options
-        if options.has_key('i') and not re.match(r'\d+', options['i']):
+        if 'i' in options and not re.match(r'\d+', options['i']):
             raise self.error("-i: integer value required.")
-        if properties.has_key('indent') and not re.match(r'\d+', properties['indent']):
+        if 'indent' in properties and not re.match(r'\d+', properties['indent']):
             raise self.error("--indent: integer value required.")
-        if options.has_key('f') and not os.path.isfile(options['f']):
+        if 'f' in options and not os.path.isfile(options['f']):
             raise self.error("-f %s: file not found." % options['f'])
 
         ## set action
@@ -129,7 +129,7 @@ class Main(object):
                      True             and 'render'
 
         ## encoding
-        if options.has_key('k'):
+        if 'k' in options:
             _encoding = options['k']
             tostrfunc = properties.get('tostrfunc', 'to_str')
             globals()[tostrfunc] = tenjin.generate_tostrfunc(_encoding)
@@ -139,7 +139,7 @@ class Main(object):
         sys.path.append('.')
 
         ## modules
-        if options.has_key('r'):
+        if 'r' in options:
             global_dict = globals()
             try:
                 for module_name in options['r'].split(','):
@@ -150,7 +150,7 @@ class Main(object):
 
         ## context data file
         context = {}
-        if options.has_key('f'):
+        if 'f' in options:
             datafile = options['f']
             read_file = tenjin._read_template_file
             content = read_file(datafile)
@@ -164,7 +164,7 @@ class Main(object):
                 raise self.error("-f %s: unknown file type ('*.yaml' or '*.py' expected)." % datafile)
 
         ## context data
-        if options.has_key('c'):
+        if 'c' in options:
             s = options['c']
             if len(s) > 0:
                 if s[0] == '{':         ## yaml string
@@ -177,18 +177,18 @@ class Main(object):
                 context.update(context2)
 
         ## set properties for tenjin.Template
-        if options.has_key('b'):
+        if 'b' in options:
             properties['preamble'] = properties['postamble'] = False
         elif action == 'convert' or action == 'retrieve' or action == 'statements':
             properties.setdefault('preamble', True)
             properties.setdefault('postamble', True)
-        if options.has_key('i'):
+        if 'i' in options:
             properties['indent'] = int(options['i'])
 
         ## set properties for tenjin.Engine
         properties.setdefault('cache', action == 'cache');
         path = None
-        if properties.has_key('path'):
+        if 'path' in properties:
             path = []
             for dir in properties['path'].split(','):
                 if not os.path.exists(dir):

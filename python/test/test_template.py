@@ -42,7 +42,7 @@ class TemplateTest(unittest.TestCase, TestCaseHelper):
             return
         #
         if testopts:
-            if testopts.has_key('crchar'):
+            if 'crchar' in testopts:
                 ch = testopts['crchar']
                 if input:     input    = input.replace(ch, "\r")
                 if source:    source   = source.replace(ch, "\r")
@@ -52,9 +52,9 @@ class TemplateTest(unittest.TestCase, TestCaseHelper):
                 context['escape'] = cgi.escape
             if testopts.get('tostrfunc') == 'str':
                 context['to_str'] = str
-            if testopts.has_key('encoding'):
+            if 'encoding' in testopts:
                 encoding = testopts.get('encoding')
-            if testopts.has_key('templateclass'):
+            if 'templateclass' in testopts:
                 templateclass = testopts.get('templateclass')
         #
         if exception:

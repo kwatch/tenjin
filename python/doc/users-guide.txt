@@ -1139,7 +1139,7 @@ In layout file, it is able to use strings captured in templates.
 .#'{{,stop_capture(True),}}' is equivarent to '{{,stop_capture(); _context["{{/varname/}}"] = {{/varname/}};,}}'.
 '{{,if not captured_as("name"): ... #endif,}}' is equivarent to the following.
 .--------------------
-<?py if _context.has_key('name'): ?>
+<?py if 'name' in _context: ?>
 <?py     _buf.append(_context['name']) ?>
 <?py else: ?>
          ...

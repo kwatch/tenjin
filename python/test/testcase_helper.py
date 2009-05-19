@@ -104,10 +104,10 @@ class TestCaseHelper:
         table = {}
         buf = []
         for doc in doclist:
-            if not doc.has_key('name'):
+            if 'name' not in doc:
                 raise Exception("'name:' is required.")
             name = doc['name']
-            if table.has_key(name):
+            if name in table:
                 raise Exception("'name: %s' is duplicated." % name)
             table[name] = doc
             buf.append(        "def test_%s(self):" % name)

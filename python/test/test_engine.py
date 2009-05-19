@@ -21,13 +21,13 @@ def _convert_data(data, lang='python'):
             if k[-1] == '*':
                 assert isinstance(v, dict)
                 data[k[:-1]] = v.get(lang)
-            if isinstance(v, dict) and v.has_key(lang):
+            if isinstance(v, dict) and lang in v:
                 data[k] = v[lang]
             else:
                 _convert_data(v, lang)
     elif isinstance(data, list):
         for k, v in enumerate(data):
-            if isinstance(v, dict) and v.has_key(lang):
+            if isinstance(v, dict) and lang in v:
                 data[k] = v[lang]
             else:
                 _convert_data(v, lang)

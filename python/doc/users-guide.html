@@ -1071,7 +1071,7 @@ File 'layout9.pyhtml':</div>
 </pre>
 <p>'<code>if not captured_as("name"): ... #endif</code>' is equivarent to the following.
 </p>
-<pre class="program">&lt;?py if _context.has_key('name'): ?&gt;
+<pre class="program">&lt;?py if 'name' in _context: ?&gt;
 &lt;?py     _buf.append(_context['name']) ?&gt;
 &lt;?py else: ?&gt;
          ...

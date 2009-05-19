@@ -200,7 +200,7 @@ def _create_helpers_module():
         """
         frame = sys._getframe(1)
         context = frame.f_locals
-        if context.has_key(name):
+        if name in context:
             _buf = context['_buf']
             _buf.append(context[name])
             return True
@@ -773,7 +773,7 @@ class Template(object):
             locals = context.copy()
         else:
             locals = {}
-            if context.has_key('_engine'):
+            if '_engine' in context:
                 context.get('_engine').hook_context(locals)
         locals['_context'] = context
         if globals is None:
@@ -963,7 +963,7 @@ class GaeMemcacheCacheStorage(CacheStorage):
         return memcache.get(self._cachename(fullpath))
 
     def _store(self, fullpath, dict):
-        if dict.has_key('bytecode'): dict.pop('bytecode')
+        if 'bytecode' in dict: dict.pop('bytecode')
         from google.appengine.api import memcache
         return memcache.set(self._cachename(fullpath), dict, self.lifetime)
 
@@ -1117,7 +1117,7 @@ class Engine(object):
     def _preprocess(self, filepath, _context, _globals):
         #if _context is None: _context = {}
         #if _globals is None: _globals = sys._getframe(3).f_globals
-        if not _context.has_key('_engine'):
+        if '_engine' not in _context:
             self.hook_context(_context)
         preprocessor = Preprocessor(filepath)
         return preprocessor.render(_context, globals=_globals)
@@ -1168,7 +1168,7 @@ class Engine(object):
         frame = sys._getframe(1)
         locals  = frame.f_locals
         globals = frame.f_globals
-        assert locals.has_key('_context')
+        assert '_context' in locals
         context = locals['_context']
         # context and globals are passed to get_template() only for preprocessing.
         template = self.get_template(template_name, context, globals)

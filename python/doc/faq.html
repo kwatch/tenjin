@@ -611,7 +611,7 @@ class M17NEngine(tenjin.Engine):
 
     ## __ini__() takes 'lang' argument
     def __init__(self, *args, **kwargs):
-        lang = kwargs.has_key('lang') and kwargs.pop('lang') or None
+        lang = 'lang' in kwargs and kwargs.pop('lang') or None
         tenjin.Engine.__init__(self, *args, **kwargs)
         if lang: self.lang = lang     # set language name
 
@@ -735,7 +735,7 @@ File 'ex9-mylayout.pyhtml':</div>
 File 'ex9-baselayout.pyhtml':</div>
 <pre class="program">&lt;html&gt;
   &lt;body&gt;
-&lt;?py if locals().has_key('title'): ?&gt;
+&lt;?py if 'title' in locals(): ?&gt;
     &lt;h1&gt;${title}&lt;/h1&gt;
 &lt;?py #end ?&gt;
 <strong>&lt;?py _buf.append(_content) ?&gt;</strong>
@@ -842,7 +842,7 @@ For example,
 </pre>
 <p>is equivarent to the following.
 </p>
-<pre class="program">&lt;?py <strong>if _context.has_key('header_part'):</strong> ?&gt;
+<pre class="program">&lt;?py <strong>if 'header_part' in _context:</strong> ?&gt;
 &lt;?py     <strong>_buf.append(_context['header_part'])</strong> ?&gt;
 &lt;?py <strong>else:</strong> ?&gt;
    &lt;img src="img/logo.png" alt="logo" ?&gt;
