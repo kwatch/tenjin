@@ -240,7 +240,6 @@ class Main(object):
             elif action == 'dump':
                 cache_filename = template_name
                 dct = marshal.load(open(cache_filename, 'rb'))
-                #print "*** debug: repr(dct)=%s" % repr(dct)
                 output = dct['script']
                 if dct['args'] is not None:
                     output += '#@ARGS ' + ', '.join(dct['args']) + "\n"
