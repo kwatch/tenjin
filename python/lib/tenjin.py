@@ -841,7 +841,7 @@ class CacheStorage(object):
     def get(self, fullpath, create_template):
         template = self.items.get(fullpath)
         if not template:
-            dict = self._load_from(fullpath)
+            dict = self._load(fullpath)
             if dict:
                 template = create_template()
                 for k, v in dict.iteritems():
@@ -853,7 +853,7 @@ class CacheStorage(object):
         self.items[fullpath] = template
         dict = { 'args'  : template.args,   'bytecode' : template.bytecode,
                  'script': template.script, 'timestamp': template.timestamp }
-        return self._store_into(fullpath, dict)
+        return self._store(fullpath, dict)
 
     def unset(self, fullpath):
         self.items.delete(self)
@@ -862,11 +862,11 @@ class CacheStorage(object):
     def clear(self):
         self.items.clear()
 
-    def _load_from(self, fullpath):
-        raise NotImplementedError.new("%s#_load_from(): not implemented yet." % self.__class__.__name__)
+    def _load(self, fullpath):
+        raise NotImplementedError.new("%s#_load(): not implemented yet." % self.__class__.__name__)
 
-    def _store_into(self, fullpath, template):
-        raise NotImplementedError.new("%s#_store_into(): not implemented yet." % self.__class__.__name__)
+    def _store(self, fullpath, template):
+        raise NotImplementedError.new("%s#_store(): not implemented yet." % self.__class__.__name__)
 
     def _delete(self, fullpath, template):
         raise NotImplementedError.new("%s#_delete(): not implemented yet." % self.__class__.__name__)
@@ -877,10 +877,10 @@ class CacheStorage(object):
 
 class MemoryCacheStorage(CacheStorage):
 
-    def _load_from(self, fullpath):
+    def _load(self, fullpath):
         return None
 
-    def _store_into(self, fullpath, template):
+    def _store(self, fullpath, template):
         pass
 
     def _delete(self, fullpath):
@@ -894,7 +894,7 @@ class MarshalCacheStorage(CacheStorage):
             self._delete(k)
         CacheStorage.clear(self)
 
-    def _load_from(self, fullpath):
+    def _load(self, fullpath):
         cachepath = self._cachename(fullpath)
         if not os.path.isfile(cachepath): return None
         dump = _read_binary_file(cachepath)
@@ -904,7 +904,7 @@ class MarshalCacheStorage(CacheStorage):
         #template.script   = dct['script']
         #template.bytecode = dct['bytecode']
 
-    def _store_into(self, fullpath, dict):
+    def _store(self, fullpath, dict):
         _write_binary_file(self._cachename(fullpath), marshal.dumps(dict))
         #dct = { 'args':     template.args,
         #        'script':   template.script,
@@ -923,7 +923,7 @@ class TextCacheStorage(CacheStorage):
         self.encoding = encoding
         self.template_class = template_class
 
-    def _load_from(self, fullpath):
+    def _load(self, fullpath):
         cachepath = self._cachename(fullpath)
         if not os.path.isfile(cachepath): return None
         s = _read_cache_file(cachepath)
@@ -937,7 +937,7 @@ class TextCacheStorage(CacheStorage):
             args = None
         return {'args': args, 'script': s, 'timestamp': os.path.getmtime(cachepath)}
 
-    def _store_into(self, fullpath, dict):
+    def _store(self, fullpath, dict):
         s = dict['script']
         if self.encoding and isinstance(s, unicode):
             s = s.encode(self.encoding)
