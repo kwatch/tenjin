@@ -256,10 +256,12 @@ class EngineTest(unittest.TestCase, TestCaseHelper):
             engine = tenjin.Engine(**props)
             output = engine.render(':create', context)
             self.assertTextEqual(expected, output)
+            if   python2:  nullbyte = '\0'
+            elif python3:  nullbyte = '\0'.encode('ascii')
             for fname in cache_filenames:
                 self.assertExists(fname)                         # file created?
-                s = read_file(fname, 'rb')
-                self.assertTrue(s.find('\0') >= 0)               # binary file?
+                s = read_file(fname, 'rb')                       # read binary file
+                self.assertTrue(s.find(nullbyte) >= 0)           # binary file?
                 f = lambda: marshal.load(open(fname, 'rb'))
                 self.assertNotRaise(f)                           # marshal?
             engine = tenjin.Engine(**props)
@@ -274,10 +276,12 @@ class EngineTest(unittest.TestCase, TestCaseHelper):
             engine = tenjin.Engine(**props)
             output = engine.render(':create', context)
             self.assertTextEqual(expected, output)
+            if   python2:  nullchar = '\0'
+            elif python3:  nullchar = '\0'
             for fname in cache_filenames:
                 self.assertExists(fname)                         # file created?
-                s = read_file(fname, 'rb')
-                self.assertTrue(s.find('\0') < 0)                # text file?
+                s = read_file(fname, 'r')                        # read text file
+                self.assertTrue(s.find(nullchar) < 0)            # text file?
                 f = lambda: marshal.load(open(fname, 'rb'))
                 ex = self.assertRaise(ValueError, f)             # non-marshal?
                 self.assertEquals("bad marshal data", str(ex))
