@@ -39,12 +39,11 @@ def remove_unmatched_test_methods(testcase_class, pattern=None):
 
 class TestCaseHelper:
 
-    def testname(self):
+    def _testname(self):
         try:
-            testname = self._TestCase__testMethodName
+            return self._TestCase__testMethodName
         except AttributeError:
-            testname = self._testMethodName
-        return testname
+            return self._testMethodName
 
     def assertTextEqual(self, text1, text2, encoding=None):
         if text1 == text2:
