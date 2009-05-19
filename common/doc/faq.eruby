@@ -1674,7 +1674,7 @@ class M17NEngine(tenjin.Engine):
 
     ## __ini__() takes 'lang' argument
     def __init__(self, *args, **kwargs):
-        lang = kwargs.has_key('lang') and kwargs.pop('lang') or None
+        lang = 'lang' in kwargs and kwargs.pop('lang') or None
         tenjin.Engine.__init__(self, *args, **kwargs)
         if lang: self.lang = lang     # set language name
 
@@ -2215,7 +2215,7 @@ baz
 .-------------------- ex[%=n%]-baselayout.[%= suffix %]
 <html>
   <body>
-<?py if locals().has_key('title'): ?>
+<?py if 'title' in locals(): ?>
     <h1>${title}</h1>
 <?py #end ?>
 {{*<?py _buf.append(_content) ?>*}}
@@ -2469,7 +2469,7 @@ For example,
 is equivarent to the following.
 
 .--------------------
-<?py {{*if _context.has_key('header_part'):*}} ?>
+<?py {{*if 'header_part' in _context:*}} ?>
 <?py     {{*_buf.append(_context['header_part'])*}} ?>
 <?py {{*else:*}} ?>
    <img src="img/logo.png" alt="logo" ?>

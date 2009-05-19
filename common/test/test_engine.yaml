@@ -1188,7 +1188,7 @@
    "python": |
         <html>
           <body>
-        <?py if _context.has_key('title'): ?>
+        <?py if 'title' in _context: ?>
             <h1>${title}</h1>
         <?py #end ?>
         <?py _buf.append(_content) ?>
