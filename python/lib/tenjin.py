@@ -45,6 +45,8 @@ __all__      = ['Template', 'Engine', 'helpers', 'html', ]
 
 
 import re, sys, os, time, marshal
+python3 = sys.version_info[0] == 3
+python2 = sys.version_info[0] == 2
 
 
 ##
