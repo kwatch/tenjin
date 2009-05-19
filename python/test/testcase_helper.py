@@ -118,14 +118,6 @@ class TestCaseHelper:
 
     def generate_testcode(filename, untabify=True, testmethod='_test', lang='python'):
         doclist = TestCaseHelper.load_testdata(filename, untabify)
-        #
-        testname_pattern = os.getenv('TEST')
-        if testname_pattern:
-            regexp = re.compile(testname_pattern)
-            doclist = [doc for doc in doclist if regexp.match(str(doc.get('name')))]
-            #if not doclist:
-            #    raise StandardError("*** testname '%s' not found." % testname_pattern)
-        #
         table = {}
         buf = []
         for doc in doclist:
