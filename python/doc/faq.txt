@@ -25,7 +25,7 @@ You should check template by it.
 
 .? File 'ex1.pyhtml':
 .-------------------- ex1.pyhtml
-<?py for i in xrange(0, 10): ?>
+<?py for i in range(0, 10): ?>
 <?py     if i % 2 == 0: ?>
 #{i} is even.
 <?py     else ?>

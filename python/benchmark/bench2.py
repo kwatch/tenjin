@@ -1,5 +1,8 @@
 import sys, os, re, time, getopt, marshal, fnmatch
 from StringIO import StringIO
+python3 = sys.version_info[0] == 3
+if python3:
+    xrange = range
 
 
 ## defaults

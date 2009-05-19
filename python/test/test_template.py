@@ -105,7 +105,7 @@ class TemplateTest(unittest.TestCase, TestCaseHelper):
 
     def test_filename1(self):
         input = """<ul>
-<?py for i in xrange(0,3): ?>
+<?py for i in range(0,3): ?>
 <li>#{i}</li>
 <?py #endfor ?>
 </ul>

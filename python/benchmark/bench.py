@@ -2,6 +2,9 @@
 import sys, os, re, time, getopt, marshal, fnmatch
 from StringIO import StringIO
 from glob import glob
+python3 = sys.version_info[0] == 3
+if python3:
+    xrange = range
 
 ## global vars
 encoding = None
