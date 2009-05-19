@@ -63,7 +63,8 @@ class TemplateTest(unittest.TestCase, TestCaseHelper):
                 template.convert(input, filename)
                 template.render(context)
                 self.fail('%s is expected but not raised.' % exception)
-            except Exception, ex:
+            except Exception:
+                ex = sys.exc_info()[1]
                 self.assertEqual(exception, ex.__class__)
                 #self.assertTrue(isinstance(ex, exception))
                 if errormsg:

@@ -85,7 +85,8 @@ class Main(object):
                 print output,
             #sys.stdout.write(output)
             sys.exit(0)
-        except CommandOptionError, ex:
+        except CommandOptionError:
+            ex = sys.exc_info()[1]
             sys.stderr.write(str(ex) + "\n")
             sys.exit(1)
     main = staticmethod(main)
@@ -270,7 +271,8 @@ class Main(object):
         try:
             compile(script, filename, 'exec')
             return None
-        except SyntaxError, ex:
+        except SyntaxError:
+            ex = sys.exc_info()[1]
             if ex.msg == 'unindent does not match any outer indentation level':
                 lines = script.splitlines(True)
                 i = ex.lineno - 1 - 1

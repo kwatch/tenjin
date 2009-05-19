@@ -68,7 +68,8 @@ class TestCaseHelper:
     def assertRaise(self, exc_class, callable_, *args, **kwargs):
         try:
             callable_(*args, **kwargs)
-        except exc_class, ex:
+        except exc_class:
+            ex = sys.exc_info()[1]
             return ex
         else:
             exc_class_name = getattr(exc_class, '__name__', None) or str(exc_class)
@@ -77,7 +78,8 @@ class TestCaseHelper:
     def assertNotRaise(self, callable_, *args, **kwargs):
         try:
             callable_(*args, **kwargs)
-        except Exception, ex:
+        except Exception:
+            ex = sys.exc_info()[1]
             self.fail("unexpected exception raised: " + repr(ex))
 
     def assertExists(self, filename):

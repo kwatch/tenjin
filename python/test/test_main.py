@@ -168,9 +168,10 @@ class MainTest(unittest.TestCase, TestCaseHelper):
                 def f1():
                     try:
                         output = app.execute()
-                    except Exception, err:
-                        lst[0] = err
-                        raise err
+                    except Exception:
+                        ex = sys.exc_info()[1]
+                        lst[0] = ex
+                        raise ex
                 self.assertRaises(exception, f1)
                 if errormsg:
                     ex = lst[0]

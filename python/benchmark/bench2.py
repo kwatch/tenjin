@@ -40,7 +40,8 @@ def do_with_report(title, do_func):
 def import_module(name):
     try:
         return do_with_report('import %s' % name, lambda: __import__(name))
-    except ImportError, ex:
+    except ImportError:
+        ex = sys.exc_info()[1]
         msg("\n")
         msg("*** module %s not found.\n" % name)
         raise ex
@@ -60,7 +61,8 @@ def has_metachar(s):
 try:
     optlist, targets = getopt.getopt(sys.argv[1:], "hpf:n:t:x:Aqm:")
     options = dict([(key[1:], val == '' and True or val) for key, val in optlist])
-except Exception, ex:
+except Exception:
+    ex = sys.exc_info()[1]
     sys.stderr.write(str(ex) + "\n")
     sys.exit(1)
 #sys.stderr.write("*** debug: options=%s, targets=%s\n" % (repr(options), repr(targets)))
@@ -184,7 +186,8 @@ if is_required('django'):
         #    else:
         #        return "odd"
         #django.template.defaultfilters.register.filter(oddeven)
-    except ImportError, ex:
+    except ImportError:
+        ex = sys.exc_info()[1]
         django = None
 
 if is_required('cheetah'):
