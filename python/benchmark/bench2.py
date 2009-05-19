@@ -149,7 +149,7 @@ msg('*** generate templates...\n')
 header = open('templates/_header.html').read()
 footer = open('templates/_footer.html').read()
 var = None
-for key, filename in template_names.iteritems():
+for key, filename in template_names.items():
     body = open('templates/' + filename).read()
     if mode == 'class':
         body = re.sub(r"(\w+)\['(\w+)'\]", r"\1.\2", body)
@@ -328,7 +328,7 @@ def benchmark_cheetah(template_name, context, ntimes):
     if cheetah:
         for i in xrange(0, ntimes):
             template = bench_cheetah.bench_cheetah()
-            for key, val in context.iteritems():
+            for key, val in context.items():
                 setattr(template, key, val)
             output = template.respond()
         return True
@@ -337,7 +337,7 @@ def benchmark_cheetah(template_name, context, ntimes):
 def benchmark_cheetah_reuse(template_name, context, ntimes):
     if cheetah:
         template = bench_cheetah.bench_cheetah()
-        for key, val in context.iteritems():
+        for key, val in context.items():
             setattr(template, key, val)
         for i in xrange(0, ntimes):
             output = template.respond()
@@ -374,7 +374,7 @@ def benchmark_kid(template_name, context, ntimes):
     if kid:
         for i in xrange(0, ntimes):
             template = kid.Template(file=template_name)
-            for key, val in context.iteritems():
+            for key, val in context.items():
                 setattr(template, key, val)
             output = template.serialize()
             for key in context.keys():
@@ -385,7 +385,7 @@ def benchmark_kid(template_name, context, ntimes):
 def benchmark_kid_reuse(template_name, context, ntimes):
     if kid:
         template = kid.Template(file=template_name)
-        for key, val in context.iteritems():
+        for key, val in context.items():
             setattr(template, key, val)
         for i in xrange(0, ntimes):
             output = template.serialize()

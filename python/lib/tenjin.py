@@ -278,7 +278,7 @@ def _create_html_module():
            ''
         """
         if klass: kwargs['class'] = klass
-        return ' '.join(['%s="%s"' % (k, escape_xml(to_str(v))) for k, v in kwargs.iteritems() if v])
+        return ' '.join(['%s="%s"' % (k, escape_xml(to_str(v))) for k, v in kwargs.items() if v])
 
     def checked(expr):
         """return ' checked="checked"' if expr is true."""
@@ -848,7 +848,7 @@ class CacheStorage(object):
             if dict:
                 template = create_template()
                 template.timestamp = os.path.getmtime(fullpath)
-                for k, v in dict.iteritems():
+                for k, v in dict.items():
                     setattr(template, k, v)
                 self.items[fullpath] = template
         return template
@@ -867,7 +867,7 @@ class CacheStorage(object):
 
     def clear(self):
         """remove all template objects and attributes from dict and cache file."""
-        for k, v in self.items.iteritems():
+        for k, v in self.items.items():
             self._delete(k)
         self.items.clear()
 

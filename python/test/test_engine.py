@@ -242,7 +242,7 @@ class EngineTest(unittest.TestCase, TestCaseHelper):
         context = { 'params': { } }
         cache_filenames = ['account_create.pyhtml.cache', 'account_form.pyhtml.cache']
         try:
-            for key, filename in filenames.iteritems():
+            for key, filename in filenames.items():
                 write_file(filename, data[key])
             props = { 'prefix':'account_', 'postfix':'.pyhtml', 'layout':'layout.pyhtml' }
             ## no caching

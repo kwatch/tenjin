@@ -113,7 +113,7 @@ class TestCaseHelper:
                 raise Exception("'name: %s' is duplicated." % name)
             table[name] = doc
             buf.append(        "def test_%s(self):" % name)
-            for key, val in doc.iteritems():
+            for key, val in doc.items():
                 if key[-1] == '*':
                     key = key[:-1]
                     val = val.get(lang)

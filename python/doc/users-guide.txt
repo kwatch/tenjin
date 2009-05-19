@@ -653,7 +653,7 @@ pyTenjin allows you to specify context data by YAML file or Python script.
 <p>${item}</p>
 <?py #end ?>
 
-<?py for key, value in hash.iteritems(): ?>
+<?py for key, value in hash.items(): ?>
 <p>#{key} = ${value}</p>
 <?py #end ?>
 .--------------------
@@ -740,7 +740,7 @@ items:
   - #{item}
 <?py #end ?>
 hash:
-<?py for key, val in hash.iteritems(): ?>
+<?py for key, val in hash.items(): ?>
   #{key}: #{val}
 <?py #end ?>
 .--------------------

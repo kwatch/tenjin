@@ -282,7 +282,7 @@ class CheetahEntry(Entry):
         filename = self.template_filename
         for i in xrange(ntimes):
             template = bench_cheetah.bench_cheetah()
-            for key, val in context.iteritems():
+            for key, val in context.items():
                 setattr(template, key, val)
             output = template.respond()
             #if encoding:
@@ -294,7 +294,7 @@ class CheetahEntry(Entry):
     def _execute_reuse(self, context, ntimes):
         filename = self.template_filename
         template = bench_cheetah.bench_cheetah()
-        for key, val in context.iteritems():
+        for key, val in context.items():
             setattr(template, key, val)
         for i in xrange(ntimes):
             output = template.respond()
@@ -406,7 +406,7 @@ class KidEntry(Entry):
                 template = kid.Template(source=s, encoding=encoding)
             else:
                 template = kid.Template(file=filename)
-            for key, val in context.iteritems():
+            for key, val in context.items():
                 setattr(template, key, val)
             output = template.serialize(encoding=encoding)
             for key in context.keys():
@@ -421,7 +421,7 @@ class KidEntry(Entry):
             template = kid.Template(source=s, encoding=encoding)
         else:
             template = kid.Template(file=filename)
-        for key, val in context.iteritems():
+        for key, val in context.items():
             setattr(template, key, val)
         for i in xrange(ntimes):
             output = template.serialize(encoding=encoding)

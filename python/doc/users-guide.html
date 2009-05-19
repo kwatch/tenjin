@@ -626,7 +626,7 @@ File 'example4.pyhtml':</div>
 &lt;p&gt;${item}&lt;/p&gt;
 &lt;?py #end ?&gt;
 
-&lt;?py for key, value in hash.iteritems(): ?&gt;
+&lt;?py for key, value in hash.items(): ?&gt;
 &lt;p&gt;#{key} = ${value}&lt;/p&gt;
 &lt;?py #end ?&gt;
 </pre>
@@ -705,7 +705,7 @@ items:
   - #{item}
 &lt;?py #end ?&gt;
 hash:
-&lt;?py for key, val in hash.iteritems(): ?&gt;
+&lt;?py for key, val in hash.items(): ?&gt;
   #{key}: #{val}
 &lt;?py #end ?&gt;
 </pre>
