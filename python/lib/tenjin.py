@@ -1032,7 +1032,7 @@ class Engine(object):
         if preprocess is not None: self.preprocess = preprocess
         self.kwargs = kwargs
         self.encoding = kwargs.get('encoding')
-        self._filepaths = {}   # template_name => filename and fullpath
+        self._filepaths = {}   # template_name => relative path and absolute path
         #self.cache = cache
         self._set_cache_storage(cache)
 
@@ -1041,7 +1041,6 @@ class Engine(object):
         elif cache is None:  self.cache = MemoryCacheStorage()
         elif cache is False: self.cache = None
         elif isinstance(cache, CacheStorage):  self.cache = cache
-        elif '__call__' in cache:              self.cache = cache()
         elif cache == 'text':  self.cache = TextCacheStorage(self.encoding, self.templateclass)
         else:
             raise Argumenterror("%s: invalid cache." % str(cache))
