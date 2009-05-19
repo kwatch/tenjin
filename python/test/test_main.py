@@ -194,7 +194,7 @@ class MainTest(unittest.TestCase, TestCaseHelper):
                 pass
 
     code = TestCaseHelper.generate_testcode(__file__)
-    exec code
+    exec(code)
 
 
 

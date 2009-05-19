@@ -784,7 +784,7 @@ class Template(object):
         locals['_buf'] = _buf
         if not self.bytecode:
             self.compile()
-        exec self.bytecode in globals, locals
+        exec(self.bytecode, globals, locals)
         if bufarg is None:
             s = ''.join(_buf)
             #if self.encoding:

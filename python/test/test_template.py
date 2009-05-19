@@ -15,7 +15,7 @@ from tenjin.helpers import *
 class TemplateTest(unittest.TestCase, TestCaseHelper):
 
     code = TestCaseHelper.generate_testcode(__file__)
-    exec code
+    exec(code)
 
 
     def setUp(self):

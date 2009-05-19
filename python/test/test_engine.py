@@ -42,7 +42,7 @@ def _remove_files(basenames=[]):
 class EngineTest(unittest.TestCase, TestCaseHelper):
 
     #code = TestCaseHelper.generate_testcode(__file__)
-    #exec code
+    #exec(code)
     datalist = TestCaseHelper.load_testdata(__file__)
     testdata = dict([ (d['name'], d) for d in datalist ])
     _convert_data(testdata, lang='python')
