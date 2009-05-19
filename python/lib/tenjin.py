@@ -876,7 +876,7 @@ class CacheStorage(object):
         """(abstract) load dict object which represents template object attributes from cache file."""
         raise NotImplementedError.new("%s#_store(): not implemented yet." % self.__class__.__name__)
 
-    def _delete(self, fullpath, template):
+    def _delete(self, fullpath):
         """(abstract) remove template object from cache file."""
         raise NotImplementedError.new("%s#_delete(): not implemented yet." % self.__class__.__name__)
 
