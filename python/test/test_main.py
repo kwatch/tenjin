@@ -291,7 +291,9 @@ class MainTest(unittest.TestCase, TestCaseHelper):
             import marshal
             dct = marshal.load(open(cachename, 'rb'))
             self.assertTextEqual(['title', 'items'], dct.get('args'))
-            self.assertEquals("<type 'code'>", str(type(dct.get('bytecode'))))
+            if   python2:  expected = "<type 'code'>"
+            elif python3:  expected = "<class 'code'>"
+            self.assertEquals(expected, str(type(dct.get('bytecode'))))
             self.assertTextEqual(script, dct.get('script'))
         finally:
             if os.path.exists(cachename):
