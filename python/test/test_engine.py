@@ -376,7 +376,7 @@ class EngineTest(unittest.TestCase, TestCaseHelper):
             self.assertEqual(expected_args, t.args)
             self.assertTextEqual(expected_script, t.script)
             import marshal
-            dct = marshal.load(open(engine.cachename(filename), 'rb'))
+            dct = marshal.load(open(filename + '.cache', 'rb'))
             self.assertEqual(expected_args, dct['args'])
             self.assertTextEqual(expected_script, dct['script'])
         ##
@@ -389,9 +389,9 @@ class EngineTest(unittest.TestCase, TestCaseHelper):
             input = data['input1']
             cachename = filename+'.cache'
             self.assertNotExist(cachename)
-            _test(filename, cachename, 1, input, script, args)
+            _test(filename, cachename, True, input, script, args)
             self.assertExists(cachename)
-            _test(filename, cachename, 1, None, script, args)
+            _test(filename, cachename, True, None, script, args)
             ## args=[], cache=1
             cachename = filename+'.cache'
             input = data['input2']  # re.sub(r'<\?py #@ARGS.*?\?>\n', '<?py #@ARGS ?>\n', input)
@@ -399,9 +399,9 @@ class EngineTest(unittest.TestCase, TestCaseHelper):
             args  = data['args2']   # []
             time.sleep(1)
             #self.assertExists(cachename)
-            _test(filename, cachename, 1, input, script, args)
+            _test(filename, cachename, True, input, script, args)
             #self.assertExists(cachename)
-            _test(filename, cachename, 1, None, script, args)
+            _test(filename, cachename, True, None, script, args)
         finally:
             _remove_files(['input.pyhtml'])
 
