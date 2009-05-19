@@ -838,17 +838,22 @@ class CacheStorage(object):
     def __init__(self):
         self.items = {}
 
-    def get(self, fullpath):
+    def get(self, fullpath, create_template):
         template = self.items.get(fullpath)
-        #if not template:
-        #    template = self._load_from(fullpath)
-        #    if template:
-        #        self.items[fullpath] = template
+        if not template:
+            dict = self._load_from(fullpath)
+            if dict:
+                template = create_template()
+                for k, v in dict.iteritems():
+                    setattr(template, k, v)
+                self.items[fullpath] = template
         return template
 
     def set(self, fullpath, template):
         self.items[fullpath] = template
-        #return self._store_into(fullpath, template)
+        dict = { 'args'  : template.args,   'bytecode' : template.bytecode,
+                 'script': template.script, 'timestamp': template.timestamp }
+        return self._store_into(fullpath, dict)
 
     def unset(self, fullpath):
         self.items.delete(self)
@@ -1101,13 +1106,7 @@ class Engine(object):
         """
         filename, fullpath = self._relative_and_absolute_path(template_name)
         assert filename and fullpath
-        template = self.cache_storage.get(fullpath)
-        if not template:
-            dct = self.cache_storage._load_from(fullpath)
-            if dct:
-                template = self._create_template(None, None, None)
-                for k, v in dct.iteritems():
-                    setattr(template, k, v)
+        template = self.cache_storage.get(fullpath, self.templateclass)
         if template and template.timestamp and template.timestamp < os.path.getmtime(filename):
             #self.cache_storage.delete(path)
             template = None
@@ -1120,11 +1119,7 @@ class Engine(object):
             template = self._create_template(filename, _context, _globals)
             template.timestamp = curr_time
             if not template.bytecode and self.cache is not False: template.compile()
-            self.cache_storage.set(fullpath, template)
-            d = template.__dict__
-            dct = { 'args'  : d.get('args'),  'bytecode' : d.get('bytecode'),
-                    'script': d.get('script'),'timestamp': d.get('timestamp') }
-            ret = self.cache_storage._store_into(fullpath, dct)
+            ret = self.cache_storage.set(fullpath, template)
             #if not ret:
             #    Engine.logger.info("failed to store cache: path=%s, template=%s" % (repr(path), repr(template)))
         #else:
