@@ -60,6 +60,10 @@ class TemplateTest(unittest.TestCase, TestCaseHelper):
         if python3:
             input  = input.replace('urllib.quote', 'urllib.parse.quote')
             source = source.replace('urllib.quote', 'urllib.parse.quote')
+            if encoding:
+                if source:
+                    source = source.replace("u'''", "'''").replace("u'", "'")
+                    input  = input.replace("u'", "'")
         #
         if exception:
             try:
