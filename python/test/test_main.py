@@ -739,7 +739,7 @@ class MainTest(unittest.TestCase, TestCaseHelper):
 <?PY            "FL": "Florida", } ?>
 <?PY # ?>
 <?py chk = { params['state']: ' checked="checked"' } ?>
-<?PY codes = states.keys() ?>
+<?PY codes = list(states.keys()) ?>
 <?PY codes.sort() ?>
 <select name="state">
   <option value="">-</option>

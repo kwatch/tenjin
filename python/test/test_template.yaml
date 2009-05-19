@@ -961,7 +961,7 @@
         <?PY            "FL": "Florida", } ?>
         <?PY # ?>
         <?py chk = { params['state']: ' checked="checked"' } ?>
-        <?PY codes = states.keys() ?>
+        <?PY codes = list(states.keys()) ?>
         <?PY codes.sort() ?>
         <select name="state">
           <option value="">-</option>
@@ -1014,7 +1014,7 @@
                    "FL": "Florida", }
         #
         _buf.extend(('''<?py chk = { params[\'state\']: \' checked="checked"\' } ?>\n''', ));
-        codes = states.keys()
+        codes = list(states.keys())
         codes.sort()
         _buf.extend(('''<select name="state">
           <option value="">-</option>\n''', ));
