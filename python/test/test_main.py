@@ -645,8 +645,17 @@ class MainTest(unittest.TestCase, TestCaseHelper):
         self._test()
 
     def test_xencoding1(self):  # --encoding=encoding
-        self.input = """\
+        if python2:
+            self.input = """\
 <?py items=['foo',u'bar',u'日本語'] ?>
+ようこそ
+<?py for item in items: ?>
+* 「${item}」
+<?py #end ?>
+"""
+        elif python3:
+            self.input = """\
+<?py items=['foo','bar','日本語'] ?>
 ようこそ
 <?py for item in items: ?>
 * 「${item}」
@@ -664,8 +673,17 @@ class MainTest(unittest.TestCase, TestCaseHelper):
         self._test()
 
     def test_xencoding2(self):  # -k encoding
-        self.input = """\
+        if python2:
+            self.input = """\
 <?py items=['foo',u'bar','日本語'] ?>
+ようこそ
+<?py for item in items: ?>
+* 「${item}」
+<?py #end ?>
+"""
+        elif python3:
+            self.input = """\
+<?py items=['foo',b'bar','日本語'] ?>
 ようこそ
 <?py for item in items: ?>
 * 「${item}」
