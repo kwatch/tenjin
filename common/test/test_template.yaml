@@ -361,7 +361,7 @@
   input*:
    "python": |
         <ul>
-        <?py for i in xrange(1,4): ?>
+        <?py for i in range(1,4): ?>
         <li>
         #{i}
         </li>
@@ -377,7 +377,7 @@
   source*:
    "python": |
         _buf.extend(('''<ul>\n''', ));
-        for i in xrange(1,4):
+        for i in range(1,4):
             _buf.extend(('''<li>
         ''', to_str(i), '''
         </li>\n''', ));
@@ -564,7 +564,7 @@
    "python": |
         <p>^
         <?py^
-        for value in xrange(0,3):^
+        for value in range(0,3):^
         ?>^
         i = #{value}^
         #{value}^
@@ -587,7 +587,7 @@
    "python": |
         _buf.extend(('''<p>\r\n''', ));
         
-        for value in xrange(0,3):
+        for value in range(0,3):
         
             _buf.extend(('''i = ''', to_str(value), '''^
         ''', to_str(value), '''\r\n''', ));
