@@ -949,6 +949,28 @@ class TextCacheStorage(CacheStorage):
         if os.path.isfile(cachepath): os.path.unlink(cachepath)
 
 
+class GaeMemcacheCacheStorage(CacheStorage):
+
+    lifetime = 0     # 0 means unlimited
+
+    def __init__(self, lifetime=None):
+        CacheStorage.__init__(self)
+        if lifetime is not None:  self.lifetime = lifetime
+
+    def _load(self, fullpath):
+        from google.appengine.api import memcache
+        return memcache.get(self._cachename(fullpath))
+
+    def _store(self, fullpath, dict):
+        if dict.has_key('bytecode'): dict.pop('bytecode')
+        from google.appengine.api import memcache
+        return memcache.set(self._cachename(fullpath), dict, self.lifetime)
+
+    def _delete(self, fullpath):
+        from google.appengine.api import memcache
+        memcache.delete(self._cachename(fullpath))
+
+
 
 ##
 ## template engine class
