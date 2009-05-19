@@ -250,6 +250,9 @@ class $(classname)(unittest.TestCase, TestCaseHelper):
     ## footer
     buf.append(c%"""
 
+remove_unmatched_test_methods($(classname))
+
+
 if __name__ == '__main__':
     unittest.main()
 """)
