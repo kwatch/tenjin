@@ -74,7 +74,7 @@ class EngineTest(unittest.TestCase, TestCaseHelper):
             for hash in testdata['templates']:
                 write_file(hash['filename'], hash['content'])
             #
-            testname = self.testname()
+            testname = self._testname()
             lst = testname[len('test_basic'):].split('_')
             action   = lst[1]                # 'list', 'show', 'create', or 'edit'
             shortp   = lst[2] == 'short'     # 'short' or 'long'
