@@ -46,22 +46,6 @@ class TestCaseHelper:
             testname = self._testMethodName
         return testname
 
-    def is_target(self, depth=2):
-        env_testname = os.environ.get('TEST')
-        if not env_testname:
-            return True
-        return self.testname() == 'test_' + env_testname
-
-    #def is_target(self, depth=2):
-    #    testname = os.environ.get('TEST')
-    #    if not testname:
-    #        return True
-    #    stack = traceback.extract_stack()
-    #    caller_method = stack[-depth][2]
-    #    assert caller_method.startswith("test_")
-    #    name = caller_method[len("test_"):]
-    #    return testname == name
-
     def assertTextEqual(self, text1, text2, encoding=None):
         if text1 == text2:
             self.assertEqual(text1, text2)
