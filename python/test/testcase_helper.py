@@ -5,10 +5,15 @@
 ###
 
 #import unittest
-import os, difflib, re, traceback
+import os, sys, difflib, re, traceback
 import yaml
 
-__all__ = ['TestCaseHelper', 'read_file', 'write_file', 'remove_unmatched_test_methods']
+__all__ = ['TestCaseHelper', 'read_file', 'write_file',
+           'remove_unmatched_test_methods', 'python3', 'python2']
+
+python3 = sys.version_info[0] == 3
+python2 = sys.version_info[0] == 2
+
 
 def read_file(filename, mode='rb'):
     f = None
