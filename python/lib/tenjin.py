@@ -79,20 +79,39 @@ def _read_binary_file(filename):
     finally:
         if f: f.close()
 
-def _read_template_file(filename, encoding=None):
-    s = _read_binary_file(filename)          ## binary(=str)
-    if encoding: s = s.decode(encoding)      ## unicode
-    return s
+if python2:
 
-def _read_cache_file(filename, encoding=None):
-    s = _read_binary_file(filename)          ## binary(=str)
-    if encoding: s = s.decode(encoding)      ## unicode
-    return s
+    def _read_template_file(filename, encoding=None):
+        s = _read_binary_file(filename)          ## binary(=str)
+        if encoding: s = s.decode(encoding)      ## unicode
+        return s
 
-def _write_cache_file(filename, content, encoding=None):
-    if encoding and isinstance(content, unicode):
-        content = content.encode(encoding)
-    _write_binary_file(filename, content)    ## binary(=str)
+    def _read_cache_file(filename, encoding=None):
+        s = _read_binary_file(filename)          ## binary(=str)
+        if encoding: s = s.decode(encoding)      ## unicode
+        return s
+
+    def _write_cache_file(filename, content, encoding=None):
+        if encoding and isinstance(content, unicode):
+            content = content.encode(encoding)   ## unicode to binary(=str)
+        _write_binary_file(filename, content)    ## binary(=str)
+
+elif python3:
+
+    def _read_template_file(filename, encoding=None):
+        s = _read_binary_file(filename)          ## binary
+        return s.decode(encoding or 'utf-8')     ## binary to unicode(=str)
+
+    def _read_cache_file(filename, encoding=None):
+        s = _read_binary_file(filename)          ## binary
+        if encoding: s = s.decode(encoding)      ## binary to unicode(=str)
+        return s
+
+    def _write_cache_file(filename, content, encoding=None):
+        if isinstance(content, str):
+            content = content.encode(encoding or 'utf-8')  ## unicode(=str) to binary
+        _write_binary_file(filename, content)    ## binary
+
 
 def _create_module(module_name):
     """ex. mod = _create_module('tenjin.util')"""
@@ -110,39 +129,52 @@ def _create_module(module_name):
 
 def _create_helpers_module():
 
-    def to_str(val):
-        """Convert value into string. Return '' if val is None.
-           ex.
-             >>> to_str(None)
-             ''
-             >>> to_str("foo")
-             'foo'
-             >>> to_str(u"\u65e5\u672c\u8a9e")
-             u'\u65e5\u672c\u8a9e'
-             >>> to_str(123)
-             '123'
-        """
-        if val is None:              return ''
-        if isinstance(val, str):     return val
-        if isinstance(val, unicode): return val
-        return str(val)
+    if python2:
 
-    def generate_tostrfunc(encoding):
-        """Generate 'to_str' function which encodes unicode to str.
-           ex.
-              import tenjin
-              from tenjin.helpers import escape
-              to_str = tenjin.generate_tostrfunc('utf-8')
-              engine = tenjin.Engine()
-              context = { 'items': [u'AAA', u'BBB', u'CCC'] }
-              print engine.render('example.pyhtml')
-        """
         def to_str(val):
-            if val is None:               return ''
-            if isinstance(val, str):      return val
-            if isinstance(val, unicode):  return val.encode(encoding)
+            """Convert value into string. Return '' if val is None.
+               ex.
+                 >>> to_str(None)
+                 ''
+                 >>> to_str("foo")
+                 'foo'
+                 >>> to_str(u"\u65e5\u672c\u8a9e")
+                 u'\u65e5\u672c\u8a9e'
+                 >>> to_str(123)
+                 '123'
+            """
+            if val is None:              return ''
+            if isinstance(val, str):     return val
+            if isinstance(val, unicode): return val
             return str(val)
-        return to_str
+
+        def generate_tostrfunc(encoding):
+            """Generate 'to_str' function which encodes unicode to str.
+               ex.
+                  import tenjin
+                  from tenjin.helpers import escape
+                  to_str = tenjin.generate_tostrfunc('utf-8')
+                  engine = tenjin.Engine()
+                  context = { 'items': [u'AAA', u'BBB', u'CCC'] }
+                  print engine.render('example.pyhtml', context)
+            """
+            def to_str(val):
+                if val is None:               return ''
+                if isinstance(val, str):      return val
+                if isinstance(val, unicode):  return val.encode(encoding)  # unicode to binary(=str)
+                return str(val)
+            return to_str
+
+    elif python3:
+
+        def generate_tostrfunc(encoding):
+            def to_str(val):
+                if val is None:             return ''
+                if isinstance(val, str):    return val
+                if isinstance(val, bytes):  return val.decode(encoding) # binary to unicode(=str)
+                return str(val)
+            return to_str
+        to_str = generate_tostrfunc('utf-8')
 
     def echo(string):
         """add string value into _buf. this is equivarent to '#{string}'."""
@@ -505,8 +537,9 @@ class Template(object):
              >>> script = template.convert(input, filename)   # filename is optional
              >>> print script
         """
-        if self.encoding and isinstance(input, str):
-            input = input.decode(self.encoding)
+        if python2:
+            if self.encoding and isinstance(input, str):
+                input = input.decode(self.encoding)
         self._reset(input, filename)
         buf = []
         self.before_convert(buf)
@@ -687,7 +720,7 @@ class Template(object):
     def add_text(self, buf, text, encode_newline=False):
         if not text:
             return;
-        if self.encoding:
+        if self.encoding and python2:
             buf.append("u'''")
         else:
             buf.append("'''")
@@ -931,7 +964,10 @@ class TextCacheStorage(CacheStorage):
         cachepath = self._cachename(fullpath)
         if not os.path.isfile(cachepath): return None
         s = _read_cache_file(cachepath)
-        if self.encoding: s = s.decode(self.encoding)
+        if python2:
+            if self.encoding: s = s.decode(self.encoding)   ## binary to unicode
+        elif python3:
+            s = s.decode(self.encoding or 'utf-8')
         if s.startswith('#@ARGS '):
             pos = s.find("\n")
             args_str = s[len('#@ARGS '):pos]
@@ -943,10 +979,14 @@ class TextCacheStorage(CacheStorage):
 
     def _store(self, fullpath, dict):
         s = dict['script']
-        if self.encoding and isinstance(s, unicode):
-            s = s.encode(self.encoding)
+        if python2:
+            if self.encoding and isinstance(s, unicode):
+                s = s.encode(self.encoding)     ## unicode to binary(=str)
         if dict.get('args') is not None:
             s = "#@ARGS %s\n%s" % (', '.join(dict['args']), s)
+        if python3:
+            if self.encoding and isinstance(s, str):
+                s = s.decode(self.encoding)     ## unicode(=str) to binary
         _write_cache_file(fullpath + '.cache', s)
 
     def _delete(self, fullpath):
