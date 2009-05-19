@@ -9,10 +9,17 @@ import os, sys, difflib, re, traceback
 import yaml
 
 __all__ = ['TestCaseHelper', 'read_file', 'write_file',
-           'remove_unmatched_test_methods', 'python3', 'python2']
+           'remove_unmatched_test_methods',
+           'python3', 'python2', '_unicode', '_bytes']
 
 python3 = sys.version_info[0] == 3
 python2 = sys.version_info[0] == 2
+if python2:
+    _unicode = unicode
+    _bytes   = str
+elif python3:
+    _unicode = str
+    _bytes   = bytes
 
 
 def read_file(filename, mode='rb'):
@@ -24,6 +31,8 @@ def read_file(filename, mode='rb'):
         if f: f.close()
 
 def write_file(filename, content, mode='wb'):
+    if isinstance(content, _unicode):
+        content = content.encode('utf-8')
     f = None
     try:
         f = open(filename, mode)
@@ -56,10 +65,10 @@ class TestCaseHelper:
         else:
             file1, file2 = '.tmp.file1', '.tmp.file2'
             if encoding:
-                if isinstance(text1, unicode):
-                    text1 = text1.encode(encoding)
-                if isinstance(text2, unicode):
-                    text2 = text2.encode(encoding)
+                if isinstance(text1, _unicode):
+                    text1 = text1.encode(encoding or 'utf-8')   # unicode to binary
+                if isinstance(text2, _unicode):
+                    text2 = text2.encode(encoding or 'utf-8')   # unicode to binary
             write_file(file1, text1)
             write_file(file2, text2)
             f = os.popen("diff -u %s %s" % (file1, file2))
