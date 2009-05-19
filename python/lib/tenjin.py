@@ -407,6 +407,7 @@ class Template(object):
     postamble  = None    # "_buf = []"
     smarttrim  = None    # "print ''.join(_buf)"
     args       = None
+    timestamp  = None
 
     def __init__(self, filename=None, encoding=None, escapefunc=None, tostrfunc=None, indent=None, preamble=None, postamble=None, smarttrim=None):
         """Initailizer of Template class.
@@ -845,6 +846,7 @@ class CacheStorage(object):
             dict = self._load(fullpath)
             if dict:
                 template = create_template()
+                template.timestamp = os.path.getmtime(fullpath)
                 for k, v in dict.iteritems():
                     setattr(template, k, v)
                 self.items[fullpath] = template
