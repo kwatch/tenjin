@@ -871,6 +871,9 @@ class CacheStorage(object):
     def _delete(self, fullpath, template):
         raise NotImplementedError.new("%s#_delete(): not implemented yet." % self.__class__.__name__)
 
+    def _cachename(self, fullpath):
+        return fullpath + '.cache'
+
 
 class MemoryCacheStorage(CacheStorage):
 
@@ -892,7 +895,7 @@ class MarshalCacheStorage(CacheStorage):
         CacheStorage.clear(self)
 
     def _load_from(self, fullpath):
-        cachepath = fullpath + '.cache'
+        cachepath = self._cachename(fullpath)
         if not os.path.isfile(cachepath): return None
         dump = _read_binary_file(cachepath)
         return marshal.loads(dump)
@@ -902,16 +905,15 @@ class MarshalCacheStorage(CacheStorage):
         #template.bytecode = dct['bytecode']
 
     def _store_into(self, fullpath, dict):
-        _write_binary_file(fullpath + '.cache', marshal.dumps(dict))
+        _write_binary_file(self._cachename(fullpath), marshal.dumps(dict))
         #dct = { 'args':     template.args,
         #        'script':   template.script,
         #        'bytecode': template.bytecode }
         #_write_cache_file(cache_filename, marshal.dumps(dct))
 
     def _delete(self, fullpath):
-        cachepath = fullpath + '.cache'
-        if os.path.isfile(cachepath):
-            os.path.unlink(cachepath)
+        cachepath = self._cachename(fullpath)
+        if os.path.isfile(cachepath): os.path.unlink(cachepath)
 
 
 class TextCacheStorage(CacheStorage):
@@ -922,7 +924,7 @@ class TextCacheStorage(CacheStorage):
         self.template_class = template_class
 
     def _load_from(self, fullpath):
-        cachepath = fullpath + '.cache'
+        cachepath = self._cachename(fullpath)
         if not os.path.isfile(cachepath): return None
         s = _read_cache_file(cachepath)
         if self.encoding: s = s.decode(self.encoding)
@@ -944,7 +946,8 @@ class TextCacheStorage(CacheStorage):
         _write_cache_file(fullpath + '.cache', s)
 
     def _delete(self, fullpath):
-        os.path.unlink(fullpath + '.cache')
+        cachepath = self._cachename(fullpath)
+        if os.path.isfile(cachepath): os.path.unlink(cachepath)
 
 
 
