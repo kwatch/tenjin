@@ -8,6 +8,8 @@
 import os, difflib, re, traceback
 import yaml
 
+__all__ = ['TestCaseHelper', 'read_file', 'write_file', 'undef_test_methods_except']
+
 def read_file(filename, mode='rb'):
     f = None
     try:
