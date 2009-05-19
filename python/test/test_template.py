@@ -57,6 +57,10 @@ class TemplateTest(unittest.TestCase, TestCaseHelper):
             if 'templateclass' in testopts:
                 templateclass = testopts.get('templateclass')
         #
+        if python3:
+            input  = input.replace('urllib.quote', 'urllib.parse.quote')
+            source = source.replace('urllib.quote', 'urllib.parse.quote')
+        #
         if exception:
             try:
                 template = tenjin.Template(**options)
