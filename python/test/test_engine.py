@@ -69,9 +69,6 @@ class EngineTest(unittest.TestCase, TestCaseHelper):
 
 
     def _test_basic(self):
-        if not self.is_target():
-            return
-        #
         try:
             testdata = EngineTest.testdata['basic']
             for hash in testdata['templates']:
@@ -168,8 +165,6 @@ class EngineTest(unittest.TestCase, TestCaseHelper):
 
 
     def test_capture_and_echo(self):
-        if not self.is_target():
-            return
         hash = EngineTest.testdata['test_capture_and_echo']
         layout = hash['layout']
         content = hash['content']
@@ -188,8 +183,6 @@ class EngineTest(unittest.TestCase, TestCaseHelper):
 
 
     def test_captured_as(self):
-        if not self.is_target():
-            return
         hash = EngineTest.testdata['test_captured_as']
         files = ( ('content.pyhtml',      hash['content']),
                   ('customlayout.pyhtml', hash['customlayout']),
@@ -208,8 +201,6 @@ class EngineTest(unittest.TestCase, TestCaseHelper):
 
 
     def test_local_layout(self):
-        if not self.is_target():
-            return
         hash = EngineTest.testdata['test_local_layout']
         context = hash['context']
         names = ['layout_html', 'layout_xhtml', 'content_html']
@@ -242,8 +233,6 @@ class EngineTest(unittest.TestCase, TestCaseHelper):
 
 
     def test_cachefile(self):
-        if not self.is_target():
-            return
         data = EngineTest.testdata['test_cachefile']
         filenames = { 'layout': 'layout.pyhtml',
                       'page': 'account_create.pyhtml',
@@ -300,8 +289,6 @@ class EngineTest(unittest.TestCase, TestCaseHelper):
 
 
     def test_change_layout(self):
-        if not self.is_target():
-            return
         data = EngineTest.testdata['test_change_layout']
         ## setup
         basenames = ['baselayout', 'customlayout', 'content']
@@ -319,8 +306,6 @@ class EngineTest(unittest.TestCase, TestCaseHelper):
 
 
     def test_context_scope(self):
-        if not self.is_target():
-            return
         data = EngineTest.testdata['test_context_scope']
         base = data['base']
         part = data['part']
@@ -339,8 +324,6 @@ class EngineTest(unittest.TestCase, TestCaseHelper):
 
 
     def test_template_args(self):
-        if not self.is_target():
-            return
         data = EngineTest.testdata['test_template_args']
         content = data['content']
         expected = data['expected']
@@ -365,8 +348,6 @@ class EngineTest(unittest.TestCase, TestCaseHelper):
 
 
     def test_cached_contents(self):
-        if not self.is_target():
-            return
         data = EngineTest.testdata['test_cached_contents']
         def _test(filename, cachename, cachemode, input, expected_script, expected_args):
             if input:
@@ -407,8 +388,6 @@ class EngineTest(unittest.TestCase, TestCaseHelper):
 
 
     def _test_template_path(self, keys):
-        if not self.is_target():
-            return
         data = EngineTest.testdata['test_template_path']
         basedir = 'test_templates'
         try:
@@ -458,8 +437,6 @@ class EngineTest(unittest.TestCase, TestCaseHelper):
 
 
     def test_preprocessor(self):
-        if not self.is_target():
-            return
         data = EngineTest.testdata['test_preprocessor']
         try:
             basenames = ('form', 'create', 'update', 'layout', )
@@ -501,6 +478,8 @@ class EngineTest(unittest.TestCase, TestCaseHelper):
         finally:
             _remove_files(filenames)
 
+
+remove_unmatched_test_methods(EngineTest)
 
 
 if __name__ == '__main__':

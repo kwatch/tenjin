@@ -55,5 +55,8 @@ class FaqTest(unittest.TestCase, TestCaseHelper):
 
 
 
+remove_unmatched_test_methods(FaqTest)
+
+
 if __name__ == '__main__':
     unittest.main()

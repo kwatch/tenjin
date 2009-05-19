@@ -25,8 +25,6 @@ class TemplateTest(unittest.TestCase, TestCaseHelper):
         pass
 
     def _test(self):
-        if not self.is_target(depth=3): return
-        #
         input     = getattr(self, 'input', None)
         source    = getattr(self, 'source', None)
         expected  = getattr(self, 'expected', None)
@@ -89,7 +87,6 @@ class TemplateTest(unittest.TestCase, TestCaseHelper):
 
 
 #    def test_render1(self):   # Tenjin#render(context) == Tenjin#render(**context)
-#        if not self.is_target(): return
 #        input = """<ul>
 #<?py for item in items: ?>
 #<li>#{item}</li>
@@ -106,7 +103,6 @@ class TemplateTest(unittest.TestCase, TestCaseHelper):
 
 
     def test_filename1(self):
-        if not self.is_target(): return
         input = """<ul>
 <?py for i in xrange(0,3): ?>
 <li>#{i}</li>
@@ -128,7 +124,6 @@ class TemplateTest(unittest.TestCase, TestCaseHelper):
 
 
     def test_import_module1(self):
-        if not self.is_target(): return
         import base64
         input = "#{base64.encodestring('tenjin')}"
         template = tenjin.Template()
@@ -143,7 +138,6 @@ class TemplateTest(unittest.TestCase, TestCaseHelper):
 
 
     def test_import_module2(self):
-        if not self.is_target(): return
         import rfc822
         input = "#{rfc822.formatdate()}"
         template = tenjin.Template()
@@ -158,7 +152,6 @@ class TemplateTest(unittest.TestCase, TestCaseHelper):
 
 
     def test_invalid_template_args(self):
-        if not self.is_target(): return
         def f():
             input = "<?py #@ARGS 1x ?>"
             template = tenjin.Template()
@@ -166,12 +159,7 @@ class TemplateTest(unittest.TestCase, TestCaseHelper):
         self.assertRaises(ValueError, f)
 
 
-import os
-name = os.environ.get('TEST')
-if name:
-    for m in dir(TemplateTest):
-        if m.startswith('test_') and m != 'test_'+name:
-            delattr(TemplateTest, m)
+remove_unmatched_test_methods(TemplateTest)
 
 
 if __name__ == '__main__':

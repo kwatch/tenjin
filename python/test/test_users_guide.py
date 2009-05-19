@@ -55,5 +55,8 @@ class UsersGuideTest(unittest.TestCase, TestCaseHelper):
 
 
 
+remove_unmatched_test_methods(UsersGuideTest)
+
+
 if __name__ == '__main__':
     unittest.main()

@@ -55,5 +55,8 @@ class ExamplesTest(unittest.TestCase, TestCaseHelper):
 
 
 
+remove_unmatched_test_methods(ExamplesTest)
+
+
 if __name__ == '__main__':
     unittest.main()

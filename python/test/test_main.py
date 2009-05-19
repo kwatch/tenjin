@@ -7,6 +7,7 @@
 
 import unittest
 import os, traceback
+import yaml
 
 from testcase_helper import *
 import tenjin
@@ -120,8 +121,6 @@ class MainTest(unittest.TestCase, TestCaseHelper):
         pass
 
     def _test(self):
-        if not self.is_target(depth=3): return
-        #
         input     = getattr(self, 'input', '')
         source    = getattr(self, 'source', None)
         expected  = getattr(self, 'expected', None)
@@ -200,7 +199,6 @@ class MainTest(unittest.TestCase, TestCaseHelper):
 
 
     def test_help(self):  # -h, --help
-        if not self.is_target(): return
         self.options  = "-h"
         self.input    = ""
         self.expected = Main(['tenjin']).usage('tenjin')
@@ -210,7 +208,6 @@ class MainTest(unittest.TestCase, TestCaseHelper):
         self._test()
 
     def test_version(self):  # -v, --version
-        if not self.is_target(): return
         self.options  = "-v"
         self.input    = ""
         self.expected = Main(['tenjin']).version() + "\n"
@@ -219,7 +216,6 @@ class MainTest(unittest.TestCase, TestCaseHelper):
         self._test()
 
 #    def test_help_and_version(self):  # -hVz
-#        if not self.is_target(): return
 #        self.options  = "-hVc"
 #        self.input    = "<?py foo() ?>"
 #        app = Main(['tenjin'])
@@ -227,7 +223,6 @@ class MainTest(unittest.TestCase, TestCaseHelper):
 #        self._test()
 
     def test_render(self):  # (nothing), -a render
-        if not self.is_target(): return
         self.options  = ""
         self.input    = INPUT
         self.expected = EXECUTED
@@ -236,7 +231,6 @@ class MainTest(unittest.TestCase, TestCaseHelper):
         self._test()
 
     def test_source(self):  # -s, -a convert
-        if not self.is_target(): return
         self.options  = "-s"
         self.input    = INPUT
         self.expected = SOURCE
@@ -245,7 +239,6 @@ class MainTest(unittest.TestCase, TestCaseHelper):
         self._test()
 
     def test_source2(self):  # -s, -aconvert
-        if not self.is_target(): return
         self.options  = "-s"
         n1 = len("<ul>\n")
         n2 = len("</ul>\n")
@@ -259,7 +252,6 @@ class MainTest(unittest.TestCase, TestCaseHelper):
         self._test()
 
     def test_source3(self):  # -sb, -baconvert
-        if not self.is_target(): return
         self.options  = "-sb"
         self.input    = INPUT
         n1 = len("_buf = []; ")
@@ -270,7 +262,6 @@ class MainTest(unittest.TestCase, TestCaseHelper):
         self._test()
 
     def test_cache1(self):   # -a cache
-        if not self.is_target(): return
         self.options  = "-a cache"
         self.input    = (
             '<?py #@ARGS title, items ?>\n'
@@ -353,7 +344,6 @@ class MainTest(unittest.TestCase, TestCaseHelper):
         ''))
 
     def test_retrieve(self):  # -S, -a retrieve
-        if not self.is_target(): return
         self.input    = self.input_for_retrieve
         self.expected = self.expected_for_retrieve
         self.options = '-S'
@@ -362,7 +352,6 @@ class MainTest(unittest.TestCase, TestCaseHelper):
         self._test()
 
     def test_retrieve2(self):  # -SU, -SNU
-        if not self.is_target(): return
         expected = '\n'.join((
             '_buf = []; ',
             'if list:',
@@ -405,7 +394,6 @@ class MainTest(unittest.TestCase, TestCaseHelper):
         self._test()
 
     def test_retrieve3(self):  # -SC, -SNC
-        if not self.is_target(): return
         expected = '\n'.join((
             '_buf = []; ',
             'if list:',
@@ -442,7 +430,6 @@ class MainTest(unittest.TestCase, TestCaseHelper):
         self._test()
 
     def test_statements(self):  # -X, -a statements
-        if not self.is_target(): return
         expected = '\n'.join((
             '_buf = []; ',
             'if list:',
@@ -474,7 +461,6 @@ class MainTest(unittest.TestCase, TestCaseHelper):
         self._test()
 
     def test_dump(self):  # -d, -a dump
-        if not self.is_target(): return
         # create cache file
         filename = '_test_dump.pyhtml'
         cachename = filename + '.cache'
@@ -497,14 +483,12 @@ class MainTest(unittest.TestCase, TestCaseHelper):
             os.unlink(cachename)
 
     def test_indent(self):  # -i2
-        if not self.is_target(): return
         self.options  = "-si2"
         self.input    = INPUT
         self.expected = SOURCE.replace('    _buf', '  _buf')
         self._test()
 
     def test_quiet(self):  # -q, -qasyntax
-        if not self.is_target(): return
         self.options  = "-z"
         input = INPUT
         self.input    = [input, input, input]
@@ -520,7 +504,6 @@ class MainTest(unittest.TestCase, TestCaseHelper):
         self._test()
 
     def test_invalid_options(self):  # -Y, -i, -f, -c, -i foo
-        if not self.is_target(): return
         self.input    = INPUT
         self.expected = ""
         self.exception = CommandOptionError
@@ -553,7 +536,6 @@ class MainTest(unittest.TestCase, TestCaseHelper):
         #
 
     def test_newline(self):
-        if not self.is_target(): return
         self.options  = "-s"
         self.input    = INPUT2
         self.expected = SOURCE2
@@ -563,7 +545,6 @@ class MainTest(unittest.TestCase, TestCaseHelper):
         self._test()
 
     def test_datafile_yaml(self): # -f datafile.yaml
-        if not self.is_target(): return
         context_filename = 'test.datafile.yaml'
         self.options  = "-f " + context_filename
         self.input    = INPUT3
@@ -573,7 +554,6 @@ class MainTest(unittest.TestCase, TestCaseHelper):
         self._test()
 
     def test_datafile_py(self): # -f datafile.py
-        if not self.is_target(): return
         context_filename = 'test.datafile.py'
         self.options  = "-f " + context_filename
         self.input    = INPUT3
@@ -583,7 +563,6 @@ class MainTest(unittest.TestCase, TestCaseHelper):
         self._test()
 
     def test_datafile_error(self):  # -f file.txt, not-a-mapping context data
-        if not self.is_target(): return
         context_filename = 'test.datafile.txt'
         self.options = "-f " + context_filename
         self.exception = CommandOptionError
@@ -602,21 +581,18 @@ class MainTest(unittest.TestCase, TestCaseHelper):
         self._test()
 
     def test_context_yaml(self):  # -c yamlstr
-        if not self.is_target(): return
         self.options = ['-c', '{title: tenjin example, items: [aaa, bbb, ccc]}']
         self.input    = INPUT3
         self.expected = EXECUTED3
         self._test()
 
     def test_context_py(self):  # -c python-code
-        if not self.is_target(): return
         self.options = ['-c', 'title="tenjin example";  items=["aaa", "bbb", "ccc"]']
         self.input    = INPUT3
         self.expected = EXECUTED3
         self._test()
 
     def test_untabify(self):  # -T
-        if not self.is_target(): return
         context_filename = 'test.datafile.yaml'
         self.options  = "-Tf " + context_filename
         self.input    = INPUT3
@@ -627,7 +603,6 @@ class MainTest(unittest.TestCase, TestCaseHelper):
         self._test()
 
     def test_modules(self):  # -r modules
-        if not self.is_target(): return
         self.options  = "--escapefunc=cgi.escape"
         self.input    = INPUT
         self.expected = EXECUTED.replace('&quot;', '"')
@@ -643,35 +618,30 @@ class MainTest(unittest.TestCase, TestCaseHelper):
         self._test()
 
     def test_modules_err(self):  # -r hogeratta
-        if not self.is_target(): return
         self.options = '-r hogeratta'
         self.exception = CommandOptionError
         self.errormsg = '-r hogeratta: module not found.'
         self._test()
 
     def test_escapefunc(self):  # --escapefunc=cgi.escape
-        if not self.is_target(): return
         self.options  = "-s --escapefunc=cgi.escape"
         self.input    = INPUT
         self.expected = SOURCE.replace('escape', 'cgi.escape')
         self._test()
 
     def test_tostrfunc(self):  # --tostrfunc=str
-        if not self.is_target(): return
         self.options  = "-s --tostrfunc=str"
         self.input    = INPUT
         self.expected = SOURCE.replace('to_str', 'str')
         self._test()
 
     def test_preamble(self):  # --preamble --postamble
-        if not self.is_target(): return
         self.options  = ["-s", "--preamble=_buf=list()", "--postamble=return ''.join(_buf)"]
         self.input    = INPUT
         self.expected = SOURCE.replace("_buf = []", "_buf=list()").replace("print ", "return ")
         self._test()
 
     def test_xencoding1(self):  # --encoding=encoding
-        if not self.is_target(): return
         self.input = """\
 <?py items=['foo',u'bar',u'日本語'] ?>
 ようこそ
@@ -691,7 +661,6 @@ class MainTest(unittest.TestCase, TestCaseHelper):
         self._test()
 
     def test_xencoding2(self):  # -k encoding
-        if not self.is_target(): return
         self.input = """\
 <?py items=['foo',u'bar','日本語'] ?>
 ようこそ
@@ -715,7 +684,6 @@ class MainTest(unittest.TestCase, TestCaseHelper):
             globals()['tostr'] = tostr_func
 
     def test_template_path(self):  # --path
-        if not self.is_target(): return
         layout = r'''<html>
   <body>
 #{_content}
@@ -764,7 +732,6 @@ class MainTest(unittest.TestCase, TestCaseHelper):
             for d in ['tmpl9/user', 'tmpl9']: os.rmdir(d)
 
     def test_preprocess1(self):  # -P, -a preprocess, --preprocess
-        if not self.is_target(): return
         input = '''\
 <?PY states = { "CA": "California", ?>
 <?PY            "NY": "New York", ?>
@@ -813,11 +780,7 @@ class MainTest(unittest.TestCase, TestCaseHelper):
             pass
 
 
-name = os.environ.get('TEST')
-if name:
-    for m in dir(MainTest):
-        if m.startswith('test_') and m != 'test_'+name:
-            delattr(MainTest, m)
+remove_unmatched_test_methods(MainTest)
 
 
 if __name__ == '__main__':

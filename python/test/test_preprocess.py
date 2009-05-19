@@ -58,5 +58,8 @@ class PreprocessTest(unittest.TestCase, TestCaseHelper):
                 os.unlink(filename)
 
 
+remove_unmatched_test_methods(PreprocessTest)
+
+
 if __name__ == '__main__':
     unittest.main()

@@ -60,5 +60,8 @@ class HtmlHelperTest(unittest.TestCase, TestCaseHelper):
                          nv('rank', 'A', style="color:red"))
 
 
+remove_unmatched_test_methods(HtmlHelperTest)
+
+
 if __name__ == '__main__':
     unittest.main()
