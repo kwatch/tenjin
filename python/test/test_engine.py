@@ -16,7 +16,7 @@ from tenjin.helpers import *
 
 def _convert_data(data, lang='python'):
     if isinstance(data, dict):
-        for k in data.keys():
+        for k in list(data.keys()):
             v = data[k]
             if k[-1] == '*':
                 assert isinstance(v, dict)
