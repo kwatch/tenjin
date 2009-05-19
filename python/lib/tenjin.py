@@ -860,6 +860,8 @@ class CacheStorage(object):
         return self._delete(fullpath)
 
     def clear(self):
+        for k, v in self.items.iteritems():
+            self._delete(k)
         self.items.clear()
 
     def _load(self, fullpath):
@@ -888,11 +890,6 @@ class MemoryCacheStorage(CacheStorage):
 
 
 class MarshalCacheStorage(CacheStorage):
-
-    def clear(self):
-        for k, v in self.items.iteritems():
-            self._delete(k)
-        CacheStorage.clear(self)
 
     def _load(self, fullpath):
         cachepath = self._cachename(fullpath)
