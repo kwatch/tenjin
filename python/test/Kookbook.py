@@ -1,4 +1,4 @@
-srcdir = "../../../rbtenjin/trunk/test"
+srcdir = "../../common/test"
 kook_default_product = 'test'
 
 
