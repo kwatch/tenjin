@@ -8,7 +8,7 @@
 import os, difflib, re, traceback
 import yaml
 
-__all__ = ['TestCaseHelper', 'read_file', 'write_file', 'undef_test_methods_except']
+__all__ = ['TestCaseHelper', 'read_file', 'write_file', 'remove_unmatched_test_methods']
 
 def read_file(filename, mode='rb'):
     f = None
@@ -26,7 +26,7 @@ def write_file(filename, content, mode='wb'):
     finally:
         if f: f.close()
 
-def undef_test_methods_except(testcase_class, pattern=None):
+def remove_unmatched_test_methods(testcase_class, pattern=None):
     pattern = pattern or os.environ.get('TEST')
     if not pattern: return
     rexp = re.compile(pattern)
