@@ -24,6 +24,16 @@ def write_file(filename, content, mode='wb'):
     finally:
         if f: f.close()
 
+def undef_test_methods_except(testcase_class, pattern=None):
+    pattern = pattern or os.environ.get('TEST')
+    if not pattern: return
+    rexp = re.compile(pattern)
+    for m in dir(testcase_class):
+        if m.startswith('test_'):
+            name = m[len('test_'):]
+            if not rexp.search(name):
+                delattr(testcase_class, m)
+
 
 class TestCaseHelper:
 
