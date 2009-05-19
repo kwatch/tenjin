@@ -2222,7 +2222,7 @@ Command-line option '-q' (quiet-mode) prints nothing if it has no errors.
 <p>${item}</p>
 <?py #end ?>
 
-<?py for key, value in hash.iteritems(): ?>
+<?py for key, value in hash.items(): ?>
 <p>#{key} = ${value}</p>
 <?py #end ?>
 .--------------------
@@ -2479,7 +2479,7 @@ items:
   - #{item}
 <?py #end ?>
 hash:
-<?py for key, val in hash.iteritems(): ?>
+<?py for key, val in hash.items(): ?>
   #{key}: #{val}
 <?py #end ?>
 .--------------------
