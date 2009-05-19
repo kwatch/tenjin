@@ -1030,10 +1030,10 @@ class Engine(object):
         if templateclass: self.templateclass = templateclass
         if path  is not None:  self.path = path
         if preprocess is not None: self.preprocess = preprocess
-        self.cache = cache
         self.kwargs = kwargs
         self.encoding = kwargs.get('encoding')
         self._filepaths = {}   # template_name => filename and fullpath
+        #self.cache = cache
         self._set_cache_storage(cache)
 
     def _set_cache_storage(self, cache):
@@ -1105,9 +1105,10 @@ class Engine(object):
         """
         filename, fullpath = self._relative_and_absolute_path(template_name)
         assert filename and fullpath
-        template = self.cache and self.cache.get(fullpath, self.templateclass) or None
+        cache = self.cache
+        template = cache and cache.get(fullpath, self.templateclass) or None
         if template and template.timestamp and template.timestamp < os.path.getmtime(filename):
-            #if self.cache: self.cache.delete(path)
+            #if cache: cache.delete(path)
             template = None
             #Engine.logger.info("cache file is old: filename=%s, template=%s" % (repr(filename), repr(t)))
         if not template:
@@ -1117,9 +1118,9 @@ class Engine(object):
                 if _globals is None: _globals = sys._getframe(1).f_globals
             template = self._create_template(filename, _context, _globals)
             template.timestamp = curr_time
-            if self.cache:
+            if cache:
                 if not template.bytecode: template.compile()
-                ret = self.cache.set(fullpath, template)
+                ret = cache.set(fullpath, template)
                 #if not ret:
                 #    Engine.logger.info("failed to store cache: path=%s, template=%s" % (repr(path), repr(template)))
         #else:
