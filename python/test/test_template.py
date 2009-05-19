@@ -150,15 +150,22 @@ class TemplateTest(unittest.TestCase, TestCaseHelper):
 
 
     def test_import_module2(self):
-        import rfc822
-        input = "#{rfc822.formatdate()}"
+        if python2:
+            import rfc822
+            input = "#{rfc822.formatdate()}"
+        elif python3:
+            import email.utils
+            input = "#{email.utils.formatdate()}"
         template = tenjin.Template()
         template.convert(input)
         def f1():
             template.render()
         self.assertRaises(NameError, f1)
-        #tenjin.import_module(rfc822)
-        globals()['rfc822'] = rfc822
+        if python2:
+            #tenjin.import_module(rfc822)
+            globals()['rfc822'] = rfc822
+        elif python3:
+            globals()['email'] = email
         #self.assertNotRaise(f1)
         f1()
 
