@@ -141,7 +141,7 @@ class MainTest(unittest.TestCase, TestCaseHelper):
                 filename = '.test.pyhtml'
             #write_file(filename, input)
             for fname, s in zip(to_list(filename), to_list(input)):
-                if encoding and isinstance(s, unicode):
+                if encoding and isinstance(s, _unicode):
                     s = s.encode(encoding)
                 write_file(fname, s)
         #
@@ -157,7 +157,7 @@ class MainTest(unittest.TestCase, TestCaseHelper):
         #
         if context_file:
             s = context_data
-            if encoding and instance(s, unicode):
+            if encoding and instance(s, _unicode):
                 s = s.encode(encoding)
             write_file(context_file, s)
         #
@@ -180,8 +180,9 @@ class MainTest(unittest.TestCase, TestCaseHelper):
                 output = app.execute()
                 #print "*** expected=%s" % repr(expected)
                 #print "*** output=%s" % repr(output)
-                if encoding and isinstance(output, unicode):
-                    output = output.encode(encoding)
+                if python2:
+                    if encoding and isinstance(output, unicode):
+                        output = output.encode(encoding)
                 self.assertTextEqual(expected, output)
         finally:
             try:
