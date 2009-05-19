@@ -84,8 +84,7 @@ class Main(object):
         try:
             output = Main(argv).execute()
             if output:
-                print output,
-            #sys.stdout.write(output)
+                sys.stdout.write(output)
             sys.exit(0)
         except CommandOptionError:
             ex = sys.exc_info()[1]
