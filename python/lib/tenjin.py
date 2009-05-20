@@ -150,6 +150,8 @@ def _create_helpers_module():
             else:
                 def to_str(val):
                     if val is None:               return ''
+                    if isinstance(val, str):      return val
+                    if isinstance(val, unicode):  return val  # don't convert into binary(=str)
                     return str(val)
             return to_str
 
@@ -167,8 +169,11 @@ def _create_helpers_module():
             else:
                 def to_str(val):
                     if val is None:             return ''
+                    if isinstance(val, str):    return val
+                    if isinstance(val, bytes):  return val  # don't convert into unicode(=str)
                     return str(val)
             return to_str
+
         to_str = generate_tostrfunc('utf-8')
 
     def echo(string):
