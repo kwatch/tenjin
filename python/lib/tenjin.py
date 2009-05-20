@@ -905,7 +905,14 @@ class MemoryCacheStorage(CacheStorage):
         pass
 
 
-class MarshalCacheStorage(CacheStorage):
+class FileCacheStorage(CacheStorage):
+
+    def _delete(self, fullpath):
+        cachepath = self._cachename(fullpath)
+        if os.path.isfile(cachepath): os.path.unlink(cachepath)
+
+
+class MarshalCacheStorage(FileCacheStorage):
 
     def _load(self, fullpath):
         cachepath = self._cachename(fullpath)
@@ -916,12 +923,8 @@ class MarshalCacheStorage(CacheStorage):
     def _store(self, fullpath, dict):
         _write_binary_file(self._cachename(fullpath), marshal.dumps(dict))
 
-    def _delete(self, fullpath):
-        cachepath = self._cachename(fullpath)
-        if os.path.isfile(cachepath): os.path.unlink(cachepath)
 
-
-class PickleCacheStorage(CacheStorage):
+class PickleCacheStorage(FileCacheStorage):
 
     def _load(self, fullpath):
         try:    import cPickle as pickle
@@ -937,15 +940,11 @@ class PickleCacheStorage(CacheStorage):
         if 'bytecode' in dict: dict.pop('bytecode')
         _write_binary_file(self._cachename(fullpath), pickle.dumps(dict))
 
-    def _delete(self, fullpath):
-        cachepath = self._cachename(fullpath)
-        if os.path.isfile(cachepath): os.path.unlink(cachepath)
 
-
-class TextCacheStorage(CacheStorage):
+class TextCacheStorage(FileCacheStorage):
 
     def __init__(self, encoding, template_class, postfix='.cache'):
-        CacheStorage.__init__(self, postfix)
+        FileCacheStorage.__init__(self, postfix)
         self.encoding = encoding
         self.template_class = template_class
 
@@ -977,10 +976,6 @@ class TextCacheStorage(CacheStorage):
             if self.encoding and isinstance(s, str):
                 s = s.decode(self.encoding)     ## unicode(=str) to binary
         _write_binary_file(fullpath + '.cache', s)
-
-    def _delete(self, fullpath):
-        cachepath = self._cachename(fullpath)
-        if os.path.isfile(cachepath): os.path.unlink(cachepath)
 
 
 class GaeMemcacheCacheStorage(CacheStorage):
