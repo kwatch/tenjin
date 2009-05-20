@@ -975,7 +975,7 @@ class TextCacheStorage(FileCacheStorage):
         if python3:
             if self.encoding and isinstance(s, str):
                 s = s.decode(self.encoding)     ## unicode(=str) to binary
-        _write_binary_file(fullpath + '.cache', s)
+        _write_binary_file(self._cachename(fullpath), s)
 
 
 class GaeMemcacheCacheStorage(CacheStorage):
