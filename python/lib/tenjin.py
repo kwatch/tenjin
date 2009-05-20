@@ -973,8 +973,8 @@ class TextCacheStorage(FileCacheStorage):
         if dict.get('args') is not None:
             s = "#@ARGS %s\n%s" % (', '.join(dict['args']), s)
         if python3:
-            if self.encoding and isinstance(s, str):
-                s = s.decode(self.encoding)     ## unicode(=str) to binary
+            if isinstance(s, str):
+                s = s.encode(self.encoding or 'utf-8')   ## unicode(=str) to binary
         _write_binary_file(self._cachename(fullpath), s)
 
 
