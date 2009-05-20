@@ -167,13 +167,13 @@ def _create_helpers_module():
         """start capturing with name.
            * ex. list.rbhtml
                <html><body>
-               <?py start_capture('itemlist') ?>
+               <?py start_capture('itemlist') ?>     # start capturing
                  <ul>
                    <?py for item in list: ?>
                    <li>${item}</li>
                    <?py #end ?>
                  </ul>
-               <?py stop_capture() ?>
+               <?py stop_capture() ?>                # stop capturing
                </body></html>
            * ex. layout.rbhtml
                <html xml:lang="en" lang="en">
@@ -182,7 +182,7 @@ def _create_helpers_module():
                 </head>
                 <body>
                  <!-- content -->
-               #{itemlist}
+               #{itemlist}                           # use captured string
                  <!-- /content -->
                 </body>
                </html>
@@ -377,8 +377,7 @@ class Template(object):
          <?py is_odd = False ?>
          <?py for item in items: ?>
          <?py     is_oddd = not is_odd ?>
-         <?py     color = is_odd and '#FFF' or '#FCF' ?>
-          <tr bgcolor="#{color}">
+          <tr bgcolor="#{is_odd and '#FFF' or '#FCF'}">
            <td>${item}</td>
           </tr>
          <?py #endfor ?>
@@ -390,13 +389,11 @@ class Template(object):
          >>> from tenjin.helpers import * # or escape, to_str
          >>> template = tenjin.Template(filename)
          >>> script = template.script
-         >>> ## or
-         >>> #template = tenjin.Template()
-         >>> #script = template.convert_file(filename)
-         >>> ## or
-         >>> #template = tenjin.Template()
-         >>> #input = open(filename).read()
-         >>> #script = template.convert(input, filename)  # filename is optional
+         >>> # or   template = tenjin.Template()
+         >>> #      script = template.convert_file(filename)
+         >>> # or   template = tenjin.Template()
+         >>> #      input = open(filename).read()
+         >>> #      script = template.convert(input, filename)  # filename is optional
          >>> print script
          >>> context = {'items': ['<foo>','bar&bar','"baz"']}
          >>> output = template.render(context)
@@ -510,8 +507,6 @@ class Template(object):
              Filename of input. this is optional but recommended to report errors.
 
            ex.
-             >>> import tenjin
-             >>> from tenjin.helpers import escape, to_str
              >>> template = tenjin.Template()
              >>> filename = 'example.html'
              >>> input = open(filename).read()
@@ -776,14 +771,6 @@ class Template(object):
              Global object. If None then globals() is used.
            _buf:list (=None)
              If None then new list is created.
-
-           ex.
-             >>> import tenjin
-             >>> from tenjin.helpers import *
-             >>> template = tenjin.Template('example.pyhtml')
-             >>> context = {'items': ['foo','bar','baz'], 'title': 'example'}
-             >>> output = template.evaluate(context)
-             >>> print output,
         """
         if context is None:
             locals = context = {}
