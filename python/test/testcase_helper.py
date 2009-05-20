@@ -91,7 +91,7 @@ class TestCaseHelper:
 
     def assertNotRaise(self, callable_, *args, **kwargs):
         try:
-            callable_(*args, **kwargs)
+            return callable_(*args, **kwargs)
         except Exception:
             ex = sys.exc_info()[1]
             self.fail("unexpected exception raised: " + repr(ex))
