@@ -133,22 +133,22 @@ def _create_helpers_module():
 
         def generate_tostrfunc(encoding):
             """Generate 'to_str' function which encodes unicode to str.
+               If encoding is None, unicode is not encoded into str.
                ex.
                   import tenjin
-                  from tenjin.helpers import escape
                   to_str = tenjin.generate_tostrfunc('utf-8')
-                  engine = tenjin.Engine()
-                  context = { 'items': [u'AAA', u'BBB', u'CCC'] }
-                  print engine.render('example.pyhtml', context)
+                  type(to_str(u'hoge'))  #=> str
             """
             if encoding:
                 def to_str(val):
+                    """Convert val into str. Return '' if None. Unicode will be encoded into str."""
                     if val is None:               return ''
                     if isinstance(val, str):      return val
                     if isinstance(val, unicode):  return val.encode(encoding)  # unicode to binary(=str)
                     return str(val)
             else:
                 def to_str(val):
+                    """Convert val into str. Return '' if None. Unicode will not be encoded into str."""
                     if val is None:               return ''
                     if isinstance(val, str):      return val
                     if isinstance(val, unicode):  return val  # don't convert into binary(=str)
@@ -162,12 +162,14 @@ def _create_helpers_module():
         def generate_tostrfunc(encoding):
             if encoding:
                 def to_str(val):
+                    """Convert val into str. Return '' if None. Bytes will be encoded into str."""
                     if val is None:             return ''
                     if isinstance(val, str):    return val
                     if isinstance(val, bytes):  return val.decode(encoding) # binary to unicode(=str)
                     return str(val)
             else:
                 def to_str(val):
+                    """Convert val into str. Return '' if None. Bytes will not be encoded into str."""
                     if val is None:             return ''
                     if isinstance(val, str):    return val
                     if isinstance(val, bytes):  return val  # don't convert into unicode(=str)
