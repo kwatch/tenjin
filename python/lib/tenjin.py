@@ -158,21 +158,31 @@ def _create_helpers_module():
                   context = { 'items': [u'AAA', u'BBB', u'CCC'] }
                   print engine.render('example.pyhtml', context)
             """
-            def to_str(val):
-                if val is None:               return ''
-                if isinstance(val, str):      return val
-                if isinstance(val, unicode):  return val.encode(encoding)  # unicode to binary(=str)
-                return str(val)
+            if encoding:
+                def to_str(val):
+                    if val is None:               return ''
+                    if isinstance(val, str):      return val
+                    if isinstance(val, unicode):  return val.encode(encoding)  # unicode to binary(=str)
+                    return str(val)
+            else:
+                def to_str(val):
+                    if val is None:               return ''
+                    return str(val)
             return to_str
 
     elif python3:
 
         def generate_tostrfunc(encoding):
-            def to_str(val):
-                if val is None:             return ''
-                if isinstance(val, str):    return val
-                if isinstance(val, bytes):  return val.decode(encoding) # binary to unicode(=str)
-                return str(val)
+            if encoding:
+                def to_str(val):
+                    if val is None:             return ''
+                    if isinstance(val, str):    return val
+                    if isinstance(val, bytes):  return val.decode(encoding) # binary to unicode(=str)
+                    return str(val)
+            else:
+                def to_str(val):
+                    if val is None:             return ''
+                    return str(val)
             return to_str
         to_str = generate_tostrfunc('utf-8')
 
