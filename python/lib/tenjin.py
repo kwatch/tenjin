@@ -131,23 +131,6 @@ def _create_helpers_module():
 
     if python2:
 
-        def to_str(val):
-            """Convert value into string. Return '' if val is None.
-               ex.
-                 >>> to_str(None)
-                 ''
-                 >>> to_str("foo")
-                 'foo'
-                 >>> to_str(u"\u65e5\u672c\u8a9e")
-                 u'\u65e5\u672c\u8a9e'
-                 >>> to_str(123)
-                 '123'
-            """
-            if val is None:              return ''
-            if isinstance(val, str):     return val
-            if isinstance(val, unicode): return val
-            return str(val)
-
         def generate_tostrfunc(encoding):
             """Generate 'to_str' function which encodes unicode to str.
                ex.
@@ -169,6 +152,8 @@ def _create_helpers_module():
                     if val is None:               return ''
                     return str(val)
             return to_str
+
+        to_str = generate_tostrfunc(None)
 
     elif python3:
 
