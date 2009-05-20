@@ -921,6 +921,27 @@ class MarshalCacheStorage(CacheStorage):
         if os.path.isfile(cachepath): os.path.unlink(cachepath)
 
 
+class PickleCacheStorage(CacheStorage):
+
+    def _load(self, fullpath):
+        try:    import cPickle as pickle
+        except: import pickle
+        cachepath = self._cachename(fullpath)
+        if not os.path.isfile(cachepath): return None
+        dump = _read_binary_file(cachepath)
+        return pickle.loads(dump)
+
+    def _store(self, fullpath, dict):
+        try:    import cPickle as pickle
+        except: import pickle
+        if 'bytecode' in dict: dict.pop('bytecode')
+        _write_binary_file(self._cachename(fullpath), pickle.dumps(dict))
+
+    def _delete(self, fullpath):
+        cachepath = self._cachename(fullpath)
+        if os.path.isfile(cachepath): os.path.unlink(cachepath)
+
+
 class TextCacheStorage(CacheStorage):
 
     def __init__(self, encoding, template_class, postfix='.cache'):
