@@ -83,12 +83,7 @@ if python2:
 
     def _read_template_file(filename, encoding=None):
         s = _read_binary_file(filename)          ## binary(=str)
-        if encoding: s = s.decode(encoding)      ## unicode
-        return s
-
-    def _read_cache_file(filename, encoding=None):
-        s = _read_binary_file(filename)          ## binary(=str)
-        if encoding: s = s.decode(encoding)      ## unicode
+        if encoding: s = s.decode(encoding)      ## binary(=str) to unicode
         return s
 
 elif python3:
@@ -96,11 +91,6 @@ elif python3:
     def _read_template_file(filename, encoding=None):
         s = _read_binary_file(filename)          ## binary
         return s.decode(encoding or 'utf-8')     ## binary to unicode(=str)
-
-    def _read_cache_file(filename, encoding=None):
-        s = _read_binary_file(filename)          ## binary
-        if encoding: s = s.decode(encoding)      ## binary to unicode(=str)
-        return s
 
 def _create_module(module_name):
     """ex. mod = _create_module('tenjin.util')"""
@@ -954,11 +944,11 @@ class TextCacheStorage(CacheStorage):
     def _load(self, fullpath):
         cachepath = self._cachename(fullpath)
         if not os.path.isfile(cachepath): return None
-        s = _read_cache_file(cachepath)
+        s = _read_binary_file(cachepath)
         if python2:
-            if self.encoding: s = s.decode(self.encoding)   ## binary to unicode
+            if self.encoding: s = s.decode(self.encoding)   ## binary(=str) to unicode
         elif python3:
-            s = s.decode(self.encoding or 'utf-8')
+            s = s.decode(self.encoding or 'utf-8')          ## binary to unicode(=str)
         if s.startswith('#@ARGS '):
             pos = s.find("\n")
             args_str = s[len('#@ARGS '):pos]
