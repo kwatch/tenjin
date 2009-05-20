@@ -91,11 +91,6 @@ if python2:
         if encoding: s = s.decode(encoding)      ## unicode
         return s
 
-    def _write_cache_file(filename, content, encoding=None):
-        if encoding and isinstance(content, unicode):
-            content = content.encode(encoding)   ## unicode to binary(=str)
-        _write_binary_file(filename, content)    ## binary(=str)
-
 elif python3:
 
     def _read_template_file(filename, encoding=None):
@@ -106,12 +101,6 @@ elif python3:
         s = _read_binary_file(filename)          ## binary
         if encoding: s = s.decode(encoding)      ## binary to unicode(=str)
         return s
-
-    def _write_cache_file(filename, content, encoding=None):
-        if isinstance(content, str):
-            content = content.encode(encoding or 'utf-8')  ## unicode(=str) to binary
-        _write_binary_file(filename, content)    ## binary
-
 
 def _create_module(module_name):
     """ex. mod = _create_module('tenjin.util')"""
@@ -989,7 +978,7 @@ class TextCacheStorage(CacheStorage):
         if python3:
             if self.encoding and isinstance(s, str):
                 s = s.decode(self.encoding)     ## unicode(=str) to binary
-        _write_cache_file(fullpath + '.cache', s)
+        _write_binary_file(fullpath + '.cache', s)
 
     def _delete(self, fullpath):
         cachepath = self._cachename(fullpath)
