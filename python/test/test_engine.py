@@ -7,6 +7,8 @@
 import unittest
 import sys, os, re, time, marshal
 from glob import glob
+try:    import cPickle as pickle
+except: import pickle
 
 from testcase_helper import *
 import tenjin
@@ -264,6 +266,30 @@ class EngineTest(unittest.TestCase, TestCaseHelper):
                 self.assertTrue(s.find(nullbyte) >= 0)           # binary file?
                 f = lambda: marshal.load(open(fname, 'rb'))
                 self.assertNotRaise(f)                           # marshal?
+            engine = tenjin.Engine(**props)
+            output = engine.render(':create', context)
+            self.assertTextEqual(expected, output)               # reloadable?
+            #
+            for fname in glob('*.pyhtml.cache'): os.unlink(fname)
+            for fname in cache_filenames:
+                self.assertNotExist(fname)
+            ## pickle caching
+            props['cache'] = tenjin.PickleCacheStorage()
+            engine = tenjin.Engine(**props)
+            output = engine.render(':create', context)
+            self.assertTextEqual(expected, output)
+            if   python2:  nullbyte = '\0'
+            elif python3:  nullbyte = '\0'.encode('ascii')
+            for fname in cache_filenames:
+                self.assertExists(fname)                         # file created?
+                s = read_file(fname, 'rb')                       # read text file
+                if python2:
+                    self.assertTrue(s.find(nullbyte) < 0)        # text file? (pickle protocol ver 2)
+                elif python3:
+                    self.assertTrue(s.find(nullbyte) >= 0)       # binary file? (pickle protocol ver 3)
+                f = lambda: Pickle.load(open(fname, 'rb'))
+                self.assertNotRaise(ValueError, f)               # pickle?
+                pickle.load(open(fname, 'rb'))
             engine = tenjin.Engine(**props)
             output = engine.render(':create', context)
             self.assertTextEqual(expected, output)               # reloadable?
