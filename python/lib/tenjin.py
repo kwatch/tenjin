@@ -852,7 +852,6 @@ class CacheStorage(object):
             dict = self._load(fullpath)
             if dict:
                 template = create_template()
-                template.timestamp = os.path.getmtime(fullpath)
                 for k, v in dict.items():
                     setattr(template, k, v)
                 self.items[fullpath] = template
@@ -1172,10 +1171,12 @@ class Engine(object):
         assert filename and fullpath
         cache = self.cache
         template = cache and cache.get(fullpath, self.templateclass) or None
-        if template and template.timestamp and template.timestamp < os.path.getmtime(filename):
-            #if cache: cache.delete(path)
-            template = None
-            #Engine.logger.info("cache file is old: filename=%s, template=%s" % (repr(filename), repr(t)))
+        if template:
+            assert template.timestamp is not None
+            if template.timestamp < os.path.getmtime(filename):
+                #if cache: cache.delete(path)
+                template = None
+                #Engine.logger.info("cache file is old: filename=%s, template=%s" % (repr(filename), repr(t)))
         if not template:
             curr_time = time.time()
             if self.preprocess:   ## required for preprocess
