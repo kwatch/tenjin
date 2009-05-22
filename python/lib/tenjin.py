@@ -943,10 +943,9 @@ class PickleCacheStorage(FileCacheStorage):
 
 class TextCacheStorage(FileCacheStorage):
 
-    def __init__(self, encoding, template_class, postfix='.cache'):
+    def __init__(self, encoding=None, postfix='.cache'):
         FileCacheStorage.__init__(self, postfix)
         self.encoding = encoding
-        self.template_class = template_class
 
     def _load(self, fullpath):
         cachepath = self._cachename(fullpath)
@@ -1094,7 +1093,7 @@ class Engine(object):
         elif cache is None:  self.cache = MemoryCacheStorage()
         elif cache is False: self.cache = None
         elif isinstance(cache, CacheStorage):  self.cache = cache
-        elif cache == 'text':  self.cache = TextCacheStorage(self.encoding, self.templateclass)
+        elif cache == 'text':  self.cache = TextCacheStorage(self.encoding)
         else:
             raise Argumenterror("%s: invalid cache." % str(cache))
 
