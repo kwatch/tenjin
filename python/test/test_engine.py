@@ -294,7 +294,7 @@ class EngineTest(unittest.TestCase, TestCaseHelper):
             output = engine.render(':create', context)
             self.assertTextEqual(expected, output)               # reloadable?
             #
-            for fname in glob('*.pyhtml.cache'): os.unlink(fname)
+            for fname in glob('*.cache'): os.unlink(fname)
             for fname in cache_filenames:
                 self.assertNotExist(fname)
             ## text caching
@@ -308,9 +308,14 @@ class EngineTest(unittest.TestCase, TestCaseHelper):
                 self.assertExists(fname)                         # file created?
                 s = read_file(fname, 'r')                        # read text file
                 self.assertTrue(s.find(nullchar) < 0)            # text file?
+                #f = lambda: marshal.loads(s)
                 f = lambda: marshal.load(open(fname, 'rb'))
-                ex = self.assertRaise(ValueError, f)             # non-marshal?
-                self.assertEquals("bad marshal data", str(ex))
+                if python3:
+                    ex = self.assertRaise(ValueError, f)         # non-marshal?
+                    self.assertEquals("bad marshal data", str(ex))
+                elif python2 and sys.version_info[1] >= 5:
+                    ex = self.assertRaise(EOFError, f)           # non-marshal?
+                    self.assertEquals("EOF read where object expected", str(ex))
             engine = tenjin.Engine(**props)
             output = engine.render(':create', context)
             self.assertTextEqual(expected, output)               # reloadable?

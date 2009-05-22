@@ -952,25 +952,36 @@ class TextCacheStorage(FileCacheStorage):
         if not os.path.isfile(cachepath): return None
         s = _read_binary_file(cachepath)
         if python2:
-            if self.encoding: s = s.decode(self.encoding)   ## binary(=str) to unicode
+            header, script = s.split("\n\n", 1)
         elif python3:
-            s = s.decode(self.encoding or 'utf-8')          ## binary to unicode(=str)
-        if s.startswith('#@ARGS '):
-            pos = s.find("\n")
-            args_str = s[len('#@ARGS '):pos]
-            args = args_str and args_str.split(', ') or []
-            s = s[pos+1:]
-        else:
-            args = None
-        return {'args': args, 'script': s, 'timestamp': os.path.getmtime(cachepath)}
+            header, script = s.split("\n\n".encode('ascii'), 1)
+            header = header.decode('ascii')
+        timestamp = encoding = args = None
+        for line in header.split("\n"):
+            key, val = line.split(": ", 1)
+            if   key == 'timestamp':  timestamp = float(val)
+            elif key == 'encoding':   encoding  = val
+            elif key == 'args':       args      = val.split(', ')
+        if python2:
+            if encoding: script = script.decode(encoding)   ## binary(=str) to unicode
+        elif python3:
+            script = script.decode(encoding or 'utf-8')     ## binary to unicode(=str)
+        return {'args': args, 'script': script, 'timestamp': timestamp}
 
     def _store(self, fullpath, dict):
         s = dict['script']
         if python2:
             if self.encoding and isinstance(s, unicode):
                 s = s.encode(self.encoding)     ## unicode to binary(=str)
+        sb = []
+        sb.append("timestamp: %s\n" % dict['timestamp'])
+        if dict.get('encoding'):
+            sb.append("encoding: %s\n" % dict['encoding'])
         if dict.get('args') is not None:
-            s = "#@ARGS %s\n%s" % (', '.join(dict['args']), s)
+            sb.append("args: %s\n" % ', '.join(dict['args']))
+        sb.append("\n")
+        sb.append(s)
+        s = ''.join(sb)
         if python3:
             if isinstance(s, str):
                 s = s.encode(self.encoding or 'utf-8')   ## unicode(=str) to binary
