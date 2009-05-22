@@ -1093,9 +1093,8 @@ class Engine(object):
         elif cache is None:  self.cache = MemoryCacheStorage()
         elif cache is False: self.cache = None
         elif isinstance(cache, CacheStorage):  self.cache = cache
-        elif cache == 'text':  self.cache = TextCacheStorage(self.encoding)
         else:
-            raise ValueError("%s: invalid cache." % str(cache))
+            raise ValueError("%s: invalid cache object." % repr(cache))
 
     def to_filename(self, template_name):
         """Convert template short name to filename.
