@@ -861,9 +861,12 @@ class CacheStorage(object):
     def set(self, fullpath, template):
         """set template object and save template attributes into cache file."""
         self.items[fullpath] = template
-        dict = { 'args'  : template.args,   'bytecode' : template.bytecode,
-                 'script': template.script, 'timestamp': template.timestamp }
+        dict = self._save_data_of(template)
         return self._store(fullpath, dict)
+
+    def _save_data_of(self, template):
+        return { 'args'  : template.args,   'bytecode' : template.bytecode,
+                 'script': template.script, 'timestamp': template.timestamp }
 
     def unset(self, fullpath):
         """remove template object from dict and cache file."""
@@ -986,6 +989,11 @@ class TextCacheStorage(FileCacheStorage):
             if isinstance(s, str):
                 s = s.encode(self.encoding or 'utf-8')   ## unicode(=str) to binary
         _write_binary_file(self._cachename(fullpath), s)
+
+    def _save_data_of(self, template):
+        dict = FileCacheStorage._save_data_of(self, template)
+        dict['encoding'] = template.encoding
+        return dict
 
 
 class GaeMemcacheCacheStorage(CacheStorage):
