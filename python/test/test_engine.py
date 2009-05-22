@@ -298,7 +298,7 @@ class EngineTest(unittest.TestCase, TestCaseHelper):
             for fname in cache_filenames:
                 self.assertNotExist(fname)
             ## text caching
-            props['cache'] = tenjin.TextCacheStorage('utf-8')
+            props['cache'] = tenjin.TextCacheStorage()
             engine = tenjin.Engine(**props)
             output = engine.render(':create', context)
             self.assertTextEqual(expected, output)

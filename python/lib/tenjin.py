@@ -946,10 +946,6 @@ class PickleCacheStorage(FileCacheStorage):
 
 class TextCacheStorage(FileCacheStorage):
 
-    def __init__(self, encoding=None, postfix='.cache'):
-        FileCacheStorage.__init__(self, postfix)
-        self.encoding = encoding
-
     def _load(self, fullpath):
         cachepath = self._cachename(fullpath)
         if not os.path.isfile(cachepath): return None
@@ -974,8 +970,8 @@ class TextCacheStorage(FileCacheStorage):
     def _store(self, fullpath, dict):
         s = dict['script']
         if python2:
-            if self.encoding and isinstance(s, unicode):
-                s = s.encode(self.encoding)     ## unicode to binary(=str)
+            if dict.get('encoding') and isinstance(s, unicode):
+                s = s.encode(dict['encoding'])           ## unicode to binary(=str)
         sb = []
         sb.append("timestamp: %s\n" % dict['timestamp'])
         if dict.get('encoding'):
@@ -987,7 +983,7 @@ class TextCacheStorage(FileCacheStorage):
         s = ''.join(sb)
         if python3:
             if isinstance(s, str):
-                s = s.encode(self.encoding or 'utf-8')   ## unicode(=str) to binary
+                s = s.encode(dict.get('encoding') or 'utf-8')   ## unicode(=str) to binary
         _write_binary_file(self._cachename(fullpath), s)
 
     def _save_data_of(self, template):
