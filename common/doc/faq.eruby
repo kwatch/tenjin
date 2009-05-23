@@ -1023,20 +1023,12 @@ Yes. You can use [%=name%] in Google App Engine (GAE).
 Compared to Django template engine, there are some merits to use [%=name%] in Google AppEngine:
 
 .* [%=name%] runs much faster than Django template engine.
-   If you are facing with CPU quota, it is recommended to try [%=name%].
+   If you are facing with CPU quota, you should try [%=name%].
 
 .* [%=name%] library is consist of only one file.
-   If you are facing with number of files quota, it is recommended to try [%=name%].
+   If you are facing with number of files quota, you should try [%=name%].
 
-But there are two points what you should know:
-
-.* GAE doesn't allow you to create files dinamically,
-   so you should turn template caching off, or create template cache file in advance.
-.* GAE doesn't allow you to use marshal moduel,
-   so you should use text-base caching instead of marshal-base caching if you want to template caching.
-
-The following is an example to use Tenjin in Google AppEngine, with template caching turned off.
-(Notice that [%=name%] is enough fast even when template caching turned off, because template objects are kept in memory due to GAE's persistent process.)
+The following is an example to use Tenjin in Google AppEngine with memcache.
 
 .? gae-example1.py
 .-------------------- gae-example1.py
@@ -1045,7 +1037,13 @@ from google.appengine.ext.webapp.util import run_wsgi_app
 
 {{*import tenjin*}}
 {{*from tenjin.helpers import **}}
-{{*engine = tenjin.Engine(cache=False)  # or cache='text'*}}
+{{*shared_cache = tenjin.GaeMemcacheCacheStorage()*}}
+{{*engine = tenjin.Engine(cache=shared_cache)*}}
+
+## it is recommended to configure logging
+import logging
+logging.basicConfig(level=logging.DEBUG)
+{{*tenjin.logger = logging*}}
 
 class MainPage(webapp.RequestHandler):
   def get(self):
@@ -1062,32 +1060,6 @@ def main():
 if __name__ == "__main__":
   main()
 .--------------------
-
-If you want to use text-base cacheing, set {{,"text",}} to {{,cache,}} parameter,
-and create template cache files by:
-
-.====================
-$ [%=command%] -a cache *.pyhtml
-.====================
-
-This command will generate *.pyhtml.cache files.
-Don't forget to upload *.pyhtml.cache as well as *.pyhtml.
-
-It is good idea to set {{,cache,}} parameter only on production environment.
-
-.--------------------
-import os
-is_dev_mode = (os.getenv("SERVER_SOFTWARE") or "").startswith("Development")
-if is_dev_mode:      # when development mode,
-    cache = False    # turn template-caching off.
-else:                # when production mode,
-    cache = 'text'   # use text-base caching.
-engine = tenjin.Engine(cache=cache)
-....
-.--------------------
-
-It should be said again that [%=name%] is enough fast even when template caching turned off. You should make template-based caching on only when you can't get enough performance.
-
 
 % end
 
@@ -3698,7 +3670,7 @@ This is not good idea for script language because:
 .* Learning cost is high.
 
 In addition, [%=name%] is faster than Jakarta Velocity which is a very popular template engine in Java.
-(It means that dynamic Java is slower than script languages.)
+(It means that {{*dynamic Java is slower than script languages*}}!)
 
 Template engine should use their host language directly unless there are some kind of reasons.
 
