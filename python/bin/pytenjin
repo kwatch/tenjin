@@ -134,7 +134,11 @@ class Main(object):
         if 'k' in options:
             _encoding = options['k']
             tostrfunc = properties.get('tostrfunc', 'to_str')
-            globals()[tostrfunc] = tenjin.generate_tostrfunc(_encoding)
+            if python2:
+                _to_str = tenjin.generate_tostrfunc(encode=_encoding)
+            elif python3:
+                _to_str = tenjin.generate_tostrfunc(decode=_encoding)
+            globals()[tostrfunc] = _to_str
         encoding = properties.get('encoding')
 
         ## add '.' to sys.path
