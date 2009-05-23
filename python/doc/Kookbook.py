@@ -92,7 +92,13 @@ def file_css(c):
 def file_html(c):
     system(c%'kwaser -t $(tagfile) -T $(ingred) > $(byprod)')
     system(c%'kwaser -t $(tagfile)    $(ingred) > $(product)')
-
+    system_f(c%'tidy -i -w 9999 -utf8 -m -q $(product)')
+    f = (
+      (re.compile(r'^  <meta name="generator" content="HTML Tidy .*?\n', re.M), ''),
+      (re.compile(r'^  <meta http-equiv="Content-Type" content="text/html">\n\n?', re.M),
+       '  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">\n'),
+    )
+    edit(c.product, by=f)
 
 @product('*.txt')
 @ingreds(original_docdir + '$(1).eruby')

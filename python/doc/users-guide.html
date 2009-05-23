@@ -1,136 +1,143 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
 <html>
 <head>
-  <meta http-equiv="Content-Type" content="text/html">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
   <title>pyTenjin User's Guide</title>
   <meta name="generator" content="kwaser">
   <meta http-equiv="Content-Style-Type" content="text/css">
   <link rel="stylesheet" href="docstyle.css" type="text/css">
- </head>
- <body>
+</head>
 
+<body>
   <blockquote>
-   <div class="mainbody">
+    <div class="mainbody">
+      <div align="left">
+        <h1>pyTenjin User's Guide</h1>
+      </div>
 
-    <div align="left"><h1>pyTenjin User's Guide</h1></div>
-    <div align="left">
-      release:     $Release$<br>
-      last update: $Date$<br>
-    </div>
+      <div align="left">
+        release: $Release$<br>
+        last update: $Date$<br>
+      </div>
 
-<p>Table of Contents:
-<ul>
-  <li><a href="#intro">Introduction</a>
-  <ul>
-    <li><a href="#overview">Overview</a>
-    </li>
-    <li><a href="#features">Features</a>
-    </li>
-    <li><a href="#comparison">Comparison with other solutions</a>
-    </li>
-    <li><a href="#benchmark">Benchmark</a>
-    </li>
-  </ul>
-  </li>
-  <li><a href="#installation">Installation</a>
-  </li>
-  <li><a href="#desguide">Designer's Guide</a>
-  <ul>
-    <li><a href="#des-notation">Notation</a>
-    </li>
-    <li><a href="#des-styles">Embedded Statement Styles</a>
-    </li>
-    <li><a href="#des-convert">Convert into Python Code</a>
-    </li>
-    <li><a href="#des-syntaxchk">Syntax Checking</a>
-    </li>
-    <li><a href="#des-contextdata">Context Data File</a>
-    </li>
-    <li><a href="#des-cmlinecontext">Command-line Context Data</a>
-    </li>
-    <li><a href="#des-nested-template">Nested Template</a>
-    </li>
-    <li><a href="#des-layout">Layout Template</a>
-    </li>
-    <li><a href="#des-capturing">Capturing</a>
-    </li>
-    <li><a href="#des-args">Template Arguments</a>
-    </li>
-    <li><a href="#des-preprocess">Preprocessing</a>
-    </li>
-    <li><a href="#des-encoding">Template Encoding</a>
-    </li>
-    <li><a href="#des-otheropts">Other Options</a>
-    </li>
-  </ul>
-  </li>
-  <li><a href="#devguide">Developer's Guide</a>
-  <ul>
-    <li><a href="#dev-example">An Example</a>
-    </li>
-    <li><a href="#dev-templateclass">Class tenjin.Template</a>
-    </li>
-    <li><a href="#dev-engineclass">Class tenjin.Engine</a>
-    </li>
-    <li><a href="#dev-caching">Template Caching</a>
-    </li>
-    <li><a href="#dev-vars-and-funcs">Variables and Functions</a>
-    </li>
-    <li><a href="#dev-htmlhelpers">HTML Helper Functions</a>
-    </li>
-    <li><a href="#dev-encoding">Template Encoding</a>
-    </li>
-    <li><a href="#dev-helpers">Add Your Helper Functions</a>
-    </li>
-    <li><a href="#dev-othertopics">Other Topics</a>
-    </li>
-  </ul>
-  </li>
-</ul>
-</p>
-<a name="intro"></a>
-<h2 class="section1">Introduction</h2>
-<a name="overview"></a>
-<h3 class="section2">Overview</h3>
-<p>pyTenjin is a very fast and lightweight template engine based on embedded Python.
-You can embed Python statements and expressions into your text file.
-pyTenjin converts it into Python script and evaluate it.
-</p>
-<p>The following is an example of pyTenjin.
-</p>
-<a name="ex.pyhtml"></a>
-<div class="program_caption">
-File 'ex.pyhtml':</div>
-<pre class="program">Hello <strong>#{name}</strong>!
+      <p>Table of Contents:</p>
+
+      <ul>
+        <li>
+          <a href="#intro">Introduction</a>
+
+          <ul>
+            <li><a href="#overview">Overview</a></li>
+
+            <li><a href="#features">Features</a></li>
+
+            <li><a href="#comparison">Comparison with other solutions</a></li>
+
+            <li><a href="#benchmark">Benchmark</a></li>
+          </ul>
+        </li>
+
+        <li><a href="#installation">Installation</a></li>
+
+        <li>
+          <a href="#desguide">Designer's Guide</a>
+
+          <ul>
+            <li><a href="#des-notation">Notation</a></li>
+
+            <li><a href="#des-styles">Embedded Statement Styles</a></li>
+
+            <li><a href="#des-convert">Convert into Python Code</a></li>
+
+            <li><a href="#des-syntaxchk">Syntax Checking</a></li>
+
+            <li><a href="#des-contextdata">Context Data File</a></li>
+
+            <li><a href="#des-cmlinecontext">Command-line Context Data</a></li>
+
+            <li><a href="#des-nested-template">Nested Template</a></li>
+
+            <li><a href="#des-layout">Layout Template</a></li>
+
+            <li><a href="#des-capturing">Capturing</a></li>
+
+            <li><a href="#des-args">Template Arguments</a></li>
+
+            <li><a href="#des-preprocess">Preprocessing</a></li>
+
+            <li><a href="#des-encoding">Template Encoding</a></li>
+
+            <li><a href="#des-otheropts">Other Options</a></li>
+          </ul>
+        </li>
+
+        <li>
+          <a href="#devguide">Developer's Guide</a>
+
+          <ul>
+            <li><a href="#dev-example">An Example</a></li>
+
+            <li><a href="#dev-templateclass">Class tenjin.Template</a></li>
+
+            <li><a href="#dev-engineclass">Class tenjin.Engine</a></li>
+
+            <li><a href="#dev-caching">Template Caching</a></li>
+
+            <li><a href="#dev-vars-and-funcs">Variables and Functions</a></li>
+
+            <li><a href="#dev-htmlhelpers">HTML Helper Functions</a></li>
+
+            <li><a href="#dev-encoding">Template Encoding</a></li>
+
+            <li><a href="#dev-helpers">Add Your Helper Functions</a></li>
+
+            <li><a href="#dev-othertopics">Other Topics</a></li>
+          </ul>
+        </li>
+      </ul><a name="intro" id="intro"></a>
+
+      <h2 class="section1">Introduction</h2><a name="overview" id="overview"></a>
+
+      <h3 class="section2">Overview</h3>
+
+      <p>pyTenjin is a very fast and lightweight template engine based on embedded Python. You can embed Python statements and expressions into your text file. pyTenjin converts it into Python script and evaluate it.</p>
+
+      <p>The following is an example of pyTenjin.</p><a name="ex.pyhtml" id="ex.pyhtml"></a>
+
+      <div class="program_caption">
+        File 'ex.pyhtml':
+      </div>
+      <pre class="program">
+Hello <strong>#{name}</strong>!
 &lt;ul&gt;
 <strong>&lt;?py for item in items: ?&gt;</strong>
  &lt;li&gt;<strong>${item}</strong>&lt;/li&gt;
 <strong>&lt;?py #end ?&gt;</strong>
 &lt;/ul&gt;
 </pre>
-<p>Here is the notation:
-</p>
-<dl class="dl3" compact>
-<dt class="dt3"><b>
-<code>&lt;?py ... ?&gt;</code> </b></dt>
-<dd class="dd3">
-	Python statements.
-</dd>
-<dt class="dt3"><b>
-<code>#{...}</code> </b></dt>
-<dd class="dd3">
-	Python expression.
-</dd>
-<dt class="dt3"><b>
-<code>${...}</code> </b></dt>
-<dd class="dd3">
-	Python expression (HTML escaped)
-</dd>
-</dl>
-<a name="ex_source.result"></a>
-<div class="terminal_caption">
-Result of covertion into Python script:</div>
-<pre class="terminal">$ pytenjin -s ex.pyhtml
+
+      <p>Here is the notation:</p>
+
+      <dl class="dl3" compact>
+        <dt class="dt3"><b><code>&lt;?py ... ?&gt;</code></b></dt>
+
+        <dd class="dd3">Python statements.</dd>
+
+        <dt class="dt3"><b><code>#{...}</code></b></dt>
+
+        <dd class="dd3">Python expression.</dd>
+
+        <dt class="dt3"><b><code>${...}</code></b></dt>
+
+        <dd class="dd3">Python expression (HTML escaped)</dd>
+      </dl><a name="ex_source.result" id="ex_source.result"></a>
+
+      <div class="terminal_caption">
+        Result of covertion into Python script:
+      </div>
+      <pre class="terminal">
+$ pytenjin -s ex.pyhtml
 _buf = []; _buf.extend(('''Hello ''', <strong>to_str(name)</strong>, '''!
 &lt;ul&gt;\n''', ));
 <strong>for item in items:</strong>
@@ -138,100 +145,81 @@ _buf = []; _buf.extend(('''Hello ''', <strong>to_str(name)</strong>, '''!
 <strong>#end</strong>
 _buf.extend(('''&lt;/ul&gt;\n''', ));
 print ''.join(_buf)
-</pre>
-<a name="ex.result"></a>
-<div class="terminal_caption">
-Output of execution with context data:</div>
-<pre class="terminal">$ pytenjin -c "name='World'; items=['&lt;AAA&gt;','B&amp;B','\"CCC\"']" ex.pyhtml
+</pre><a name="ex.result" id="ex.result"></a>
+
+      <div class="terminal_caption">
+        Output of execution with context data:
+      </div>
+      <pre class="terminal">
+$ pytenjin -c "name='World'; items=['&lt;AAA&gt;','B&amp;B','\"CCC\"']" ex.pyhtml
 Hello World!
 &lt;ul&gt;
  &lt;li&gt;&amp;lt;AAA&amp;gt;&lt;/li&gt;
  &lt;li&gt;B&amp;amp;B&lt;/li&gt;
  &lt;li&gt;&amp;quot;CCC&amp;quot;&lt;/li&gt;
 &lt;/ul&gt;
-</pre>
-<a name="ex.script"></a>
-<div class="program_caption">
-Example of Python script</div>
-<pre class="program">import tenjin
+</pre><a name="ex.script" id="ex.script"></a>
+
+      <div class="program_caption">
+        Example of Python script
+      </div>
+      <pre class="program">
+import tenjin
 from tenjin.helpers import *   # or escape, to_str
 engine = tenjin.Engine()
 context = { 'name': 'World', 'items': ['&lt;AAA&gt;', 'B&amp;B', '"CCC"'] }
 output = engine.render('ex.pyhtml', context)
 print output,
-</pre>
-<br>
+</pre><br>
+      <a name="features" id="features"></a>
 
+      <h3 class="section2">Features</h3>
 
-<a name="features"></a>
-<h3 class="section2">Features</h3>
-<p>pyTenjin has the following features:
-</p>
-<ul type="disc">
-<li>pyTenjin runs very fast. It works about twice as fast as any other solution.
-</li>
-<li>pyTenjin doesn't break HTML design because it uses XML Processing
-  Instructions (PI) as embedded notation for Python statements.
-</li>
-<li>pyTenjin is secure because it supports escaping expression value by default.
-</li>
-<li>pyTenjin is small and lightweight. It is very easy to include pyTenjin
-  into your application.
-</li>
-<li>pyTenjin supports auto caching of converted Python code.
-</li>
-<li>pyTenjin supports partial template and layout template.
-  These are very useful especially for web application.
-</li>
-<li>pyTenjin supports partial capturing of template.
-</li>
-<li>pyTenjin can load YAML file as context data. Using pyTenjin, it is able to
-  separate template file and data file.
-</li>
-<li>pyTenjin now supports Goole AppEngine. See <a href="faq.html#faq-google-appengine">FAQ</a> for details.
-</li>
-</ul>
-<br>
+      <p>pyTenjin has the following features:</p>
 
+      <ul type="disc">
+        <li>pyTenjin runs very fast. It works about twice as fast as any other solution.</li>
 
-<a name="comparison"></a>
-<h3 class="section2">Comparison with other solutions</h3>
-<p>pyTenjin has advantages compared with other solutions (including other language solutions):
-</p>
-<ul type="disc">
-<li><strong>Easy to design</strong> --
-  JSP, ePerl, or eRuby breaks HTML design because they use
-  '<code>&lt;% ... %&gt;</code>' as embedded notation which is not valid in HTML.
-  pyTenjin doesn't break HTML desgin because it uses Processing
-  Instructions (PI) as embedded notation which is valid in HTML.
-</li>
-<li><strong>Easy to write</strong> --
-  In PHP, it is a little bother to write embedded expression
-  because the notation '<code>&lt;?php echo $value; ?&gt;</code>' is a little long,
-  and very bother to embed escaped expression because
-  '<code>&lt;?php echo htmlspecialchars($value); ?&gt;</code>' is very long.
-  In pyTenjin, these are very easy to write because embedded expression
-  notations ('<code>#{value}</code>' and '<code>${value}</code>') are very short.
-</li>
-<li><strong>Easy to learn</strong> --
-  Zope DTML, PageTemplate, Django Template, and other template systems
-  are hard to learn because they are large, highly functinal, and
-  based on non-Python syntax.
-  pyTenjin is very easy to learn if you already know Python language because
-  it is very small and  you can embed any Python code into HTML template.
-</li>
-</ul>
-<br>
+        <li>pyTenjin doesn't break HTML design because it uses XML Processing Instructions (PI) as embedded notation for Python statements.</li>
 
+        <li>pyTenjin is secure because it supports escaping expression value by default.</li>
 
-<a name="benchmark"></a>
-<h3 class="section2">Benchmark</h3>
-<p>Benchmark script is contained in pyTenjin archive.
-The following is an example of benchmark.
-</p>
-<div class="terminal_caption">
-MacOS X 10.4 Tiger, Intel CoreDuo 1.83GHz, Memory 2GB</div>
-<pre class="terminal">$ cd pytenjin-X.X.X/benchmark
+        <li>pyTenjin is small and lightweight. It is very easy to include pyTenjin into your application.</li>
+
+        <li>pyTenjin supports auto caching of converted Python code.</li>
+
+        <li>pyTenjin supports partial template and layout template. These are very useful especially for web application.</li>
+
+        <li>pyTenjin supports partial capturing of template.</li>
+
+        <li>pyTenjin can load YAML file as context data. Using pyTenjin, it is able to separate template file and data file.</li>
+
+        <li>pyTenjin now supports Goole AppEngine. See <a href="faq.html#faq-google-appengine">FAQ</a> for details.</li>
+      </ul><br>
+      <a name="comparison" id="comparison"></a>
+
+      <h3 class="section2">Comparison with other solutions</h3>
+
+      <p>pyTenjin has advantages compared with other solutions (including other language solutions):</p>
+
+      <ul type="disc">
+        <li><strong>Easy to design</strong> -- JSP, ePerl, or eRuby breaks HTML design because they use '<code>&lt;% ... %&gt;</code>' as embedded notation which is not valid in HTML. pyTenjin doesn't break HTML desgin because it uses Processing Instructions (PI) as embedded notation which is valid in HTML.</li>
+
+        <li><strong>Easy to write</strong> -- In PHP, it is a little bother to write embedded expression because the notation '<code>&lt;?php echo $value; ?&gt;</code>' is a little long, and very bother to embed escaped expression because '<code>&lt;?php echo htmlspecialchars($value); ?&gt;</code>' is very long. In pyTenjin, these are very easy to write because embedded expression notations ('<code>#{value}</code>' and '<code>${value}</code>') are very short.</li>
+
+        <li><strong>Easy to learn</strong> -- Zope DTML, PageTemplate, Django Template, and other template systems are hard to learn because they are large, highly functinal, and based on non-Python syntax. pyTenjin is very easy to learn if you already know Python language because it is very small and you can embed any Python code into HTML template.</li>
+      </ul><br>
+      <a name="benchmark" id="benchmark"></a>
+
+      <h3 class="section2">Benchmark</h3>
+
+      <p>Benchmark script is contained in pyTenjin archive. The following is an example of benchmark.</p>
+
+      <div class="terminal_caption">
+        MacOS X 10.4 Tiger, Intel CoreDuo 1.83GHz, Memory 2GB
+      </div>
+      <pre class="terminal">
+$ cd pytenjin-X.X.X/benchmark
 $ python -V
 Python 2.5.1
 $ python bench.py -q -n 10000
@@ -257,93 +245,87 @@ mako-nocache           236.10000    1.67000  237.77000  238.38705
 templetor              424.03000    4.15000  428.19000  429.59667
 templetor-reuse         61.46000    0.07000   61.53000   61.68483
 </pre>
-<p>Versions:
-</p>
-<ul type="disc">
-<li>Python 2.5.1
-</li>
-<li>Tenjin 0.6.1
-</li>
-<li>Django 0.95
-</li>
-<li>Cheetah 2.0
-</li>
-<li>Myghty 1.1
-</li>
-<li>Kid 0.9.6
-</li>
-<li>Genshi 0.4.4
-</li>
-<li>Mako 0.1.9
-</li>
-<li>Templetor (web.py) 0.22
-</li>
-</ul>
-<p>This shows the followings.
-</p>
-<ul type="disc">
-<li>pyTenjin is the fastest template engine.
-</li>
-<li>Cheetah's performance is good.
-</li>
-<li>Myghty's performance is good for mod_python, but is bad for CGI program.
-</li>
-<li>Django's performance is not good.
-</li>
-<li>Kid's performance is worse. It is too slow.
-</li>
-<li>Genshi's performance is also worse. It is faster than Kid, but slower than others.
-</li>
-<li>Mako's performance is very good when module caching is enabled.
-</li>
-<li>Templetor's performance is not good for mod_python and worse for CGI program.
-</li>
-</ul>
-<br>
 
+      <p>Versions:</p>
 
-<br>
+      <ul type="disc">
+        <li>Python 2.5.1</li>
 
+        <li>Tenjin 0.6.1</li>
 
-<a name="installation"></a>
-<h2 class="section1">Installation</h2>
-<p>pyTenjin works on CPython (2.3 or higher, 3.0 supported).
-</p>
-  <ol type="1">
-  <li>Download pyTenjin-X.X.X.tar.gz and extract it.
-  </li>
-  <li>Just type '<code>python setup.py install</code>' with administrator or root user,
-      or copy 'lib/tenjin.py' and 'bin/pytenjin' into proper directory if you don't
-      have administrator or root priviledge.
-  </li>
-  <li>(Optional) Install <a href="http://pyyaml.org">PyYAML</a>.
-  </li>
-  </ol>
-<br>
+        <li>Django 0.95</li>
 
+        <li>Cheetah 2.0</li>
 
-<a name="desguide"></a>
-<h2 class="section1">Designer's Guide</h2>
-<p>This section shows how to use pyTenjin for designer.
-</p>
-<p>If you want to know how to use pyTenjin in your program, see <a href="#devguide">Developer's Guide</a> section.
-</p>
-<a name="des-notation"></a>
-<h3 class="section2">Notation</h3>
-<p>The following is the notation of pyTenjin.
-</p>
-<ul type="disc">
-<li>'<code>&lt;?py ... ?&gt;</code>' : Python statement
-</li>
-<li>'<code>#{...}</code>' : Python expression
-</li>
-<li>'<code>${...}</code>' : Python expression with HTML escape
-</li>
-</ul>
-<a name="example1.pyhtml"></a>
-<div class="program_caption">
-File 'example1.pyhtml':</div>
-<pre class="program">&lt;table&gt;
+        <li>Myghty 1.1</li>
+
+        <li>Kid 0.9.6</li>
+
+        <li>Genshi 0.4.4</li>
+
+        <li>Mako 0.1.9</li>
+
+        <li>Templetor (web.py) 0.22</li>
+      </ul>
+
+      <p>This shows the followings.</p>
+
+      <ul type="disc">
+        <li>pyTenjin is the fastest template engine.</li>
+
+        <li>Cheetah's performance is good.</li>
+
+        <li>Myghty's performance is good for mod_python, but is bad for CGI program.</li>
+
+        <li>Django's performance is not good.</li>
+
+        <li>Kid's performance is worse. It is too slow.</li>
+
+        <li>Genshi's performance is also worse. It is faster than Kid, but slower than others.</li>
+
+        <li>Mako's performance is very good when module caching is enabled.</li>
+
+        <li>Templetor's performance is not good for mod_python and worse for CGI program.</li>
+      </ul><br>
+      <br>
+      <a name="installation" id="installation"></a>
+
+      <h2 class="section1">Installation</h2>
+
+      <p>pyTenjin works on CPython (2.3 or higher, 3.0 supported).</p>
+
+      <ol type="1">
+        <li>Download pyTenjin-X.X.X.tar.gz and extract it.</li>
+
+        <li>Just type '<code>python setup.py install</code>' with administrator or root user, or copy 'lib/tenjin.py' and 'bin/pytenjin' into proper directory if you don't have administrator or root priviledge.</li>
+
+        <li>(Optional) Install <a href="http://pyyaml.org">PyYAML</a>.</li>
+      </ol><br>
+      <a name="desguide" id="desguide"></a>
+
+      <h2 class="section1">Designer's Guide</h2>
+
+      <p>This section shows how to use pyTenjin for designer.</p>
+
+      <p>If you want to know how to use pyTenjin in your program, see <a href="#devguide">Developer's Guide</a> section.</p><a name="des-notation" id="des-notation"></a>
+
+      <h3 class="section2">Notation</h3>
+
+      <p>The following is the notation of pyTenjin.</p>
+
+      <ul type="disc">
+        <li>'<code>&lt;?py ... ?&gt;</code>' : Python statement</li>
+
+        <li>'<code>#{...}</code>' : Python expression</li>
+
+        <li>'<code>${...}</code>' : Python expression with HTML escape</li>
+      </ul><a name="example1.pyhtml" id="example1.pyhtml"></a>
+
+      <div class="program_caption">
+        File 'example1.pyhtml':
+      </div>
+      <pre class="program">
+&lt;table&gt;
   &lt;tbody&gt;
 <strong>&lt;?py i = 0 ?&gt;</strong>
 <strong>&lt;?py for item in ['&lt;foo&gt;', 'bar&amp;bar', '"baz"']: ?&gt;</strong>
@@ -356,16 +338,16 @@ File 'example1.pyhtml':</div>
   &lt;tbody&gt;
 &lt;/table&gt;
 </pre>
-<p>Notice that it is required to add '<code>&lt;?py #end ?&gt;</code>' line because Python doesn't have block-end mark.
-Block-end mark line tells pytenjin command the position of end of block.
-It is able to use '<code>#endfor</code>', '<code>#</code>', '<code>pass</code>', and so on as block-end mark.
-</p>
-<p>The following is the result of executing 'example1.pyhtml'.
-</p>
-<a name="example1.result"></a>
-<div class="terminal_caption">
-Result:</div>
-<pre class="terminal">$ pytenjin example1.pyhtml
+
+      <p>Notice that it is required to add '<code>&lt;?py #end ?&gt;</code>' line because Python doesn't have block-end mark. Block-end mark line tells pytenjin command the position of end of block. It is able to use '<code>#endfor</code>', '<code>#</code>', '<code>pass</code>', and so on as block-end mark.</p>
+
+      <p>The following is the result of executing 'example1.pyhtml'.</p><a name="example1.result" id="example1.result"></a>
+
+      <div class="terminal_caption">
+        Result:
+      </div>
+      <pre class="terminal">
+$ pytenjin example1.pyhtml
 &lt;table&gt;
   &lt;tbody&gt;
     &lt;tr&gt;
@@ -382,20 +364,18 @@ Result:</div>
     &lt;/tr&gt;
   &lt;tbody&gt;
 &lt;/table&gt;
-</pre>
-<br>
+</pre><br>
+      <a name="des-styles" id="des-styles"></a>
 
+      <h3 class="section2">Embedded Statement Styles</h3>
 
-<a name="des-styles"></a>
-<h3 class="section2">Embedded Statement Styles</h3>
-<p>Two styles of embedded statement are available.
-The first style is shown in the previous section.
-In this style, it is able to put indent spaces before '<code>&lt;?py</code>' like the following:
-</p>
-<a name="example1a.pyhtml"></a>
-<div class="program_caption">
-File 'example1a.pyhtml':</div>
-<pre class="program">&lt;table&gt;
+      <p>Two styles of embedded statement are available. The first style is shown in the previous section. In this style, it is able to put indent spaces before '<code>&lt;?py</code>' like the following:</p><a name="example1a.pyhtml" id="example1a.pyhtml"></a>
+
+      <div class="program_caption">
+        File 'example1a.pyhtml':
+      </div>
+      <pre class="program">
+&lt;table&gt;
   &lt;tbody&gt;
 &lt;?py i = 0 ?&gt;
 &lt;?py for item in ['&lt;foo&gt;', 'bar&amp;bar', '"baz"']: ?&gt;
@@ -408,13 +388,14 @@ File 'example1a.pyhtml':</div>
   &lt;/tbody&gt;
 &lt;/table&gt;
 </pre>
-<p>The second style is shown in the following.
-This style is convenient for a lot of statements.
-</p>
-<a name="example1b.pyhtml"></a>
-<div class="program_caption">
-File 'example1b.pyhtml':</div>
-<pre class="program">&lt;table&gt;
+
+      <p>The second style is shown in the following. This style is convenient for a lot of statements.</p><a name="example1b.pyhtml" id="example1b.pyhtml"></a>
+
+      <div class="program_caption">
+        File 'example1b.pyhtml':
+      </div>
+      <pre class="program">
+&lt;table&gt;
   &lt;tbody&gt;
 <strong>&lt;?py</strong>
 <strong>i = 0</strong>
@@ -431,11 +412,14 @@ File 'example1b.pyhtml':</div>
   &lt;/tbody&gt;
 &lt;/table&gt;
 </pre>
-<p>It is able to mix two styles in a file, but the following styles are <strong>NOT</strong> available.
-</p>
-<div class="program_caption">
-Invalid example #1:</div>
-<pre class="program">&lt;ul&gt;
+
+      <p>It is able to mix two styles in a file, but the following styles are <strong>NOT</strong> available.</p>
+
+      <div class="program_caption">
+        Invalid example #1:
+      </div>
+      <pre class="program">
+&lt;ul&gt;
 <strong>&lt;?py i = 0</strong>
 <strong>     for item in ['&lt;foo&gt;', 'bar&amp;bar', '"baz"']:</strong>
 <strong>     i += 1 ?&gt;</strong>
@@ -444,9 +428,12 @@ Invalid example #1:</div>
 &lt;?py #end ?&gt;
 &lt;/ul&gt;
 </pre>
-<div class="program_caption">
-Invalid example #2:</div>
-<pre class="program">&lt;ul&gt;
+
+      <div class="program_caption">
+        Invalid example #2:
+      </div>
+      <pre class="program">
+&lt;ul&gt;
 <strong>&lt;?py</strong>
 <strong>    i = 0</strong>
 <strong>    for item in ['&lt;foo&gt;', 'bar&amp;bar', '"baz"']:</strong>
@@ -458,18 +445,18 @@ Invalid example #2:</div>
     <strong>#end</strong>
 <strong>?&gt;</strong>
 &lt;/ul&gt;
-</pre>
-<br>
+</pre><br>
+      <a name="des-convert" id="des-convert"></a>
 
+      <h3 class="section2">Convert into Python Code</h3>
 
-<a name="des-convert"></a>
-<h3 class="section2">Convert into Python Code</h3>
-<p>Command-line option '-s' converts embedded files into Python code.
-</p>
-<a name="example1_source.result"></a>
-<div class="terminal_caption">
-Result:</div>
-<pre class="terminal">$ pytenjin <strong>-s</strong> example1.pyhtml
+      <p>Command-line option '-s' converts embedded files into Python code.</p><a name="example1_source.result" id="example1_source.result"></a>
+
+      <div class="terminal_caption">
+        Result:
+      </div>
+      <pre class="terminal">
+$ pytenjin <strong>-s</strong> example1.pyhtml
 _buf = []; _buf.extend(('''&lt;table&gt;
   &lt;tbody&gt;\n''', ));
 <strong>i = 0</strong>
@@ -484,33 +471,33 @@ _buf.extend(('''  &lt;tbody&gt;
 &lt;/table&gt;\n''', ));
 print ''.join(_buf)
 </pre>
-<ul type="disc">
-<li>Variable <code>_buf</code> is a list.
-</li>
-<li>Function <code>to_str()</code> (= <code>tenjin.helpers.to_str()</code>) converts value into string
-   except None is converted into <code>""</code> (empty string).
-   Command-line option <code>--tostrfunc=<em>func</em></code> makes pytenjin to use <code><em>func</em>()</code> instead of <code>to_str()</code>.
-</li>
-<li>Function <code>escape()</code> (= <code>tenjin.escape()</code>) escapes <code>'&amp; &lt; &gt; "'</code> into <code>'&amp;amp; &amp;lt; &amp;gt; &amp;quot;'</code><sup>(<a href="#fnref:1" name="fnlink:1">*1</a>)</sup>.
-  Command-line option <code>--escapefunc=<em>func</em></code> makes pytenjin to use <code><em>func</em>()</code> instead of <code>escape()</code>.
-</li>
-<li>End-of-line character ("\n" or "\r\n") is automatically detected by pyTenjin.
-</li>
-</ul>
-<p>'<code>_buf = [];</code>' is called as preamble and '<code>print ''.join(_buf)</code>' is called as postamble.
-Command-line option '<code>-b</code>' removes preamble and postamble.
-</p>
-<a name="example2.pyhtml"></a>
-<div class="program_caption">
-File 'example2.pyhtml'</div>
-<pre class="program">&lt;?py for i in [1, 2, 3]: ?&gt;
+
+      <ul type="disc">
+        <li>Variable <code>_buf</code> is a list.</li>
+
+        <li>Function <code>to_str()</code> (= <code>tenjin.helpers.to_str()</code>) converts value into string except None is converted into <code>""</code> (empty string). Command-line option <code>--tostrfunc=<em>func</em></code> makes pytenjin to use <code><em>func</em>()</code> instead of <code>to_str()</code>.</li>
+
+        <li>Function <code>escape()</code> (= <code>tenjin.escape()</code>) escapes <code>'&amp; &lt; &gt; "'</code> into <code>'&amp;amp; &amp;lt; &amp;gt; &amp;quot;'</code><sup>(<a href="#fnref:1" name="fnlink:1" id="fnlink:1">*1</a>)</sup>. Command-line option <code>--escapefunc=<em>func</em></code> makes pytenjin to use <code><em>func</em>()</code> instead of <code>escape()</code>.</li>
+
+        <li>End-of-line character ("\n" or "\r\n") is automatically detected by pyTenjin.</li>
+      </ul>
+
+      <p>'<code>_buf = [];</code>' is called as preamble and '<code>print ''.join(_buf)</code>' is called as postamble. Command-line option '<code>-b</code>' removes preamble and postamble.</p><a name="example2.pyhtml" id="example2.pyhtml"></a>
+
+      <div class="program_caption">
+        File 'example2.pyhtml'
+      </div>
+      <pre class="program">
+&lt;?py for i in [1, 2, 3]: ?&gt;
 &lt;p&gt;#{i}&lt;/p&gt;
 &lt;?py #end ?&gt;
-</pre>
-<a name="example2_sb.result2"></a>
-<div class="terminal_caption">
-Result:</div>
-<pre class="terminal">$ pytenjin -s example2.pyhtml
+</pre><a name="example2_sb.result2" id="example2_sb.result2"></a>
+
+      <div class="terminal_caption">
+        Result:
+      </div>
+      <pre class="terminal">
+$ pytenjin -s example2.pyhtml
 <strong>_buf = []</strong>
 for i in [1, 2, 3]:
     _buf.extend(('''&lt;p&gt;''', to_str(i), '''&lt;/p&gt;\n''', ));
@@ -521,13 +508,14 @@ for i in [1, 2, 3]:
     _buf.extend(('''&lt;p&gt;''', to_str(i), '''&lt;/p&gt;\n''', ));
 #end
 </pre>
-<p>Command-line option '-S' also show converted Python code but it doesn't print text part.
-This is useful to check Python code for debugging.
-</p>
-<a name="example1_S.result"></a>
-<div class="terminal_caption">
-Result:</div>
-<pre class="terminal">$ pytenjin <strong>-S</strong> example1.pyhtml
+
+      <p>Command-line option '-S' also show converted Python code but it doesn't print text part. This is useful to check Python code for debugging.</p><a name="example1_S.result" id="example1_S.result"></a>
+
+      <div class="terminal_caption">
+        Result:
+      </div>
+      <pre class="terminal">
+$ pytenjin <strong>-S</strong> example1.pyhtml
 _buf = []; 
 
 i = 0
@@ -542,34 +530,32 @@ for item in ['&lt;foo&gt;', 'bar&amp;bar', '"baz"']:
 
 print ''.join(_buf)
 </pre>
-<p>In addition, the following command-line options are available.
-</p>
-<dl class="dl3" compact>
-<dt class="dt3"><b>
--N </b></dt>
-<dd class="dd3">
-	     Add line number.
-</dd>
-<dt class="dt3"><b>
--X </b></dt>
-<dd class="dd3">
-	     Delete expressions.
-</dd>
-<dt class="dt3"><b>
--C </b></dt>
-<dd class="dd3">
-	     Remove empty lines (compact-mode).
-</dd>
-<dt class="dt3"><b>
--U </b></dt>
-<dd class="dd3">
-	     Compress empty lines to a line (uniq-mode).
-</dd>
-</dl>
-<a name="example1_SXNC.result"></a>
-<div class="terminal_caption">
-Result:</div>
-<pre class="terminal">$ pytenjin <strong>-SUNX</strong> example1.pyhtml
+
+      <p>In addition, the following command-line options are available.</p>
+
+      <dl class="dl3" compact>
+        <dt class="dt3"><b>-N</b></dt>
+
+        <dd class="dd3">Add line number.</dd>
+
+        <dt class="dt3"><b>-X</b></dt>
+
+        <dd class="dd3">Delete expressions.</dd>
+
+        <dt class="dt3"><b>-C</b></dt>
+
+        <dd class="dd3">Remove empty lines (compact-mode).</dd>
+
+        <dt class="dt3"><b>-U</b></dt>
+
+        <dd class="dd3">Compress empty lines to a line (uniq-mode).</dd>
+      </dl><a name="example1_SXNC.result" id="example1_SXNC.result"></a>
+
+      <div class="terminal_caption">
+        Result:
+      </div>
+      <pre class="terminal">
+$ pytenjin <strong>-SUNX</strong> example1.pyhtml
     1:  _buf = []; 
 
     3:  i = 0
@@ -580,52 +566,55 @@ Result:</div>
 
    13:  print ''.join(_buf)
 </pre>
-<div class="footnote">
- <dl compact>
-  <dt>(<a name="fnref:1" href="#fnlink:1">*1</a>)</dt>
-  <dd>Difference between <code>escape()</code> and <code>cgi.escape()</code> is that the former escapes double-quotation mark into '<code>&amp;quot;</code>' and the latter doesn't.</dd>
- </dl>
-</div>
-<br>
 
+      <div class="footnote">
+        <dl compact>
+          <dt>(<a name="fnref:1" href="#fnlink:1" id="fnref:1">*1</a>)</dt>
 
-<a name="des-syntaxchk"></a>
-<h3 class="section2">Syntax Checking</h3>
-<p>Command-line option '<code>-z</code>' checks syntax error in embedded Python code.
-</p>
-<a name="example3.pyhtml"></a>
-<div class="program_caption">
-File example3.pyhtml:</div>
-<pre class="program">&lt;ul&gt;
+          <dd>Difference between <code>escape()</code> and <code>cgi.escape()</code> is that the former escapes double-quotation mark into '<code>&amp;quot;</code>' and the latter doesn't.</dd>
+        </dl>
+      </div><br>
+      <a name="des-syntaxchk" id="des-syntaxchk"></a>
+
+      <h3 class="section2">Syntax Checking</h3>
+
+      <p>Command-line option '<code>-z</code>' checks syntax error in embedded Python code.</p><a name="example3.pyhtml" id="example3.pyhtml"></a>
+
+      <div class="program_caption">
+        File example3.pyhtml:
+      </div>
+      <pre class="program">
+&lt;ul&gt;
 &lt;?py for item in items: ?&gt;
  &lt;li&gt;${item}&lt;/li&gt;
 &lt;?py   <strong>#end</strong> ?&gt;
 &lt;/ul&gt;
-</pre>
-<a name="example3_syntaxcheck.result"></a>
-<div class="terminal_caption">
-Result:</div>
-<pre class="terminal">$ pytenjin <strong>-z</strong> example3.pyhtml
+</pre><a name="example3_syntaxcheck.result" id="example3_syntaxcheck.result"></a>
+
+      <div class="terminal_caption">
+        Result:
+      </div>
+      <pre class="terminal">
+$ pytenjin <strong>-z</strong> example3.pyhtml
 example3.pyhtml:4:3: unindent does not match any outer indentation level
   4:   #end
        ^
 </pre>
-<p>Error message is the same format as gcc compiler or java compiler.
-Error jump in Emacs or other editor is available.
-</p>
-<p>Command-line option '-q' (quiet-mode) prints nothing if it has no errors.
-</p>
-<br>
 
+      <p>Error message is the same format as gcc compiler or java compiler. Error jump in Emacs or other editor is available.</p>
 
-<a name="des-contextdata"></a>
-<h3 class="section2">Context Data File</h3>
-<p>pyTenjin allows you to specify context data by YAML file or Python script.
-</p>
-<a name="example4.pyhtml"></a>
-<div class="program_caption">
-File 'example4.pyhtml':</div>
-<pre class="program">&lt;p&gt;
+      <p>Command-line option '-q' (quiet-mode) prints nothing if it has no errors.</p><br>
+      <a name="des-contextdata" id="des-contextdata"></a>
+
+      <h3 class="section2">Context Data File</h3>
+
+      <p>pyTenjin allows you to specify context data by YAML file or Python script.</p><a name="example4.pyhtml" id="example4.pyhtml"></a>
+
+      <div class="program_caption">
+        File 'example4.pyhtml':
+      </div>
+      <pre class="program">
+&lt;p&gt;
   ${text}
   #{num}
   #{flag}
@@ -638,11 +627,13 @@ File 'example4.pyhtml':</div>
 &lt;?py for key, value in hash.items(): ?&gt;
 &lt;p&gt;#{key} = ${value}&lt;/p&gt;
 &lt;?py #end ?&gt;
-</pre>
-<a name="datafile.yaml"></a>
-<div class="program_caption">
-File 'datafile.yaml':</div>
-<pre class="program">text:   foo
+</pre><a name="datafile.yaml" id="datafile.yaml"></a>
+
+      <div class="program_caption">
+        File 'datafile.yaml':
+      </div>
+      <pre class="program">
+text:   foo
 num:    3.14
 flag:   yes
 items:
@@ -652,11 +643,13 @@ items:
 hash:
   x: 1
   y: 2
-</pre>
-<a name="example4_yaml.result"></a>
-<div class="terminal_caption">
-Result:</div>
-<pre class="terminal">$ pytenjin <strong>-f datafile.yaml</strong> example4.pyhtml
+</pre><a name="example4_yaml.result" id="example4_yaml.result"></a>
+
+      <div class="terminal_caption">
+        Result:
+      </div>
+      <pre class="terminal">
+$ pytenjin <strong>-f datafile.yaml</strong> example4.pyhtml
 &lt;p&gt;
   foo
   3.14
@@ -669,20 +662,24 @@ Result:</div>
 
 &lt;p&gt;y = 2&lt;/p&gt;
 &lt;p&gt;x = 1&lt;/p&gt;
-</pre>
-<a name="datafile.py"></a>
-<div class="program_caption">
-File 'datafile.py':</div>
-<pre class="program">text  = "foo"
+</pre><a name="datafile.py" id="datafile.py"></a>
+
+      <div class="program_caption">
+        File 'datafile.py':
+      </div>
+      <pre class="program">
+text  = "foo"
 num   = 3.14
 flag  = True
 items = ["foo", "bar", "baz"]
 hash  = {"x":1, "y":2}
-</pre>
-<a name="example4_datafile_py.result"></a>
-<div class="terminal_caption">
-Result:</div>
-<pre class="terminal">$ pytenjin <strong>-f datafile.py</strong> example4.pyhtml
+</pre><a name="example4_datafile_py.result" id="example4_datafile_py.result"></a>
+
+      <div class="terminal_caption">
+        Result:
+      </div>
+      <pre class="terminal">
+$ pytenjin <strong>-f datafile.py</strong> example4.pyhtml
 &lt;p&gt;
   foo
   3.14
@@ -696,19 +693,19 @@ Result:</div>
 &lt;p&gt;y = 2&lt;/p&gt;
 &lt;p&gt;x = 1&lt;/p&gt;
 </pre>
-<p>You must install <a href="http://pyyaml.org">PyYAML</a> if you want to use YAML-format context data file.
-</p>
-<br>
 
+      <p>You must install <a href="http://pyyaml.org">PyYAML</a> if you want to use YAML-format context data file.</p><br>
+      <a name="des-cmlinecontext" id="des-cmlinecontext"></a>
 
-<a name="des-cmlinecontext"></a>
-<h3 class="section2">Command-line Context Data</h3>
-<p>Command-line option '<code>-c</code>' specifies context data in YAML format or Python code.
-</p>
-<a name="example5.pyhtml"></a>
-<div class="program_caption">
-File 'example5.pyhtml':</div>
-<pre class="program">text:  #{text}
+      <h3 class="section2">Command-line Context Data</h3>
+
+      <p>Command-line option '<code>-c</code>' specifies context data in YAML format or Python code.</p><a name="example5.pyhtml" id="example5.pyhtml"></a>
+
+      <div class="program_caption">
+        File 'example5.pyhtml':
+      </div>
+      <pre class="program">
+text:  #{text}
 items:
 &lt;?py for item in items: ?&gt;
   - #{item}
@@ -717,11 +714,28 @@ hash:
 &lt;?py for key, val in hash.items(): ?&gt;
   #{key}: #{val}
 &lt;?py #end ?&gt;
-</pre>
-<a name="example5_datastr_py.result"></a>
-<div class="terminal_caption">
-Result of context data in python code:</div>
-<pre class="terminal">$ pytenjin <strong>-c 'text="foo"; items=["a","b","c"]; hash={"x":1,"y":2}'</strong> example5.pyhtml
+</pre><a name="example5_datastr_py.result" id="example5_datastr_py.result"></a>
+
+      <div class="terminal_caption">
+        Result of context data in python code:
+      </div>
+      <pre class="terminal">
+$ pytenjin <strong>-c 'text="foo"; items=["a","b","c"]; hash={"x":1,"y":2}'</strong> example5.pyhtml
+text:  foo
+items:
+  - a
+  - b
+  - c
+hash:
+  y: 2
+  x: 1
+</pre><a name="example5_datastr_yaml.result" id="example5_datastr_yaml.result"></a>
+
+      <div class="terminal_caption">
+        Result of context data in yaml format:
+      </div>
+      <pre class="terminal">
+$ pytenjin <strong>-c '{text: foo, items: [a, b, c], hash: {x: 1, y: 2} }'</strong> example5.pyhtml
 text:  foo
 items:
   - a
@@ -731,42 +745,27 @@ hash:
   y: 2
   x: 1
 </pre>
-<a name="example5_datastr_yaml.result"></a>
-<div class="terminal_caption">
-Result of context data in yaml format:</div>
-<pre class="terminal">$ pytenjin <strong>-c '{text: foo, items: [a, b, c], hash: {x: 1, y: 2} }'</strong> example5.pyhtml
-text:  foo
-items:
-  - a
-  - b
-  - c
-hash:
-  y: 2
-  x: 1
-</pre>
-<p>You must install <a href="http://pyyaml.org">PyYAML</a> at first if you want to specify context data in YAML format.
-</p>
-<br>
 
+      <p>You must install <a href="http://pyyaml.org">PyYAML</a> at first if you want to specify context data in YAML format.</p><br>
+      <a name="des-nested-template" id="des-nested-template"></a>
 
-<a name="des-nested-template"></a>
-<h3 class="section2">Nested Template</h3>
-<p>Template can include other templates.
-Included templates can also include other templates.
-</p>
-<p>The following function is available to include other templates.
-</p>
-<dl class="dl3">
-<dt class="dt3"><b>
-include(str template_name) </b></dt>
-<dd class="dd3">
-    Include other template.
-</dd>
-</dl>
-<a name="example6.pyhtml"></a>
-<div class="program_caption">
-File 'example6.pyhtml':</div>
-<pre class="program">&lt;html&gt;
+      <h3 class="section2">Nested Template</h3>
+
+      <p>Template can include other templates. Included templates can also include other templates.</p>
+
+      <p>The following function is available to include other templates.</p>
+
+      <dl class="dl3">
+        <dt class="dt3"><b>include(str template_name)</b></dt>
+
+        <dd class="dd3">Include other template.</dd>
+      </dl><a name="example6.pyhtml" id="example6.pyhtml"></a>
+
+      <div class="program_caption">
+        File 'example6.pyhtml':
+      </div>
+      <pre class="program">
+&lt;html&gt;
   &lt;body&gt;
 
     &lt;div id="sidemenu"&gt;
@@ -785,39 +784,47 @@ File 'example6.pyhtml':</div>
 
   &lt;/body&gt;
 &lt;/table&gt;
-</pre>
-<a name="sidemenu.pyhtml"></a>
-<div class="program_caption">
-File 'sidemenu.pyhtml':</div>
-<pre class="program">&lt;ul&gt;
+</pre><a name="sidemenu.pyhtml" id="sidemenu.pyhtml"></a>
+
+      <div class="program_caption">
+        File 'sidemenu.pyhtml':
+      </div>
+      <pre class="program">
+&lt;ul&gt;
 &lt;?py for item in menu: ?&gt;
   &lt;li&gt;&lt;a href="${item['url']}"&gt;${item['name']}&lt;/a&gt;&lt;/li&gt;
 &lt;?py #end ?&gt;
 &lt;/ul&gt;
-</pre>
-<a name="footer.pyhtml"></a>
-<div class="program_caption">
-File 'footer.pyhtml':</div>
-<pre class="program">&lt;hr /&gt;
+</pre><a name="footer.pyhtml" id="footer.pyhtml"></a>
+
+      <div class="program_caption">
+        File 'footer.pyhtml':
+      </div>
+      <pre class="program">
+&lt;hr /&gt;
 &lt;address&gt;
   &lt;a href="mailto:${webmaster_email}"&gt;${webmaster_email}&lt;/a&gt;
 &lt;/address&gt;
-</pre>
-<a name="contextdata.py"></a>
-<div class="program_caption">
-File 'contextdata.py':</div>
-<pre class="program">items = [ '&lt;FOO&gt;', '&amp;BAR', '"BAZ"' ]
+</pre><a name="contextdata.py" id="contextdata.py"></a>
+
+      <div class="program_caption">
+        File 'contextdata.py':
+      </div>
+      <pre class="program">
+items = [ '&lt;FOO&gt;', '&amp;BAR', '"BAZ"' ]
 webmaster_email = 'webmaster@example.com'
 menu  = [
     {'name': 'Top',      'url': '/' },
     {'name': 'Products', 'url': '/prod' },
     {'name': 'Support',  'url': '/support' },
 ]
-</pre>
-<a name="example6_nested.result"></a>
-<div class="terminal_caption">
-Result:</div>
-<pre class="terminal">$ pytenjin -f contextdata.py example6.pyhtml
+</pre><a name="example6_nested.result" id="example6_nested.result"></a>
+
+      <div class="terminal_caption">
+        Result:
+      </div>
+      <pre class="terminal">
+$ pytenjin -f contextdata.py example6.pyhtml
 &lt;html&gt;
   &lt;body&gt;
 
@@ -846,30 +853,23 @@ Result:</div>
   &lt;/body&gt;
 &lt;/table&gt;
 </pre>
-<p>Function '<code>include()</code>' can take template filename
-(ex. 'user_main.pyhtml') or template short name (ex. ':main').
-Template short name represents a template in short notation. It starts with colon (':').
-</p>
-<p>To make template short name available, command-line option '<code>--prefix</code>' and
-'<code>--postfix</code>' are required.
-For example, '<code>include("user_main.pyhtml")</code>' can be described as '<code>include(":main")</code>'
-when '<code>--prefix="user_"</code>' and '<code>--postfix=".pyhtml"</code>' are specified in command-line.
-</p>
-<br>
 
+      <p>Function '<code>include()</code>' can take template filename (ex. 'user_main.pyhtml') or template short name (ex. ':main'). Template short name represents a template in short notation. It starts with colon (':').</p>
 
-<a name="des-layout"></a>
-<h3 class="section2">Layout Template</h3>
-<p>Command-line option '<code>--layout=templatename</code>' specifies layout template name.
-</p>
-<p>For example, 'exmample6.pyhtml' template in the previous section can be divided
-into layout file 'layout6.pyhtml' and content file 'content6.pyhtml'.
-Variable '<code>_content</code>' in layout template represents the result of content file.
-</p>
-<a name="layout6.pyhtml"></a>
-<div class="program_caption">
-File 'layout6.pyhtml':</div>
-<pre class="program">&lt;html&gt;
+      <p>To make template short name available, command-line option '<code>--prefix</code>' and '<code>--postfix</code>' are required. For example, '<code>include("user_main.pyhtml")</code>' can be described as '<code>include(":main")</code>' when '<code>--prefix="user_"</code>' and '<code>--postfix=".pyhtml"</code>' are specified in command-line.</p><br>
+      <a name="des-layout" id="des-layout"></a>
+
+      <h3 class="section2">Layout Template</h3>
+
+      <p>Command-line option '<code>--layout=templatename</code>' specifies layout template name.</p>
+
+      <p>For example, 'exmample6.pyhtml' template in the previous section can be divided into layout file 'layout6.pyhtml' and content file 'content6.pyhtml'. Variable '<code>_content</code>' in layout template represents the result of content file.</p><a name="layout6.pyhtml" id="layout6.pyhtml"></a>
+
+      <div class="program_caption">
+        File 'layout6.pyhtml':
+      </div>
+      <pre class="program">
+&lt;html&gt;
   &lt;body&gt;
 
     &lt;div id="sidemenu"&gt;
@@ -886,18 +886,22 @@ File 'layout6.pyhtml':</div>
 
   &lt;/body&gt;
 &lt;/table&gt;
-</pre>
-<a name="content6.pyhtml"></a>
-<div class="program_caption">
-File 'content6.pyhtml':</div>
-<pre class="program">&lt;?py for item in items: ?&gt;
+</pre><a name="content6.pyhtml" id="content6.pyhtml"></a>
+
+      <div class="program_caption">
+        File 'content6.pyhtml':
+      </div>
+      <pre class="program">
+&lt;?py for item in items: ?&gt;
   &lt;p&gt;${item}&lt;/p&gt;
 &lt;?py #end ?&gt;
-</pre>
-<a name="example6_layout.result"></a>
-<div class="terminal_caption">
-Result:</div>
-<pre class="terminal">$ pytenjin -f contextdata.py <strong>--layout=layout6.pyhtml</strong> content6.pyhtml
+</pre><a name="example6_layout.result" id="example6_layout.result"></a>
+
+      <div class="terminal_caption">
+        Result:
+      </div>
+      <pre class="terminal">
+$ pytenjin -f contextdata.py <strong>--layout=layout6.pyhtml</strong> content6.pyhtml
 &lt;html&gt;
   &lt;body&gt;
 
@@ -927,16 +931,16 @@ Result:</div>
   &lt;/body&gt;
 &lt;/table&gt;
 </pre>
-<p>Target template and layout template don't share local variables.
-It means that local variables set in a template are not available in layout template.
-</p>
-<p>If you want variables set in a temlate to be available in layout template,
-you should use '_context' dict.
-</p>
-<a name="layout7.pyhtml"></a>
-<div class="program_caption">
-File 'layout7.pyhtml':</div>
-<pre class="program">...
+
+      <p>Target template and layout template don't share local variables. It means that local variables set in a template are not available in layout template.</p>
+
+      <p>If you want variables set in a temlate to be available in layout template, you should use '_context' dict.</p><a name="layout7.pyhtml" id="layout7.pyhtml"></a>
+
+      <div class="program_caption">
+        File 'layout7.pyhtml':
+      </div>
+      <pre class="program">
+...
 &lt;h1&gt;<strong>${title}</strong>&lt;/h1&gt;
 
 &lt;div id="main-content"&gt;
@@ -945,20 +949,24 @@ File 'layout7.pyhtml':</div>
 
 &lt;a href="<strong>${url}</strong>"&gt;Next page&lt;/a&gt;
 ...
-</pre>
-<a name="content7.pyhtml"></a>
-<div class="program_caption">
-File 'content7.pyhtml':</div>
-<pre class="program"><strong>&lt;?py _context['title'] = 'Document Title' ?&gt;</strong>
+</pre><a name="content7.pyhtml" id="content7.pyhtml"></a>
+
+      <div class="program_caption">
+        File 'content7.pyhtml':
+      </div>
+      <pre class="program">
+<strong>&lt;?py _context['title'] = 'Document Title' ?&gt;</strong>
 <strong>&lt;?py _context['url'] = '/next/page' ?&gt;</strong>
 &lt;table&gt;
   ...content...
 &lt;/table&gt;
-</pre>
-<a name="example7_layout2.result"></a>
-<div class="terminal_caption">
-Result:</div>
-<pre class="terminal">$ pytenjin --layout=layout7.pyhtml content7.pyhtml
+</pre><a name="example7_layout2.result" id="example7_layout2.result"></a>
+
+      <div class="terminal_caption">
+        Result:
+      </div>
+      <pre class="terminal">
+$ pytenjin --layout=layout7.pyhtml content7.pyhtml
 ...
 &lt;h1&gt;<strong>Document Title</strong>&lt;/h1&gt;
 
@@ -972,38 +980,45 @@ Result:</div>
 &lt;a href="<strong>/next/page</strong>"&gt;Next page&lt;/a&gt;
 ...
 </pre>
-<p>Using '_context["_layout"]', it is able to specify layout template name in each template file.
-If you assigned False to '_context["_layout"]', no layout template is used.
-</p>
-<a name="content8.pyhtml"></a>
-<div class="program_caption">
-File 'content8.pyhtml':</div>
-<pre class="program"><strong>&lt;?py _context['_layout'] = ":layout8_xhtml" ?&gt;</strong>
+
+      <p>Using '_context["_layout"]', it is able to specify layout template name in each template file. If you assigned False to '_context["_layout"]', no layout template is used.</p><a name="content8.pyhtml" id="content8.pyhtml"></a>
+
+      <div class="program_caption">
+        File 'content8.pyhtml':
+      </div>
+      <pre class="program">
+<strong>&lt;?py _context['_layout'] = ":layout8_xhtml" ?&gt;</strong>
 &lt;h1&gt;Hello World!&lt;/h1&gt;
-</pre>
-<a name="layout8_html.pyhtml"></a>
-<div class="program_caption">
-File 'layout8_html.pyhtml':</div>
-<pre class="program">&lt;html&gt;
+</pre><a name="layout8_html.pyhtml" id="layout8_html.pyhtml"></a>
+
+      <div class="program_caption">
+        File 'layout8_html.pyhtml':
+      </div>
+      <pre class="program">
+&lt;html&gt;
   &lt;body&gt;
 #{_content}
   &lt;/body&gt;
 &lt;/html&gt;
-</pre>
-<a name="layout8_xhtml.pyhtml"></a>
-<div class="program_caption">
-File 'layout8_xhtml.pyhtml':</div>
-<pre class="program">&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+</pre><a name="layout8_xhtml.pyhtml" id="layout8_xhtml.pyhtml"></a>
+
+      <div class="program_caption">
+        File 'layout8_xhtml.pyhtml':
+      </div>
+      <pre class="program">
+&lt;?xml version="1.0" encoding="UTF-8"?&gt;
 &lt;html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en"&gt;
   &lt;body&gt;
 #{_content}
   &lt;/body&gt;
 &lt;/html&gt;
-</pre>
-<a name="example8_layout3.result"></a>
-<div class="terminal_caption">
-Result: ':layout8_html' is specified in command-line option but ':layout8_xhtml' is used</div>
-<pre class="terminal">$ pytenjin --postfix='.pyhtml' <strong>--layout=':layout8_html'</strong> content8.pyhtml
+</pre><a name="example8_layout3.result" id="example8_layout3.result"></a>
+
+      <div class="terminal_caption">
+        Result: ':layout8_html' is specified in command-line option but ':layout8_xhtml' is used
+      </div>
+      <pre class="terminal">
+$ pytenjin --postfix='.pyhtml' <strong>--layout=':layout8_html'</strong> content8.pyhtml
 &lt;?xml version="1.0" encoding="UTF-8"?&gt;
 &lt;html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en"&gt;
   &lt;body&gt;
@@ -1011,18 +1026,18 @@ Result: ':layout8_html' is specified in command-line option but ':layout8_xhtml'
 
   &lt;/body&gt;
 &lt;/html&gt;
-</pre>
-<br>
+</pre><br>
+      <a name="des-capturing" id="des-capturing"></a>
 
+      <h3 class="section2">Capturing</h3>
 
-<a name="des-capturing"></a>
-<h3 class="section2">Capturing</h3>
-<p>It is able to capture any part of template.
-</p>
-<a name="example9.pyhtml"></a>
-<div class="program_caption">
-File 'example9.pyhtml':</div>
-<pre class="program">&lt;?py _context['title'] = 'Capture Test' ?&gt;
+      <p>It is able to capture any part of template.</p><a name="example9.pyhtml" id="example9.pyhtml"></a>
+
+      <div class="program_caption">
+        File 'example9.pyhtml':
+      </div>
+      <pre class="program">
+&lt;?py _context['title'] = 'Capture Test' ?&gt;
 &lt;html&gt;
   &lt;body&gt;
 
@@ -1041,18 +1056,18 @@ File 'example9.pyhtml':</div>
   &lt;/body&gt;
 &lt;/html&gt;
 </pre>
-<p>Captured strings are accessable as local variables.
-For example, you can get captured string as a variable '<code>content_part</code>' in the above example.
-</p>
-<p>A template can contain several capturing.
-It is not able to nest capturing.
-</p>
-<p>In layout file, it is able to use strings captured in templates.
-</p>
-<a name="layout9.pyhtml"></a>
-<div class="program_caption">
-File 'layout9.pyhtml':</div>
-<pre class="program">&lt;html lang="en"&gt;
+
+      <p>Captured strings are accessable as local variables. For example, you can get captured string as a variable '<code>content_part</code>' in the above example.</p>
+
+      <p>A template can contain several capturing. It is not able to nest capturing.</p>
+
+      <p>In layout file, it is able to use strings captured in templates.</p><a name="layout9.pyhtml" id="layout9.pyhtml"></a>
+
+      <div class="program_caption">
+        File 'layout9.pyhtml':
+      </div>
+      <pre class="program">
+&lt;html lang="en"&gt;
   &lt;head&gt;
     &lt;title&gt;${title}&lt;/title&gt;
   &lt;/head&gt;
@@ -1078,20 +1093,23 @@ File 'layout9.pyhtml':</div>
   &lt;/body&gt;
 &lt;/html&gt;
 </pre>
-<p>'<code>if not captured_as("name"): ... #endif</code>' is equivarent to the following.
-</p>
-<pre class="program">&lt;?py if 'name' in _context: ?&gt;
+
+      <p>'<code>if not captured_as("name"): ... #endif</code>' is equivarent to the following.</p>
+      <pre class="program">
+&lt;?py if 'name' in _context: ?&gt;
 &lt;?py     _buf.append(_context['name']) ?&gt;
 &lt;?py else: ?&gt;
          ...
 &lt;?py #endif ?&gt;
 </pre>
-<p>The following result shows that content part and footer part are overrided by capturing in content template but header part is not.
-</p>
-<a name="example9_capture.result"></a>
-<div class="terminal_caption">
-Result:</div>
-<pre class="terminal">$ pytenjin --layout=layout9.pyhtml example9.pyhtml
+
+      <p>The following result shows that content part and footer part are overrided by capturing in content template but header part is not.</p><a name="example9_capture.result" id="example9_capture.result"></a>
+
+      <div class="terminal_caption">
+        Result:
+      </div>
+      <pre class="terminal">
+$ pytenjin --layout=layout9.pyhtml example9.pyhtml
 &lt;html lang="en"&gt;
   &lt;head&gt;
     &lt;title&gt;Capture Test&lt;/title&gt;
@@ -1117,78 +1135,78 @@ Result:</div>
 
   &lt;/body&gt;
 &lt;/html&gt;
-</pre>
-<br>
+</pre><br>
+      <a name="des-args" id="des-args"></a>
 
+      <h3 class="section2">Template Arguments</h3>
 
-<a name="des-args"></a>
-<h3 class="section2">Template Arguments</h3>
-<p>It is able to specify template arguments in template files.
-Template arguments are variables which are passed by main program via context object.
-In the following example, '<code>title</code>' and '<code>name</code>' are template arguments.
-</p>
-<a name="example10.pyhtml"></a>
-<div class="program_caption">
-File 'example10.pyhtml':</div>
-<pre class="program">&lt;?xml version="1.0"?&gt;
+      <p>It is able to specify template arguments in template files. Template arguments are variables which are passed by main program via context object. In the following example, '<code>title</code>' and '<code>name</code>' are template arguments.</p><a name="example10.pyhtml" id="example10.pyhtml"></a>
+
+      <div class="program_caption">
+        File 'example10.pyhtml':
+      </div>
+      <pre class="program">
+&lt;?xml version="1.0"?&gt;
 <strong>&lt;?py #@ARGS title, name ?&gt;</strong>
 &lt;h1&gt;${title}&lt;/h1&gt;
 &lt;p&gt;Hello ${name}!&lt;/p&gt;
 </pre>
-<p>Template arguments line is converted into assignment statements of local variables.
-</p>
-<a name="example10_template_args.result"></a>
-<pre class="terminal">$ pytenjin -s example10.pyhtml
+
+      <p>Template arguments line is converted into assignment statements of local variables.</p><a name="example10_template_args.result" id="example10_template_args.result"></a>
+      <pre class="terminal">
+$ pytenjin -s example10.pyhtml
 _buf = []; _buf.extend(('''&lt;?xml version="1.0"?&gt;\n''', ));
 <strong>title = _context.get('title'); name = _context.get('name'); </strong>
 _buf.extend(('''&lt;h1&gt;''', escape(to_str(title)), '''&lt;/h1&gt;
 &lt;p&gt;Hello ''', escape(to_str(name)), '''!&lt;/p&gt;\n''', ));
 print ''.join(_buf)
 </pre>
-<p>If template arguments are specified, other variables passed by context object are not set.
-</p>
-<a name="example11.pyhtml"></a>
-<div class="program_caption">
-File 'example11.pyhtml':</div>
-<pre class="program"><strong>&lt;?py #@ARGS x ?&gt;</strong>
+
+      <p>If template arguments are specified, other variables passed by context object are not set.</p><a name="example11.pyhtml" id="example11.pyhtml"></a>
+
+      <div class="program_caption">
+        File 'example11.pyhtml':
+      </div>
+      <pre class="program">
+<strong>&lt;?py #@ARGS x ?&gt;</strong>
 &lt;p&gt;
 x = #{x}
 y = #{y}   # NameError
 &lt;/p&gt;
-</pre>
-<a name="example11_template_args_result"></a>
-<div class="terminal_caption">
-Result:</div>
-<pre class="terminal">$ pytenjin <strong>-c 'x=10;y=20'</strong> example11.pyhtml
+</pre><a name="example11_template_args_result" id="example11_template_args_result"></a>
+
+      <div class="terminal_caption">
+        Result:
+      </div>
+      <pre class="terminal">
+$ pytenjin <strong>-c 'x=10;y=20'</strong> example11.pyhtml
 NameError: name 'y' is not defined
 </pre>
-<p>Special variable '<code>_context</code>' which represents context object is always available whether template arguments are specified or not.
-</p>
-<br>
 
+      <p>Special variable '<code>_context</code>' which represents context object is always available whether template arguments are specified or not.</p><br>
+      <a name="des-preprocess" id="des-preprocess"></a>
 
-<a name="des-preprocess"></a>
-<h3 class="section2">Preprocessing</h3>
-<p>pyTenjin supports preprocessing of template.
-Preprocessing executes some logics when templates are loaded and that logics are not executed when rendering.
-Preprocessing makes your application much faster.
-</p>
-<p>Notation of preprocessing is the following.
-</p>
-<ul type="disc">
-<li><code>&lt;?PY ... ?&gt;</code> represents preprocessing statement.
-</li>
-<li><code>#{{...}}</code> represents preprocessing expression (without HTML escape).
-</li>
-<li><code>${{...}}</code> represents preprocessing expression (with HTML escape).
-</li>
-</ul>
-<p>For example, assume the following template.
-</p>
-<a name="example12.pyhtml"></a>
-<div class="program_caption">
-File 'example12.pyhtml':</div>
-<pre class="program"><strong>&lt;?PY states = { "CA": "California", ?&gt;</strong>
+      <h3 class="section2">Preprocessing</h3>
+
+      <p>pyTenjin supports preprocessing of template. Preprocessing executes some logics when templates are loaded and that logics are not executed when rendering. Preprocessing makes your application much faster.</p>
+
+      <p>Notation of preprocessing is the following.</p>
+
+      <ul type="disc">
+        <li><code>&lt;?PY ... ?&gt;</code> represents preprocessing statement.</li>
+
+        <li><code>#{{...}}</code> represents preprocessing expression (without HTML escape).</li>
+
+        <li><code>${{...}}</code> represents preprocessing expression (with HTML escape).</li>
+      </ul>
+
+      <p>For example, assume the following template.</p><a name="example12.pyhtml" id="example12.pyhtml"></a>
+
+      <div class="program_caption">
+        File 'example12.pyhtml':
+      </div>
+      <pre class="program">
+<strong>&lt;?PY states = { "CA": "California", ?&gt;</strong>
 <strong>&lt;?PY            "NY": "New York", ?&gt;</strong>
 <strong>&lt;?PY            "FL": "Florida",  ?&gt;</strong>
 <strong>&lt;?PY            "TX": "Texas",  ?&gt;</strong>
@@ -1204,13 +1222,14 @@ File 'example12.pyhtml':</div>
 <strong>&lt;?PY #endfor ?&gt;</strong>
 &lt;/select&gt;
 </pre>
-<p>If preprocessing is activated, the above will be converted into the following when template is loaded.
-(Command-line option <code>-P</code> shows the result of preprocessing.)
-</p>
-<a name="example12_preprocessed.result"></a>
-<div class="terminal_caption">
-Result of preprocessing:</div>
-<pre class="terminal">$ pytenjin <strong>-P</strong> example12.pyhtml
+
+      <p>If preprocessing is activated, the above will be converted into the following when template is loaded. (Command-line option <code>-P</code> shows the result of preprocessing.)</p><a name="example12_preprocessed.result" id="example12_preprocessed.result"></a>
+
+      <div class="terminal_caption">
+        Result of preprocessing:
+      </div>
+      <pre class="terminal">
+$ pytenjin <strong>-P</strong> example12.pyhtml
 &lt;?py chk = { params['state']: ' selected="selected"' } ?&gt;
 &lt;select name="state"&gt;
   &lt;option value=""&gt;-&lt;/option&gt;
@@ -1221,15 +1240,16 @@ Result of preprocessing:</div>
   &lt;option value="TX"#{chk.get('TX', '')}&gt;Texas&lt;/option&gt;
 &lt;/select&gt;
 </pre>
-<p>This means that for-loop is executed only once when template is loaded and is not executed when rendering.
-In the result, rendering speed becomes to be much faster.
-</p>
-<p>And the Python code is here. This shows that there is no for-loop.
-</p>
-<a name="example12_preprocessed_source.result"></a>
-<div class="terminal_caption">
-Translated script code:</div>
-<pre class="terminal">$ pytenjin <strong>--preprocess</strong> -sb example12.pyhtml
+
+      <p>This means that for-loop is executed only once when template is loaded and is not executed when rendering. In the result, rendering speed becomes to be much faster.</p>
+
+      <p>And the Python code is here. This shows that there is no for-loop.</p><a name="example12_preprocessed_source.result" id="example12_preprocessed_source.result"></a>
+
+      <div class="terminal_caption">
+        Translated script code:
+      </div>
+      <pre class="terminal">
+$ pytenjin <strong>--preprocess</strong> -sb example12.pyhtml
 chk = { params['state']: ' selected="selected"' }
 _buf.extend(('''&lt;select name="state"&gt;
   &lt;option value=""&gt;-&lt;/option&gt;
@@ -1240,71 +1260,69 @@ _buf.extend(('''&lt;select name="state"&gt;
   &lt;option value="TX"''', to_str(chk.get('TX', '')), '''&gt;Texas&lt;/option&gt;
 &lt;/select&gt;\n''', ));
 </pre>
-<p>If you have errors on preprocessing, you should check source script by <code>-Ps</code> option<sup>(<a href="#fnref:2" name="fnlink:2">*2</a>)</sup>.
-</p>
-<p>The following is an another example.
-Assume that <code>link_to()</code> is a helper method which takes label and url and generate
-<code>&lt;a&gt;&lt;/a&gt;</code> tag.
-In this case, label and url can be parameterized by <code>_p("...")</code> and <code>_P("...")</code>.
-The former is converted into <code>#{...}</code> and the latter converted into <code>${...}</code>
-by preprocessor.
-</p>
-<a name="example13.pyhtml"></a>
-<div class="program_caption">
-File 'example13.pyhtml':</div>
-<pre class="program">&lt;?PY ## ex. link_to('Show', '/show/1')  =&gt; &lt;a href="/show/1"&gt;Show&lt;/a&gt; ?&gt;
+
+      <p>If you have errors on preprocessing, you should check source script by <code>-Ps</code> option<sup>(<a href="#fnref:2" name="fnlink:2" id="fnlink:2">*2</a>)</sup>.</p>
+
+      <p>The following is an another example. Assume that <code>link_to()</code> is a helper method which takes label and url and generate <code>&lt;a&gt;&lt;/a&gt;</code> tag. In this case, label and url can be parameterized by <code>_p("...")</code> and <code>_P("...")</code>. The former is converted into <code>#{...}</code> and the latter converted into <code>${...}</code> by preprocessor.</p><a name="example13.pyhtml" id="example13.pyhtml"></a>
+
+      <div class="program_caption">
+        File 'example13.pyhtml':
+      </div>
+      <pre class="program">
+&lt;?PY ## ex. link_to('Show', '/show/1')  =&gt; &lt;a href="/show/1"&gt;Show&lt;/a&gt; ?&gt;
 &lt;?PY def link_to(label, url): ?&gt;
 &lt;?PY     import urllib ?&gt;
 &lt;?PY     return '&lt;a href="%s"&gt;%s&lt;/a&gt;' % (urllib.quote(url), label) ?&gt;
 &lt;?PY # ?&gt;
 #{{link_to('Show '+<strong>_P('params["name"]')</strong>, '/items/show/'+<strong>_p('params["id"]')</strong>)}}
-</pre>
-<a name="example13_preprocessed.result"></a>
-<div class="terminal_caption">
-Preprocessed template:</div>
-<pre class="terminal">$ pytenjin <strong>-P</strong> example13.pyhtml
+</pre><a name="example13_preprocessed.result" id="example13_preprocessed.result"></a>
+
+      <div class="terminal_caption">
+        Preprocessed template:
+      </div>
+      <pre class="terminal">
+$ pytenjin <strong>-P</strong> example13.pyhtml
 &lt;a href="/items/show/<strong>#{params["id"]}"</strong>&gt;Show <strong>${params["name"]}</strong>&lt;/a&gt;
-</pre>
-<a name="example13_preprocessed_source.result"></a>
-<div class="terminal_caption">
-Translated script code:</div>
-<pre class="terminal">$ pytenjin <strong>--preprocess</strong> -sb example13.pyhtml
+</pre><a name="example13_preprocessed_source.result" id="example13_preprocessed_source.result"></a>
+
+      <div class="terminal_caption">
+        Translated script code:
+      </div>
+      <pre class="terminal">
+$ pytenjin <strong>--preprocess</strong> -sb example13.pyhtml
 _buf.extend(('''&lt;a href="/items/show/''', to_str(params["id"]), '''"&gt;Show ''', escape(to_str(params["name"])), '''&lt;/a&gt;\n''', ));
 </pre>
-<p>There are many web-application framework and they provides helper functions.
-These helper functions are divided into two groups.
-</p>
-<ul type="disc">
-<li><code>link_to()</code> or <code>_()</code> (function for M17N) return the same result
-   when the same arguments are passed.
-   These functions can be expanded by preprocessor.
-</li>
-<li>Some functions return the different result even if the same arguments are passed.
-   These functions can't be expaned by preprocessor.
-</li>
-</ul>
-<p>Preprocessor has the power to make your application much faster,
-but it may make the debugging difficult.
-You should use it carefully.
-</p>
-<div class="footnote">
- <dl compact>
-  <dt>(<a name="fnref:2" href="#fnlink:2">*2</a>)</dt>
-  <dd>Command-line option '-Ps' is available but '-PS' is not availabe. This is a current restriction of pytenjin. </dd>
- </dl>
-</div>
-<br>
 
+      <p>There are many web-application framework and they provides helper functions. These helper functions are divided into two groups.</p>
 
-<a name="des-encoding"></a>
-<h3 class="section2">Template Encoding</h3>
-<p>It is able to specify template encoding by command-line option '<code>-k <em>encoding</em></code>' or '<code>--encoding=<em>encoding</em></code>'.
-</p>
-<p>Notice that these options are not equal.<sup>(<a href="#fnref:3" name="fnlink:3">*3</a>)</sup>
-</p>
-<div class="program_caption">
-File 'example14.pyhtml':</div>
-<pre class="program">## The following is OK for '-k <em>encoding</em>' option,
+      <ul type="disc">
+        <li><code>link_to()</code> or <code>_()</code> (function for M17N) return the same result when the same arguments are passed. These functions can be expanded by preprocessor.</li>
+
+        <li>Some functions return the different result even if the same arguments are passed. These functions can't be expaned by preprocessor.</li>
+      </ul>
+
+      <p>Preprocessor has the power to make your application much faster, but it may make the debugging difficult. You should use it carefully.</p>
+
+      <div class="footnote">
+        <dl compact>
+          <dt>(<a name="fnref:2" href="#fnlink:2" id="fnref:2">*2</a>)</dt>
+
+          <dd>Command-line option '-Ps' is available but '-PS' is not availabe. This is a current restriction of pytenjin.</dd>
+        </dl>
+      </div><br>
+      <a name="des-encoding" id="des-encoding"></a>
+
+      <h3 class="section2">Template Encoding</h3>
+
+      <p>It is able to specify template encoding by command-line option '<code>-k <em>encoding</em></code>' or '<code>--encoding=<em>encoding</em></code>'.</p>
+
+      <p>Notice that these options are not equal.<sup>(<a href="#fnref:3" name="fnlink:3" id="fnlink:3">*3</a>)</sup></p>
+
+      <div class="program_caption">
+        File 'example14.pyhtml':
+      </div>
+      <pre class="program">
+## The following is OK for '-k <em>encoding</em>' option,
 ## but is NG for '--encoding=<em>encoding</em>' option.
 &lt;?py val1 = '...non-ascii-characters...' ?&gt;
 val1 = #{val1}
@@ -1314,54 +1332,51 @@ val1 = #{val1}
 &lt;?py val2 = <strong>u</strong>'...non-ascii-characters...' ?&gt;
 val2 = #{val2}
 </pre>
-<div class="footnote">
- <dl compact>
-  <dt>(<a name="fnref:3" href="#fnlink:3">*3</a>)</dt>
-  <dd>(Internally) If command-line option '-k <em>encoding</em>' is specified, pytenjin command executes '<code>to_str = tenjin.generate_tostrfunc("<em>encoding</em>")</code>'. If command-line option '--encoding=<em>encoding</em>' is specified, pytenjin command pass 'encoding=<em>encoding</em>' option to tenjin.Engine(). See <a href="#devguide6">Developer's Guide</a> for details.</dd>
- </dl>
-</div>
-<br>
 
+      <div class="footnote">
+        <dl compact>
+          <dt>(<a name="fnref:3" href="#fnlink:3" id="fnref:3">*3</a>)</dt>
 
-<a name="des-otheropts"></a>
-<h3 class="section2">Other Options</h3>
-<ul type="disc">
-<li>Command-line option '<code>-i N</code>' or '<code>--indent=N</code>' changes indent depth to <code>N</code> (default 4).
-</li>
-<li>Command-line option '<code>-m mod1,mod2,mod3</code>' loads modules mod1, mod2, and mod3.
-  This option is equivarent to Python code '<code>import mod1, mod2, mod3</code>'.
-</li>
-<li>Command-line option '<code>--escapefunc=func1</code>' changes <code>escape()</code> function name to <code>func1</code>
-  and '<code>--tostrfunc=func2</code>' changes <code>to_str()</code> function name to <code>func2</code>.
-</li>
-<li>Command-line option '<code>--path=dir1,dir2,...</code>' sepcifies template directory path.
-</li>
-<li>Command-line option '<code>-k encoding</code>' or '<code>--encoding=encoding</code>' specifies encoding name (default None).
-</li>
-</ul>
-<br>
+          <dd>(Internally) If command-line option '-k <em>encoding</em>' is specified, pytenjin command executes '<code>to_str = tenjin.generate_tostrfunc("<em>encoding</em>")</code>'. If command-line option '--encoding=<em>encoding</em>' is specified, pytenjin command pass 'encoding=<em>encoding</em>' option to tenjin.Engine(). See <a href="#devguide6">Developer's Guide</a> for details.</dd>
+        </dl>
+      </div><br>
+      <a name="des-otheropts" id="des-otheropts"></a>
 
+      <h3 class="section2">Other Options</h3>
 
-<br>
+      <ul type="disc">
+        <li>Command-line option '<code>-i N</code>' or '<code>--indent=N</code>' changes indent depth to <code>N</code> (default 4).</li>
 
+        <li>Command-line option '<code>-m mod1,mod2,mod3</code>' loads modules mod1, mod2, and mod3. This option is equivarent to Python code '<code>import mod1, mod2, mod3</code>'.</li>
 
-<a name="devguide"></a>
-<h2 class="section1">Developer's Guide</h2>
-<p>This section shows how to use pyTenjin in your Python script.
-</p>
-<p>If you want to know the notation or features of pyTenjin, see <a href="#desguide">Designer's Guide</a> section.
-</p>
-<p>If you want to handle non-ascii characters, see <a href="#dev-encoding">Template Encoding</a> section.
-</p>
-<p>If you are interested in Google AppEngine, see <a href="faq.html#faq-google-appengine">FAQ</a>.
-</p>
-<a name="dev-example"></a>
-<h3 class="section2">An Example</h3>
-<p>The following is an example to use pyTenjin in Python.
-</p>
-<div class="program_caption">
-Example:</div>
-<pre class="program">import tenjin
+        <li>Command-line option '<code>--escapefunc=func1</code>' changes <code>escape()</code> function name to <code>func1</code> and '<code>--tostrfunc=func2</code>' changes <code>to_str()</code> function name to <code>func2</code>.</li>
+
+        <li>Command-line option '<code>--path=dir1,dir2,...</code>' sepcifies template directory path.</li>
+
+        <li>Command-line option '<code>-k encoding</code>' or '<code>--encoding=encoding</code>' specifies encoding name (default None).</li>
+      </ul><br>
+      <br>
+      <a name="devguide" id="devguide"></a>
+
+      <h2 class="section1">Developer's Guide</h2>
+
+      <p>This section shows how to use pyTenjin in your Python script.</p>
+
+      <p>If you want to know the notation or features of pyTenjin, see <a href="#desguide">Designer's Guide</a> section.</p>
+
+      <p>If you want to handle non-ascii characters, see <a href="#dev-encoding">Template Encoding</a> section.</p>
+
+      <p>If you are interested in Google AppEngine, see <a href="faq.html#faq-google-appengine">FAQ</a>.</p><a name="dev-example" id="dev-example"></a>
+
+      <h3 class="section2">An Example</h3>
+
+      <p>The following is an example to use pyTenjin in Python.</p>
+
+      <div class="program_caption">
+        Example:
+      </div>
+      <pre class="program">
+import tenjin
 from tenjin.helpers import *   # or escape, to_str
 engine = tenjin.Engine()
 context = { 'title': 'pyTenjin Example', 'items': ['AAA', 'BBB', 'CCC'] }
@@ -1369,86 +1384,77 @@ filename = 'file.pyhtml'
 output = engine.render(filename, context)
 print output,
 </pre>
-<p>If you want to define helper functions for template, see <a href="#dev-helpers">Add Your Helper Functions</a> section.
-</p>
-<br>
 
+      <p>If you want to define helper functions for template, see <a href="#dev-helpers">Add Your Helper Functions</a> section.</p><br>
+      <a name="dev-templateclass" id="dev-templateclass"></a>
 
-<a name="dev-templateclass"></a>
-<h3 class="section2">Class tenjin.Template</h3>
-<p>tenjin.Template class represents a template file.
-An object of tenjin.Template corresponds to a template file.
-Main responsibilities of this class are:
-</p>
-<ul type="circle">
-<li>Convert template file into python script
-</li>
-<li>Render converted python script with context data
-</li>
-</ul>
-<p>This class has the following methods and attributes.
-</p>
-<dl class="dl3">
-<dt class="dt3"><b>
-tenjin.Template(filename=None, encoding=None, escapefunc='escape', tostrfunc='to_str', indent=4) </b></dt>
-<dd class="dd3">
-    Create template object. If filename is given, read and convert it to Python code.
-</dd>
-</dl>
-<dl class="dl3">
-<dt class="dt3"><b>
-tenjin.Template.convert(str input, str filename=None) </b></dt>
-<dd class="dd3">
-    Convert input text into Python code and return it.
-</dd>
-</dl>
-<dl class="dl3">
-<dt class="dt3"><b>
-tenjin.Template.convert_file(str filename) </b></dt>
-<dd class="dd3">
-    Convert file into Python code and return it.
-    This is equivarent to <code>tenjin.Template.convert(open(filename).read(), filename)</code>
-</dd>
-</dl>
-<dl class="dl3">
-<dt class="dt3"><b>
-tenjin.Template.render(dict context=None) </b></dt>
-<dd class="dd3">
-    Compile Python code, evaluate it with context data, and return the result of evaluation.
-    If encoding name is specified when creating template object then
-    render() method will return unicode object, else return str object.
-</dd>
-</dl>
-<dl class="dl3">
-<dt class="dt3"><b>
-tenjin.Template.script </b></dt>
-<dd class="dd3">
-    Converted Python code
-</dd>
-</dl>
-<dl class="dl3">
-<dt class="dt3"><b>
-tenjin.Template.bytecode </b></dt>
-<dd class="dd3">
-    Compiled Python code
-</dd>
-</dl>
-<p>The followings are examples to use tenjin.Template in Python script.
-</p>
-<a name="example16.pyhtml"></a>
-<div class="program_caption">
-File 'example16.pyhtml':</div>
-<pre class="program">&lt;h1&gt;#{title}&lt;/h1&gt;
+      <h3 class="section2">Class tenjin.Template</h3>
+
+      <p>tenjin.Template class represents a template file. An object of tenjin.Template corresponds to a template file. Main responsibilities of this class are:</p>
+
+      <ul type="circle">
+        <li>Convert template file into python script</li>
+
+        <li>Render converted python script with context data</li>
+      </ul>
+
+      <p>This class has the following methods and attributes.</p>
+
+      <dl class="dl3">
+        <dt class="dt3"><b>tenjin.Template(filename=None, encoding=None, escapefunc='escape', tostrfunc='to_str', indent=4)</b></dt>
+
+        <dd class="dd3">Create template object. If filename is given, read and convert it to Python code.</dd>
+      </dl>
+
+      <dl class="dl3">
+        <dt class="dt3"><b>tenjin.Template.convert(str input, str filename=None)</b></dt>
+
+        <dd class="dd3">Convert input text into Python code and return it.</dd>
+      </dl>
+
+      <dl class="dl3">
+        <dt class="dt3"><b>tenjin.Template.convert_file(str filename)</b></dt>
+
+        <dd class="dd3">Convert file into Python code and return it. This is equivarent to <code>tenjin.Template.convert(open(filename).read(), filename)</code></dd>
+      </dl>
+
+      <dl class="dl3">
+        <dt class="dt3"><b>tenjin.Template.render(dict context=None)</b></dt>
+
+        <dd class="dd3">Compile Python code, evaluate it with context data, and return the result of evaluation. If encoding name is specified when creating template object then render() method will return unicode object, else return str object.</dd>
+      </dl>
+
+      <dl class="dl3">
+        <dt class="dt3"><b>tenjin.Template.script</b></dt>
+
+        <dd class="dd3">Converted Python code</dd>
+      </dl>
+
+      <dl class="dl3">
+        <dt class="dt3"><b>tenjin.Template.bytecode</b></dt>
+
+        <dd class="dd3">Compiled Python code</dd>
+      </dl>
+
+      <p>The followings are examples to use tenjin.Template in Python script.</p><a name="example16.pyhtml" id="example16.pyhtml"></a>
+
+      <div class="program_caption">
+        File 'example16.pyhtml':
+      </div>
+      <pre class="program">
+&lt;h1&gt;#{title}&lt;/h1&gt;
 &lt;ul&gt;
 &lt;?py for item in items: ?&gt;
  &lt;li&gt;${item}&lt;/li&gt;
 &lt;?py #end ?&gt;
 &lt;/ul&gt;
-</pre>
-<a name="example16.py"></a>
-<div class="program_caption">
-File 'example16.py':</div>
-<pre class="program">## template
+</pre><a name="example16.py" id="example16.py"></a>
+
+      <div class="program_caption">
+        File 'example16.py':
+      </div>
+      <pre class="program">
+## template
 filename = 'example16.pyhtml'
 
 ## convert into python code
@@ -1473,11 +1479,13 @@ context = {'title': 'pyTenjin Example', 'items': ['&lt;AAA&gt;','B&amp;B','"CCC"
 output = <strong>template.render(context)</strong>
 print "---- output ----"
 print output,
-</pre>
-<a name="example16_tmplclass.result"></a>
-<div class="terminal_caption">
-Result:</div>
-<pre class="terminal">$ python example16.py
+</pre><a name="example16_tmplclass.result" id="example16_tmplclass.result"></a>
+
+      <div class="terminal_caption">
+        Result:
+      </div>
+      <pre class="terminal">
+$ python example16.py
 ---- python code ----
 _buf.extend(('''&lt;h1&gt;''', to_str(title), '''&lt;/h1&gt;
 &lt;ul&gt;\n''', ));
@@ -1493,38 +1501,32 @@ _buf.extend(('''&lt;/ul&gt;\n''', ));
  &lt;li&gt;&amp;quot;CCC&amp;quot;&lt;/li&gt;
 &lt;/ul&gt;
 </pre>
-<p>Constructor of tenjin.Template can take the follwoing options.
-</p>
-<ul type="disc">
-<li>'<code>encoding</code>' (string) specifies encoding name of template file.
-  If you specifies encoding, template file string is converted into unicode object.
-  Template.render() will return unicode object if encoding is specified
-  else return str object.
-  Default is None.
-</li>
-</ul>
-<ul type="disc">
-<li>'<code>escapefunc</code>' (string) specifies function name to escape string.
-  Default is '<code>escape</code>' (= <code>tenjin.helpers.escape</code>).
-</li>
-</ul>
-<ul type="disc">
-<li>'<code>tostrfunc</code>' (string) specifies function name to convert value into string.
-  Default is '<code>to_str</code>' (= <code>tenjin.helpers.to_str</code>).
-</li>
-</ul>
-<ul type="disc">
-<li>'<code>indent</code>' (integer) specifies width of indentation.
-  Default is 4.
-</li>
-</ul>
-<p>Constructor of tenjin.Engine can also take the same options as above.
-These options given to constructor of tenjin.Engine are passed to constructor of tenjin.Template internally.
-</p>
-<a name="example17.py"></a>
-<div class="program_caption">
-File 'example17.py':</div>
-<pre class="program">filename = 'example16.pyhtml'
+
+      <p>Constructor of tenjin.Template can take the follwoing options.</p>
+
+      <ul type="disc">
+        <li>'<code>encoding</code>' (string) specifies encoding name of template file. If you specifies encoding, template file string is converted into unicode object. Template.render() will return unicode object if encoding is specified else return str object. Default is None.</li>
+      </ul>
+
+      <ul type="disc">
+        <li>'<code>escapefunc</code>' (string) specifies function name to escape string. Default is '<code>escape</code>' (= <code>tenjin.helpers.escape</code>).</li>
+      </ul>
+
+      <ul type="disc">
+        <li>'<code>tostrfunc</code>' (string) specifies function name to convert value into string. Default is '<code>to_str</code>' (= <code>tenjin.helpers.to_str</code>).</li>
+      </ul>
+
+      <ul type="disc">
+        <li>'<code>indent</code>' (integer) specifies width of indentation. Default is 4.</li>
+      </ul>
+
+      <p>Constructor of tenjin.Engine can also take the same options as above. These options given to constructor of tenjin.Engine are passed to constructor of tenjin.Template internally.</p><a name="example17.py" id="example17.py"></a>
+
+      <div class="program_caption">
+        File 'example17.py':
+      </div>
+      <pre class="program">
+filename = 'example16.pyhtml'
 import tenjin
 from tenjin.helpers import escape, to_str
 template = tenjin.Template(filename, <strong>escapefunc='cgi.escape'</strong>, <strong>tostrfunc='str'</strong>)
@@ -1535,11 +1537,13 @@ title = 'pyTenjin Example'
 items = ['&lt;foo&gt;', '&amp;bar', '"baz"', None, True, False]
 output = template.render({'title':title, 'items':items})
 print output,
-</pre>
-<a name="example17_escapefunc.result"></a>
-<div class="terminal_caption">
-Result:</div>
-<pre class="terminal">$ python example17.py
+</pre><a name="example17_escapefunc.result" id="example17_escapefunc.result"></a>
+
+      <div class="terminal_caption">
+        Result:
+      </div>
+      <pre class="terminal">
+$ python example17.py
 _buf.extend(('''&lt;h1&gt;''', <strong>str</strong>(title), '''&lt;/h1&gt;
 &lt;ul&gt;\n''', ));
 for item in items:
@@ -1556,138 +1560,109 @@ _buf.extend(('''&lt;/ul&gt;\n''', ));
  &lt;li&gt;True&lt;/li&gt;
  &lt;li&gt;False&lt;/li&gt;
 &lt;/ul&gt;
-</pre>
-<br>
+</pre><br>
+      <a name="dev-engineclass" id="dev-engineclass"></a>
 
+      <h3 class="section2">Class tenjin.Engine</h3>
 
-<a name="dev-engineclass"></a>
-<h3 class="section2">Class tenjin.Engine</h3>
-<p>tenjin.Engine class contains some template objects.
-It can handle nested template and layout template.
-This class provides many features such as:
-</p>
-<ul type="circle">
-<li>Search template files
-</li>
-<li>Nestable layout template
-</li>
-<li>Partial template
-</li>
-<li><s>File caching</s> (caching feature is separated to tenjin.CacheStorage class.)
-</li>
-<li>Preprocessing
-</li>
-<li>and so on
-</li>
-</ul>
-<p>This class has the following methods.
-</p>
-<dl class="dl3">
-<dt class="dt3"><b>
-tenjin.Engine(str prefix='', str postfix='', str layout=None, list path=None, object cache=True, bool preprocess=False, type templateclass=Template, **kwargs) </b></dt>
-<dd class="dd3">
-    Create Engine object.
-    Argument 'cache' controls caching policy.
-    <ul type="circle">
-    <li>If instance object of CacheStorage class, use it as cache storage.
-    </li>
-    <li>If True, new MarshalCacheStorage object is created and used.
-       In the result, template objects are cached in both memory and marshal-base cache file.
-    </li>
-    <li>If None, new MemoryCacheStorage object is created and used.
-       In the result, template objects are cached in memory but not saved in cache file.
-    </li>
-    <li>If False, nothing is done for caching.
-       Template objects are not cached in both memory nor file.
-    </li>
-    </ul>
-    Arguments <code>kwargs</code> are passed to tenjin.Template() internally.
-</dd>
-</dl>
-<dl class="dl3">
-<dt class="dt3"><b>
-tenjin.Engine#render(str template_name, dict context=None, dict globals=None, str layout=None) </b></dt>
-<dd class="dd3">
-    Convert template into Python code, evaluate it with context data, and return the result of it.
-    <ul type="circle">
-    <li>If <code>layout</code> is True or None then layout template name specified by constructor option will be used as layout template.
-    </li>
-    <li>Else if <code>layout</code> is False then layout template will be not used,
-    </li>
-    <li>Else if <code>layout</code> is string then it is regarded as layout template name.
-    </li>
-    </ul>
-</dd>
-</dl>
-<dl class="dl3">
-<dt class="dt3"><b>
-tenjin.Engine#include(str template_name) </b></dt>
-<dd class="dd3">
-    Include and evaluate other template.
-</dd>
-</dl>
-<p>Argument <code>template_name</code> in render() methods is filename or short name of template.
-Template short name is a string starting with colon (':').
-For example, '<code>render(":list", context)</code>' is equivarent to '<code>render("user_list.pyhtml", context)</code>' if prefix option is '<code>user_</code>' and postfix option is '<code>.pyhtml</code>'.
-</p>
-<br>
+      <p>tenjin.Engine class contains some template objects. It can handle nested template and layout template. This class provides many features such as:</p>
 
+      <ul type="circle">
+        <li>Search template files</li>
 
-<a name="dev-caching"></a>
-<h3 class="section2">Template Caching</h3>
-<p>pyTenjin provides some classes which caches template objects.
-These classes and their objects are called as cache storage.
-</p>
-<dl class="dl3">
-<dt class="dt3"><b>
-MarshalCacheStorage </b></dt>
-<dd class="dd3">
-	Caches template objects in both memory and cache file.
-	Cache file is based on marshal format.
-	This is the default cache storage in pyTenjin because marshal can save bytecode object into file.
-</dd>
-</dl>
-<dl class="dl3">
-<dt class="dt3"><b>
-PickleCacheStorage </b></dt>
-<dd class="dd3">
-	Caches template objects in both memory and cache file.
-	Cache file is based on pickle format.
-	Notice that pickle can't save bytecode object, so it is a little slower than MarshalCacheStorage.
-	In this reason, it is recommended to use MarshalCacheStorage if it is available.
-</dd>
-</dl>
-<dl class="dl3">
-<dt class="dt3"><b>
-TextCacheStorage </b></dt>
-<dd class="dd3">
-	(experimental)
-	Caches template objects in both memory and cache file.
-	Cache file is based on normal text file.
-	This may be useful when neither marshal nor pickle are available, such as Jython or so.
-</dd>
-</dl>
-<dl class="dl3">
-<dt class="dt3"><b>
-MemoryCacheStorage </b></dt>
-<dd class="dd3">
-	Caches template objects in memory, but not in file.
-	This doesn't create cache file at all.
-</dd>
-</dl>
-<dl class="dl3">
-<dt class="dt3"><b>
-GaeMemcacheCacheStorage </b></dt>
-<dd class="dd3">
-	Caches template objects in both memory and memcache.
-	This is available only in Google AppEngine environment.
-	See <a href="faq.html#faq-google-appengine">FAQ</a> for details.
-</dd>
-</dl>
-<p>CacheStorage uses full-path of template files as key of cache.
-So you can share a cache storage between engine objects.
-</p>
-<pre class="program">## shared cache storage
+        <li>Nestable layout template</li>
+
+        <li>Partial template</li>
+
+        <li><s>File caching</s> (caching feature is separated to tenjin.CacheStorage class.)</li>
+
+        <li>Preprocessing</li>
+
+        <li>and so on</li>
+      </ul>
+
+      <p>This class has the following methods.</p>
+
+      <dl class="dl3">
+        <dt class="dt3"><b>tenjin.Engine(str prefix='', str postfix='', str layout=None, list path=None, object cache=True, bool preprocess=False, type templateclass=Template, **kwargs)</b></dt>
+
+        <dd class="dd3">
+          Create Engine object. Argument 'cache' controls caching policy.
+
+          <ul type="circle">
+            <li>If instance object of CacheStorage class, use it as cache storage.</li>
+
+            <li>If True, new MarshalCacheStorage object is created and used. In the result, template objects are cached in both memory and marshal-base cache file.</li>
+
+            <li>If None, new MemoryCacheStorage object is created and used. In the result, template objects are cached in memory but not saved in cache file.</li>
+
+            <li>If False, nothing is done for caching. Template objects are not cached in both memory nor file.</li>
+          </ul>Arguments <code>kwargs</code> are passed to tenjin.Template() internally.
+        </dd>
+      </dl>
+
+      <dl class="dl3">
+        <dt class="dt3"><b>tenjin.Engine#render(str template_name, dict context=None, dict globals=None, str layout=None)</b></dt>
+
+        <dd class="dd3">
+          Convert template into Python code, evaluate it with context data, and return the result of it.
+
+          <ul type="circle">
+            <li>If <code>layout</code> is True or None then layout template name specified by constructor option will be used as layout template.</li>
+
+            <li>Else if <code>layout</code> is False then layout template will be not used,</li>
+
+            <li>Else if <code>layout</code> is string then it is regarded as layout template name.</li>
+          </ul>
+        </dd>
+      </dl>
+
+      <dl class="dl3">
+        <dt class="dt3"><b>tenjin.Engine#include(str template_name)</b></dt>
+
+        <dd class="dd3">Include and evaluate other template.</dd>
+      </dl>
+
+      <p>Argument <code>template_name</code> in render() methods is filename or short name of template. Template short name is a string starting with colon (':'). For example, '<code>render(":list", context)</code>' is equivarent to '<code>render("user_list.pyhtml", context)</code>' if prefix option is '<code>user_</code>' and postfix option is '<code>.pyhtml</code>'.</p><br>
+      <a name="dev-caching" id="dev-caching"></a>
+
+      <h3 class="section2">Template Caching</h3>
+
+      <p>pyTenjin provides some classes which caches template objects. These classes and their objects are called as cache storage.</p>
+
+      <dl class="dl3">
+        <dt class="dt3"><b>MarshalCacheStorage</b></dt>
+
+        <dd class="dd3">Caches template objects in both memory and cache file. Cache file is based on marshal format. This is the default cache storage in pyTenjin because marshal can save bytecode object into file.</dd>
+      </dl>
+
+      <dl class="dl3">
+        <dt class="dt3"><b>PickleCacheStorage</b></dt>
+
+        <dd class="dd3">Caches template objects in both memory and cache file. Cache file is based on pickle format. Notice that pickle can't save bytecode object, so it is a little slower than MarshalCacheStorage. In this reason, it is recommended to use MarshalCacheStorage if it is available.</dd>
+      </dl>
+
+      <dl class="dl3">
+        <dt class="dt3"><b>TextCacheStorage</b></dt>
+
+        <dd class="dd3">(experimental) Caches template objects in both memory and cache file. Cache file is based on normal text file. This may be useful when neither marshal nor pickle are available, such as Jython or so.</dd>
+      </dl>
+
+      <dl class="dl3">
+        <dt class="dt3"><b>MemoryCacheStorage</b></dt>
+
+        <dd class="dd3">Caches template objects in memory, but not in file. This doesn't create cache file at all.</dd>
+      </dl>
+
+      <dl class="dl3">
+        <dt class="dt3"><b>GaeMemcacheCacheStorage</b></dt>
+
+        <dd class="dd3">Caches template objects in both memory and memcache. This is available only in Google AppEngine environment. See <a href="faq.html#faq-google-appengine">FAQ</a> for details.</dd>
+      </dl>
+
+      <p>CacheStorage uses full-path of template files as key of cache. So you can share a cache storage between engine objects.</p>
+      <pre class="program">
+## shared cache storage
 shared = MarshalCacheStorage()
 
 ## create an engine for BooksController
@@ -1699,67 +1674,56 @@ engine1 = tenjin.Engine(path=path1, <strong>cache=shared</strong>)
 ## but it is able to share cache storage.
 path2 = ["<strong>views/authors</strong>", "views"]
 engine2 = tenjin.Engine(path=path2, <strong>cache=shared</strong>)
-</pre>
-<br>
+</pre><br>
+      <a name="dev-vars-and-funcs" id="dev-vars-and-funcs"></a>
 
+      <h3 class="section2">Variables and Functions</h3>
 
-<a name="dev-vars-and-funcs"></a>
-<h3 class="section2">Variables and Functions</h3>
-<p>In template file, the following variables and functions are available.
-</p>
-<dl class="dl3">
-<dt class="dt3"><b>
-_content </b></dt>
-<dd class="dd3">
-    This variable represents the result of evaluation of other template.
-    This is available only in layout template file.
-</dd>
-</dl>
-<dl class="dl3">
-<dt class="dt3"><b>
-_context </b></dt>
-<dd class="dd3">
-    This variable represents context data dictionary and same as the 2nd argument of tenjin.Engine.render().
-    You can tweak this dict. For example if you set <code>_context['title']="Example"</code> in your template file, <code>title</code> variable will be available in layout template file.
-</dd>
-</dl>
-<dl class="dl3">
-<dt class="dt3"><b>
-include(str template_name) </b></dt>
-<dd class="dd3">
-    Include and evaluate other template.
-    This is an alias of tenjin.Engine.include().
-</dd>
-</dl>
-<dl class="dl3">
-<dt class="dt3"><b>
-start_capture(name) </b></dt>
-<dd class="dd3">
-    Start capturing. Result will be stored into <code>_context['<em>name</em>']</code>.
-</dd>
-</dl>
-<dl class="dl3">
-<dt class="dt3"><b>
-stop_capture() </b></dt>
-<dd class="dd3">
-    Stop capturing.
-</dd>
-</dl>
-<dl class="dl3">
-<dt class="dt3"><b>
-captured_as(varname) </b></dt>
-<dd class="dd3">
-    If captured string as <em>varname</em> is exist then append it into
-    <code>_buf</code> and return True, else return False.
-    This is a helper function for layout template.
-</dd>
-</dl>
-<p>The followings are example of tenjin.Engine class.
-</p>
-<a name="user_form.pyhtml"></a>
-<div class="program_caption">
-File 'user_form.pyhtml':</div>
-<pre class="program">&lt;?py #@ARGS params ?&gt;
+      <p>In template file, the following variables and functions are available.</p>
+
+      <dl class="dl3">
+        <dt class="dt3"><b>_content</b></dt>
+
+        <dd class="dd3">This variable represents the result of evaluation of other template. This is available only in layout template file.</dd>
+      </dl>
+
+      <dl class="dl3">
+        <dt class="dt3"><b>_context</b></dt>
+
+        <dd class="dd3">This variable represents context data dictionary and same as the 2nd argument of tenjin.Engine.render(). You can tweak this dict. For example if you set <code>_context['title']="Example"</code> in your template file, <code>title</code> variable will be available in layout template file.</dd>
+      </dl>
+
+      <dl class="dl3">
+        <dt class="dt3"><b>include(str template_name)</b></dt>
+
+        <dd class="dd3">Include and evaluate other template. This is an alias of tenjin.Engine.include().</dd>
+      </dl>
+
+      <dl class="dl3">
+        <dt class="dt3"><b>start_capture(name)</b></dt>
+
+        <dd class="dd3">Start capturing. Result will be stored into <code>_context['<em>name</em>']</code>.</dd>
+      </dl>
+
+      <dl class="dl3">
+        <dt class="dt3"><b>stop_capture()</b></dt>
+
+        <dd class="dd3">Stop capturing.</dd>
+      </dl>
+
+      <dl class="dl3">
+        <dt class="dt3"><b>captured_as(varname)</b></dt>
+
+        <dd class="dd3">If captured string as <em>varname</em> is exist then append it into <code>_buf</code> and return True, else return False. This is a helper function for layout template.</dd>
+      </dl>
+
+      <p>The followings are example of tenjin.Engine class.</p><a name="user_form.pyhtml" id="user_form.pyhtml"></a>
+
+      <div class="program_caption">
+        File 'user_form.pyhtml':
+      </div>
+      <pre class="program">
+&lt;?py #@ARGS params ?&gt;
 &lt;p&gt;
   Name:  &lt;input type="text" name="name"  value="${params['name']}" /&gt;&lt;br /&gt;
   Email: &lt;input type="text" name="email" value="${params['email']}" /&gt;&lt;br /&gt;
@@ -1768,32 +1732,38 @@ File 'user_form.pyhtml':</div>
   &lt;input type="radio" name="gender" value="m" #{chk.get('m')} /&gt;Male
   &lt;input type="radio" name="gender" value="f" #{chk.get('f')} /&gt;Female
 &lt;/p&gt;
-</pre>
-<a name="user_create.pyhtml"></a>
-<div class="program_caption">
-File 'user_create.pyhtml':</div>
-<pre class="program">&lt;?py #@ARGS ?&gt;
+</pre><a name="user_create.pyhtml" id="user_create.pyhtml"></a>
+
+      <div class="program_caption">
+        File 'user_create.pyhtml':
+      </div>
+      <pre class="program">
+&lt;?py #@ARGS ?&gt;
 &lt;form action="user_app.cgi" method="post"&gt;
   &lt;input type="hidden" name="action" value="create" /&gt;
 <strong>&lt;?py include(':form') ?&gt;</strong>
   &lt;input type="submit" value="Create" /&gt;
 &lt;/form&gt;
-</pre>
-<a name="user_edit.pyhtml"></a>
-<div class="program_caption">
-File 'user_edit.pyhtml':</div>
-<pre class="program">&lt;?py #@ARGS params ?&gt;
+</pre><a name="user_edit.pyhtml" id="user_edit.pyhtml"></a>
+
+      <div class="program_caption">
+        File 'user_edit.pyhtml':
+      </div>
+      <pre class="program">
+&lt;?py #@ARGS params ?&gt;
 &lt;form action="user_app.cgi" method="post"&gt;
   &lt;input type="hidden" name="action" value="edit" /&gt;
   &lt;input type="hidden" name="id" value="${params['id']}" /&gt;
 <strong>&lt;?py include(':form') ?&gt;</strong>
   &lt;input type="submit" value="Edit" /&gt;
 &lt;/form&gt;
-</pre>
-<a name="user_layout.pyhtml"></a>
-<div class="program_caption">
-File 'user_layout.pyhtml':</div>
-<pre class="program">&lt;?py #@ARGS _content, title ?&gt;
+</pre><a name="user_layout.pyhtml" id="user_layout.pyhtml"></a>
+
+      <div class="program_caption">
+        File 'user_layout.pyhtml':
+      </div>
+      <pre class="program">
+&lt;?py #@ARGS _content, title ?&gt;
 &lt;html&gt;
   &lt;body&gt;
 
@@ -1809,20 +1779,24 @@ File 'user_layout.pyhtml':</div>
 
   &lt;/body&gt;
 &lt;/html&gt;
-</pre>
-<a name="footer.html"></a>
-<div class="program_caption">
-File 'footer.html':</div>
-<pre class="program">&lt;?py #@ARGS ?&gt;
+</pre><a name="footer.html" id="footer.html"></a>
+
+      <div class="program_caption">
+        File 'footer.html':
+      </div>
+      <pre class="program">
+&lt;?py #@ARGS ?&gt;
 &lt;hr /&gt;
 &lt;address&gt;
   &lt;a href="mailto:webmaster@example.com"&gt;webmaster@example.com&lt;/a&gt;
 &lt;/address&gt;
-</pre>
-<a name="user_app.cgi"></a>
-<div class="program_caption">
-File 'user_app.cgi':</div>
-<pre class="program">#!/usr/bin/env python
+</pre><a name="user_app.cgi" id="user_app.cgi"></a>
+
+      <div class="program_caption">
+        File 'user_app.cgi':
+      </div>
+      <pre class="program">
+#!/usr/bin/env python
 
 ## set action ('create' or 'edit')
 import sys, os, cgi
@@ -1844,8 +1818,8 @@ else:
     title = 'Edit User'
     params = {'name': 'Margalette',
               'email': 'meg@example.com',
-	      'gender': 'f',
-	      'id': 123 }
+              'gender': 'f',
+              'id': 123 }
 context = {'title': title, 'params': params}
 
 ## create engine object
@@ -1861,11 +1835,13 @@ template_name = ':' + action   # ':create' or ':edit'
 if form:
     print "Content-Type: text/html\r\n\r\n",
 print output,
-</pre>
-<a name="user_app.result"></a>
-<div class="terminal_caption">
-Result:</div>
-<pre class="terminal">$ python user_app.cgi create
+</pre><a name="user_app.result" id="user_app.result"></a>
+
+      <div class="terminal_caption">
+        Result:
+      </div>
+      <pre class="terminal">
+$ python user_app.cgi create
 &lt;html&gt;
   &lt;body&gt;
 
@@ -1895,61 +1871,58 @@ Result:</div>
 
   &lt;/body&gt;
 &lt;/html&gt;
-</pre>
-<br>
+</pre><br>
+      <a name="dev-htmlhelpers" id="dev-htmlhelpers"></a>
 
+      <h3 class="section2">HTML Helper Functions</h3>
 
-<a name="dev-htmlhelpers"></a>
-<h3 class="section2">HTML Helper Functions</h3>
-<p>pyTenjin provides some useful helper functions for HTML.
-These are defined in tenjin.helpers.html module.
-</p>
-<dl class="dl3">
-<dt class="dt3"><b>
-tenjin.helpers.html.checked(<em>expr</em>) </b></dt>
-<dd class="dd3">
-    Return <code>' checked="checked"'</code> if <em>expr</em> is true.
-</dd>
-</dl>
-<dl class="dl3">
-<dt class="dt3"><b>
-tenjin.helpers.html.selected(<em>expr</em>) </b></dt>
-<dd class="dd3">
-    Return <code>' selected="selected"'</code> if <em>expr</em> is true.
-</dd>
-</dl>
-<dl class="dl3">
-<dt class="dt3"><b>
-tenjin.helpers.html.disabled(<em>expr</em>) </b></dt>
-<dd class="dd3">
-    Return <code>' disabled="disabled"'</code> if <em>expr</em> is true.
-</dd>
-</dl>
-<dl class="dl3">
-<dt class="dt3"><b>
-tenjin.helpers.html.nl2br(<em>str</em>) </b></dt>
-<dd class="dd3">
-    Relplace "\n" in <em>str</em> into "&lt;br /&gt;\n" and return it.
-</dd>
-</dl>
-<dl class="dl3">
-<dt class="dt3"><b>
-tenjin.helpers.html.nv(<em>name</em>, <em>value</em>, <em>sep</em>=None, <em>klass</em>=None, <em>checked</em>=None, <em>disabled</em>=None, **<em>kwargs</em>) </b></dt>
-<dd class="dd3">
-    Return ' name="<em>name</em>" value="<em>value</em>"' string.
-    <ul type="circle">
-    <li>If <em>sep</em> is specified, ' id="<em>name</em> <em>sep</em> <em>value</em>' will be added.
-    </li>
-    <li>If <em>klass</em> is specified, ' class="<em>klass</em>"' will be added.
-    </li>
-    <li>If <em>checked</em> is true value, ' checked="checked"' will be added.
-    </li>
-    <li>If <em>disabled</em> is true value, ' disabled="disabled"' will be added.
-    </li>
-    </ul>
-<div class="program_caption">
-ex:</div>
-<pre class="program">&gt;&gt;&gt; nv('gender', 'F')
+      <p>pyTenjin provides some useful helper functions for HTML. These are defined in tenjin.helpers.html module.</p>
+
+      <dl class="dl3">
+        <dt class="dt3"><b>tenjin.helpers.html.checked(<em>expr</em>)</b></dt>
+
+        <dd class="dd3">Return <code>' checked="checked"'</code> if <em>expr</em> is true.</dd>
+      </dl>
+
+      <dl class="dl3">
+        <dt class="dt3"><b>tenjin.helpers.html.selected(<em>expr</em>)</b></dt>
+
+        <dd class="dd3">Return <code>' selected="selected"'</code> if <em>expr</em> is true.</dd>
+      </dl>
+
+      <dl class="dl3">
+        <dt class="dt3"><b>tenjin.helpers.html.disabled(<em>expr</em>)</b></dt>
+
+        <dd class="dd3">Return <code>' disabled="disabled"'</code> if <em>expr</em> is true.</dd>
+      </dl>
+
+      <dl class="dl3">
+        <dt class="dt3"><b>tenjin.helpers.html.nl2br(<em>str</em>)</b></dt>
+
+        <dd class="dd3">Relplace "\n" in <em>str</em> into "&lt;br /&gt;\n" and return it.</dd>
+      </dl>
+
+      <dl class="dl3">
+        <dt class="dt3"><b>tenjin.helpers.html.nv(<em>name</em>, <em>value</em>, <em>sep</em>=None, <em>klass</em>=None, <em>checked</em>=None, <em>disabled</em>=None, **<em>kwargs</em>)</b></dt>
+
+        <dd class="dd3">
+          Return ' name="<em>name</em>" value="<em>value</em>"' string.
+
+          <ul type="circle">
+            <li>If <em>sep</em> is specified, ' id="<em>name</em> <em>sep</em> <em>value</em>' will be added.</li>
+
+            <li>If <em>klass</em> is specified, ' class="<em>klass</em>"' will be added.</li>
+
+            <li>If <em>checked</em> is true value, ' checked="checked"' will be added.</li>
+
+            <li>If <em>disabled</em> is true value, ' disabled="disabled"' will be added.</li>
+          </ul>
+
+          <div class="program_caption">
+            ex:
+          </div>
+          <pre class="program">
+&gt;&gt;&gt; nv('gender', 'F')
 ' name="gender" value="F"'
 &gt;&gt;&gt; nv('gender', 'F', '.')
 ' name="gender" value="F" id="gender.F"'
@@ -1960,48 +1933,49 @@ ex:</div>
 &gt;&gt;&gt; nv('gender', 'F', '.', style="color:red")
 ' name="gender" value="F" id="gender.F" style="color:red"'
 </pre>
-</dd>
-</dl>
-<dl class="dl3">
-<dt class="dt3"><b>
-tenjin.helpers.html.tagattr(<em>name1</em>=<em>value1</em>, <em>name2</em>=<em>value2</em>, <em>...</em>) </b></dt>
-<dd class="dd3">
-    <strong>(experimental)</strong>
-    Return '<code><em>name1</em>="<em>value1</em>" <em>name2</em>="<em>value2</em>"</code>'.
-    <ul type="circle">
-    <li>If <em>valueN</em> is false value, that pair is ignored.
-    </li>
-    <li>If <em>nameN</em> is 'klass', then 'class="<em>valueN</em>"' will be added.
-    </li>
-    </ul>
-<div class="program_caption">
-ex:</div>
-<pre class="program">&gt;&gt;&gt; tagattr(colspan=40, rowspan=4)
+        </dd>
+      </dl>
+
+      <dl class="dl3">
+        <dt class="dt3"><b>tenjin.helpers.html.tagattr(<em>name1</em>=<em>value1</em>, <em>name2</em>=<em>value2</em>, <em>...</em>)</b></dt>
+
+        <dd class="dd3">
+          <strong>(experimental)</strong> Return '<code><em>name1</em>="<em>value1</em>" <em>name2</em>="<em>value2</em>"</code>'.
+
+          <ul type="circle">
+            <li>If <em>valueN</em> is false value, that pair is ignored.</li>
+
+            <li>If <em>nameN</em> is 'klass', then 'class="<em>valueN</em>"' will be added.</li>
+          </ul>
+
+          <div class="program_caption">
+            ex:
+          </div>
+          <pre class="program">
+&gt;&gt;&gt; tagattr(colspan=40, rowspan=4)
 'colspan="40" rowspan="4"'
 &gt;&gt;&gt; tagattr(colspan=0, rowspan=False)
 ''
 &gt;&gt;&gt; tagattr(klass='error')    # 'klass' will be renamed to 'class'
 'class="error"'
 </pre>
-</dd>
-</dl>
-<br>
+        </dd>
+      </dl><br>
+      <a name="dev-encoding" id="dev-encoding"></a>
 
+      <h3 class="section2">Template Encoding</h3>
 
-<a name="dev-encoding"></a>
-<h3 class="section2">Template Encoding</h3>
-<p>(Python 2.x)
-</p>
-<p>pyTenjin provides two approaches for encoding in Python 2.x.
-</p>
-<p>One approach is to handle template content as string (byte sequence),
-and convert context data into string by extended <code>to_str()</code> function
-if context data is unicode object.
-This is the default way in Python 2.x.
-</p>
-<div class="program_caption">
-File 'example18a.py':</div>
-<pre class="program">import tenjin
+      <p>(Python 2.x)</p>
+
+      <p>pyTenjin provides two approaches for encoding in Python 2.x.</p>
+
+      <p>One approach is to handle template content as string (byte sequence), and convert context data into string by extended <code>to_str()</code> function if context data is unicode object. This is the default way in Python 2.x.</p>
+
+      <div class="program_caption">
+        File 'example18a.py':
+      </div>
+      <pre class="program">
+import tenjin
 from tenjin.helpers import *
 
 ## Create to_str() function which encodes unicode object into string
@@ -2015,12 +1989,14 @@ context = { 'name': u'\u65e5\u672c\u8a9e' }  # non-ascii characters
 output = engine.render('encoding1.pyhtml', context)
 print(output)
 </pre>
-<p>The other approach is to convert template content into unicode object.
-This is slower than the previous approach, so if you are speed freak, you should adopt the previous one.
-</p>
-<div class="program_caption">
-File 'example18b.py':</div>
-<pre class="program">import tenjin
+
+      <p>The other approach is to convert template content into unicode object. This is slower than the previous approach, so if you are speed freak, you should adopt the previous one.</p>
+
+      <div class="program_caption">
+        File 'example18b.py':
+      </div>
+      <pre class="program">
+import tenjin
 from tenjin.helpers import *
 
 ## Create to_str() function which doesn't encode unicode object into string.
@@ -2040,37 +2016,38 @@ output = engine.render('encoding1.pyhtml', context)
     <strong>output = output.encode('utf-8')</strong>
 print(output)
 </pre>
-<p>(Python 3.0)
-</p>
-<p>In Python 3.0, string is treated as unicode object.
-So pyTenjin handles all templates in string base (= unicode base), and bytes data is converted into str by to_str() function.
-If you don't specify any encoding, pyTenjin uses 'utf-8' encoding as default.
-</p>
-<pre class="program">to_str = tenjin.generate_tostrfunc('utf-8')  ## decode bytes into utf-8 string
+
+      <p>(Python 3.0)</p>
+
+      <p>In Python 3.0, string is treated as unicode object. So pyTenjin handles all templates in string base (= unicode base), and bytes data is converted into str by to_str() function. If you don't specify any encoding, pyTenjin uses 'utf-8' encoding as default.</p>
+      <pre class="program">
+to_str = tenjin.generate_tostrfunc('utf-8')  ## decode bytes into utf-8 string
 engine = tenjin.Engine(encoding='utf-8')     ## handle template as utf-8 text
-</pre>
-<br>
+</pre><br>
+      <a name="dev-helpers" id="dev-helpers"></a>
 
+      <h3 class="section2">Add Your Helper Functions</h3>
 
-<a name="dev-helpers"></a>
-<h3 class="section2">Add Your Helper Functions</h3>
-<p>There are several ways to use helper functions.
-</p>
-<p>Assume the following template.
-</p>
-<a name="example19.pyhtml"></a>
-<div class="program_caption">
-File 'example19.pyhtml':</div>
-<pre class="program">&lt;ul&gt;
+      <p>There are several ways to use helper functions.</p>
+
+      <p>Assume the following template.</p><a name="example19.pyhtml" id="example19.pyhtml"></a>
+
+      <div class="program_caption">
+        File 'example19.pyhtml':
+      </div>
+      <pre class="program">
+&lt;ul&gt;
   &lt;li&gt;#{<strong>link_to(label, url)</strong>}&lt;/li&gt;
 &lt;/ul&gt;
 </pre>
-<p>(A) Define helper functions as global.
-</p>
-<a name="example19a.py"></a>
-<div class="program_caption">
-File 'example19a.py':</div>
-<pre class="program">import tenjin
+
+      <p>(A) Define helper functions as global.</p><a name="example19a.py" id="example19a.py"></a>
+
+      <div class="program_caption">
+        File 'example19a.py':
+      </div>
+      <pre class="program">
+import tenjin
 from tenjin.helpers import *
 
 <strong>def link_to(label, url):</strong>
@@ -2080,21 +2057,25 @@ engine = tenjin.Engine()
 context = { 'label': 'Top', 'url': '/' }
 output = engine.render('example19.pyhtml', context)
 print output,
-</pre>
-<a name="example19a.result"></a>
-<div class="terminal_caption">
-Result:</div>
-<pre class="terminal">$ python example19a.py
+</pre><a name="example19a.result" id="example19a.result"></a>
+
+      <div class="terminal_caption">
+        Result:
+      </div>
+      <pre class="terminal">
+$ python example19a.py
 &lt;ul&gt;
   &lt;li&gt;&lt;a href="/"&gt;Top&lt;/a&gt;&lt;/li&gt;
 &lt;/ul&gt;
 </pre>
-<p>(B) Add helper functions into context.
-</p>
-<a name="example19b.py"></a>
-<div class="program_caption">
-File 'example19b.py':</div>
-<pre class="program">import tenjin
+
+      <p>(B) Add helper functions into context.</p><a name="example19b.py" id="example19b.py"></a>
+
+      <div class="program_caption">
+        File 'example19b.py':
+      </div>
+      <pre class="program">
+import tenjin
 from tenjin.helpers import *
 
 def f1(label, url):
@@ -2104,21 +2085,25 @@ engine = tenjin.Engine()
 context = { 'label': 'Top', 'url': '/', <strong>'link_to': f1</strong> }
 output = engine.render('example19.pyhtml', context)
 print output,
-</pre>
-<a name="example19b.result"></a>
-<div class="terminal_caption">
-Result:</div>
-<pre class="terminal">$ python example19b.py
+</pre><a name="example19b.result" id="example19b.result"></a>
+
+      <div class="terminal_caption">
+        Result:
+      </div>
+      <pre class="terminal">
+$ python example19b.py
 &lt;ul&gt;
   &lt;li&gt;&lt;a href="/"&gt;Top&lt;/a&gt;&lt;/li&gt;
 &lt;/ul&gt;
 </pre>
-<p>(C) Add functions to a dict object and pass it as global variables.
-</p>
-<a name="example19c.py"></a>
-<div class="program_caption">
-File 'example19c.py':</div>
-<pre class="program">import tenjin
+
+      <p>(C) Add functions to a dict object and pass it as global variables.</p><a name="example19c.py" id="example19c.py"></a>
+
+      <div class="program_caption">
+        File 'example19c.py':
+      </div>
+      <pre class="program">
+import tenjin
 from tenjin.helpers import *
 
 def f1(label, url):
@@ -2129,44 +2114,34 @@ context = { 'label': 'Top', 'url': '/' }
 globals = {'escape':escape, 'to_str':to_str, <strong>'link_to':f1</strong>}
 output = engine.render('example19.pyhtml', context, globals=globals)
 print output,
-</pre>
-<a name="example19c.result"></a>
-<div class="terminal_caption">
-Result:</div>
-<pre class="terminal">$ python example19c.py
+</pre><a name="example19c.result" id="example19c.result"></a>
+
+      <div class="terminal_caption">
+        Result:
+      </div>
+      <pre class="terminal">
+$ python example19c.py
 &lt;ul&gt;
   &lt;li&gt;&lt;a href="/"&gt;Top&lt;/a&gt;&lt;/li&gt;
 &lt;/ul&gt;
-</pre>
-<br>
+</pre><br>
+      <a name="dev-othertopics" id="dev-othertopics"></a>
 
+      <h3 class="section2">Other Topics</h3>
 
-<a name="dev-othertopics"></a>
-<h3 class="section2">Other Topics</h3>
-<ul type="disc">
-<li>tenjin.Template detects newline character ("\n" or "\r\n") automatically.
-   If input file contains "\r\n", pyTenjin generates output which contains "\r\n".
-</li>
-</ul>
-<ul type="disc">
-<li>tenjin.Template.render() can be called many times.
-   If you create a tenjin.Template object, you can call render() method many times.
-</li>
-</ul>
-<ul type="disc">
-<li>tenjin.Template.convert() also can be called many times.
-  If you create a tenjin.Template object, you can call convert() (and also render()) method many times.
-</li>
-</ul>
-<br>
+      <ul type="disc">
+        <li>tenjin.Template detects newline character ("\n" or "\r\n") automatically. If input file contains "\r\n", pyTenjin generates output which contains "\r\n".</li>
+      </ul>
 
+      <ul type="disc">
+        <li>tenjin.Template.render() can be called many times. If you create a tenjin.Template object, you can call render() method many times.</li>
+      </ul>
 
-<br>
-
-
-
-   </div>
+      <ul type="disc">
+        <li>tenjin.Template.convert() also can be called many times. If you create a tenjin.Template object, you can call convert() (and also render()) method many times.</li>
+      </ul><br>
+      <br>
+    </div>
   </blockquote>
-
- </body>
+</body>
 </html>
