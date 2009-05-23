@@ -68,11 +68,13 @@
   <ul>
     <li><a href="#dev-example">An Example</a>
     </li>
-    <li><a href="#dev-classes">Classes and Functions in pyTenjin</a>
-    </li>
     <li><a href="#dev-templateclass">Class tenjin.Template</a>
     </li>
     <li><a href="#dev-engineclass">Class tenjin.Engine</a>
+    </li>
+    <li><a href="#dev-caching">Template Caching</a>
+    </li>
+    <li><a href="#dev-vars-and-funcs">Variables and Functions</a>
     </li>
     <li><a href="#dev-htmlhelpers">HTML Helper Functions</a>
     </li>
@@ -108,14 +110,23 @@ File 'ex.pyhtml':</div>
 </pre>
 <p>Here is the notation:
 </p>
-<ul type="disc">
-<li><code>&lt;?py ... ?&gt;</code> represents embedded Python statements.
-</li>
-<li><code>#{...}</code> represents embedded Python expression.
-</li>
-<li><code>${...}</code> represents embedded escaped (sanitized) Python expression.
-</li>
-</ul>
+<dl class="dl3" compact>
+<dt class="dt3"><b>
+<code>&lt;?py ... ?&gt;</code> </b></dt>
+<dd class="dd3">
+	Python statements.
+</dd>
+<dt class="dt3"><b>
+<code>#{...}</code> </b></dt>
+<dd class="dd3">
+	Python expression.
+</dd>
+<dt class="dt3"><b>
+<code>${...}</code> </b></dt>
+<dd class="dd3">
+	Python expression (HTML escaped)
+</dd>
+</dl>
 <a name="ex_source.result"></a>
 <div class="terminal_caption">
 Result of covertion into Python script:</div>
@@ -296,7 +307,7 @@ templetor-reuse         61.46000    0.07000   61.53000   61.68483
 
 <a name="installation"></a>
 <h2 class="section1">Installation</h2>
-<p>pyTenjin works on CPython (2.3 or higher).
+<p>pyTenjin works on CPython (2.3 or higher, 3.0 supported).
 </p>
   <ol type="1">
   <li>Download pyTenjin-X.X.X.tar.gz and extract it.
@@ -322,11 +333,11 @@ templetor-reuse         61.46000    0.07000   61.53000   61.68483
 <p>The following is the notation of pyTenjin.
 </p>
 <ul type="disc">
-<li>'<code>&lt;?py ... ?&gt;</code>' represents embedded Python statement.
+<li>'<code>&lt;?py ... ?&gt;</code>' : Python statement
 </li>
-<li>'<code>#{...}</code>' represents embedded Python expression.
+<li>'<code>#{...}</code>' : Python expression
 </li>
-<li>'<code>${...}</code>' represents embedded Python expression which is to be escaped (for example, '<code>&amp; &lt; &gt; "</code>' is escaped to '<code>&amp;amp; &amp;lt; &amp;gt; &amp;quot;</code>').
+<li>'<code>${...}</code>' : Python expression with HTML escape
 </li>
 </ul>
 <a name="example1.pyhtml"></a>
@@ -420,9 +431,7 @@ File 'example1b.pyhtml':</div>
   &lt;/tbody&gt;
 &lt;/table&gt;
 </pre>
-<p>It is able to mix two styles in a file.
-</p>
-<p>The following styles are <strong>not</strong> available.
+<p>It is able to mix two styles in a file, but the following styles are <strong>NOT</strong> available.
 </p>
 <div class="program_caption">
 Invalid example #1:</div>
@@ -478,14 +487,14 @@ print ''.join(_buf)
 <ul type="disc">
 <li>Variable <code>_buf</code> is a list.
 </li>
-<li>Function <code>to_str()</code> (= <code>tenjin.helpers.html.to_str()</code>) converts value into string
+<li>Function <code>to_str()</code> (= <code>tenjin.helpers.to_str()</code>) converts value into string
    except None is converted into <code>""</code> (empty string).
-   Command-line option <code>--tostrfunc=func</code> makes pytenjin to use <code>func()</code> instead of <code>to_str()</code>.
+   Command-line option <code>--tostrfunc=<em>func</em></code> makes pytenjin to use <code><em>func</em>()</code> instead of <code>to_str()</code>.
 </li>
 <li>Function <code>escape()</code> (= <code>tenjin.escape()</code>) escapes <code>'&amp; &lt; &gt; "'</code> into <code>'&amp;amp; &amp;lt; &amp;gt; &amp;quot;'</code><sup>(<a href="#fnref:1" name="fnlink:1">*1</a>)</sup>.
-  Command-line option <code>--escapefunc=func</code> makes pytenjin to use <code>func()</code> instead of <code>escape()</code>.
+  Command-line option <code>--escapefunc=<em>func</em></code> makes pytenjin to use <code><em>func</em>()</code> instead of <code>escape()</code>.
 </li>
-<li>Newline character ("\n" or "\r\n") is automatically detected by pyTenjin.
+<li>End-of-line character ("\n" or "\r\n") is automatically detected by pyTenjin.
 </li>
 </ul>
 <p>'<code>_buf = [];</code>' is called as preamble and '<code>print ''.join(_buf)</code>' is called as postamble.
@@ -1141,8 +1150,8 @@ print ''.join(_buf)
 <a name="example11.pyhtml"></a>
 <div class="program_caption">
 File 'example11.pyhtml':</div>
-<pre class="program">&lt;p&gt;
-<strong>&lt;?py #@ARGS x ?&gt;</strong>
+<pre class="program"><strong>&lt;?py #@ARGS x ?&gt;</strong>
+&lt;p&gt;
 x = #{x}
 y = #{y}   # NameError
 &lt;/p&gt;
@@ -1365,81 +1374,18 @@ print output,
 <br>
 
 
-<a name="dev-classes"></a>
-<h3 class="section2">Classes and Functions in pyTenjin</h3>
-<p>pyTenjin has the follwoing classes.
-</p>
-<dl class="dl3">
-<dt class="dt3"><b>
-tenjin.Template </b></dt>
-<dd class="dd3">
-    This class represents a template file.
-    Main responsibilities of this class are:
-    <ul type="circle">
-    <li>Convert template file into python script
-    </li>
-    <li>Render converted python script with context data
-    </li>
-    </ul>
-</dd>
-</dl>
-<dl class="dl3">
-<dt class="dt3"><b>
-tenjin.Engine </b></dt>
-<dd class="dd3">
-    This class provides many features such as:
-    <ul type="circle">
-    <li>Search template files
-    </li>
-    <li>Nestable layout template
-    </li>
-    <li>Partial template
-    </li>
-    <li>File caching
-    </li>
-    <li>Preprocessing
-    </li>
-    <li>and so on
-    </li>
-    </ul>
-</dd>
-</dl>
-<p>pyTenjin has the following utility functions.
-These are defined at tenjin.helpers module.
-</p>
-<dl class="dl3">
-<dt class="dt3"><b>
-tenjin.helpers.to_str(value) </b></dt>
-<dd class="dd3">
-    Convert value into string.
-    Return empty string if value is None else return value of <code>str(value)</code>.
-</dd>
-</dl>
-<dl class="dl3">
-<dt class="dt3"><b>
-tenjin.helpers.escape(str) </b></dt>
-<dd class="dd3">
-    Escape '<code>&amp; &lt; &gt; "</code>' in string into '<code>&amp;amp; &amp;lt; &amp;gt; &amp;quot;</code>'.
-</dd>
-</dl>
-<dl class="dl3">
-<dt class="dt3"><b>
-tenjin.helpers.generate_tostrfunc(str) </b></dt>
-<dd class="dd3">
-    Generate 'to_str' function which encodes unicode to str.
-    This is used when handling non-ascii characters in template file.
-    See <a href="#dev-encoding">Template Encoding</a> section for details.
-</dd>
-</dl>
-<br>
-
-
 <a name="dev-templateclass"></a>
 <h3 class="section2">Class tenjin.Template</h3>
 <p>tenjin.Template class represents a template file.
 An object of tenjin.Template corresponds to a template file.
-It doesn't support nested template nor layout template (use tenjin.Engine class instead).
+Main responsibilities of this class are:
 </p>
+<ul type="circle">
+<li>Convert template file into python script
+</li>
+<li>Render converted python script with context data
+</li>
+</ul>
 <p>This class has the following methods and attributes.
 </p>
 <dl class="dl3">
@@ -1559,12 +1505,12 @@ _buf.extend(('''&lt;/ul&gt;\n''', ));
 </ul>
 <ul type="disc">
 <li>'<code>escapefunc</code>' (string) specifies function name to escape string.
-  Default is '<code>escape</code>' (= <code>tenjin.escape</code>).
+  Default is '<code>escape</code>' (= <code>tenjin.helpers.escape</code>).
 </li>
 </ul>
 <ul type="disc">
 <li>'<code>tostrfunc</code>' (string) specifies function name to convert value into string.
-  Default is '<code>to_str</code>' (= <code>tenjin.to_str</code>).
+  Default is '<code>to_str</code>' (= <code>tenjin.helpers.to_str</code>).
 </li>
 </ul>
 <ul type="disc">
@@ -1618,16 +1564,43 @@ _buf.extend(('''&lt;/ul&gt;\n''', ));
 <h3 class="section2">Class tenjin.Engine</h3>
 <p>tenjin.Engine class contains some template objects.
 It can handle nested template and layout template.
-Using tenjin.Engine class, you can use pyTenjin as a template engine for web application.
+This class provides many features such as:
 </p>
+<ul type="circle">
+<li>Search template files
+</li>
+<li>Nestable layout template
+</li>
+<li>Partial template
+</li>
+<li><s>File caching</s> (caching feature is separated to tenjin.CacheStorage class.)
+</li>
+<li>Preprocessing
+</li>
+<li>and so on
+</li>
+</ul>
 <p>This class has the following methods.
 </p>
 <dl class="dl3">
 <dt class="dt3"><b>
-tenjin.Engine(str prefix='', str postfix='', str layout=None, list path=None, bool cache=True, bool preprocess=False, type templateclass=Template, **kwargs) </b></dt>
+tenjin.Engine(str prefix='', str postfix='', str layout=None, list path=None, object cache=True, bool preprocess=False, type templateclass=Template, **kwargs) </b></dt>
 <dd class="dd3">
     Create Engine object.
-    Argument 'cache' controls caching policy. If True, marshal-base cache files will be created. If '<code>"text"</code>', text-base cache files will be created. If False, no cache files are created.
+    Argument 'cache' controls caching policy.
+    <ul type="circle">
+    <li>If instance object of CacheStorage class, use it as cache storage.
+    </li>
+    <li>If True, new MarshalCacheStorage object is created and used.
+       In the result, template objects are cached in both memory and marshal-base cache file.
+    </li>
+    <li>If None, new MemoryCacheStorage object is created and used.
+       In the result, template objects are cached in memory but not saved in cache file.
+    </li>
+    <li>If False, nothing is done for caching.
+       Template objects are not cached in both memory nor file.
+    </li>
+    </ul>
     Arguments <code>kwargs</code> are passed to tenjin.Template() internally.
 </dd>
 </dl>
@@ -1636,9 +1609,14 @@ tenjin.Engine(str prefix='', str postfix='', str layout=None, list path=None, bo
 tenjin.Engine#render(str template_name, dict context=None, dict globals=None, str layout=None) </b></dt>
 <dd class="dd3">
     Convert template into Python code, evaluate it with context data, and return the result of it.
-    If <code>layout</code> is True or None then layout template name specified by constructor option is
-    used as layout template, else if False then layout template is not used,
-    else if string then it is regarded as layout template name.
+    <ul type="circle">
+    <li>If <code>layout</code> is True or None then layout template name specified by constructor option will be used as layout template.
+    </li>
+    <li>Else if <code>layout</code> is False then layout template will be not used,
+    </li>
+    <li>Else if <code>layout</code> is string then it is regarded as layout template name.
+    </li>
+    </ul>
 </dd>
 </dl>
 <dl class="dl3">
@@ -1652,7 +1630,82 @@ tenjin.Engine#include(str template_name) </b></dt>
 Template short name is a string starting with colon (':').
 For example, '<code>render(":list", context)</code>' is equivarent to '<code>render("user_list.pyhtml", context)</code>' if prefix option is '<code>user_</code>' and postfix option is '<code>.pyhtml</code>'.
 </p>
-<p>In template file, the followings are available.
+<br>
+
+
+<a name="dev-caching"></a>
+<h3 class="section2">Template Caching</h3>
+<p>pyTenjin provides some classes which caches template objects.
+These classes and their objects are called as cache storage.
+</p>
+<dl class="dl3">
+<dt class="dt3"><b>
+MarshalCacheStorage </b></dt>
+<dd class="dd3">
+	Caches template objects in both memory and cache file.
+	Cache file is based on marshal format.
+	This is the default cache storage in pyTenjin because marshal can save bytecode object into file.
+</dd>
+</dl>
+<dl class="dl3">
+<dt class="dt3"><b>
+PickleCacheStorage </b></dt>
+<dd class="dd3">
+	Caches template objects in both memory and cache file.
+	Cache file is based on pickle format.
+	Notice that pickle can't save bytecode object, so it is a little slower than MarshalCacheStorage.
+	In this reason, it is recommended to use MarshalCacheStorage if it is available.
+</dd>
+</dl>
+<dl class="dl3">
+<dt class="dt3"><b>
+TextCacheStorage </b></dt>
+<dd class="dd3">
+	(experimental)
+	Caches template objects in both memory and cache file.
+	Cache file is based on normal text file.
+	This may be useful when neither marshal nor pickle are available, such as Jython or so.
+</dd>
+</dl>
+<dl class="dl3">
+<dt class="dt3"><b>
+MemoryCacheStorage </b></dt>
+<dd class="dd3">
+	Caches template objects in memory, but not in file.
+	This doesn't create cache file at all.
+</dd>
+</dl>
+<dl class="dl3">
+<dt class="dt3"><b>
+GaeMemcacheCacheStorage </b></dt>
+<dd class="dd3">
+	Caches template objects in both memory and memcache.
+	This is available only in Google AppEngine environment.
+	See <a href="faq.html#faq-google-appengine">FAQ</a> for details.
+</dd>
+</dl>
+<p>CacheStorage uses full-path of template files as key of cache.
+So you can share a cache storage between engine objects.
+</p>
+<pre class="program">## shared cache storage
+shared = MarshalCacheStorage()
+
+## create an engine for BooksController
+path1 = ["<strong>views/books</strong>", "views"]
+engine1 = tenjin.Engine(path=path1, <strong>cache=shared</strong>)
+
+## create an engine for AuthorsController.
+## this engine has different parameter value,
+## but it is able to share cache storage.
+path2 = ["<strong>views/authors</strong>", "views"]
+engine2 = tenjin.Engine(path=path2, <strong>cache=shared</strong>)
+</pre>
+<br>
+
+
+<a name="dev-vars-and-funcs"></a>
+<h3 class="section2">Variables and Functions</h3>
+<p>In template file, the following variables and functions are available.
 </p>
 <dl class="dl3">
 <dt class="dt3"><b>
@@ -1660,6 +1713,14 @@ _content </b></dt>
 <dd class="dd3">
     This variable represents the result of evaluation of other template.
     This is available only in layout template file.
+</dd>
+</dl>
+<dl class="dl3">
+<dt class="dt3"><b>
+_context </b></dt>
+<dd class="dd3">
+    This variable represents context data dictionary and same as the 2nd argument of tenjin.Engine.render().
+    You can tweak this dict. For example if you set <code>_context['title']="Example"</code> in your template file, <code>title</code> variable will be available in layout template file.
 </dd>
 </dl>
 <dl class="dl3">
@@ -1703,10 +1764,9 @@ File 'user_form.pyhtml':</div>
   Name:  &lt;input type="text" name="name"  value="${params['name']}" /&gt;&lt;br /&gt;
   Email: &lt;input type="text" name="email" value="${params['email']}" /&gt;&lt;br /&gt;
   Gender:
-&lt;?py gender = params['gender'] ?&gt;
-&lt;?py chk = { True: ' checked="checked"', False: '' } ?&gt;
-  &lt;input type="radio" name="gender" value="m" #{chk[gender=='m']} /&gt;Male
-  &lt;input type="radio" name="gender" value="f" #{chk[gender=='f']} /&gt;Female
+&lt;?py chk = { params['gender'] : ' checked="checked"' } ?&gt;
+  &lt;input type="radio" name="gender" value="m" #{chk.get('m')} /&gt;Male
+  &lt;input type="radio" name="gender" value="f" #{chk.get('f')} /&gt;Female
 &lt;/p&gt;
 </pre>
 <a name="user_create.pyhtml"></a>
@@ -1846,39 +1906,39 @@ These are defined in tenjin.helpers.html module.
 </p>
 <dl class="dl3">
 <dt class="dt3"><b>
-tenjin.helpers.checked(<em>expr</em>) </b></dt>
+tenjin.helpers.html.checked(<em>expr</em>) </b></dt>
 <dd class="dd3">
     Return <code>' checked="checked"'</code> if <em>expr</em> is true.
 </dd>
 </dl>
 <dl class="dl3">
 <dt class="dt3"><b>
-tenjin.helpers.selected(<em>expr</em>) </b></dt>
+tenjin.helpers.html.selected(<em>expr</em>) </b></dt>
 <dd class="dd3">
     Return <code>' selected="selected"'</code> if <em>expr</em> is true.
 </dd>
 </dl>
 <dl class="dl3">
 <dt class="dt3"><b>
-tenjin.helpers.disabled(<em>expr</em>) </b></dt>
+tenjin.helpers.html.disabled(<em>expr</em>) </b></dt>
 <dd class="dd3">
     Return <code>' disabled="disabled"'</code> if <em>expr</em> is true.
 </dd>
 </dl>
 <dl class="dl3">
 <dt class="dt3"><b>
-tenjin.helpers.nl2br(<em>str</em>) </b></dt>
+tenjin.helpers.html.nl2br(<em>str</em>) </b></dt>
 <dd class="dd3">
     Relplace "\n" in <em>str</em> into "&lt;br /&gt;\n" and return it.
 </dd>
 </dl>
 <dl class="dl3">
 <dt class="dt3"><b>
-tenjin.helpers.nv(<em>name</em>, <em>value</em>, <em>id_sep</em>=None, <em>klass</em>=None, <em>checked</em>=None, <em>disabled</em>=None, **<em>kwargs</em>) </b></dt>
+tenjin.helpers.html.nv(<em>name</em>, <em>value</em>, <em>sep</em>=None, <em>klass</em>=None, <em>checked</em>=None, <em>disabled</em>=None, **<em>kwargs</em>) </b></dt>
 <dd class="dd3">
     Return ' name="<em>name</em>" value="<em>value</em>"' string.
     <ul type="circle">
-    <li>If <em>id_sep</em> is specified, ' id="<em>name</em><em>id_sep</em><em>value</em>' will be added.
+    <li>If <em>sep</em> is specified, ' id="<em>name</em> <em>sep</em> <em>value</em>' will be added.
     </li>
     <li>If <em>klass</em> is specified, ' class="<em>klass</em>"' will be added.
     </li>
@@ -1904,7 +1964,7 @@ ex:</div>
 </dl>
 <dl class="dl3">
 <dt class="dt3"><b>
-tenjin.helpers.tagattr(<em>name1</em>=<em>value1</em>, <em>name2</em>=<em>value2</em>, <em>...</em>) </b></dt>
+tenjin.helpers.html.tagattr(<em>name1</em>=<em>value1</em>, <em>name2</em>=<em>value2</em>, <em>...</em>) </b></dt>
 <dd class="dd3">
     <strong>(experimental)</strong>
     Return '<code><em>name1</em>="<em>value1</em>" <em>name2</em>="<em>value2</em>"</code>'.
@@ -1930,11 +1990,14 @@ ex:</div>
 
 <a name="dev-encoding"></a>
 <h3 class="section2">Template Encoding</h3>
-<p>pyTenjin provides two approaches for encoding.
+<p>(Python 2.x)
+</p>
+<p>pyTenjin provides two approaches for encoding in Python 2.x.
 </p>
 <p>One approach is to handle template content as string (byte sequence),
 and convert context data into string by extended <code>to_str()</code> function
 if context data is unicode object.
+This is the default way in Python 2.x.
 </p>
 <div class="program_caption">
 File 'example18a.py':</div>
@@ -1943,25 +2006,29 @@ from tenjin.helpers import *
 
 ## Create to_str() function which encodes unicode object into string
 ## according to encoding.
-<strong>to_str = tenjin.generate_tostrfunc('euc-jp')</strong>
-         #  ex.  to_str(u'\u65e5\u672c\u8a9e')
-         #         =&gt;  '\xc6\xfc\xcb\xdc\xb8\xec' (euc-jp string)
+<strong>to_str = tenjin.generate_tostrfunc('utf-8')</strong>
+       #  ex.  to_str(u'\u65e5\u672c\u8a9e')
+       #          =&gt; '\xe6\x97\xa5\xe6\x9c\xac\xe8\xaa\x9e' (utf-8 string)
 
 engine = tenjin.Engine()
 context = { 'name': u'\u65e5\u672c\u8a9e' }  # non-ascii characters
 output = engine.render('encoding1.pyhtml', context)
-print output,
+print(output)
 </pre>
 <p>The other approach is to convert template content into unicode object.
+This is slower than the previous approach, so if you are speed freak, you should adopt the previous one.
 </p>
 <div class="program_caption">
 File 'example18b.py':</div>
 <pre class="program">import tenjin
 from tenjin.helpers import *
 
+## Create to_str() function which doesn't encode unicode object into string.
+<strong>to_str = tenjin.generate_tostrfunc(None)</strong>
+
 ## If you specify encoding option for Template() or Engine(),
 ## content of template will be converted into unicode object.
-engine = tenjin.Engine(<strong>encoding='euc-jp'</strong>)
+engine = tenjin.Engine(<strong>encoding='utf-8'</strong>)
 ## If you want to see python code, try the following:
 ##   template = engine.get_template(filename)
 ##   print template.script
@@ -1970,8 +2037,17 @@ engine = tenjin.Engine(<strong>encoding='euc-jp'</strong>)
 context = { 'name': u'\u65e5\u672c\u8a9e' }  # non-ascii characters
 output = engine.render('encoding1.pyhtml', context)
 <strong>if isinstance(output, unicode):</strong>
-   <strong>output = output.encode('euc-jp')</strong>
-print output,
+    <strong>output = output.encode('utf-8')</strong>
+print(output)
+</pre>
+<p>(Python 3.0)
+</p>
+<p>In Python 3.0, string is treated as unicode object.
+So pyTenjin handles all templates in string base (= unicode base), and bytes data is converted into str by to_str() function.
+If you don't specify any encoding, pyTenjin uses 'utf-8' encoding as default.
+</p>
+<pre class="program">to_str = tenjin.generate_tostrfunc('utf-8')  ## decode bytes into utf-8 string
+engine = tenjin.Engine(encoding='utf-8')     ## handle template as utf-8 text
 </pre>
 <br>
 

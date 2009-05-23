@@ -37,9 +37,9 @@ Hello {{*#{name}*}}!
 
 Here is the notation:
 
-.* {{,<?py ... ?>,}} represents embedded Python statements.
-.* {{,#{...},}} represents embedded Python expression.
-.* {{,${...},}} represents embedded escaped (sanitized) Python expression.
+.[ {{,<?py ... ?>,}} ]	Python statements.
+.[ {{,#{...},}} ]	Python expression.
+.[ {{,${...},}} ]	Python expression (HTML escaped)
 
 .? Result of covertion into Python script:
 .==================== ex_source.result
@@ -225,7 +225,7 @@ This shows the followings.
 .$ Installation			| installation
 
 
-pyTenjin works on CPython (2.3 or higher).
+pyTenjin works on CPython (2.3 or higher, 3.0 supported).
 
 .#.* CPython
    
@@ -266,9 +266,9 @@ If you want to know how to use pyTenjin in your program, see {{<Developer's Guid
 
 The following is the notation of pyTenjin.
 
-.* '{{,<?py ... ?>,}}' represents embedded Python statement.
-.* '{{,#{...},}}' represents embedded Python expression.
-.* '{{,${...},}}' represents embedded Python expression which is to be escaped (for example, '{{,& < > ",}}' is escaped to '{{,&amp; &lt; &gt; &quot;,}}').
+.* '{{,<?py ... ?>,}}' : Python statement
+.* '{{,#{...},}}' : Python expression
+.* '{{,${...},}}' : Python expression with HTML escape
 
 
 .? File 'example1.pyhtml':
@@ -412,10 +412,7 @@ print ''.join(_buf)
 .====================
 .#---
 
-It is able to mix two styles in a file.
-
-
-The following styles are {{*not*}} available.
+It is able to mix two styles in a file, but the following styles are {{*NOT*}} available.
 
 .? Invalid example #1:
 .--------------------
@@ -487,12 +484,12 @@ print ''.join(_buf)
 
 
 .* Variable {{,_buf,}} is a list.
-.* Function {{,to_str(),}} (= {{,tenjin.helpers.html.to_str(),}}) converts value into string
+.* Function {{,to_str(),}} (= {{,tenjin.helpers.to_str(),}}) converts value into string
    except None is converted into {{,"",}} (empty string).
-   Command-line option {{,--tostrfunc=func,}} makes pytenjin to use {{,func(),}} instead of {{,to_str(),}}.
+   Command-line option {{,--tostrfunc={{/func/}},}} makes pytenjin to use {{,{{/func/}}(),}} instead of {{,to_str(),}}.
 .* Function {{,escape(),}} (= {{,tenjin.escape(),}}) escapes {{,'& < > "',}} into {{,'&amp; &lt; &gt; &quot;',}}{{(Difference between {{,escape(),}} and {{,cgi.escape(),}} is that the former escapes double-quotation mark into '{{,&quot;,}}' and the latter doesn't.)}}.
-  Command-line option {{,--escapefunc=func,}} makes pytenjin to use {{,func(),}} instead of {{,escape(),}}.
-.* Newline character ("\n" or "\r\n") is automatically detected by pyTenjin.
+  Command-line option {{,--escapefunc={{/func/}},}} makes pytenjin to use {{,{{/func/}}(),}} instead of {{,escape(),}}.
+.* End-of-line character ("\n" or "\r\n") is automatically detected by pyTenjin.
 
 
 '{{,_buf = [];,}}' is called as preamble and '{{,print ''.join(_buf),}}' is called as postamble.
@@ -1212,8 +1209,8 @@ If template arguments are specified, other variables passed by context object ar
 
 .? File 'example11.pyhtml':
 .-------------------- example11.pyhtml
-<p>
 {{*<?py #@ARGS x ?>*}}
+<p>
 x = #{x}
 y = #{y}   # NameError
 </p>
@@ -1477,45 +1474,77 @@ If you want to define helper functions for template, see {{<Add Your Helper Func
 
 
 
-.$$ Classes and Functions in pyTenjin	| dev-classes
-
-
-pyTenjin has the follwoing classes.
-
-.[ tenjin.Template ]
-    This class represents a template file.
-    Main responsibilities of this class are:
-    .- Convert template file into python script
-    .- Render converted python script with context data
-
-.[ tenjin.Engine ]
-    This class provides many features such as:
-    .- Search template files
-    .- Nestable layout template
-    .- Partial template
-    .- File caching
-    .- Preprocessing
-    .- and so on
-
-
-
-
-
-pyTenjin has the following utility functions.
-These are defined at tenjin.helpers module.
-
-.[ tenjin.helpers.to_str(value) ]
-    Convert value into string.
-    Return empty string if value is None else return value of {{,str(value),}}.
-
-.[ tenjin.helpers.escape(str) ]
-    Escape '{{,& < > ",}}' in string into '{{,&amp; &lt; &gt; &quot;,}}'.
-
-.[ tenjin.helpers.generate_tostrfunc(str) ]
-    Generate 'to_str' function which encodes unicode to str.
-    This is used when handling non-ascii characters in template file.
-    See {{<Template Encoding|#dev-encoding>}} section for details.
-
+.#.$$ Classes and Functions in pyTenjin	| dev-classes
+.#
+.#
+.#pyTenjin has the follwoing classes.
+.#
+.#.[ tenjin.Template ]
+.#    This class represents a template file.
+.#    Main responsibilities of this class are:
+.#    .- Convert template file into python script
+.#    .- Render converted python script with context data
+.#
+.#.[ tenjin.Engine ]
+.#    This class provides many features such as:
+.#    .- Search template files
+.#    .- Nestable layout template
+.#    .- Partial template
+.#    .- File caching
+.#    .- Preprocessing
+.#    .- and so on
+.#
+.#% if context_class && !context_class.empty?
+.#.[  ]
+.#    This class represents context data.
+.#% end 
+.#
+.#
+.#% if PYTHON
+.#%   mod = 'tenjin.helpers.'
+.#% elsif RUBY
+.#%   mod = ''
+.#% elsif PERL
+.#%   mod = 'Tenjin::Context'
+.#% elsif JS
+.#%   mod = 'Tenjin.Util'
+.#% elsif PHP
+.#%   mod = 'XXXX'
+.#% else assert false 
+.#% end 
+.#
+.#
+.#% if PYTHON
+.#pyTenjin has the following utility functions.
+.#These are defined at tenjin.helpers module.
+.#% elsif RUBY
+.#pyTenjin has the following utility functions.
+.#These are defined at Tenjin::HtmlHelper module and Tenjin::Context class includes it.
+.#% elsif PERL
+.#pyTenjin has the following utility functions.
+.#% elsif JS
+.#.#pyTenjin has the following utility functions.
+.#% elsif PHP
+.#.#pyTenjin has the following utility functions.
+.#% else assert false 
+.#% end 
+.#
+.#% if PYTHON
+.#.[ to_str(value) ]
+.#    Convert value into string.
+.#    Return empty string if value is None else return value of {{,str(value),}}.
+.#% end 
+.#
+.#.[ escape(str) ]
+.#    Escape '{{,& < > ",}}' in string into '{{,&amp; &lt; &gt; &quot;,}}'.
+.#
+.#% if PYTHON
+.#.[ generate_tostrfunc(str) ]
+.#    Generate 'to_str' function which encodes unicode to str.
+.#    This is used when handling non-ascii characters in template file.
+.#    See {{<Template Encoding|#dev-encoding>}} section for details.
+.#% end
+.#
 
 
 .$$ Class tenjin.Template		| dev-templateclass
@@ -1523,7 +1552,10 @@ These are defined at tenjin.helpers module.
 
 tenjin.Template class represents a template file.
 An object of tenjin.Template corresponds to a template file.
-It doesn't support nested template nor layout template (use tenjin.Engine class instead).
+Main responsibilities of this class are:
+
+.- Convert template file into python script
+.- Render converted python script with context data
 
 This class has the following methods and attributes.
 
@@ -1630,10 +1662,10 @@ Constructor of tenjin.Template can take the follwoing options.
   Default is None.
 
 .* '{{,escapefunc,}}' (string) specifies function name to escape string.
-  Default is '{{,escape,}}' (= {{,tenjin.escape,}}).
+  Default is '{{,escape,}}' (= {{,tenjin.helpers.escape,}}).
 
 .* '{{,tostrfunc,}}' (string) specifies function name to convert value into string.
-  Default is '{{,to_str,}}' (= {{,tenjin.to_str,}}).
+  Default is '{{,to_str,}}' (= {{,tenjin.helpers.to_str,}}).
 
 .* '{{,indent,}}' (integer) specifies width of indentation.
   Default is 4.
@@ -1691,22 +1723,36 @@ _buf.extend(('''</ul>\n''', ));
 
 tenjin.Engine class contains some template objects.
 It can handle nested template and layout template.
-Using tenjin.Engine class, you can use pyTenjin as a template engine for web application.
+This class provides many features such as:
+.- Search template files
+.- Nestable layout template
+.- Partial template
+.- {{=File caching=}} (caching feature is separated to tenjin.CacheStorage class.)
+.- Preprocessing
+.- and so on
+
 
 This class has the following methods.
 
 
 
-.[ tenjin.Engine(str prefix='', str postfix='', str layout=None, list path=None, bool cache=True, bool preprocess=False, type templateclass=Template, **kwargs) ]
+.[ tenjin.Engine(str prefix='', str postfix='', str layout=None, list path=None, object cache=True, bool preprocess=False, type templateclass=Template, **kwargs) ]
     Create Engine object.
-    Argument 'cache' controls caching policy. If True, marshal-base cache files will be created. If '{{,"text",}}', text-base cache files will be created. If False, no cache files are created.
+    Argument 'cache' controls caching policy.
+    .- If instance object of CacheStorage class, use it as cache storage.
+    .- If True, new MarshalCacheStorage object is created and used.
+       In the result, template objects are cached in both memory and marshal-base cache file.
+    .- If None, new MemoryCacheStorage object is created and used.
+       In the result, template objects are cached in memory but not saved in cache file.
+    .- If False, nothing is done for caching.
+       Template objects are not cached in both memory nor file.
     Arguments {{,kwargs,}} are passed to tenjin.Template() internally.
 
 .[ tenjin.Engine#render(str template_name, dict context=None, dict globals=None, str layout=None) ]
     Convert template into Python code, evaluate it with context data, and return the result of it.
-    If {{,layout,}} is True or None then layout template name specified by constructor option is
-    used as layout template, else if False then layout template is not used,
-    else if string then it is regarded as layout template name.
+    .- If {{,layout,}} is True or None then layout template name specified by constructor option will be used as layout template.
+    .- Else if {{,layout,}} is False then layout template will be not used,
+    .- Else if {{,layout,}} is string then it is regarded as layout template name.
 
 .#.[ tenjin.Engine#include(str template_name, bool append_to_buf=True) ]
 .[ tenjin.Engine#include(str template_name) ]
@@ -1721,11 +1767,77 @@ For example, '{{,render(":list", context),}}' is equivarent to '{{,render("user_
 
 
 
-In template file, the followings are available.
+
+
+
+
+.$$ Template Caching		| dev-caching
+
+
+pyTenjin provides some classes which caches template objects.
+These classes and their objects are called as cache storage.
+
+
+.[ MarshalCacheStorage ]
+	Caches template objects in both memory and cache file.
+	Cache file is based on marshal format.
+	This is the default cache storage in pyTenjin because marshal can save bytecode object into file.
+
+.[ PickleCacheStorage ]
+	Caches template objects in both memory and cache file.
+	Cache file is based on pickle format.
+	Notice that pickle can't save bytecode object, so it is a little slower than MarshalCacheStorage.
+	In this reason, it is recommended to use MarshalCacheStorage if it is available.
+
+.[ TextCacheStorage ]
+	(experimental)
+	Caches template objects in both memory and cache file.
+	Cache file is based on normal text file.
+	This may be useful when neither marshal nor pickle are available, such as Jython or so.
+
+.[ MemoryCacheStorage ]
+	Caches template objects in memory, but not in file.
+	This doesn't create cache file at all.
+
+.[ GaeMemcacheCacheStorage ]
+	Caches template objects in both memory and memcache.
+	This is available only in Google AppEngine environment.
+	See {{<FAQ|faq.html#faq-google-appengine>}} for details.
+
+
+CacheStorage uses full-path of template files as key of cache.
+So you can share a cache storage between engine objects.
+
+.--------------------
+## shared cache storage
+shared = MarshalCacheStorage()
+
+## create an engine for BooksController
+path1 = ["{{*views/books*}}", "views"]
+engine1 = tenjin.Engine(path=path1, {{*cache=shared*}})
+
+## create an engine for AuthorsController.
+## this engine has different parameter value,
+## but it is able to share cache storage.
+path2 = ["{{*views/authors*}}", "views"]
+engine2 = tenjin.Engine(path=path2, {{*cache=shared*}})
+.--------------------
+
+
+
+
+.$$ Variables and Functions	| dev-vars-and-funcs
+
+
+In template file, the following variables and functions are available.
 
 .[ _content ]
     This variable represents the result of evaluation of other template.
     This is available only in layout template file.
+
+.[ _context ]
+    This variable represents context data dictionary and same as the 2nd argument of tenjin.Engine.render().
+    You can tweak this dict. For example if you set {{,_context['title']="Example",}} in your template file, {{,title,}} variable will be available in layout template file.
 
 .#.[ include(str template_name, append_to_buf=True) ]
 .[ include(str template_name) ]
@@ -1765,10 +1877,9 @@ The followings are example of tenjin.Engine class.
   Name:  <input type="text" name="name"  value="${params['name']}" /><br />
   Email: <input type="text" name="email" value="${params['email']}" /><br />
   Gender:
-<?py gender = params['gender'] ?>
-<?py chk = { True: ' checked="checked"', False: '' } ?>
-  <input type="radio" name="gender" value="m" #{chk[gender=='m']} />Male
-  <input type="radio" name="gender" value="f" #{chk[gender=='f']} />Female
+<?py chk = { params['gender'] : ' checked="checked"' } ?>
+  <input type="radio" name="gender" value="m" #{chk.get('m')} />Male
+  <input type="radio" name="gender" value="f" #{chk.get('f')} />Female
 </p>
 .--------------------
 
@@ -1911,21 +2022,21 @@ pyTenjin provides some useful helper functions for HTML.
 These are defined in tenjin.helpers.html module.
 
 
-.[ tenjin.helpers.checked({{/expr/}}) ]
+.[ tenjin.helpers.html.checked({{/expr/}}) ]
     Return {{,' checked="checked"',}} if {{/expr/}} is true.
 
-.[ tenjin.helpers.selected({{/expr/}}) ]
+.[ tenjin.helpers.html.selected({{/expr/}}) ]
     Return {{,' selected="selected"',}} if {{/expr/}} is true.
 
-.[ tenjin.helpers.disabled({{/expr/}}) ]
+.[ tenjin.helpers.html.disabled({{/expr/}}) ]
     Return {{,' disabled="disabled"',}} if {{/expr/}} is true.
 
-.[ tenjin.helpers.nl2br({{/str/}}) ]
+.[ tenjin.helpers.html.nl2br({{/str/}}) ]
     Relplace "\n" in {{/str/}} into "<br />\n" and return it.
 
-.[ tenjin.helpers.nv({{/name/}}, {{/value/}}, {{/id_sep/}}=None, {{/klass/}}=None, {{/checked/}}=None, {{/disabled/}}=None, **{{/kwargs/}}) ]
+.[ tenjin.helpers.html.nv({{/name/}}, {{/value/}}, {{/sep/}}=None, {{/klass/}}=None, {{/checked/}}=None, {{/disabled/}}=None, **{{/kwargs/}}) ]
     Return ' name="{{/name/}}" value="{{/value/}}"' string.
-    .- If {{/id_sep/}} is specified, ' id="{{/name/}}{{/id_sep/}}{{/value/}}' will be added.
+    .- If {{/sep/}} is specified, ' id="{{/name/}} {{/sep/}} {{/value/}}' will be added.
     .- If {{/klass/}} is specified, ' class="{{/klass/}}"' will be added.
     .- If {{/checked/}} is true value, ' checked="checked"' will be added.
     .- If {{/disabled/}} is true value, ' disabled="disabled"' will be added.
@@ -1943,7 +2054,7 @@ These are defined in tenjin.helpers.html module.
     ' name="gender" value="F" id="gender.F" style="color:red"'
     .--------------------
 
-.[ tenjin.helpers.tagattr({{/name1/}}={{/value1/}}, {{/name2/}}={{/value2/}}, {{/.../}}) ]
+.[ tenjin.helpers.html.tagattr({{/name1/}}={{/value1/}}, {{/name2/}}={{/value2/}}, {{/.../}}) ]
     {{*(experimental)*}}
     Return '{{,{{/name1/}}="{{/value1/}}" {{/name2/}}="{{/value2/}}",}}'.
     .- If {{/valueN/}} is false value, that pair is ignored.
@@ -1966,11 +2077,14 @@ These are defined in tenjin.helpers.html module.
 
 .$$ Template Encoding		| dev-encoding
 
-pyTenjin provides two approaches for encoding.
+(Python 2.x)
+
+pyTenjin provides two approaches for encoding in Python 2.x.
 
 One approach is to handle template content as string (byte sequence),
 and convert context data into string by extended {{,to_str(),}} function
 if context data is unicode object.
+This is the default way in Python 2.x.
 
 
 .? File 'example18a.py':
@@ -1980,26 +2094,30 @@ from tenjin.helpers import *
 
 ## Create to_str() function which encodes unicode object into string
 ## according to encoding.
-{{*to_str = tenjin.generate_tostrfunc('euc-jp')*}}
-         #  ex.  to_str(u'\u65e5\u672c\u8a9e')
-         #         =>  '\xc6\xfc\xcb\xdc\xb8\xec' (euc-jp string)
+{{*to_str = tenjin.generate_tostrfunc('utf-8')*}}
+       #  ex.  to_str(u'\u65e5\u672c\u8a9e')
+       #          => '\xe6\x97\xa5\xe6\x9c\xac\xe8\xaa\x9e' (utf-8 string)
 
 engine = tenjin.Engine()
 context = { 'name': u'\u65e5\u672c\u8a9e' }  # non-ascii characters
 output = engine.render('encoding1.pyhtml', context)
-print output,
+print(output)
 .--------------------
 
 The other approach is to convert template content into unicode object.
+This is slower than the previous approach, so if you are speed freak, you should adopt the previous one.
 
 .? File 'example18b.py':
 .-------------------- example18b.py'
 import tenjin
 from tenjin.helpers import *
 
+## Create to_str() function which doesn't encode unicode object into string.
+{{*to_str = tenjin.generate_tostrfunc(None)*}}
+
 ## If you specify encoding option for Template() or Engine(),
 ## content of template will be converted into unicode object.
-engine = tenjin.Engine({{*encoding='euc-jp'*}})
+engine = tenjin.Engine({{*encoding='utf-8'*}})
 ## If you want to see python code, try the following:
 ##   template = engine.get_template(filename)
 ##   print template.script
@@ -2008,8 +2126,19 @@ engine = tenjin.Engine({{*encoding='euc-jp'*}})
 context = { 'name': u'\u65e5\u672c\u8a9e' }  # non-ascii characters
 output = engine.render('encoding1.pyhtml', context)
 {{*if isinstance(output, unicode):*}}
-   {{*output = output.encode('euc-jp')*}}
-print output,
+    {{*output = output.encode('utf-8')*}}
+print(output)
+.--------------------
+
+(Python 3.0)
+
+In Python 3.0, string is treated as unicode object.
+So pyTenjin handles all templates in string base (= unicode base), and bytes data is converted into str by to_str() function.
+If you don't specify any encoding, pyTenjin uses 'utf-8' encoding as default.
+
+.--------------------
+to_str = tenjin.generate_tostrfunc('utf-8')  ## decode bytes into utf-8 string
+engine = tenjin.Engine(encoding='utf-8')     ## handle template as utf-8 text
 .--------------------
 
 .#+++
@@ -2020,9 +2149,11 @@ print output,
 
 .==================== example18_encoding.result2
 $ python example18a.py
-<p>ÆüËÜ¸ì</p>
+<p>æ—¥æœ¬èªž</p>
+
 $ python example18b.py
-<p>ÆüËÜ¸ì</p>
+<p>æ—¥æœ¬èªž</p>
+
 .====================
 
 .#---
