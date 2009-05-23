@@ -55,28 +55,22 @@ logger = None
 ## utilities
 ##
 
-try:
-    import fcntl
-except ImportError:
-    fcntl = None
-
 def _write_binary_file(filename, content):
     f = None
     try:
-        f = open(filename, 'ab')
-        if fcntl: fcntl.flock(f.fileno(), fcntl.LOCK_EX)
-        f.seek(0)
-        f.truncate(0)
+        import random
+        tmpfile = filename + str(random.random())[1:]
+        f = open(tmpfile, 'wb')
         f.write(content)
-        #or f.write(content); f.truncate(f.tell())
     finally:
-        if f: f.close()
+        if f:
+            f.close()
+            os.rename(tmpfile, filename)
 
 def _read_binary_file(filename):
     f = None
     try:
         f = open(filename, 'rb')
-        #if fcntl: fcntl.flock(f.fileno(), fcntl.LOCK_SH)
         return f.read()
     finally:
         if f: f.close()
