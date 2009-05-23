@@ -48,6 +48,8 @@ import re, sys, os, time, marshal
 python3 = sys.version_info[0] == 3
 python2 = sys.version_info[0] == 2
 
+logger = None
+
 
 ##
 ## utilities
@@ -919,11 +921,14 @@ class MarshalCacheStorage(FileCacheStorage):
     def _load(self, fullpath):
         cachepath = self._cachename(fullpath)
         if not os.path.isfile(cachepath): return None
+        if logger: logger.info("[tenjin.MarshalCacheStorage] load cache (file=%s)" % repr(cachepath))
         dump = _read_binary_file(cachepath)
         return marshal.loads(dump)
 
     def _store(self, fullpath, dict):
-        _write_binary_file(self._cachename(fullpath), marshal.dumps(dict))
+        cachepath = self._cachename(fullpath)
+        if logger: logger.info("[tenjin.MarshalCacheStorage] store cache (file=%s)" % repr(cachepath))
+        _write_binary_file(cachepath, marshal.dumps(dict))
 
 
 class PickleCacheStorage(FileCacheStorage):
@@ -933,6 +938,7 @@ class PickleCacheStorage(FileCacheStorage):
         except: import pickle
         cachepath = self._cachename(fullpath)
         if not os.path.isfile(cachepath): return None
+        if logger: logger.info("[tenjin.PickleCacheStorage] load cache (file=%s)" % repr(cachepath))
         dump = _read_binary_file(cachepath)
         return pickle.loads(dump)
 
@@ -940,7 +946,9 @@ class PickleCacheStorage(FileCacheStorage):
         try:    import cPickle as pickle
         except: import pickle
         if 'bytecode' in dict: dict.pop('bytecode')
-        _write_binary_file(self._cachename(fullpath), pickle.dumps(dict))
+        cachepath = self._cachename(fullpath)
+        if logger: logger.info("[tenjin.PickleCacheStorage] store cache (file=%s)" % repr(cachepath))
+        _write_binary_file(cachepath, pickle.dumps(dict))
 
 
 class TextCacheStorage(FileCacheStorage):
@@ -948,6 +956,7 @@ class TextCacheStorage(FileCacheStorage):
     def _load(self, fullpath):
         cachepath = self._cachename(fullpath)
         if not os.path.isfile(cachepath): return None
+        if logger: logger.info("[tenjin.TextCacheStorage] load cache (file=%s)" % repr(cachepath))
         s = _read_binary_file(cachepath)
         if python2:
             header, script = s.split("\n\n", 1)
@@ -983,7 +992,9 @@ class TextCacheStorage(FileCacheStorage):
         if python3:
             if isinstance(s, str):
                 s = s.encode(dict.get('encoding') or 'utf-8')   ## unicode(=str) to binary
-        _write_binary_file(self._cachename(fullpath), s)
+        cachepath = self._cachename(fullpath)
+        if logger: logger.info("[tenjin.TextCacheStorage] store cache (file=%s)" % repr(cachepath))
+        _write_binary_file(cachepath, s)
 
     def _save_data_of(self, template):
         dict = FileCacheStorage._save_data_of(self, template)
@@ -1001,12 +1012,18 @@ class GaeMemcacheCacheStorage(CacheStorage):
 
     def _load(self, fullpath):
         from google.appengine.api import memcache
-        return memcache.get(self._cachename(fullpath))
+        key = self._cachename(fullpath)
+        if logger: logger.info("[tenjin.GaeMemcacheCacheStorage] load cache (key=%s)" % repr(key))
+        return memcache.get(key)
 
     def _store(self, fullpath, dict):
         if 'bytecode' in dict: dict.pop('bytecode')
         from google.appengine.api import memcache
-        return memcache.set(self._cachename(fullpath), dict, self.lifetime)
+        key = self._cachename(fullpath)
+        if logger: logger.info("[tenjin.GaeMemcacheCacheStorage] store cache (key=%s)" % repr(key))
+        ret = memcache.set(key, dict, self.lifetime)
+        if not ret:
+            if logger: logger.info("[tenjin.GaeMemcacheCacheStorage: failed to store cache (key=%s)" % repr(key))
 
     def _delete(self, fullpath):
         from google.appengine.api import memcache
@@ -1183,7 +1200,7 @@ class Engine(object):
             if template.timestamp < os.path.getmtime(filename):
                 #if cache: cache.delete(path)
                 template = None
-                #Engine.logger.info("cache file is old: filename=%s, template=%s" % (repr(filename), repr(t)))
+                if logger: logger.info("[tenjin.Engine] cache is old (filename=%s, template=%s)" % (repr(filename), repr(template)))
         if not template:
             curr_time = time.time()
             if self.preprocess:   ## required for preprocess
@@ -1193,9 +1210,7 @@ class Engine(object):
             template.timestamp = curr_time
             if cache:
                 if not template.bytecode: template.compile()
-                ret = cache.set(fullpath, template)
-                #if not ret:
-                #    Engine.logger.info("failed to store cache: path=%s, template=%s" % (repr(path), repr(template)))
+                cache.set(fullpath, template)
         #else:
         #    template.compile()
         return template
