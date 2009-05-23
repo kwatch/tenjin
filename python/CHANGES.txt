@@ -2,46 +2,77 @@
 CHANGES
 =======
 
-Release 0.7.0 (2009-05-17)
+Release 0.7.0 (2009-05-24)
 
 * [Enhancements]
 
+  * Python 3.0 is now supported officially.
+
   * Google AppEngine (GAE) supported.
-    You can use pyTenjin on Google AppEngine.
+    You can use pyTenjin on Google AppEngine with memcache.
     See FAQ: 'Is pyTenjin ready for Google App Engine?' section.
     http://www.kuwata-lab.com/tenjin/pytenjin-faq.html#faq-google-appengine
 
-  * Text-base template caching support.
-    If you pass 'cache="text"' option to template.Engine(),
-    pyTenjin creates text-base cache files instead of marshal-base caches.
-    (This is required to support GAE because marshal is not available in GAE.)
+  * Logging supported.
+    ex:
+
+      import logging
+      logging.basicConfig(level=logging.DEBUG)
+      tenjin.logger = logging
+      tenjin.Engine().render('index.pyhtml')  # report some messages
 
   * New command-line option '-a cache' supported.
     This option enables you to generate template cache files in advance.
-    (This is required to support GAE because GAE doesn't allow you to
-     create cache files dinamically.)
 
   * (Experimental) HTML helper functions are now provided.
     ex:
 
-       >>> import tenjin
-       >>> from tenjin.helpers.html import *
-       >>> checked(1==1)
-       ' checked="checked"'
-       >>> checked(1==0)
-       ''
-       >>> selected(1==1)
-       ' selected="selected"'
-       >>> tagattr(klass='error', style='color:red')
-       'class="error" style="color:red"'
-       >>> tagattr(width='', height=0)
-       ''
-       >>> nv('rank', 'A')      # name and value
-       'name="rank" value="A"'
-       >>> nv('rank', 'A', '.')
-       'name="rank" value="A" id="rank.A"'
+      >>> import tenjin
+      >>> from tenjin.helpers.html import *
+      >>> checked(1==1)
+      ' checked="checked"'
+      >>> checked(1==0)
+      ''
+      >>> selected(1==1)
+      ' selected="selected"'
+      >>> tagattr(klass='error', style='color:red')
+      'class="error" style="color:red"'
+      >>> tagattr(width='', height=0)
+      ''
+      >>> nv('rank', 'A')      # name and value
+      'name="rank" value="A"'
+      >>> nv('rank', 'A', '.', klass='opt')
+      'name="rank" value="A" id="rank.A" class="opt"'
+
+  * You can share caches between all engine objects.
+    PyTenjin now uses full-path of template file as key of cache.
+    So you can share caches between engines which have different
+    search path.
+    ex:
+
+      shared = tenjin.MarshalCacheStorage()
+      engine1 = tenjin.Engine(path=['views/books', 'views'], cache=shared)
+      engine2 = tenjin.Engine(path=['views/authors', 'views'], cache=shared)
+
+  * Pickle-base and text-base template caching support.
+    If you pass 'cache=tenjin.PickleCacheStorage()' or
+    'cache=tenjin.TextCacheStorage()' option to template.Engine(),
+    pyTenjin creates pickle-base or text-base cache files instead of
+    marshal-base caches.
+    These are useful in environment in which marshal module is
+    not available, such as Google AppEngine.
 
 * [Changes]
+
+  * 'cache' option for tenjin.Engine() changed.
+    (0.6.2)
+      cache=True  :  cached both in memory and file (marshal-based)
+      cache=None  :  same as cache=True
+      cache=False :  cached in meory but not in file
+    (0.7.0)
+      cache=True  :  cached both in memory and file (marshal-based)
+      cache=None  :  cached in meory but not in file
+      cache=False :  never cached both in memory nor file
 
   * Benchmark script now skips to do benchmark template libraries
     which are failed to import.
