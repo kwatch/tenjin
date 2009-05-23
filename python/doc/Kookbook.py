@@ -28,7 +28,7 @@ testdir  = '../test'
 datadir  = testdir + '/data'
 #title   = "Tenjin User's Guide"
 #stylesheet = 'html4css1.css'
-stylesheet = 'users-guide.css'
+stylesheet = 'docstyle.css'
 #rstdir   = '/Library/Frameworks/Python.framework/Versions/2.4/bin'
 #rst2html = rstdir+'/rst2html.py'
 #rst2html_opts = 'rst2html_opts', '--link-stylesheet --no-xml-declaration --no-source-link --no-toc-backlinks --language=en --stylesheet="%s" --title="%s"' % (stylesheet, title)  #--strip-comments
@@ -51,10 +51,16 @@ def task_all(c):
     pass
 
 
-@ingreds(htmlfiles)
+@ingreds(htmlfiles, stylesheet)
 def task_doc(c):
     """generate *.html"""
     pass
+
+
+@product(stylesheet)
+@ingreds(original_docdir + stylesheet)
+def file_css(c):
+    cp(c.ingred, c.product)
 
 
 #@product('users-guide.html')
