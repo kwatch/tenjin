@@ -395,26 +395,15 @@ Hello Guest!
 </p>
 <ul type="disc">
 <li>pyTenjin runs much faster than Django template engine.
-   If you are facing with CPU quota, it is recommended to try pyTenjin.
+   If you are facing with CPU quota, you should try pyTenjin.
 </li>
 </ul>
 <ul type="disc">
 <li>pyTenjin library is consist of only one file.
-   If you are facing with number of files quota, it is recommended to try pyTenjin.
+   If you are facing with number of files quota, you should try pyTenjin.
 </li>
 </ul>
-<p>But there are two points what you should know:
-</p>
-<ul type="disc">
-<li>GAE doesn't allow you to create files dinamically,
-   so you should turn template caching off, or create template cache file in advance.
-</li>
-<li>GAE doesn't allow you to use marshal moduel,
-   so you should use text-base caching instead of marshal-base caching if you want to template caching.
-</li>
-</ul>
-<p>The following is an example to use Tenjin in Google AppEngine, with template caching turned off.
-(Notice that pyTenjin is enough fast even when template caching turned off, because template objects are kept in memory due to GAE's persistent process.)
+<p>The following is an example to use Tenjin in Google AppEngine with memcache.
 </p>
 <a name="gae-example1.py"></a>
 <div class="program_caption">
@@ -424,7 +413,13 @@ from google.appengine.ext.webapp.util import run_wsgi_app
 
 <strong>import tenjin</strong>
 <strong>from tenjin.helpers import *</strong>
-<strong>engine = tenjin.Engine(cache=False)  # or cache='text'</strong>
+<strong>shared_cache = tenjin.GaeMemcacheCacheStorage()</strong>
+<strong>engine = tenjin.Engine(cache=shared_cache)</strong>
+
+## it is recommended to configure logging
+import logging
+logging.basicConfig(level=logging.DEBUG)
+<strong>tenjin.logger = logging</strong>
 
 class MainPage(webapp.RequestHandler):
   def get(self):
@@ -441,27 +436,6 @@ def main():
 if __name__ == "__main__":
   main()
 </pre>
-<p>If you want to use text-base cacheing, set <code>"text"</code> to <code>cache</code> parameter,
-and create template cache files by:
-</p>
-<pre class="terminal">$ pytenjin -a cache *.pyhtml
-</pre>
-<p>This command will generate *.pyhtml.cache files.
-Don't forget to upload *.pyhtml.cache as well as *.pyhtml.
-</p>
-<p>It is good idea to set <code>cache</code> parameter only on production environment.
-</p>
-<pre class="program">import os
-is_dev_mode = (os.getenv("SERVER_SOFTWARE") or "").startswith("Development")
-if is_dev_mode:      # when development mode,
-    cache = False    # turn template-caching off.
-else:                # when production mode,
-    cache = 'text'   # use text-base caching.
-engine = tenjin.Engine(cache=cache)
-....
-</pre>
-<p>It should be said again that pyTenjin is enough fast even when template caching turned off. You should make template-based caching on only when you can't get enough performance.
-</p>
 <br>
 
 
@@ -1446,7 +1420,7 @@ This is not good idea for script language because:
 </li>
 </ul>
 <p>In addition, pyTenjin is faster than Jakarta Velocity which is a very popular template engine in Java.
-(It means that dynamic Java is slower than script languages.)
+(It means that <strong>dynamic Java is slower than script languages</strong>!)
 </p>
 <p>Template engine should use their host language directly unless there are some kind of reasons.
 </p>
