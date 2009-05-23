@@ -1065,6 +1065,11 @@ class Engine(object):
     path       = None
     cache      = None
     preprocess = False
+    _cache_storage_classes = {
+        'marshal': MarshalCacheStorage,
+        'pickle' : PickleCacheStorage,
+        'text'   : TextCacheStorage,
+    }
 
     def __init__(self, prefix=None, postfix=None, layout=None, path=None, cache=True, preprocess=None, templateclass=None, **kwargs):
         """Initializer of Engine class.
@@ -1107,6 +1112,8 @@ class Engine(object):
         elif cache is None:  self.cache = MemoryCacheStorage()
         elif cache is False: self.cache = None
         elif isinstance(cache, CacheStorage):  self.cache = cache
+        elif self._cache_storage_classes.get(cache):
+            self.cache = self._cache_storage_classes[cache]()
         else:
             raise ValueError("%s: invalid cache object." % repr(cache))
 
