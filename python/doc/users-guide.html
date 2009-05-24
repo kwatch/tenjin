@@ -88,7 +88,15 @@
 
             <li><a href="#dev-htmlhelpers">HTML Helper Functions</a></li>
 
-            <li><a href="#dev-encoding">Template Encoding</a></li>
+            <li>
+              <a href="#dev-encoding">Template Encoding</a>
+
+              <ul>
+                <li><a href="#Python%202.x">Python 2.x</a></li>
+
+                <li><a href="#Python%203.0">Python 3.0</a></li>
+              </ul>
+            </li>
 
             <li><a href="#dev-helpers">Add Your Helper Functions</a></li>
 
@@ -1963,77 +1971,73 @@ $ python user_app.cgi create
       </dl><br>
       <a name="dev-encoding" id="dev-encoding"></a>
 
-      <h3 class="section2">Template Encoding</h3>
+      <h3 class="section2">Template Encoding</h3><a name="Python 2.x"></a>
 
-      <p>(Python 2.x)</p>
+      <h4 class="section3">Python 2.x</h4>
 
       <p>pyTenjin provides two approaches for encoding in Python 2.x.</p>
 
-      <p>One approach is to handle template content as string (byte sequence), and convert context data into string by extended <code>to_str()</code> function if context data is unicode object. This is the default way in Python 2.x.</p>
+      <dl class="dl2">
+        <dt class="dt2">(A) Binary-based approach</dt>
 
-      <div class="program_caption">
-        File 'example18a.py':
-      </div>
-      <pre class="program">
-import tenjin
-from tenjin.helpers import *
-
-## Create to_str() function which encodes unicode object into string
-## according to encoding.
-<strong>to_str = tenjin.generate_tostrfunc('utf-8')</strong>
-       #  ex.  to_str(u'\u65e5\u672c\u8a9e')
-       #          =&gt; '\xe6\x97\xa5\xe6\x9c\xac\xe8\xaa\x9e' (utf-8 string)
-
+        <dd class="dd2">
+          <p>pyTenjin handles templates as binary file. For example, text "foo" will be converted into <code>_buf &lt;&lt; 'foo'</code>. In this approach, unicode object should be encoded into binary(=str) by <code>to_str()</code></p>
+          <pre class="program">
+to_str = tenjin.generate_tostrfunc(<strong>encode</strong>='utf-8')
+   # ex. to_str(u'\u65e5\u672c\u8a9e') =&gt; '\xe6\x97\xa5\xe6\x9c\xac\xe8\xaa\x9e'
 engine = tenjin.Engine()
-context = { 'name': u'\u65e5\u672c\u8a9e' }  # non-ascii characters
-output = engine.render('encoding1.pyhtml', context)
-print(output)
 </pre>
 
-      <p>The other approach is to convert template content into unicode object. This is slower than the previous approach, so if you are speed freak, you should adopt the previous one.</p>
+          <p>If you have some troubles about encoding in this approach, try to add encoding declaration in your templates if your templates contain non-ascii characters.</p>
+          <pre class="program">
+<strong>&lt;?py # -*- coding: utf-8 -*- ?&gt;</strong>
+&lt;h1&gt;Hello&lt;/h1&gt;
+</pre>
+        </dd>
+      </dl>
 
-      <div class="program_caption">
-        File 'example18b.py':
-      </div>
-      <pre class="program">
-import tenjin
-from tenjin.helpers import *
+      <dl class="dl2">
+        <dt class="dt2">(B) Unicode-based approach</dt>
 
-## Create to_str() function which doesn't encode unicode object into string.
-<strong>to_str = tenjin.generate_tostrfunc(None)</strong>
-
-## If you specify encoding option for Template() or Engine(),
-## content of template will be converted into unicode object.
-engine = tenjin.Engine(<strong>encoding='utf-8'</strong>)
-## If you want to see python code, try the following:
-##   template = engine.get_template(filename)
-##   print template.script
-
-## You must encode output into string because output will be unicode.
-context = { 'name': u'\u65e5\u672c\u8a9e' }  # non-ascii characters
-output = engine.render('encoding1.pyhtml', context)
-<strong>if isinstance(output, unicode):</strong>
-    <strong>output = output.encode('utf-8')</strong>
-print(output)
+        <dd class="dd2">
+          <p>You can hanlde templates as unicode string with <code>encoding</code> option for tenjin.Engine(). For example, text "foo" will be converted into <code>_buf &lt;&lt; <strong>u</strong>'foo'</code>. In this approach, binary(=str) should be decoded into unicode in <code>to_str()</code>.</p>
+          <pre class="program">
+to_str = tenjin.generate_tostrfunc(<strong>decode</strong>='utf-8')
+   # ex. to_str('\xe6\x97\xa5\xe6\x9c\xac\xe8\xaa\x9e')  #=&gt; u'\u65e5\u672c\u8a9e'
+engine = tenjin.Engine(<strong>encoding</strong>='utf-8')
+html = engine.render('index.pyhtml')
+if isinstance(html, unicode): html = html.encode('utf-8')
+print(html)
 </pre>
 
-      <p>(Python 3.0)</p>
+          <p>You should not add encoding declaration in your templates, or you will get the following error.</p>
+          <pre class="program">
+SyntaxError: encoding declaration in Unicode string
+</pre>
+        </dd>
+      </dl>
+
+      <p>In Python 2.x, binary-based approach is faster than unicode-based approach. If you don't have any special reason, it is recommend to be with binary-based approach.</p><br>
+      <a name="Python 3.0"></a>
+
+      <h4 class="section3">Python 3.0</h4>
 
       <p>In Python 3.0, string is treated as unicode object. So pyTenjin handles all templates in string base (= unicode base), and bytes data is converted into str by to_str() function. If you don't specify any encoding, pyTenjin uses 'utf-8' encoding as default.</p>
       <pre class="program">
-to_str = tenjin.generate_tostrfunc('utf-8')  ## decode bytes into utf-8 string
-engine = tenjin.Engine(encoding='utf-8')     ## handle template as utf-8 text
+to_str = tenjin.generate_tostrfunc('utf-8')  ## decode bytes into unicode
+engine = tenjin.Engine(encoding='utf-8')     ## handle template as unicode
 </pre><br>
+      <br>
       <a name="dev-helpers" id="dev-helpers"></a>
 
       <h3 class="section2">Add Your Helper Functions</h3>
 
       <p>There are several ways to use helper functions.</p>
 
-      <p>Assume the following template.</p><a name="example19.pyhtml" id="example19.pyhtml"></a>
+      <p>Assume the following template.</p><a name="example18.pyhtml" id="example18.pyhtml"></a>
 
       <div class="program_caption">
-        File 'example19.pyhtml':
+        File 'example18.pyhtml':
       </div>
       <pre class="program">
 &lt;ul&gt;
@@ -2041,10 +2045,10 @@ engine = tenjin.Engine(encoding='utf-8')     ## handle template as utf-8 text
 &lt;/ul&gt;
 </pre>
 
-      <p>(A) Define helper functions as global.</p><a name="example19a.py" id="example19a.py"></a>
+      <p>(A) Define helper functions as global.</p><a name="example18a.py" id="example18a.py"></a>
 
       <div class="program_caption">
-        File 'example19a.py':
+        File 'example18a.py':
       </div>
       <pre class="program">
 import tenjin
@@ -2055,24 +2059,24 @@ from tenjin.helpers import *
 
 engine = tenjin.Engine()
 context = { 'label': 'Top', 'url': '/' }
-output = engine.render('example19.pyhtml', context)
+output = engine.render('example18.pyhtml', context)
 print output,
-</pre><a name="example19a.result" id="example19a.result"></a>
+</pre><a name="example18a.result" id="example18a.result"></a>
 
       <div class="terminal_caption">
         Result:
       </div>
       <pre class="terminal">
-$ python example19a.py
+$ python example18a.py
 &lt;ul&gt;
   &lt;li&gt;&lt;a href="/"&gt;Top&lt;/a&gt;&lt;/li&gt;
 &lt;/ul&gt;
 </pre>
 
-      <p>(B) Add helper functions into context.</p><a name="example19b.py" id="example19b.py"></a>
+      <p>(B) Add helper functions into context.</p><a name="example18b.py" id="example18b.py"></a>
 
       <div class="program_caption">
-        File 'example19b.py':
+        File 'example18b.py':
       </div>
       <pre class="program">
 import tenjin
@@ -2083,24 +2087,24 @@ def f1(label, url):
 
 engine = tenjin.Engine()
 context = { 'label': 'Top', 'url': '/', <strong>'link_to': f1</strong> }
-output = engine.render('example19.pyhtml', context)
+output = engine.render('example18.pyhtml', context)
 print output,
-</pre><a name="example19b.result" id="example19b.result"></a>
+</pre><a name="example18b.result" id="example18b.result"></a>
 
       <div class="terminal_caption">
         Result:
       </div>
       <pre class="terminal">
-$ python example19b.py
+$ python example18b.py
 &lt;ul&gt;
   &lt;li&gt;&lt;a href="/"&gt;Top&lt;/a&gt;&lt;/li&gt;
 &lt;/ul&gt;
 </pre>
 
-      <p>(C) Add functions to a dict object and pass it as global variables.</p><a name="example19c.py" id="example19c.py"></a>
+      <p>(C) Add functions to a dict object and pass it as global variables.</p><a name="example18c.py" id="example18c.py"></a>
 
       <div class="program_caption">
-        File 'example19c.py':
+        File 'example18c.py':
       </div>
       <pre class="program">
 import tenjin
@@ -2112,15 +2116,15 @@ def f1(label, url):
 engine = tenjin.Engine()
 context = { 'label': 'Top', 'url': '/' }
 globals = {'escape':escape, 'to_str':to_str, <strong>'link_to':f1</strong>}
-output = engine.render('example19.pyhtml', context, globals=globals)
+output = engine.render('example18.pyhtml', context, globals=globals)
 print output,
-</pre><a name="example19c.result" id="example19c.result"></a>
+</pre><a name="example18c.result" id="example18c.result"></a>
 
       <div class="terminal_caption">
         Result:
       </div>
       <pre class="terminal">
-$ python example19c.py
+$ python example18c.py
 &lt;ul&gt;
   &lt;li&gt;&lt;a href="/"&gt;Top&lt;/a&gt;&lt;/li&gt;
 &lt;/ul&gt;
