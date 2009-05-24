@@ -53,6 +53,8 @@
             <li><a href="#faq-exprpat">Is it able to change embedded expression pattern?</a></li>
 
             <li><a href="#faq-m17n">Does pyTenjin support M17N?</a></li>
+
+            <li><a href="#faq-m17n-cache">Is it possible to create separated template chaches for each language?</a></li>
           </ul>
         </li>
 
@@ -579,14 +581,25 @@ $ python ex7-expr-pattern.py
 
       <h3 class="section2">Does pyTenjin support M17N?</h3>
 
-      <p>No, but it is easy to support M17N. The point is:</p>
+      <p>No. pyTenjin doesn't provide M17 feature.</p>
+
+      <p>pyTenjin doesn't provide M17N feature directly because requirements for M17N are different for each applications or frameworks. Some applications or frameworks adapt GetText library and others use their original M17N library. What pyTenjin should do is not to provide M17N feature but to show an example to support M17N.</p>
+
+      <p>But using preprocessing, you can make your M17N template files much faster. See the next section for details.</p><br>
+      <a name="faq-m17n-cache" id="faq-m17n-cache"></a>
+
+      <h3 class="section2">Is it possible to create separated template chaches for each language?</h3>
+
+      <p>Yes.</p>
+
+      <p>The point is:</p>
 
       <ul type="disc">
-        <li>Change cache filename according to language. For example, create cache file 'file.pyhtml.en.cache', 'file.pyhtml.fr.cache', 'file.pyhtml.it.cache', and so on from template file 'file.pyhtml'.</li>
+        <li>Change cache filename according to language. For example, create cache file 'file.pyhtml.en.cache', 'file.pyhtml.fr.cache', 'file.pyhtml.it.cache', and so on from template file 'file.pyhtml'. This can be done by overriding CacheStorage#_cachename().</li>
 
-        <li>Create Engine object for each language.</li>
+        <li>Create CacheStorage and Engine object for each language.</li>
 
-        <li>(optinal) Use preprocessing for performance reason.</li>
+        <li>Use preprocessing to create different cache content for each language.</li>
       </ul>
 
       <p>The following is an example to generate M17N pages from a template file.</p><a name="ex8-m18n.pyhtml" id="ex8-m18n.pyhtml"></a>
@@ -615,41 +628,44 @@ import re
 ##
 MESSAGE_CATALOG = {
     'en': { 'Hello': 'Hello',
-            'Good bye': 'Good bye', },
+            'Good bye': 'Good bye',
+          },
     'fr': { 'Hello': 'Bonjour',
-            'Good bye': 'Au revoir', },
-    }
-
+            'Good bye': 'Au revoir',
+          },
+}
 
 ##
-## engine class which supports M17N
+## create translation function and return it.
+## ex.
+##    _ = create_translation_func('fr')
+##    print _('Hello')   #=&gt; 'Bonjour'
 ##
-class M17NEngine(tenjin.Engine):
+def create_translation_func(lang):
+    dict = MESSAGE_CATALOG.get(lang)
+    if not dict:
+        raise ValueError("%s: unknown lang." % lang)
+    def func(message_key):
+        return dict.get(message_key)
+    return func
+    
+##
+## cache storage class to cache template object for each language
+##
+class M17nCacheStorage(tenjin.MarshalCacheStorage):
 
-    lang = 'en'     # default language name
+    lang = 'en'       # default language
 
-    ## __ini__() takes 'lang' argument
     def __init__(self, *args, **kwargs):
-        lang = 'lang' in kwargs and kwargs.pop('lang') or None
-        tenjin.Engine.__init__(self, *args, **kwargs)
-        if lang: self.lang = lang     # set language name
+        if 'lang' in kwargs:
+            lang = kwargs.pop('lang')
+            if lang: 
+                self.lang = lang
+        tenjin.MarshalCacheStorage.__init__(self, *args, **kwargs)
 
-    ## change cache filename to 'file.html.lang.cache'
-    <strong>def cachename(self, filename):</strong>
-        <strong>return "%s.%s.cache" % (filename, self.lang)</strong>
-
-    ## translate message according to self.lang
-    def translate(self, message_key):
-        message_dict = MESSAGE_CATALOG.get(self.lang)
-        if not message_dict:
-            return message_key
-        return message_dict.get(message_key, message_key)
-
-    ## set self.translate() to context['_']
-    def hook_context(self, context):
-        tenjin.Engine.hook_context(self, context)
-        context['_'] = self.translate
-
+    ## change cache filename to 'file.pyhtml.lang.cache'
+    <strong>def _cachename(self, fullpath):</strong>
+        <strong>return "%s.%s.cache" % (fullpath, self.lang)</strong>
 
 ##
 ## test program
@@ -657,19 +673,29 @@ class M17NEngine(tenjin.Engine):
 if __name__ == '__main__':
 
     template_name = 'ex8-m18n.pyhtml'
-    context = { 'username': 'World' }
+    common_context = { 'username': 'World' }
+
+    ## create cache storage and engine for English
+    <strong>m17ncache = M17nCacheStorage(lang='en')</strong>
+    engine = tenjin.Engine(preprocess=True, <strong>cache=m17ncache</strong>)
+
+    ## render html for English
+    context = common_context.copy()
+    context['_'] = create_translation_func('en')
+    html = engine.render(template_name, context)
+    print("--- lang: en ---")
+    print(html)
     
-    ## engine for english
-    engine = <strong>M17NEngine</strong>(preprocess=True, cache=None)
-    output = engine.render(template_name, context)
-    print "--- lang: %s ---" %  engine.lang
-    print output
-    
-    ## engine for French
-    engine = <strong>M17NEngine</strong>(preprocess=True, cache=None, <strong>lang='fr'</strong>)
-    output = engine.render(template_name, context)
-    print "--- lang: %s ---" %  engine.lang
-    print output
+    ## create cache storage and engine for French
+    <strong>m17ncache = M17nCacheStorage(lang='fr')</strong>
+    engine = tenjin.Engine(preprocess=True, <strong>cache=m17ncache</strong>)
+
+    ## render html for French
+    context = common_context.copy()
+    context['_'] = create_translation_func('fr')
+    html = engine.render(template_name, context)
+    print("--- lang: fr ---")
+    print(html)
 </pre><a name="ex8_m18n.result" id="ex8_m18n.result"></a>
 
       <div class="terminal_caption">
@@ -689,7 +715,26 @@ $ python ex8-m18n.py
 
 </pre>
 
-      <p>pyTenjin doesn't provide M17N feature directly because requirements for M17N are different for each applications or frameworks. Some applications or frameworks adapt GetText library and others use their original M17N library. What pyTenjin should do is not to provide M17N feature but to show an example to support M17N.</p><br>
+      <p>After that, you can find two cache files are created.</p>
+      <pre class="terminal">
+$ ls ex8-m18n.pyhtml*
+ex8-m18n.pyhtml  ex8-m18n.pyhtml.<strong>en</strong>.cache  ex8-m18n.pyhtml.<strong>fr</strong>.cache
+</pre>
+
+      <p>And each cache files have different content.</p>
+      <pre class="terminal">
+### "_('Hello')" is translated into "Hello" in Engilish cache file
+$ pytenjin -a dump ex8-m18n.pyhtml.en.cache
+_buf.extend(('''&lt;div&gt;
+ &lt;p&gt;<strong>Hello</strong> ''', escape(to_str(username)), '''!&lt;/p&gt;
+&lt;/div&gt;\n''', ));
+
+### "_('Hello')" is translated into "Bonjour" in French cache file
+$ pytenjin -a dump ex8-m18n.pyhtml.fr.cache
+_buf.extend(('''&lt;div&gt;
+ &lt;p&gt;<strong>Bonjour</strong> ''', escape(to_str(username)), '''!&lt;/p&gt;
+&lt;/div&gt;\n''', ));
+</pre><br>
       <br>
       <a name="faq-layout" id="faq-layout"></a>
 
@@ -987,7 +1032,7 @@ s2 = ${s2}  # OK
 
             <td class="td2">&lt;?py ... ?&gt;</td>
 
-            <td class="td2">&lt;?Erubis::PI ... ?&gt;</td>
+            <td class="td2">&lt;?PY ... ?&gt;</td>
           </tr>
 
           <tr class="tr2">
@@ -1379,7 +1424,7 @@ _buf.extend(('''&lt;p&gt;
 
       <p>Preprocessing is also effective for M17N (Multilingualization), because the runtime cost of M17N can be almost zero by preprocessing.</p>
 
-      <p>See <a href="#faq-m17n">this section</a> for M17N example using preprocessing.</p><br>
+      <p>See <a href="#faq-m17n-cache">this section</a> for M17N example using preprocessing.</p><br>
       <br>
       <br>
       <a name="faq-performance" id="faq-performance"></a>
