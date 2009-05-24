@@ -6185,89 +6185,63 @@ These are defined in [%=htmlhelper%] module.
 
 % if PYTHON
 
+
 .$$ Template Encoding		| dev-encoding
 
-(Python 2.x)
+
+.$$$ Python 2.x
 
 [%= name %] provides two approaches for encoding in Python 2.x.
 
-One approach is to handle template content as string (byte sequence),
-and convert context data into string by extended {{,to_str(),}} function
-if context data is unicode object.
-This is the default way in Python 2.x.
+.% (A) Binary-based approach
+   
+   [%=name%] handles templates as binary file.
+   For example, text "foo" will be converted into {{,_buf << 'foo',}}.
+   In this approach, unicode object should be encoded into binary(=str) by {{,to_str(),}}
+   .--------------------
+   to_str = tenjin.generate_tostrfunc({{*encode*}}='utf-8')
+      # ex. to_str(u'\u65e5\u672c\u8a9e') => '\xe6\x97\xa5\xe6\x9c\xac\xe8\xaa\x9e'
+   engine = tenjin.Engine()
+   .--------------------
+   If you have some troubles about encoding in this approach, try to add encoding declaration in your templates if your templates contain non-ascii characters.
+   .--------------------
+   {{*<?py # -*- coding: utf-8 -*- ?>*}}
+   <h1>Hello</h1>
+   .--------------------
 
-% n += 1 
+.% (B) Unicode-based approach
+   
+   You can hanlde templates as unicode string with {{,encoding,}} option for tenjin.Engine().
+   For example, text "foo" will be converted into {{,_buf << {{*u*}}'foo',}}.
+   In this approach, binary(=str) should be decoded into unicode in {{,to_str(),}}.
+   .--------------------
+   to_str = tenjin.generate_tostrfunc({{*decode*}}='utf-8')
+      # ex. to_str('\xe6\x97\xa5\xe6\x9c\xac\xe8\xaa\x9e')  #=> u'\u65e5\u672c\u8a9e'
+   engine = tenjin.Engine({{*encoding*}}='utf-8')
+   html = engine.render('index.pyhtml')
+   if isinstance(html, unicode): html = html.encode('utf-8')
+   print(html)
+   .--------------------
+   You should not add encoding declaration in your templates, or you will get the following error.
+   .--------------------
+   SyntaxError: encoding declaration in Unicode string
+   .--------------------
 
-.? File 'example[%= n %]a.py':
-.-------------------- example[%= n %]a.py'
-import tenjin
-from tenjin.helpers import *
+In Python 2.x, binary-based approach is faster than unicode-based approach.
+If you don't have any special reason, it is recommend to be with binary-based approach.
 
-## Create to_str() function which encodes unicode object into string
-## according to encoding.
-{{*to_str = tenjin.generate_tostrfunc('utf-8')*}}
-       #  ex.  to_str(u'\u65e5\u672c\u8a9e')
-       #          => '\xe6\x97\xa5\xe6\x9c\xac\xe8\xaa\x9e' (utf-8 string)
 
-engine = tenjin.Engine()
-context = { 'name': u'\u65e5\u672c\u8a9e' }  # non-ascii characters
-output = engine.render('encoding1.pyhtml', context)
-print(output)
-.--------------------
-
-The other approach is to convert template content into unicode object.
-This is slower than the previous approach, so if you are speed freak, you should adopt the previous one.
-
-.? File 'example[%= n %]b.py':
-.-------------------- example[%= n %]b.py'
-import tenjin
-from tenjin.helpers import *
-
-## Create to_str() function which doesn't encode unicode object into string.
-{{*to_str = tenjin.generate_tostrfunc(None)*}}
-
-## If you specify encoding option for Template() or Engine(),
-## content of template will be converted into unicode object.
-engine = tenjin.Engine({{*encoding='utf-8'*}})
-## If you want to see python code, try the following:
-##   template = engine.get_template(filename)
-##   print template.script
-
-## You must encode output into string because output will be unicode.
-context = { 'name': u'\u65e5\u672c\u8a9e' }  # non-ascii characters
-output = engine.render('encoding1.pyhtml', context)
-{{*if isinstance(output, unicode):*}}
-    {{*output = output.encode('utf-8')*}}
-print(output)
-.--------------------
-
-(Python 3.0)
+.$$$ Python 3.0
 
 In Python 3.0, string is treated as unicode object.
 So [%=name%] handles all templates in string base (= unicode base), and bytes data is converted into str by to_str() function.
 If you don't specify any encoding, [%=name%] uses 'utf-8' encoding as default.
 
 .--------------------
-to_str = tenjin.generate_tostrfunc('utf-8')  ## decode bytes into utf-8 string
-engine = tenjin.Engine(encoding='utf-8')     ## handle template as utf-8 text
+to_str = tenjin.generate_tostrfunc('utf-8')  ## decode bytes into unicode
+engine = tenjin.Engine(encoding='utf-8')     ## handle template as unicode
 .--------------------
 
-.#+++
-
-.-------------------- encoding1.pyhtml
-<p>#{name}</p>
-.--------------------
-
-.==================== example[%= n %]_encoding.result2
-$ python example[%= n %]a.py
-<p>日本語</p>
-
-$ python example[%= n %]b.py
-<p>日本語</p>
-
-.====================
-
-.#---
 
 % end 
 
