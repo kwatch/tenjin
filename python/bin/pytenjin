@@ -140,6 +140,8 @@ class Main(object):
                 _to_str = tenjin.generate_tostrfunc(decode=_encoding)
             globals()[tostrfunc] = _to_str
         encoding = properties.get('encoding')
+        if encoding:
+            globals()['to_str'] = tenjin.generate_tostrfunc(decode=encoding)
 
         ## add '.' to sys.path
         sys.path.append('.')
