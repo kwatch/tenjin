@@ -616,14 +616,6 @@ class Template(object):
 
     def statement_hook(self, stmt):
         """expand macros and parse '#@ARGS' in a statement."""
-        ## macro expantion
-        #macro_pattern = r'^(\s*)(\w+)\((.*?)\);?\s*$';
-        #m = re.match(macro_pattern, stmt)
-        #if m:
-        #    lspace, name, arg = m.group(1), m.group(2), m.group(3)
-        #    handler = self.get_macro_handler(name)
-        #    return handler is None and stmt or lspace + handler(arg)
-        ## arguments declaration
         if self.args is None:
             args_pattern = r'^ *#@ARGS(?:[ \t]+(.*?))?$'
             m = re.match(args_pattern, stmt)
@@ -641,24 +633,6 @@ class Template(object):
                 return ''.join(declares)
         ##
         return stmt
-
-    #MACRO_HANDLER_TABLE = {
-    #    "echo":
-    #        lambda arg: "_buf.append(%s); " % arg,
-    #    "include":
-    #        lambda arg: "_buf.append(_context['_engine'].render(%s, _context, layout=False)); " % arg,
-    #    "start_capture":
-    #        lambda arg: "_buf_bkup = _buf; _buf = []; _capture_varname = %s; " % arg,
-    #    "stop_capture":
-    #        lambda arg: "_context[_capture_varname] = ''.join(_buf); _buf = _buf_bkup; ",
-    #    "start_placeholder":
-    #        lambda arg: "if (_context[%s]) _buf.push(_context[%s]); else:" % (arg, arg),
-    #    "stop_placeholder":
-    #        lambda arg: "#endif",
-    #}
-    #
-    #def get_macro_handler(name):
-    #    return MACRO_HANDLER_TABLE.get(name)
 
     EXPR_PATTERN = None
 
