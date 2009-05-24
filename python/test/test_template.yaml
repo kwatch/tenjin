@@ -748,7 +748,7 @@
 - name:         option_encoding1
   desc:         encoding option
   disabled*:
-   "python": false
+   "python": true
    "ruby":   true
   options: { encoding: utf-8 }
   testopts: { encoding: utf-8 }
