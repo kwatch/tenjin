@@ -1,0 +1,276 @@
+.######################################################################
+.$ [ANN] pyTenjin 0.7.0 - the fastest and full-featured template engine
+
+I have released pyTenjin 0.7.0
+http://www.kuwata-lab.com/tenjin/
+
+pyTenjin is the fastest template engine for Python.
+It is not only very fast but also full-featured and easy-to-use.
+You can embed Python statements and expressions into your text file.
+Tenjin converts it into Python program and evaluate it.
+
+Features:
+* very fast
+  - x2 faster than Mako
+  - x3 faster than Cheetah and Myghty
+  - x9 faster than Django
+  - x60 faster than Kid
+* Full-featured
+  - layout template
+  - partial template
+  - capturing
+  - preprocessing
+  - and so on...
+
+You can see the detail of benchmark at:
+http://www.kuwata-lab.com/tenjin/
+(benchmark script is included in pyTenjin distribution.)
+
+
+Enhancements in 0.7.0
+---------------------
+
+* Python 3.0 is now supported officially.
+* Google AppEngine (GAE) supported.
+  http://www.kuwata-lab.com/tenjin/pytenjin-faq.html#faq-google-appengine
+* Logging support.
+* enerate_tostrfun() can take not only encode-encoding but also
+  decode-encoding.
+* (Experimental) HTML helper functions are now provided.
+* New command-line option '-a cache' supported.
+* You can share caches between all engine objects.
+* Pickle-base and text-base template caching support.
+
+See CHANGES.txt for details.
+  http://www.kuwata-lab.com/pytenjin-CHANGES.txt
+
+
+Changes in 0.7.0
+----------------
+
+* 'cache' option for tenjin.Engine() changed.
+* to_str() is changed to encode unicode object into binary(=str)
+    using utf-8 encoding in default.
+* Benchmark script now skips to do benchmark template libraries
+  which are failed to import.
+
+
+Bugfix in 0.7.0
+----------------
+* In preprocessing, error was raised when expression is not string.
+  Now fixed.
+
+
+Download and Install
+--------------------
+
+Type:
+
+  $ sudo eazy_install Tenjin
+
+Or:
+
+  $ tar xzf Tenjin-0.7.0.tar.gz
+  $ cd Tenjin-0.7.0
+  $ sudo python setup.py install
+
+
+Documents
+---------
+
+* User's Guide
+  http://www.kuwata-lab.com/tenjin/pytenjin-users-guide.html
+
+* FAQ
+  http://www.kuwata-lab.com/tenjin/pytenjin-faq.html
+
+* Examples
+  http://www.kuwata-lab.com/tenjin/pytenjin-examples.html
+
+* (Presentation) Tenjin - the fastest template engine in the world
+  http://www.slideshare.net/kwatch/tenjin-the-wastest-template-engine-in-the-world
+
+
+
+Have fun!
+
+--
+regards,
+makoto kuwata
+
+
+.######################################################################
+.$ [ANN] pyTenjin 0.6.2 - a fast and full-featured template engine
+
+I have released pyTenjin 0.6.2.
+http://www.kuwata-lab.com/tenjin/
+This is a tiny bug fix release.
+
+pyTenjin is the fastest template engine for Python.
+Not only very fast, but also full-featured and easy-to-use is pyTenjin.
+You can embed Python statements and expressions into your text file.
+Tenjin converts it into Python program and evaluate it.
+
+Features:
+* very fast
+  - x2 faster than Mako
+  - x3 faster than Cheetah and Myghty
+  - x9 faster than Django
+  - x60 faster than Kid
+* Full-featured
+  - layout template
+  - partial template
+  - capturing
+  - preprocessing
+  - and so on...
+
+You can see the detail of benchmark at:
+http://www.kuwata-lab.com/tenjin/
+(benchmark script is included in pyTenjin distribution.)
+
+
+Installation:
+
+   $ easy_install Tenjin
+   ## or download, extract, and execute 'setup.py'
+
+
+Example: template.pyhtml
+
+   <h1>${title}</h1>
+   <ul>
+   <?py for item in items: ?>
+     <li>${item}
+         #{item}</li>
+   <?py #end ?>
+   </ul>
+
+Example: main.py
+
+   import tenjin
+   from tenjin.helpers import to_str, escape
+   engine = tenjin.Engine()
+   context = { 'title': 'pyTenjin Example',
+               'items': ['<AAA>', 'B&B', '"CCC"'] }
+   output = engine.render('template.pyhtml', context)
+   print output,
+
+Example: result
+
+   $ python main.py
+   <h1>pyTenjin Example</h1>
+   <ul>
+     <li>&lt;AAA&gt;
+         <AAA></li>
+     <li>B&amp;B
+         B&B</li>
+     <li>&quot;CCC&quot;
+         "CCC"</li>
+   </ul>
+
+
+See user's guide and examples at the above page for details.
+New release of pyTenjin will be informed at:
+http://www.kuwata-lab.com/support/
+
+
+Release 0.6.2:
+
+[Changes]
+
+  * When '-S', '-a retrieve', '-X', or '-a statements' specified,
+    pytenjin command replaces text before expressions into spaces
+    and print it.
+
+[Bugfix]
+
+  * pytenjin command printed "\n\n" instead of "\n" when '-U' specified.
+    Fixed to print "\n".
+
+
+--
+regards,
+makoto kuwata
+
+.######################################################################
+
+.$ [ANN] pyTenjin 0.6.1 - a fast and full-featured template engine
+
+I have released Tenjin 0.6.1.
+http://www.kuwata-lab.com/tenjin/
+In this release, benchmark script is enhanced to support
+Genshi, Mako, and Templetor.
+
+Tenjin is a very fast and full-featured temlate engine.
+You can embed Python statements and expressions into your text file.
+Tenjin converts it into Python program and evaluate it.
+
+How fast Tenjin is? It is about:
+* three times faster than Cheetah and Myghty
+* nine times faster than Django
+* sixty times faster than Kid
+* twice faster than Mako
+You can see the detail of benchmark at:
+http://www.kuwata-lab.com/tenjin/
+(benchmark script is included in Tenjin distribution.)
+
+Tenjin is not only so fast and lightweight but also full-featured.
+It supports:
+* layout template
+* partial template
+* capturing
+* preprocessing
+* and so on...
+
+See user's guide and examples at the above page for details.
+New release of Tenjin will be informed at:
+http://www.kuwata-lab.com/support/
+
+
+Release 0.6.1:
+
+[Enhancements]
+
+  * Benchmark script ('benchmark/bench.py') is rewrited.
+  * Benchmark supports Genshi, Mako, and Templetor.
+  * Add examples.
+
+[Bugfix]
+
+  * Typo in User's Guide is fixed.
+
+
+--
+makoto kuwata
+
+.######################################################################
+
+.$ [ANN] pyTenjin 0.6.0 - a fast and full-featured template engine
+
+I have Released pyTenjin 0.6.0.
+http://www.kuwata-lab.com/tenjin/
+This is a first release of pyTenjin.
+
+pyTenjin is a very fast and full-featured temlate engine based on
+embedded Python.
+You can embed Python statements and expressions into your text file.
+pyTenjin converts it into Python program and evaluate it.
+
+Features:
+* Very fast (three times faster than Cheetah, nine times faster than Djano).
+* Lightweight (only one file which contains about 1000 lines)
+* Not break HTML design because it uses XML Processing
+  Instructions (PI) as embedded notation for Python statements.
+* Secure because it supports escaping expression value by default.
+* Auto caching of converted Python code.
+* Nestable layout template
+* Inlucde other templates
+* Capture part of template
+* Load YAML file as context data
+* Preprocessing support
+
+See user's guide and examples at the above page.
+
+--
+regards
+kwatch
