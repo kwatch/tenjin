@@ -36,12 +36,13 @@ download = 'http://downloads.sourceforge.net/tenjin/%s-%s.tar.gz' % (name, versi
 #download = 'http://jaist.dl.sourceforge.net/sourceforge/tenjin/%s-%s.tar.gz' % (name, version)
 classifiers = [
     'Development Status :: 4 - Beta',
-    'Environment :: Console'
+    'Environment :: Console',
     'Intended Audience :: Developers',
     'License :: OSI Approved :: MIT License',
     'Operating System :: OS Independent',
     'Programming Language :: Python',
     'Topic :: Software Development :: Libraries :: Python Modules',
+    'Topic :: Internet :: WWW/HTTP :: Dynamic Content :: CGI Tools/Libraries',
 ]
 
 
