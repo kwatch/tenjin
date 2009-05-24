@@ -862,67 +862,17 @@ $ pytenjin -c "items=['AAA', 'BBB', 'CCC']" ex10-content.pyhtml
 
 pyTenjin supports two approaches to handle template encoding.
 
-One way is to handle template content as string (byte sequence).
-In this way, you must decode unicode object to str in 'to_str()' function.
+One approach is binary(=str)-based: to handle template content as string (byte sequence).
+In this approach, you must decode unicode object to str in 'to_str()' function.
+Command-line option '-k {{/encoding/}}' is equivarent to this.
 
-pyTenjin provides the helper method for this purpose.
-
-
-.? File 'ex11a.rb':
-.-------------------- ex11a.py'
-import tenjin
-from tenjin.helpers import *
-
-## generate to_str() function which decode unicode object
-## into string object according to encoding name.
-encoding = 'euc-jp'
-{{*to_str = tenjin.generate_tostrfunc(encoding)*}}
-
-engine = tenjin.Engine()
-context = { 'title': u'\u65e5\u672c\u8a9e' }
-output = engine.render('ex11.euc-jp.pyhtml', context)
-assert isinstance(output, str)
-print output
-.--------------------
-
-Command-line option '-k {{/encoding/}}' is equivarent to the above way.
-
-The second way to convert template content into unicode object.
-In this way, output is unicode object and you must decode it to string with proper encoding name.
-
-.? File 'ex11b.py':
-.-------------------- ex11b.py'
-import tenjin
-from tenjin.helpers import *
-
-## set encoding option
-encoding = 'euc-jp'
-engine = tenjin.Engine({{*encoding=encoding*}})  
-context = { 'title': u'\u65e5\u672c\u8a9e' }
-output = engine.render('ex11.euc-jp.pyhtml', context)
-assert isinstance(output, unicode)
-print {{*output.decode(encoding)*}}   # decode unicode object into string
-.--------------------
-
+The other one is unicode-based: to convert template content into unicode object.
+In this approach, you must decode binary(=str) data into unicode object in 'to_str()' function.
 Command-line option '--encoding={{/encoding/}}' is equivarent the second way.
 
+See {{<User's Guide|users-guide.html#dev-encoding>}} for details.
 
-.#+++
-
-.? File 'ex11.euc-jp.pyhtml':
-.-------------------- ex11.euc-jp.pyhtml
-<h1>${title}</h1>
-<p>日本語</p>
-<ul>
-<?py #items = [u'\u65e5', u'\u672c', u'\u8a9e'] # OK ?>
-<?py items = [u'日', u'本', u'語'] # NG for ex11a.rb ?>
-<?py for item in items: ?>
- <li>${item}</li>
-<?py #end ?>
-</ul>
-.--------------------
-
-.#---
+In Python 3.0, pyTenjin supports only unicode-based approach because str object represents unicode.
 
 
 
@@ -932,14 +882,25 @@ Command-line option '--encoding={{/encoding/}}' is equivarent the second way.
 Yes. You can contain encoding declaration in template.
 
 
-.? File 'ex12.pyhtml':
-.-------------------- ex12.pyhtml
+.? File 'ex11.pyhtml':
+.-------------------- ex11.pyhtml
 {{*<?py # -*- coding: <encoding-name> -*- ?>*}}
 <?py s1 = '..non-ascii characters..' ?>
 <?py s2 = u'..non-ascii characters..' ?>
 s1 = ${s1}  # OK
 s2 = ${s2}  # OK
 .--------------------
+
+
+
+.$$ I got 'SyntaxError: encoding declaration in Unicode string'	| faq-encoding-syntaxerr
+
+This is because you added encoding declaration in template file AND you specified encoding option to tenjin.Engine() or tenjin.Template().
+
+Solution:
+
+.* If you specify encoding option to tenjin.Engine() or tenjin.Template(), remove encoding declaration from your template file.
+.* If you want to add encoding declaration into your template file, don't specify encoding option to tenjin.Engine() or tenjin.Template().
 
 
 
@@ -1423,8 +1384,8 @@ Template engine should use their host language directly unless there are some ki
 
 You can get more speed by including 'escape()' and 'to_str()' functions to context data.
 
-.? File 'ex13a.py':
-.-------------------- ex13a.py
+.? File 'ex12a.py':
+.-------------------- ex12a.py
 import tenjin
 from tenjin.helpers import *
 
@@ -1434,14 +1395,14 @@ context = { 'title': 'Example', 'items': ['A', 'B', 'C'] }
 {{*context['to_str'] = to_str*}}
 
 engine = tenjin.Engine()
-output = engine.render('ex13a.pyhtml', context)
+output = engine.render('ex12a.pyhtml', context)
 .--------------------
 
 You can get more and more speed by deleting implicit call of 'to_str()' function.
 Of course, you have to call it properly in your templates.
 
-.? File 'ex13b.py':
-.-------------------- ex13b.py
+.? File 'ex12b.py':
+.-------------------- ex12b.py
 import tenjin
 from tenjin.helpers import *
 
@@ -1454,7 +1415,7 @@ context['to_str'] = to_str
 engine = tenjin.Engine({{*tostrfunc=''*}})
 
 ## show python code and output
-filename = 'ex13b.pyhtml'
+filename = 'ex12b.pyhtml'
 template = engine.get_template(filename)
 output = engine.render(filename, context)
 print "--- python code ---"
@@ -1463,8 +1424,8 @@ print "--- output ---"
 print output,
 .--------------------
 
-.? File 'ex13b.pyhtml':
-.-------------------- ex13b.pyhtml
+.? File 'ex12b.pyhtml':
+.-------------------- ex12b.pyhtml
 <h1>${title}</h1>
 <ul>
 <?py for i, item in enumerate(items): ?>
@@ -1474,8 +1435,8 @@ print output,
 .--------------------
 
 .? Result:
-.==================== ex13b_deltostr.result
-$ python ex13b.py
+.==================== ex12b_deltostr.result
+$ python ex12b.py
 --- python code ---
 _buf.extend(('''<h1>''', {{*escape((title))*}}, '''</h1>
 <ul>\n''', ));

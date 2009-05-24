@@ -77,6 +77,8 @@
             <li><a href="#faq-template-encoding">How to specify template encoding?</a></li>
 
             <li><a href="#faq-encoding-decl">Can I specify encoding name in template file?</a></li>
+
+            <li><a href="#faq-encoding-syntaxerr">I got 'SyntaxError: encoding declaration in Unicode string'</a></li>
           </ul>
         </li>
 
@@ -909,58 +911,21 @@ $ pytenjin -c "items=['AAA', 'BBB', 'CCC']" ex10-content.pyhtml
 
       <p>pyTenjin supports two approaches to handle template encoding.</p>
 
-      <p>One way is to handle template content as string (byte sequence). In this way, you must decode unicode object to str in 'to_str()' function.</p>
+      <p>One approach is binary(=str)-based: to handle template content as string (byte sequence). In this approach, you must decode unicode object to str in 'to_str()' function. Command-line option '-k <em>encoding</em>' is equivarent to this.</p>
 
-      <p>pyTenjin provides the helper method for this purpose.</p>
+      <p>The other one is unicode-based: to convert template content into unicode object. In this approach, you must decode binary(=str) data into unicode object in 'to_str()' function. Command-line option '--encoding=<em>encoding</em>' is equivarent the second way.</p>
 
-      <div class="program_caption">
-        File 'ex11a.rb':
-      </div>
-      <pre class="program">
-import tenjin
-from tenjin.helpers import *
+      <p>See <a href="users-guide.html#dev-encoding">User's Guide</a> for details.</p>
 
-## generate to_str() function which decode unicode object
-## into string object according to encoding name.
-encoding = 'euc-jp'
-<strong>to_str = tenjin.generate_tostrfunc(encoding)</strong>
-
-engine = tenjin.Engine()
-context = { 'title': u'\u65e5\u672c\u8a9e' }
-output = engine.render('ex11.euc-jp.pyhtml', context)
-assert isinstance(output, str)
-print output
-</pre>
-
-      <p>Command-line option '-k <em>encoding</em>' is equivarent to the above way.</p>
-
-      <p>The second way to convert template content into unicode object. In this way, output is unicode object and you must decode it to string with proper encoding name.</p>
-
-      <div class="program_caption">
-        File 'ex11b.py':
-      </div>
-      <pre class="program">
-import tenjin
-from tenjin.helpers import *
-
-## set encoding option
-encoding = 'euc-jp'
-engine = tenjin.Engine(<strong>encoding=encoding</strong>)  
-context = { 'title': u'\u65e5\u672c\u8a9e' }
-output = engine.render('ex11.euc-jp.pyhtml', context)
-assert isinstance(output, unicode)
-print <strong>output.decode(encoding)</strong>   # decode unicode object into string
-</pre>
-
-      <p>Command-line option '--encoding=<em>encoding</em>' is equivarent the second way.</p><br>
+      <p>In Python 3.0, pyTenjin supports only unicode-based approach because str object represents unicode.</p><br>
       <a name="faq-encoding-decl" id="faq-encoding-decl"></a>
 
       <h3 class="section2">Can I specify encoding name in template file?</h3>
 
-      <p>Yes. You can contain encoding declaration in template.</p><a name="ex12.pyhtml" id="ex12.pyhtml"></a>
+      <p>Yes. You can contain encoding declaration in template.</p><a name="ex11.pyhtml" id="ex11.pyhtml"></a>
 
       <div class="program_caption">
-        File 'ex12.pyhtml':
+        File 'ex11.pyhtml':
       </div>
       <pre class="program">
 <strong>&lt;?py # -*- coding: &lt;encoding-name&gt; -*- ?&gt;</strong>
@@ -969,6 +934,19 @@ print <strong>output.decode(encoding)</strong>   # decode unicode object into st
 s1 = ${s1}  # OK
 s2 = ${s2}  # OK
 </pre><br>
+      <a name="faq-encoding-syntaxerr" id="faq-encoding-syntaxerr"></a>
+
+      <h3 class="section2">I got 'SyntaxError: encoding declaration in Unicode string'</h3>
+
+      <p>This is because you added encoding declaration in template file AND you specified encoding option to tenjin.Engine() or tenjin.Template().</p>
+
+      <p>Solution:</p>
+
+      <ul type="disc">
+        <li>If you specify encoding option to tenjin.Engine() or tenjin.Template(), remove encoding declaration from your template file.</li>
+
+        <li>If you want to add encoding declaration into your template file, don't specify encoding option to tenjin.Engine() or tenjin.Template().</li>
+      </ul><br>
       <br>
       <a name="faq-preprocessing" id="faq-preprocessing"></a>
 
@@ -1489,10 +1467,10 @@ templetor-reuse         61.46000    0.07000   61.53000   61.68483
 
       <h3 class="section2">Is there any way to get more speed?</h3>
 
-      <p>You can get more speed by including 'escape()' and 'to_str()' functions to context data.</p><a name="ex13a.py" id="ex13a.py"></a>
+      <p>You can get more speed by including 'escape()' and 'to_str()' functions to context data.</p><a name="ex12a.py" id="ex12a.py"></a>
 
       <div class="program_caption">
-        File 'ex13a.py':
+        File 'ex12a.py':
       </div>
       <pre class="program">
 import tenjin
@@ -1504,13 +1482,13 @@ context = { 'title': 'Example', 'items': ['A', 'B', 'C'] }
 <strong>context['to_str'] = to_str</strong>
 
 engine = tenjin.Engine()
-output = engine.render('ex13a.pyhtml', context)
+output = engine.render('ex12a.pyhtml', context)
 </pre>
 
-      <p>You can get more and more speed by deleting implicit call of 'to_str()' function. Of course, you have to call it properly in your templates.</p><a name="ex13b.py" id="ex13b.py"></a>
+      <p>You can get more and more speed by deleting implicit call of 'to_str()' function. Of course, you have to call it properly in your templates.</p><a name="ex12b.py" id="ex12b.py"></a>
 
       <div class="program_caption">
-        File 'ex13b.py':
+        File 'ex12b.py':
       </div>
       <pre class="program">
 import tenjin
@@ -1525,17 +1503,17 @@ context['to_str'] = to_str
 engine = tenjin.Engine(<strong>tostrfunc=''</strong>)
 
 ## show python code and output
-filename = 'ex13b.pyhtml'
+filename = 'ex12b.pyhtml'
 template = engine.get_template(filename)
 output = engine.render(filename, context)
 print "--- python code ---"
 print template.script
 print "--- output ---"
 print output,
-</pre><a name="ex13b.pyhtml" id="ex13b.pyhtml"></a>
+</pre><a name="ex12b.pyhtml" id="ex12b.pyhtml"></a>
 
       <div class="program_caption">
-        File 'ex13b.pyhtml':
+        File 'ex12b.pyhtml':
       </div>
       <pre class="program">
 &lt;h1&gt;${title}&lt;/h1&gt;
@@ -1544,13 +1522,13 @@ print output,
   &lt;li&gt;#{<strong>to_str(i)</strong>}: #{item}&lt;/li&gt;
 &lt;?py #end ?&gt;
 &lt;/ul&gt;
-</pre><a name="ex13b_deltostr.result" id="ex13b_deltostr.result"></a>
+</pre><a name="ex12b_deltostr.result" id="ex12b_deltostr.result"></a>
 
       <div class="terminal_caption">
         Result:
       </div>
       <pre class="terminal">
-$ python ex13b.py
+$ python ex12b.py
 --- python code ---
 _buf.extend(('''&lt;h1&gt;''', <strong>escape((title))</strong>, '''&lt;/h1&gt;
 &lt;ul&gt;\n''', ));
