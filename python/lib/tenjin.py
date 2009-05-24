@@ -817,7 +817,7 @@ class Template(object):
             self.compile()
         exec(self.bytecode, globals, locals)
         if bufarg is not None:
-            return None
+            return bufarg
         elif not logger:
             return ''.join(_buf)
         else:
