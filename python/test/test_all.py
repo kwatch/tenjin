@@ -5,18 +5,26 @@
 ###
 
 
+import sys
+python3 = sys.version_info[0] == 3
+python2 = sys.version_info[0] == 2
+
+
 def main(verbose):
 
-    basenames = (
+    basenames = [
         "test_template",
         "test_engine",
         "test_preprocess",
         "test_htmlhelper",
         "test_main",
+        "test_encoding",
         "test_users_guide",
         "test_faq",
         "test_examples",
-        )
+    ]
+    if python3:
+        basenames.remove("test_encoding")
 
     if verbose:
 
