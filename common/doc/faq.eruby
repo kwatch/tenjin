@@ -2848,68 +2848,17 @@ $ [%= command %] -c '$items=array("AAA","BBB","CCC");' ex[%=n%]-content.[%= suff
 
 [%= name %] supports two approaches to handle template encoding.
 
-One way is to handle template content as string (byte sequence).
-In this way, you must decode unicode object to str in 'to_str()' function.
+One approach is binary(=str)-based: to handle template content as string (byte sequence).
+In this approach, you must decode unicode object to str in 'to_str()' function.
+Command-line option '-k {{/encoding/}}' is equivarent to this.
 
-[%= name %] provides the helper method for this purpose.
-
-% n += 1 
-
-.? File 'ex[%=n%]a.rb':
-.-------------------- ex[%=n%]a.py'
-import tenjin
-from tenjin.helpers import *
-
-## generate to_str() function which decode unicode object
-## into string object according to encoding name.
-encoding = 'euc-jp'
-{{*to_str = tenjin.generate_tostrfunc(encoding)*}}
-
-engine = tenjin.Engine()
-context = { 'title': u'\u65e5\u672c\u8a9e' }
-output = engine.render('ex[%=n%].euc-jp.[%= suffix %]', context)
-assert isinstance(output, str)
-print output
-.--------------------
-
-Command-line option '-k {{/encoding/}}' is equivarent to the above way.
-
-The second way to convert template content into unicode object.
-In this way, output is unicode object and you must decode it to string with proper encoding name.
-
-.? File 'ex[%=n%]b.py':
-.-------------------- ex[%=n%]b.py'
-import tenjin
-from tenjin.helpers import *
-
-## set encoding option
-encoding = 'euc-jp'
-engine = tenjin.Engine({{*encoding=encoding*}})  
-context = { 'title': u'\u65e5\u672c\u8a9e' }
-output = engine.render('ex[%=n%].euc-jp.[%= suffix %]', context)
-assert isinstance(output, unicode)
-print {{*output.decode(encoding)*}}   # decode unicode object into string
-.--------------------
-
+The other one is unicode-based: to convert template content into unicode object.
+In this approach, you must decode binary(=str) data into unicode object in 'to_str()' function.
 Command-line option '--encoding={{/encoding/}}' is equivarent the second way.
 
+See {{<User's Guide|users-guide.html#dev-encoding>}} for details.
 
-.#+++
-
-.? File 'ex[%=n%].euc-jp.[%= suffix %]':
-.-------------------- ex[%=n%].euc-jp.[%= suffix %]
-<h1>${title}</h1>
-<p>日本語</p>
-<ul>
-<?py #items = [u'\u65e5', u'\u672c', u'\u8a9e'] # OK ?>
-<?py items = [u'日', u'本', u'語'] # NG for ex[%=n%]a.rb ?>
-<?py for item in items: ?>
- <li>${item}</li>
-<?py #end ?>
-</ul>
-.--------------------
-
-.#---
+In Python 3.0, [%=name%] supports only unicode-based approach because str object represents unicode.
 
 
 
@@ -2928,6 +2877,17 @@ Yes. You can contain encoding declaration in template.
 s1 = ${s1}  # OK
 s2 = ${s2}  # OK
 .--------------------
+
+
+
+.$$ I got 'SyntaxError: encoding declaration in Unicode string'	| faq-encoding-syntaxerr
+
+This is because you added encoding declaration in template file AND you specified encoding option to tenjin.Engine() or tenjin.Template().
+
+Solution:
+
+.* If you specify encoding option to tenjin.Engine() or tenjin.Template(), remove encoding declaration from your template file.
+.* If you want to add encoding declaration into your template file, don't specify encoding option to tenjin.Engine() or tenjin.Template().
 
 
 % elsif $RUBY
