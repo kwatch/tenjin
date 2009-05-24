@@ -23,19 +23,10 @@
 ##
 
 """Very fast and light-weight template engine based embedded Python.
-
-   pyTenjin is similar to PHP or eRuby (embedded Ruby).
-   * '<?py ... ?>' represents python statement.
-   * '#{...}' represents python expression.
-   * '${...}' represents python expression with escaping.
-
-   And it provides the following features.
-   * Layout template and nested template
-   * Including other template files
-   * Template caching
-   * Capturing
-
-   See help of tenjin.Template and tenjin.Engine for details.
+   See User's Guide, FAQ, and examples for details.
+   http://www.kuwata-lab.com/tenjin/pytenjin-users-guide.html
+   http://www.kuwata-lab.com/tenjin/pytenjin-faq.html
+   http://www.kuwata-lab.com/tenjin/pytenjin-examples.html
 """
 
 __revision__ = "$Rev$"[6:-2]
@@ -190,29 +181,7 @@ def _create_helpers_module():
         context['_buf'].append(string)
 
     def start_capture(varname=None):
-        """start capturing with name.
-           * ex. list.rbhtml
-               <html><body>
-               <?py start_capture('itemlist') ?>     # start capturing
-                 <ul>
-                   <?py for item in list: ?>
-                   <li>${item}</li>
-                   <?py #end ?>
-                 </ul>
-               <?py stop_capture() ?>                # stop capturing
-               </body></html>
-           * ex. layout.rbhtml
-               <html xml:lang="en" lang="en">
-                <head>
-                 <title>Capture Example</title>
-                </head>
-                <body>
-                 <!-- content -->
-               #{itemlist}                           # use captured string
-                 <!-- /content -->
-                </body>
-               </html>
-        """
+        """start capturing with name."""
         frame = sys._getframe(1)
         context = frame.f_locals
         context['_buf_tmp'] = context['_buf']
@@ -392,49 +361,10 @@ helpers.escape = helpers.html.escape_xml
 
 class Template(object):
     """Convert and evaluate embedded python string.
-
-       Notation:
-       * '<?py ... ?>' means python statement code.
-       * '#{...}' means python expression code.
-       * '${...}' means python escaped expression code.
-
-       ex. example.pyhtml
-         <table>
-         <?py is_odd = False ?>
-         <?py for item in items: ?>
-         <?py     is_oddd = not is_odd ?>
-          <tr bgcolor="#{is_odd and '#FFF' or '#FCF'}">
-           <td>${item}</td>
-          </tr>
-         <?py #endfor ?>
-         </table>
-
-       ex.
-         >>> filename = 'example.pyhtml'
-         >>> import tenjin
-         >>> from tenjin.helpers import * # or escape, to_str
-         >>> template = tenjin.Template(filename)
-         >>> script = template.script
-         >>> # or   template = tenjin.Template()
-         >>> #      script = template.convert_file(filename)
-         >>> # or   template = tenjin.Template()
-         >>> #      input = open(filename).read()
-         >>> #      script = template.convert(input, filename)  # filename is optional
-         >>> print script
-         >>> context = {'items': ['<foo>','bar&bar','"baz"']}
-         >>> output = template.render(context)
-         >>> print output
-         <table>
-          <tr bgcolor="#FFF">
-           <td>&lt;foo&gt;</td>
-          </tr>
-          <tr bgcolor="#FCF">
-           <td>bar&amp;bar</td>
-          </tr>
-          <tr bgcolor="#FFF">
-           <td>&quot;baz&quot;</td>
-          </tr>
-         </table>
+       See User's Guide, FAQ, and examples for details.
+       http://www.kuwata-lab.com/tenjin/pytenjin-users-guide.html
+       http://www.kuwata-lab.com/tenjin/pytenjin-faq.html
+       http://www.kuwata-lab.com/tenjin/pytenjin-examples.html
     """
 
     ## default value of attributes
@@ -531,13 +461,6 @@ class Template(object):
              Input string to convert into python code.
            filename:str (=None)
              Filename of input. this is optional but recommended to report errors.
-
-           ex.
-             >>> template = tenjin.Template()
-             >>> filename = 'example.html'
-             >>> input = open(filename).read()
-             >>> script = template.convert(input, filename)   # filename is optional
-             >>> print script
         """
         if python2:
             if self.encoding and isinstance(input, str):
@@ -813,6 +736,7 @@ class Template(object):
 ##
 
 class Preprocessor(Template):
+    """Template class for preprocessing."""
 
     STMT_PATTERN = None
 
@@ -845,6 +769,7 @@ class Preprocessor(Template):
 ##
 
 class CacheStorage(object):
+    """[abstract] Template object cache class (in memory and/or file)"""
 
     def __init__(self, postfix='.cache'):
         self.postfix = postfix
@@ -1040,41 +965,10 @@ class GaeMemcacheCacheStorage(CacheStorage):
 
 class Engine(object):
     """Template Engine class.
-
-       ex.
-         >>> ## create engine
-         >>> import tenjin
-         >>> from tenjin.helpers import *
-         >>> prefix = 'user_'
-         >>> postfix = '.pyhtml'
-         >>> layout = 'layout.pyhtml'
-         >>> path = ['views']
-         >>> engine = tenjin.Engine(prefix=prefix, postfix=postfix,
-         ...                        layout=layout, path=path, encoding='utf-8')
-         >>> ## evaluate template(='views/user_create.pyhtml') with context object.
-         >>> ## (layout template (='views/layout.pyhtml') are used.)
-         >>> context = {'title': 'Create User', 'user': user}
-         >>> print engine.render(':create', context)
-         >>> ## evaluate template without layout template.
-         >>> print engine.render(':create', context, layout=False)
-
-       In template file, the followings are available.
-       * include(template_name, append_to_buf=True) :
-            Include other template
-       * _content :
-            Result of evaluating template (available only in layout file).
-
-       ex. file 'layout.pyhtml':
-         <html>
-          <body>
-           <div class="sidemenu">
-         <?py include(':sidemenu') ?>
-           </div>
-           <div class="maincontent">
-         #{_content}
-           </div>
-          </body>
-         </html>
+       See User's Guide, FAQ, and examples for details.
+       http://www.kuwata-lab.com/tenjin/pytenjin-users-guide.html
+       http://www.kuwata-lab.com/tenjin/pytenjin-faq.html
+       http://www.kuwata-lab.com/tenjin/pytenjin-examples.html
     """
 
     ## default value of attributes
