@@ -3,6 +3,7 @@ CHANGES
 =======
 
 Release 0.7.0 (2009-05-24)
+--------------------------
 
 * [Enhancements]
 
@@ -13,7 +14,7 @@ Release 0.7.0 (2009-05-24)
     See FAQ: 'Is pyTenjin ready for Google App Engine?' section.
     http://www.kuwata-lab.com/tenjin/pytenjin-faq.html#faq-google-appengine
 
-  * Logging supported.
+  * Logging support.
     ex:
 
       import logging
@@ -21,8 +22,14 @@ Release 0.7.0 (2009-05-24)
       tenjin.logger = logging
       tenjin.Engine().render('index.pyhtml')  # report some messages
 
-  * New command-line option '-a cache' supported.
-    This option enables you to generate template cache files in advance.
+  * enerate_tostrfun() can take not only encode-encoding but also
+    decode-encoding. These are exclusive.
+
+    ex:
+      ## convert unicode object into binary(=str)
+      to_str = tenjin.generate_tostrfunc(encode='utf-8')
+      ## convert binary(=str) into unicode object
+      to_str = tenjin.generate_tostrfunc(decode='utf-8')
 
   * (Experimental) HTML helper functions are now provided.
     ex:
@@ -43,6 +50,9 @@ Release 0.7.0 (2009-05-24)
       'name="rank" value="A"'
       >>> nv('rank', 'A', '.', klass='opt')
       'name="rank" value="A" id="rank.A" class="opt"'
+
+  * New command-line option '-a cache' supported.
+    This option enables you to generate template cache files in advance.
 
   * You can share caches between all engine objects.
     PyTenjin now uses full-path of template file as key of cache.
@@ -73,6 +83,13 @@ Release 0.7.0 (2009-05-24)
       cache=True  :  cached both in memory and file (marshal-based)
       cache=None  :  cached in meory but not in file
       cache=False :  never cached both in memory nor file
+
+  * to_str() is changed to encode unicode object into binary(=str)
+    using utf-8 encoding in default.
+    In short:
+
+      to_str = generate_tostrfunc(encode='utf-8')   # 0.7.0
+      to_str = generate_tostrfunc(encode=None)      # 0.6.2
 
   * Benchmark script now skips to do benchmark template libraries
     which are failed to import.
