@@ -29,7 +29,6 @@
    http://www.kuwata-lab.com/tenjin/pytenjin-examples.html
 """
 
-__revision__ = "$Rev$"[6:-2]
 __release__  = "$Release$"
 __license__  = "MIT License"
 __all__      = ['Template', 'Engine', 'helpers', 'html', ]

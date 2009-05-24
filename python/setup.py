@@ -1,5 +1,4 @@
 ###
-### $Rev$
 ### $Release: 0.7.0 $
 ### copyright(c) 2007-2009 kuwata-lab.com all rights reserved.
 ###
