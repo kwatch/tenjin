@@ -179,7 +179,7 @@ def _create_helpers_module():
             return to_str
 
     if python2:
-        to_str = generate_tostrfunc(encode=None)  # or encode='utf-8'?
+        to_str = generate_tostrfunc(encode='utf-8')  # or encode=None?
     elif python3:
         to_str = generate_tostrfunc(decode='utf-8')
 
