@@ -975,7 +975,7 @@ $ pytenjin -c "items=['AAA', 'BBB', 'CCC']" ex10-content.pyhtml
         File 'ex11.pyhtml':
       </div>
       <pre class="program">
-<strong>&lt;?py # -*- coding: &lt;encoding-name&gt; -*- ?&gt;</strong>
+<strong>&lt;?py # -*- coding: utf-8 -*- ?&gt;</strong>
 &lt;?py s1 = '..non-ascii characters..' ?&gt;
 &lt;?py s2 = u'..non-ascii characters..' ?&gt;
 s1 = ${s1}  # OK
@@ -1013,17 +1013,17 @@ s2 = ${s2}  # OK
       <ul type="disc">
         <li>Render tempalte with specifying <code>_buf</code> and check it directly.
           <pre class="program">
-   <strong>_buf = []</strong>
-   try:
-       engine.get_template("index.pyhtml").render(context, <strong>_buf=_buf</strong>)
-       print(''.join(_buf))
-   except UnicodeDecodeError:
-       for item in _buf:
-           if isinstance(item, str):
-               try:
-                   str.decode('ascii')
-               except UnicodeDecodeError:
-                   print("*** failed to decode: %s" % repr(item))
+<strong>_buf = []</strong>
+try:
+    engine.get_template("index.pyhtml").render(context, <strong>_buf=_buf</strong>)
+    print(''.join(_buf))
+except UnicodeDecodeError:
+    for item in _buf:
+        if isinstance(item, str):
+            try:
+                str.decode('ascii')
+            except UnicodeDecodeError:
+                print("*** failed to decode: %s" % repr(item))
 </pre>
         </li>
       </ul><br>

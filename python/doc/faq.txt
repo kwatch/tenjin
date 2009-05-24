@@ -929,7 +929,7 @@ Yes. You can contain encoding declaration in template.
 
 .? File 'ex11.pyhtml':
 .-------------------- ex11.pyhtml
-{{*<?py # -*- coding: <encoding-name> -*- ?>*}}
+{{*<?py # -*- coding: utf-8 -*- ?>*}}
 <?py s1 = '..non-ascii characters..' ?>
 <?py s2 = u'..non-ascii characters..' ?>
 s1 = ${s1}  # OK
@@ -969,10 +969,10 @@ If you got UnicodeDecodeError, you should do the following solutions.
    except UnicodeDecodeError:
        for item in _buf:
            if isinstance(item, str):
-	       try:
-	           str.decode('ascii')
-	       except UnicodeDecodeError:
-	           print("*** failed to decode: %s" % repr(item))
+               try:
+                   str.decode('ascii')
+               except UnicodeDecodeError:
+                   print("*** failed to decode: %s" % repr(item))
    .--------------------
 
 
