@@ -104,45 +104,79 @@ def _create_module(module_name):
 
 def _create_helpers_module():
 
-    def generate_tostrfunc(encode=None, decode=None):
-        """Generate 'to_str' function with encode or decode encoding.
-           ex. generate to_str() function which encodes unicode into binary(=str).
-              to_str = tenjin.generate_tostrfunc(encode='utf-8')
-              repr(to_str(u'hoge'))  #=> 'hoge' (str)
-           ex. generate to_str() function which decodes binary(=str) into unicode.
-              to_str = tenjin.generate_tostrfunc(decode='utf-8')
-              repr(to_str('hoge'))   #=> u'hoge' (unicode)
-        """
-        if python2:
-            Binary = str;  Unicode = unicode
-        elif python3:
-            Binary = bytes; Unicode = str
-        if encode:
-            if decode:
-                raise ValueError("encode or decode or both should be None.")
+    if python2:
+        def generate_tostrfunc(encode=None, decode=None):
+            """Generate 'to_str' function with encode or decode encoding.
+               ex. generate to_str() function which encodes unicode into binary(=str).
+                  to_str = tenjin.generate_tostrfunc(encode='utf-8')
+                  repr(to_str(u'hoge'))  #=> 'hoge' (str)
+               ex. generate to_str() function which decodes binary(=str) into unicode.
+                  to_str = tenjin.generate_tostrfunc(decode='utf-8')
+                  repr(to_str('hoge'))   #=> u'hoge' (unicode)
+            """
+            if encode:
+                if decode:
+                    raise ValueError("can't specify both encode and decode encoding.")
+                else:
+                    def to_str(val):
+                        """Convert val into string or return '' if None. Unicode will be encoded into binary(=str)."""
+                        if val is None:              return ''
+                        if isinstance(val, str):     return val
+                        if isinstance(val, unicode): return val.encode(encode)  # unicode to binary(=str)
+                        return str(val)
             else:
-                def to_str(val):
-                    """Convert val into string or return '' if None. %s will be encoded into %s.""" % (Unicode.__name__, Binary.__name__)
-                    if val is None:              return ''
-                    if isinstance(val, Binary):  return val
-                    if isinstance(val, Unicode): return val.encode(encode)  # unicode to binary
-                    return str(val)
-        else:
-            if decode:
-                def to_str(val):
-                    """Convert val into string or return '' if None. %s will be decoded into %s.""" % (Binary.__name__, Unicode.__name__)
-                    if val is None:              return ''
-                    if isinstance(val, Binary):  return val.decode(decode)  # binary to unicode
-                    if isinstance(val, Unicode): return val
-                    return Unicode(val)
+                if decode:
+                    def to_str(val):
+                        """Convert val into string or return '' if None. Binary(=str) will be decoded into unicode."""
+                        if val is None:              return ''
+                        if isinstance(val, str):     return val.decode(decode)  # binary(=str) to unicode
+                        if isinstance(val, unicode): return val
+                        return unicode(val)
+                else:
+                    def to_str(val):
+                        """Convert val into string or return '' if None. Both binary(=str) and unicode will be retruned as-is."""
+                        if val is None:              return ''
+                        if isinstance(val, str):     return val
+                        if isinstance(val, unicode): return val
+                        return str(val)
+            return to_str
+
+    elif python3:
+        def generate_tostrfunc(decode=None, encode=None):
+            """Generate 'to_str' function with encode or decode encoding.
+               ex. generate to_str() function which encodes unicode(=str) into bytes
+                  to_str = tenjin.generate_tostrfunc(encode='utf-8')
+                  repr(to_str('hoge'))  #=> b'hoge' (bytes)
+               ex. generate to_str() function which decodes bytes into unicode(=str).
+                  to_str = tenjin.generate_tostrfunc(decode='utf-8')
+                  repr(to_str(b'hoge'))   #=> 'hoge' (str)
+            """
+            if encode:
+                if decode:
+                    raise ValueError("can't specify both encode and decode encoding.")
+                else:
+                    def to_str(val):
+                        """Convert val into string or return '' if None. Unicode(=str) will be encoded into bytes."""
+                        if val is None:              return ''
+                        if isinstance(val, str):     return val.encode(encode)  # unicode(=str) to binary
+                        if isinstance(val, bytes):   return val
+                        return str(val).encode(encode)
             else:
-                def to_str(val):
-                    """Convert val into string or return '' if None. Both %s and %s will be retruned as is.""" % (Binary.__name__, Unicode.__name__)
-                    if val is None:              return ''
-                    if isinstance(val, Binary):  return val
-                    if isinstance(val, Unicode): return val
-                    return str(val)
-        return to_str
+                if decode:
+                    def to_str(val):
+                        """Convert val into string or return '' if None. Bytes will be decoded into unicode(=str)."""
+                        if val is None:              return ''
+                        if isinstance(val, str):     return val
+                        if isinstance(val, bytes):   return val.decode(decode)  # binary to unicode(=str)
+                        return str(val)
+                else:
+                    def to_str(val):
+                        """Convert val into string or return '' if None. Both bytes and unicode(=str) will be retruned as-is."""
+                        if val is None:              return ''
+                        if isinstance(val, str):     return val
+                        if isinstance(val, bytes):   return val
+                        return str(val)
+            return to_str
 
     if python2:
         to_str = generate_tostrfunc(encode=None)  # or encode='utf-8'?
