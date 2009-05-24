@@ -13,6 +13,11 @@ pyTenjin is a very fast and full-featured template engine based on embedded Pyth
 You can embed Python statements and expressions into your text file.
 pyTenjin converts it into Python program and evaluate it.
 
+!!ATTENTION!!
+
+pyTenjin is enough stable, but it is under beta release.
+It means that API or specification may change in the future.
+
 
 Features
 --------
@@ -38,13 +43,6 @@ Install
 1. Just type 'python setup.py install' with administrator or root user,
    or copy 'lib/tenjin.py' and 'bin/pytenjin' into proper directory.
 2. (Optional) Install `PyYAML <http://pyyaml.org>`_.
-
-
-Attention
----------
-
-pyTenjin is beta released. It means that API or specification may change
-in the future.
 
 
 License
