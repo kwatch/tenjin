@@ -2949,6 +2949,35 @@ Solution:
 .* If you want to add encoding declaration into your template file, don't specify encoding option to tenjin.Engine() or tenjin.Template().
 
 
+
+.$$ I got UnicodeDecodeError, but I can't find what is wrong  | faq-encoding-unicodedecodeerror
+
+If you got UnicodeDecodeError, you should do the following solutions.
+
+.* Set logger to {{,tenjin.logger,}}. If you set, [%=name%] will report the content of {{,_buf,}}.
+   .--------------------
+   {{*import logging*}}
+   {{*logging.basicConfig(level=logging.DEBUG)*}}
+   {{*tenjin.logger = logging*}}
+   .--------------------
+
+.* Render tempalte with specifying {{,_buf,}} and check it directly.
+   .--------------------
+   {{*_buf = []*}}
+   try:
+       engine.get_template("index.pyhtml").render(context, {{*_buf=_buf*}})
+       print(''.join(_buf))
+   except UnicodeDecodeError:
+       for item in _buf:
+           if isinstance(item, str):
+	       try:
+	           str.decode('ascii')
+	       except UnicodeDecodeError:
+	           print("*** failed to decode: %s" % repr(item))
+   .--------------------
+
+
+
 % elsif $RUBY
 % elsif $PERL
 % elsif $JS

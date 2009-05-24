@@ -4288,6 +4288,8 @@ If you want to know the notation or features of [%= name %], see {{<Designer's G
 % if PYTHON
 If you want to handle non-ascii characters, see {{<Template Encoding|#dev-encoding>}} section.
 
+If you got UnicodeDecodeError, see {{<FAQ|faq.html#faq-encoding-unicodedecodeerror>}}.
+
 If you are interested in Google AppEngine, see {{<FAQ|faq.html#faq-google-appengine>}}.
 % end
 
@@ -6189,6 +6191,9 @@ These are defined in [%=htmlhelper%] module.
 .$$ Template Encoding		| dev-encoding
 
 
+If you got UnicodeDecodeError, see {{<FAQ|faq.html#faq-encoding-unicodedecodeerror>}} at first.
+
+
 .$$$ Python 2.x
 
 [%= name %] provides two approaches for encoding in Python 2.x.
@@ -6197,7 +6202,7 @@ These are defined in [%=htmlhelper%] module.
    
    [%=name%] handles templates as binary file.
    For example, text "foo" will be converted into {{,_buf << 'foo',}}.
-   In this approach, unicode object should be encoded into binary(=str) by {{,to_str(),}}
+   In this approach, unicode object should be encoded into binary(=str) by {{,to_str(),}}.
    .--------------------
    to_str = tenjin.generate_tostrfunc({{*encode*}}='utf-8')
       # ex. to_str(u'\u65e5\u672c\u8a9e') => '\xe6\x97\xa5\xe6\x9c\xac\xe8\xaa\x9e'
