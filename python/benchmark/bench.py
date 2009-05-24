@@ -267,6 +267,7 @@ class CheetahEntry(Entry):
         if globals().get('Cheetah'): return
         try:
             import_module('Cheetah')
+            if 'Cheetah' not in globals(): import Cheetah    # why?
             filename = cls.template_filename
             compiled = filename.replace('.tmpl', 'py')
             do_with_report('compiling %s' % filename,
