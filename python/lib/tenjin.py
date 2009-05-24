@@ -816,13 +816,18 @@ class Template(object):
         if not self.bytecode:
             self.compile()
         exec(self.bytecode, globals, locals)
-        if bufarg is None:
-            s = ''.join(_buf)
-            #if self.encoding:
-            #    s = s.encode(self.encoding)
-            return s
-        else:
+        if bufarg is not None:
             return None
+        elif not logger:
+            return ''.join(_buf)
+        else:
+            try:
+                return ''.join(_buf)
+            except UnicodeDecodeError:
+                ex = sys.exc_info()[1]
+                logger.error("[tenjin.Template] " + str(ex))
+                logger.error("[tenjin.Template] (_buf=%s)" % repr(_buf))
+                raise
 
     def compile(self):
         """compile self.script into self.bytecode"""
