@@ -1374,6 +1374,8 @@ val2 = #{val2}
 
       <p>If you want to handle non-ascii characters, see <a href="#dev-encoding">Template Encoding</a> section.</p>
 
+      <p>If you got UnicodeDecodeError, see <a href="faq.html#faq-encoding-unicodedecodeerror">FAQ</a>.</p>
+
       <p>If you are interested in Google AppEngine, see <a href="faq.html#faq-google-appengine">FAQ</a>.</p><a name="dev-example" id="dev-example"></a>
 
       <h3 class="section2">An Example</h3>
@@ -1971,7 +1973,9 @@ $ python user_app.cgi create
       </dl><br>
       <a name="dev-encoding" id="dev-encoding"></a>
 
-      <h3 class="section2">Template Encoding</h3><a name="Python 2.x"></a>
+      <h3 class="section2">Template Encoding</h3>
+
+      <p>If you got UnicodeDecodeError, see <a href="faq.html#faq-encoding-unicodedecodeerror">FAQ</a> at first.</p><a name="Python 2.x"></a>
 
       <h4 class="section3">Python 2.x</h4>
 
@@ -1981,7 +1985,7 @@ $ python user_app.cgi create
         <dt class="dt2">(A) Binary-based approach</dt>
 
         <dd class="dd2">
-          <p>pyTenjin handles templates as binary file. For example, text "foo" will be converted into <code>_buf &lt;&lt; 'foo'</code>. In this approach, unicode object should be encoded into binary(=str) by <code>to_str()</code></p>
+          <p>pyTenjin handles templates as binary file. For example, text "foo" will be converted into <code>_buf &lt;&lt; 'foo'</code>. In this approach, unicode object should be encoded into binary(=str) by <code>to_str()</code>.</p>
           <pre class="program">
 to_str = tenjin.generate_tostrfunc(<strong>encode</strong>='utf-8')
    # ex. to_str(u'\u65e5\u672c\u8a9e') =&gt; '\xe6\x97\xa5\xe6\x9c\xac\xe8\xaa\x9e'
