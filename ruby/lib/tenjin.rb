@@ -901,11 +901,9 @@ module Tenjin
     def store_cachefile(cache_filename, template)
       s = template.script
       s = "\#@ARGS #{template.args.join(',')}\n#{s}" if template.args
-      File.open(cache_filename, 'w') do |f|
-        f.flock(File::LOCK_EX)
-        f.write(s)
-        #f.lock(FIle::LOCK_UN)   # File#close() unlocks automatically
-      end
+      tmp_filename = "#{cache_filename}.#{rand()}"
+      File.open(tmp_filename, 'w') {|f| f.write(s) }
+      File.rename(tmp_filename, cache_filename)
     end
 
     ## load template from cache file
