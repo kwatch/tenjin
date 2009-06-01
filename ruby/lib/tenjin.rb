@@ -855,11 +855,14 @@ module Tenjin
     def read_template_file(filename, _context)
       return File.read(filename) if !@preprocess
       _context ||= {}
-      if _context.is_a?(Hash) || _context._engine.nil?
-        _context = hook_context(_context)
+      _context = hook_context(_context) if _context.is_a?(Hash) || _context._engine.nil?
+      _buf = _context._buf
+      _context._buf = ""
+      begin
+        return Preprocessor.new(filename).render(_context)
+      ensure
+        _context._buf = _buf
       end
-      preprocessor = Preprocessor.new(filename)
-      return preprocessor.render(_context)
     end
 
     ## register template object

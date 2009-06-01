@@ -480,6 +480,28 @@ class TenjinEngineTest < Test::Unit::TestCase
   end
 
 
+  def test_include_with_preprocess
+    data = TESTDATA['test_include_with_preprocess']
+    index_rbhtml = data['index_html']
+    show_rbhtml  = data['show_html']
+    expected     = data['expected']
+    testopts     = data['testopts']
+    #
+    File.write("index.rbhtml", index_rbhtml)
+    File.write("show.rbhtml", show_rbhtml)
+    #
+    engine = Tenjin::Engine.new(:cache=>false, :preprocess=>false)
+    actual = engine.render("index.rbhtml")
+    assert_text_equal(expected, actual)
+    #
+    engine = Tenjin::Engine.new(:cache=>false, :preprocess=>true)
+    actual = engine.render("index.rbhtml")
+    assert_text_equal(expected, actual)
+  ensure
+    %w[index.rbhtml show.rbhtml].each {|x| File.unlink(x) if File.exist?(x) }
+  end
+
+
   self.select_target_test()
 
 
