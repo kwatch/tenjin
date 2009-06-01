@@ -1188,7 +1188,7 @@
    "python": |
         <html>
           <body>
-        <?py if _context.has_key('title'): ?>
+        <?py if 'title' in _context: ?>
             <h1>${title}</h1>
         <?py #end ?>
         <?py _buf.append(_content) ?>
@@ -1401,7 +1401,7 @@
    "js": |
   errormsg*:
    "python": name 'b' is not defined
-   "ruby": "undefined local variable or method `b' for #<Tenjin::Context>"
+   "ruby": "undefined local variable or method `b' for #<Tenjin::Context:0x12345>"
    "perl": |
 	*** Error: content.plhtml
 	Global symbol "$y" requires explicit package name at (eval 999) line 3.
@@ -1799,7 +1799,7 @@
         <?PY            "FL": "Florida", } ?>
         <?PY # ?>
         <?py chk = { params['state']: ' checked="checked"' } ?>
-        <?PY codes = states.keys() ?>
+        <?PY codes = list(states.keys()) ?>
         <?PY codes.sort() ?>
         <select name="state">
           <option value="">-</option>
