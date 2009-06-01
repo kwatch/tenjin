@@ -1,5 +1,68 @@
+.$ ANN: pyTenjin 0.7.0 - much faster template engine than Django
+
+Please give me a chance to introduce my work.
+
+I have released pyTenjin 0.7.0
+http://www.kuwata-lab.com/tenjin/
+
+pyTenjin is the fastest template engine for Python.
+
+* Very fast (about 10 times faster than Django template engine)
+* Easy to learn (no need to learn template-original language)
+* Full-featured (layout template, partial template, preprocessing, ...)
+* Very small (only 1,200 lines, one file)
+
+And Goole AppEngine is now supported in this release.
+You can use pyTenjin on Google AppEngine instead of Django template.
+See
+ http://www.kuwata-lab.com/tenjin/pytenjin-faq.html#faq-google-appengine
+for details.
+
+
+Enhancements and Changes on 0.7.0
+---------------------------------
+
+There are many enhancements and changes on 0.7.0.  See
+ http://www.kuwata-lab.com/tenjin/pytenjin-CHANGES.txt
+for details.
+
+
+Download and Install
+--------------------
+
+  $ wget http://downloads.sourceforge.net/tenjin/Tenjin-0.7.0.tar.gz
+  $ tar xzf Tenjin-0.7.0.tar.gz
+  $ cd Tenjin-0.7.0
+  $ sudo python setup.py install
+
+
+Documents and Materials
+-----------------------
+
+* User's Guide
+  http://www.kuwata-lab.com/tenjin/pytenjin-users-guide.html
+
+* FAQ
+  http://www.kuwata-lab.com/tenjin/pytenjin-faq.html
+
+* Examples
+  http://www.kuwata-lab.com/tenjin/pytenjin-examples.html
+
+* (Presentation) Tenjin - the fastest template engine in the world
+  http://www.slideshare.net/kwatch/tenjin-the-wastest-template-engine-in-the-world
+
+
+Have fun!
+
+--
+regards,
+makoto kuwata
+
+
 .######################################################################
 .$ [ANN] pyTenjin 0.7.0 - the fastest and full-featured template engine
+
+Hi,
 
 I have released pyTenjin 0.7.0
 http://www.kuwata-lab.com/tenjin/
@@ -70,6 +133,7 @@ Type:
 
 Or:
 
+  $ wget http://downloads.sourceforge.net/tenjin/Tenjin-0.7.0.tar.gz
   $ tar xzf Tenjin-0.7.0.tar.gz
   $ cd Tenjin-0.7.0
   $ sudo python setup.py install
