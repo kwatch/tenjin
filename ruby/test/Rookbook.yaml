@@ -1,14 +1,32 @@
+parameters:
+  - data_files:	[ test_template.yaml, test_engine.yaml ]
+  - rook_product:	:test
 
 recipes:
+
+  - product:	:all
+    desc:	'alias to :test'
+    ingreds:	[ :test ]
 
   - product:	:clean
     method*: |
 	rm_rf '**/*.rbc', 'test.log'
 
-  - product:	:ruby_test
+  - product:	:copy
+    desc:	"copy '*.yaml' from '../../common/test/*.yaml'"
+    ingreds:	[ $(data_files) ]
+
+  - product:	test_*.yaml
+    ingreds:	[ ../../common/test/test_$(1).yaml ]
+    method*: |
+	cp @ingred, @product
+
+  - product:	:test
+    ingreds:	[ $(data_files) ]
     method*: |
 	sys 'ruby test_all.rb 2>&1 | tee test.log'
 
   - product:	:rubinius_test
+    ingreds:	[ $(data_files) ]
     method*: |
 	sys 'rubinius test_all.rb 2>&1 | tee test.log'
