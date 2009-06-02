@@ -14,12 +14,12 @@
 
     <div align="left"><h1>rbTenjin User's Guide</h1></div>
     <div align="left">
+      release:     $Release$<br>
       last update: $Date$<br>
     </div>
 
-<p>Release: $Release$
-</p>
 <p>Table of Contents:
+</p>
 <ul>
   <li><a href="#intro">Introduction</a>
   <ul>
@@ -63,13 +63,11 @@
   <ul>
     <li><a href="#dev-example">An Example</a>
     </li>
-    <li><a href="#dev-classes">Classes and Functions in rbTenjin</a>
-    </li>
     <li><a href="#dev-templateclass">Class Tenjin::Template</a>
     </li>
     <li><a href="#dev-engineclass">Class Tenjin::Engine</a>
     </li>
-    <li><a href="#dev-initopts">Template Initialize Options</a>
+    <li><a href="#dev-vars-and-funcs">Variables and Functions</a>
     </li>
     <li><a href="#dev-helpers">Add Your Helper Functions</a>
     </li>
@@ -78,7 +76,6 @@
   </ul>
   </li>
 </ul>
-</p>
 <a name="intro"></a>
 <h2 class="section1">Introduction</h2>
 <a name="overview"></a>
@@ -101,14 +98,23 @@ File 'ex.rbhtml':</div>
 </pre>
 <p>Here is the notation:
 </p>
-<ul type="disc">
-<li><code>&lt;?rb ... ?&gt;</code> represents embedded Ruby statements.
-</li>
-<li><code>#{...}</code> represents embedded Ruby expression.
-</li>
-<li><code>${...}</code> represents embedded escaped (sanitized) Ruby expression.
-</li>
-</ul>
+<dl class="dl3" compact>
+<dt class="dt3"><b>
+<code>&lt;?rb ... ?&gt;</code> </b></dt>
+<dd class="dd3">
+	Ruby statements.
+</dd>
+<dt class="dt3"><b>
+<code>#{...}</code> </b></dt>
+<dd class="dd3">
+	Ruby expression.
+</dd>
+<dt class="dt3"><b>
+<code>${...}</code> </b></dt>
+<dd class="dd3">
+	Ruby expression (HTML escaped)
+</dd>
+</dl>
 <a name="ex_source.result"></a>
 <div class="terminal_caption">
 Result of covertion into Ruby script:</div>
@@ -244,11 +250,11 @@ $ cp bin/rbtenjin $HOME/bin/
 <p>The following is the notation of rbTenjin.
 </p>
 <ul type="disc">
-<li>'<code>&lt;?rb ... ?&gt;</code>' represents embedded Ruby statement.
+<li>'<code>&lt;?rb ... ?&gt;</code>' : Ruby statement
 </li>
-<li>'<code>#{...}</code>' represents embedded Ruby expression.
+<li>'<code>#{...}</code>' : Ruby expression
 </li>
-<li>'<code>${...}</code>' represents embedded Ruby expression which is to be escaped (for example, '<code>&amp; &lt; &gt; "</code>' is escaped to '<code>&amp;amp; &amp;lt; &amp;gt; &amp;quot;</code>').
+<li>'<code>${...}</code>' : Ruby expression with HTML escape
 </li>
 </ul>
 <a name="example1.rbhtml"></a>
@@ -319,9 +325,9 @@ _buf.to_s
 <li>Variable <code>@_buf</code> is a String.
 </li>
 <li>Function <code>escape()</code> (= <code>Tenjin::Context.escape()</code>) escapes <code>'&amp; &lt; &gt; "'</code> into <code>'&amp;amp; &amp;lt; &amp;gt; &amp;quot;'</code>.
-  Command-line option <code>--escapefunc=func</code> makes rbtenjin to use <code>func()</code> instead of <code>escape()</code>.
+  Command-line option <code>--escapefunc=<em>func</em></code> makes rbtenjin to use <code><em>func</em>()</code> instead of <code>escape()</code>.
 </li>
-<li>Newline character ("\n" or "\r\n") is automatically detected by rbTenjin.
+<li>End-of-line character ("\n" or "\r\n") is automatically detected by rbTenjin.
 </li>
 </ul>
 <p>'<code>_buf = '';</code>' is called as preamble and '<code>_buf.to_s</code>' is called as postamble.
@@ -966,8 +972,8 @@ _buf.to_s
 <a name="example11.rbhtml"></a>
 <div class="program_caption">
 File 'example11.rbhtml':</div>
-<pre class="program">&lt;p&gt;
-<strong>&lt;?rb #@ARGS x ?&gt;</strong>
+<pre class="program"><strong>&lt;?rb #@ARGS x ?&gt;</strong>
+&lt;p&gt;
 x = #{x}
 y = #{y}   # NameError
 &lt;/p&gt;
@@ -1155,46 +1161,18 @@ print output
 <br>
 
 
-<a name="dev-classes"></a>
-<h3 class="section2">Classes and Functions in rbTenjin</h3>
-<p>rbTenjin has the follwoing classes.
-</p>
-<dl class="dl3">
-<dt class="dt3"><b>
-Tenjin::Template </b></dt>
-<dd class="dd3">
-    This class represents a template file.
-    An object of Tenjin::Template correspond to a template file.
-</dd>
-</dl>
-<dl class="dl3">
-<dt class="dt3"><b>
-Tenjin::Engine </b></dt>
-<dd class="dd3">
-    This class represents some template objects.
-    It can handle nested template and layout template.
-    Using Tenjin::Engine class, you can use rbTenjin as a template engine for web application.
-</dd>
-</dl>
-<dl class="dl3">
-<dt class="dt3"><b>
-Tenjin::Context </b></dt>
-<dd class="dd3">
-    This class represents context data.
-</dd>
-</dl>
-<p>rbTenjin has the following utility functions.
-These are defined at Tenjin::HtmlHelper module and Tenjin::Context class includes it.
-</p>
-<br>
-
-
 <a name="dev-templateclass"></a>
 <h3 class="section2">Class Tenjin::Template</h3>
 <p>Tenjin::Template class represents a template file.
 An object of Tenjin::Template corresponds to a template file.
-It doesn't support nested template nor layout template (use Tenjin::Engine class instead).
+Main responsibilities of this class are:
 </p>
+<ul type="circle">
+<li>Convert template file into ruby script
+</li>
+<li>Render converted ruby script with context data
+</li>
+</ul>
 <p>This class has the following methods and attributes.
 </p>
 <dl class="dl3">
@@ -1300,6 +1278,48 @@ end
  &lt;li&gt;&amp;quot;CCC&amp;quot;&lt;/li&gt;
 &lt;/ul&gt;
 </pre>
+<p>Constructor of Tenjin::Template can take the follwoing options.
+</p>
+<ul type="disc">
+<li>'<code>escapefunc</code>' (string) specifies function name to escape string.
+  Default is '<code>escape</code>' (= <code>Tenjin::Context#escape</code>).
+</li>
+</ul>
+<p>Constructor of Tenjin::Engine can also take the same options as above.
+These options given to constructor of Tenjin::Engine are passed to constructor of Tenjin::Template internally.
+</p>
+<a name="example15.rb"></a>
+<div class="program_caption">
+File 'example15.rb':</div>
+<pre class="program">require 'tenjin'
+filename = 'example14.rbhtml'
+template = Tenjin::Template.new(filename, <strong>:escapefunc=&gt;'CGI.escapeHTML'</strong>)
+print template.script, "\n"
+
+require 'cgi'
+title = 'rbTenjin Example'
+items = ['&lt;foo&gt;', '&amp;bar', '"baz"']
+output = template.render(:title=&gt;title, :items=&gt;items)
+print output
+</pre>
+<a name="example15_escapefunc.result"></a>
+<div class="terminal_caption">
+Result:</div>
+<pre class="terminal">$ ruby example15.rb
+ _buf &lt;&lt; %Q`&lt;h1&gt;#{@title}&lt;/h1&gt;
+&lt;ul&gt;\n`
+for item in @items
+ _buf &lt;&lt; %Q` &lt;li&gt;#{<strong>CGI.escapeHTML</strong>((item).to_s)}&lt;/li&gt;\n`
+end
+ _buf &lt;&lt; %Q`&lt;/ul&gt;\n`
+
+&lt;h1&gt;rbTenjin Example&lt;/h1&gt;
+&lt;ul&gt;
+ &lt;li&gt;&amp;lt;foo&amp;gt;&lt;/li&gt;
+ &lt;li&gt;&amp;amp;bar&lt;/li&gt;
+ &lt;li&gt;&amp;quot;baz&amp;quot;&lt;/li&gt;
+&lt;/ul&gt;
+</pre>
 <br>
 
 
@@ -1307,8 +1327,22 @@ end
 <h3 class="section2">Class Tenjin::Engine</h3>
 <p>Tenjin::Engine class contains some template objects.
 It can handle nested template and layout template.
-Using Tenjin::Engine class, you can use rbTenjin as a template engine for web application.
+This class provides many features such as:
 </p>
+<ul type="circle">
+<li>Search template files
+</li>
+<li>Nestable layout template
+</li>
+<li>Partial template
+</li>
+<li><s>File caching</s> (caching feature is separated to tenjin.CacheStorage class.)
+</li>
+<li>Preprocessing
+</li>
+<li>and so on
+</li>
+</ul>
 <p>This class has the following methods.
 </p>
 <dl class="dl3">
@@ -1334,7 +1368,12 @@ Tenjin::Engine#render(template_name, context=nil, layout=nil) </b></dt>
 Template short name is a Symbol.
 For example, '<code>render(:list, context)</code>' is equivarent to '<code>render("user_list.rbhtml", context)</code>' if prefix option is '<code>user_</code>' and postfix option is '<code>.rbhtml</code>'.
 </p>
-<p>In template file, the followings are available.
+<br>
+
+
+<a name="dev-vars-and-funcs"></a>
+<h3 class="section2">Variables and Functions</h3>
+<p>In template file, the following variables and functions are available.
 </p>
 <dl class="dl3">
 <dt class="dt3"><b>
@@ -1342,6 +1381,14 @@ For example, '<code>render(:list, context)</code>' is equivarent to '<code>rende
 <dd class="dd3">
     This variable represents the result of evaluation of other template.
     This is available only in layout template file.
+</dd>
+</dl>
+<dl class="dl3">
+<dt class="dt3"><b>
+@_context </b></dt>
+<dd class="dd3">
+    This variable represents context data dictionary and same as the 2nd argument of tenjin.Engine.render().
+    You can tweak this dict. For example if you set <code>_context['title']="Example"</code> in your template file, <code>title</code> variable will be available in layout template file.
 </dd>
 </dl>
 <dl class="dl3">
@@ -1517,53 +1564,6 @@ Result:</div>
 
   &lt;/body&gt;
 &lt;/html&gt;
-</pre>
-<br>
-
-
-<a name="dev-initopts"></a>
-<h3 class="section2">Template Initialize Options</h3>
-<p>Tenjin::Template() can take the follwoing options.
-</p>
-<ul type="disc">
-<li>'<code>escapefunc</code>' (string) specifies function name to escape string.
-  Default is '<code>escape</code>' (= <code>Tenjin::Context#escape</code>).
-</li>
-</ul>
-<p>Constructor of Tenjin::Engine can also take the same options as above.
-These options given to constructor of Tenjin::Engine are passed to constructor of Tenjin::Template internally.
-</p>
-<a name="example15.rb"></a>
-<div class="program_caption">
-File 'example15.rb':</div>
-<pre class="program">require 'tenjin'
-filename = 'example14.rbhtml'
-template = Tenjin::Template.new(filename, <strong>:escapefunc=&gt;'CGI.escapeHTML'</strong>)
-print template.script, "\n"
-
-require 'cgi'
-title = 'rbTenjin Example'
-items = ['&lt;foo&gt;', '&amp;bar', '"baz"']
-output = template.render(:title=&gt;title, :items=&gt;items)
-print output
-</pre>
-<a name="example15_escapefunc.result"></a>
-<div class="terminal_caption">
-Result:</div>
-<pre class="terminal">$ ruby example15.rb
- _buf &lt;&lt; %Q`&lt;h1&gt;#{@title}&lt;/h1&gt;
-&lt;ul&gt;\n`
-for item in @items
- _buf &lt;&lt; %Q` &lt;li&gt;#{<strong>CGI.escapeHTML</strong>((item).to_s)}&lt;/li&gt;\n`
-end
- _buf &lt;&lt; %Q`&lt;/ul&gt;\n`
-
-&lt;h1&gt;rbTenjin Example&lt;/h1&gt;
-&lt;ul&gt;
- &lt;li&gt;&amp;lt;foo&amp;gt;&lt;/li&gt;
- &lt;li&gt;&amp;amp;bar&lt;/li&gt;
- &lt;li&gt;&amp;quot;baz&amp;quot;&lt;/li&gt;
-&lt;/ul&gt;
 </pre>
 <br>
 
