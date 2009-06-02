@@ -2,6 +2,14 @@
 = CHANGES
 
 
+== Release 0.6.3 (2009-06-06)
+
+* Bug fix: import() now works well with preprocessing enabled.
+
+* Changed to use File.rename() instead of File.open() + File#flock()
+  when creating template cache file.
+
+
 == Release 0.6.2 (2008-02-24)
 
 * Rubinius supported.
