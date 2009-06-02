@@ -23,6 +23,11 @@ recipes:
 	sys "kwaser -t $(tagfile) -T #{@ingred} > #{@byprod}"
 	sys "kwaser -t $(tagfile)    #{@ingred} > #{@product}"
 
+  - product:	/^([-\w]*\.eruby)$/
+    ingreds:	[ ../../common/doc/$(1) ]
+    method*: |
+	cp @ingred, @product
+
   - product:	*.txt
     ingreds:	[ $(1).eruby ]
     method*: |
