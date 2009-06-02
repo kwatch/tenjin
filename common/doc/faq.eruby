@@ -170,6 +170,13 @@
 % else
 %    assert false
 % end
+%
+% PYTHON = $PYTHON
+% RUBY   = $RUBY
+% PERL   = $PERL
+% JS     = $JS
+% PHP    = $PHP
+%
 % n = 0    # example counter
 %
 .=title:	[%= name %] FAQ
@@ -3112,14 +3119,14 @@ It makes rendering speed much faster.
 {{*<?PY*}} #end ?>
 </select>
 % elsif $RUBY
-{{*<?PY*}} WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] ?>
+{{*<?RB*}} weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] ?>
 <select name="weekday">
   <option>-</option>
-{{*<?PY*}} i = 0 ?>
-{{*<?PY*}} for wday in WEEKDAYS ?>
-{{*<?PY*}}     i += 1?>
+{{*<?RB*}} i = 0 ?>
+{{*<?RB*}} for wday in weekdays ?>
+{{*<?RB*}}   i += 1?>
   <option value="{{*#{{{}}{*}}i{{*}}*}}">{{*#{{{}}{*}}wday{{*}}*}}</option>
-{{*<?PY*}} end ?>
+{{*<?RB*}} end ?>
 </select>
 % elsif $PERL
 {{*<?PY*}} $WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']; ?>
@@ -3132,9 +3139,9 @@ It makes rendering speed much faster.
 {{*<?PY*}} } ?>
 </select>
 % elsif $JS
-
+## TODO
 % elsif $PHP
-
+## TODO
 % else assert false 
 % end 
 .--------------------
@@ -3153,13 +3160,13 @@ print '***** output *****'
 print engine.render('weekday1.[%=suffix%]'),
 % elsif $RUBY
 require 'tenjin'
-engine = Tenjin::Engine.new(:preprocess=true)
+engine = Tenjin::Engine.new(:preprocess=>true)
 puts '***** preprocessed *****'
 puts engine.get_template('weekday1.[%=suffix%]').script
 puts '***** output *****'
 puts engine.render('weekday1.[%=suffix%]')
 % elsif $PERL
-
+## TODO
 % elsif $JS
 var engine = new Tenjin.Engine({preprocess:true});
 print("***** preprocessed *****\n");
@@ -3167,7 +3174,7 @@ print(engine.getTemplate('weekday1.[%=suffix%]').script);
 print("***** output *****\n");
 print(engine.render('weekday1.[%=suffix%]'));
 % elsif $PHP
-
+## TODO
 % else assert false 
 % end 
 .--------------------
@@ -3175,8 +3182,10 @@ print(engine.render('weekday1.[%=suffix%]'));
 .? result:
 .==================== weekday1.result
 $ [%=lang%] weekday1.[%=ext%]
-% if $PYTHON
 ***** preprocessed *****
+%
+% if PYTHON
+%
 _buf.extend(('''<select name="weekday">
   <option>-</option>
   <option value="1">Sun</option>
@@ -3187,11 +3196,26 @@ _buf.extend(('''<select name="weekday">
   <option value="6">Fri</option>
   <option value="7">Sat</option>
 </select>\n''', ));
-% elsif $RUBY
-
-% elsif $PERL
-
-% elsif $JS
+%
+% elsif RUBY
+%
+ _buf << %Q`<select name="weekday">
+  <option>-</option>
+  <option value="1">Sun</option>
+  <option value="2">Mon</option>
+  <option value="3">Tue</option>
+  <option value="4">Wed</option>
+  <option value="5">Thu</option>
+  <option value="6">Fri</option>
+  <option value="7">Sat</option>
+</select>\n`
+%
+% elsif PERL
+%
+## TODO
+%
+% elsif JS
+%
 ***** preprocessed *****
 _buf.push('<select name="weekday">\n\
   <option>-</option>\n\
@@ -3203,10 +3227,14 @@ _buf.push('<select name="weekday">\n\
   <option value="6">Fri</option>\n\
   <option value="7">Sat</option>\n\
 </select>\n');
-% elsif $PHP
-
+%
+% elsif PHP
+%
+## TODO
+%
 % else assert false 
 % end 
+%
 ***** output *****
 <select name="weekday">
   <option>-</option>
@@ -3224,7 +3252,9 @@ If you want to add selected attribute (' selected="selected"') dinamically, see 
 
 .? weekday2.[%=suffix%]:
 .-------------------- weekday2.[%=suffix%]
-% if $PYTHON
+%
+% if PYTHON
+%
 <?PY WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] ?>
 <select name="weekday">
 {{*<?py selected = { str(params.get('weekday')): ' selected="selected"' } ?>*}}
@@ -3235,11 +3265,26 @@ If you want to add selected attribute (' selected="selected"') dinamically, see 
   <option value="#{{{}}{i}}"{{*#{selected.get('#{{i}}')}*}}>#{{{}}{wday}}</option>
 <?PY #end ?>
 </select>
-% elsif $RUBY
-
-% elsif $PERL
-
-% elsif $JS
+%
+% elsif RUBY
+%
+<?RB weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] ?>
+<select name="weekday">
+{{*<?rb selected = { @params['weekday'].to_s => ' selected="selected"' } ?>*}}
+  <option>-</option>
+<?RB i = 0 ?>
+<?RB for wday in weekdays ?>
+<?RB   i += 1?>
+  <option value="#{{{}}{i}}"{{*#{selected['#{{i}}']}*}}>#{{{}}{wday}}</option>
+<?RB end ?>
+</select>
+%
+% elsif PERL
+%
+## TODO
+%
+% elsif JS
+%
 <?JS var WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']; ?>
 <select name="weekday">
 {{*<?js var selected = { params.weekday: ' selected="selected"' }; ?>*}}
@@ -3249,47 +3294,72 @@ If you want to add selected attribute (' selected="selected"') dinamically, see 
   <option value="{{==i=}}"{{*{==selected['{{==i=}}']=}*}}>{{==wday=}}</option>
 <?JS } ?>
 </select>
-% elsif $PHP
-
-% else assert false 
-% end 
+%
+% elsif PHP
+%
+## TODO
+%
+% else assert false
+% end
+%
 .--------------------
 
 .? weekday2.[%=ext%]:
 .-------------------- weekday2.[%=ext%]
-% if $PYTHON
+%
+% if PYTHON
+%
 ## import all helper methods
 import tenjin
 from tenjin.helpers import *
 ## render with preprocessing
 engine = tenjin.Engine(preprocess=True)
 {{*context = { 'params': { 'weekday': 3, 'day': 19 } }*}}
-print '***** preprocessed *****'
-print engine.get_template('weekday2.pyhtml').script,
-print '***** output *****'
-print engine.render('weekday2.pyhtml'{{*, context*}}),
-% elsif $RUBY
-
-% elsif $PERL
-
-% elsif $JS
+print('***** preprocessed *****')
+print(engine.get_template('weekday2.pyhtml').script)
+print('***** output *****')
+print(engine.render('weekday2.pyhtml'{{*, context*}}))
+%
+% elsif RUBY
+%
+## render with preprocessing
+require 'tenjin'
+engine = Tenjin::Engine.new(:preprocess=>true)
+{{*context = { :params => { 'weekday'=>3, 'day'=>19 } }*}}
+puts '***** preprocessed *****'
+puts engine.get_template('weekday2.rbhtml').script
+puts '***** output *****'
+puts engine.render('weekday2.rbhtml'{{*, context*}})
+%
+% elsif PERL
+%
+## TODO
+%
+% elsif JS
+%
 var engine = new Tenjin.Engine({preprocess: true});
 {{*var context = {params: {weekday: 3, day: 19}};*}}
 print("***** preprocessed *****\n");
 print(engine.getTemplate("weekday2.[%=suffix%]").script);
 print("***** output *****\n");
 print(engine.render("weekday2.[%=suffix%]"{{*, context*}}));
-% elsif $PHP
-
+%
+% elsif PHP
+%
+## TODO
+%
 % else assert false 
 % end 
+%
 .--------------------
 
 result:
 .==================== weekday2.result
 $ [%=lang%] weekday2.[%=ext%]
 ***** preprocessed *****
-% if $PYTHON
+%
+% if PYTHON
+%
 _buf.extend(('''<select name="weekday">\n''', ));
 selected = { str(params.get('weekday')): ' selected="selected"' }
 _buf.extend(('''  <option>-</option>
@@ -3301,13 +3371,36 @@ _buf.extend(('''  <option>-</option>
   <option value="6"''', to_str(selected.get('6')), '''>Fri</option>
   <option value="7"''', to_str(selected.get('7')), '''>Sat</option>
 </select>\n''', ));
-% elsif $RUBY
-% elsif $PERL
-% elsif $JS
-% elsif $PHP
-
+%
+% elsif RUBY
+%
+ _buf << %Q`<select name="weekday">\n`
+selected = { @params['weekday'].to_s => ' selected="selected"' }
+ _buf << %Q`  <option>-</option>
+  <option value="1"#{selected['1']}>Sun</option>
+  <option value="2"#{selected['2']}>Mon</option>
+  <option value="3"#{selected['3']}>Tue</option>
+  <option value="4"#{selected['4']}>Wed</option>
+  <option value="5"#{selected['5']}>Thu</option>
+  <option value="6"#{selected['6']}>Fri</option>
+  <option value="7"#{selected['7']}>Sat</option>
+</select>\n`
+%
+% elsif PERL
+%
+## TODO
+%
+% elsif JS
+%
+## TODO
+%
+% elsif PHP
+%
+## TODO
+%
 % else assert false 
 % end 
+%
 ***** output *****
 <select name="weekday">
   <option>-</option>
@@ -3326,20 +3419,38 @@ It is possible to make helper function to generate <select> and <option> tags.
 .? weekday3.[%=suffix%]:
 .-------------------- weekday3.[%=suffix%]
 <form>
-% if $PYTHON
+%
+% if PYTHON
+%
 {{*#{{pp_select_weekday_tag("params.get('weekday')", name='weekday')}}*}}
-% elsif $RUBY
-% elsif $PERL
-% elsif $JS
+%
+% elsif RUBY
+%
+{{*#{{pp_select_weekday_tag("@params['weekday']", 'weekday')}}*}}
+%
+% elsif PERL
+%
+## TODO
+%
+% elsif JS
+%
 {{*{{==pp_select_weekday_tag("params.weekday", {name: "weekday"})=}}*}}
-% elsif $PHP
+%
+% elsif PHP
+%
+## TODO
+%
 % else raise false
 % end
+%
 </form>
 .--------------------
 
 .? weekday3.[%=ext%]:
 .-------------------- weekday3.[%=ext%]
+%
+% if PYTHON
+%
 ## helper function
 WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 def pp_select_weekday_tag(expr_str, name='weekday', indent=''):
@@ -3369,12 +3480,54 @@ print '***** preprocessed *****'
 print engine.get_template('weekday3.[%=suffix%]').script,
 print '***** output *****'
 print engine.render('weekday3.[%=suffix%]'{{*, context*}}),
+%
+% elsif RUBY
+%
+## helper function
+WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+def pp_select_weekday_tag(expr_str, name='weekday')
+  buf = ""
+  buf <<   "<?rb _selected = { (#{expr_str}).to_s => ' selected=\"selected\"' } ?>\n"
+  buf <<   "<select name=\"#{name}\">\n"
+  buf <<   "  <option>-</option>\n"
+  WEEKDAYS.each_with_index do |wday, i|
+    buf << "  <option value=\"#{i+1}\"\#{_selected['#{i+1}']}>#{wday}</option>\n"
+  end
+  buf <<   "</select>"
+  return buf
+end
+
+##
+require 'tenjin'
+engine = Tenjin::Engine.new(:preprocess=>true)
+{{*context = { :params => { 'weekday'=>3, 'day'=>19 } }*}}
+puts '***** preprocessed *****'
+puts engine.get_template('weekday3.[%=suffix%]').script
+puts '***** output *****'
+puts engine.render('weekday3.[%=suffix%]'{{*, context*}})
+%
+% elsif PERL
+%
+## TODO
+%
+% elsif JS
+%
+## TODO
+%
+% elsif PHP
+%
+## TODO
+%
+% else raise false
+% end
+%
 .--------------------
 
 .? result:
 .==================== weekday3.result
 $ [%=lang%] weekday3.[%=ext%]
 ***** preprocessed *****
+% if PYTHON
 _buf.extend(('''<form>
 <select name="weekday">\n''', ));
 _selected = { str(params.get('weekday')): ' selected="selected"' }
@@ -3388,6 +3541,28 @@ _buf.extend(('''  <option>-</option>
   <option value="7"''', to_str(_selected.get("7")), '''>Sat</option>
 </select>
 </form>\n''', ));
+% elsif RUBY
+ _buf << %Q`<form>\n`
+_selected = { (@params['weekday']).to_s => ' selected="selected"' }
+ _buf << %Q`<select name="weekday">
+  <option>-</option>
+  <option value="1"#{_selected['1']}>Sun</option>
+  <option value="2"#{_selected['2']}>Mon</option>
+  <option value="3"#{_selected['3']}>Tue</option>
+  <option value="4"#{_selected['4']}>Wed</option>
+  <option value="5"#{_selected['5']}>Thu</option>
+  <option value="6"#{_selected['6']}>Fri</option>
+  <option value="7"#{_selected['7']}>Sat</option>
+</select>
+</form>\n`
+% elsif PERL
+## TODO
+% elsif JS
+## TODO
+% elsif PHP
+## TODO
+% else raise false
+% end
 ***** output *****
 <form>
 <select name="weekday">
@@ -3413,14 +3588,43 @@ Using preprocessing, it is able to execute these helper functions in advance, an
 
 .? helpers1.[%=suffix%]:
 .-------------------- helpers1.[%=suffix%]
+%
+% if PYTHON
+%
 <p>
 #{link_to('Create', action='new')}
 #{{link_to('Create', action='new')}}
 </p>
+%
+% elsif RUBY
+%
+<p>
+#{link_to('Create', :action=>'new')}
+#{{link_to('Create', :action=>'new')}}
+</p>
+%
+% elsif PERL
+%
+## TODO
+%
+% elsif JS
+%
+## TODO
+%
+% elsif PHP
+%
+## TODO
+% 
+% else raise false
+% end
+%
 .--------------------
 
 .? helpers1.[%=ext%]:
 .-------------------- helpers1.[%=ext%]
+%
+% if PYTHON
+%
 ## define helper method
 def link_to(label, href=None, action=None):
     if not href and action:
@@ -3438,16 +3642,78 @@ print '***** preprocessed *****'
 print engine.get_template('helpers1.pyhtml').script,
 print '***** output *****'
 print engine.render('helpers1.pyhtml'),
+%
+% elsif RUBY
+%
+## define helper method
+def link_to(label, opts={})
+  href = opts[:href]
+  action = opts[:action]
+  if !href && action
+    href = "/#{controller_name()}/#{action}"
+  end
+  return "<a href=\"#{href}\">#{label}</a>"
+end
+## 
+def controller_name; 'user'; end
+require 'tenjin'
+engine = Tenjin::Engine.new(:preprocess=>true)
+puts '***** preprocessed *****'
+puts engine.get_template('helpers1.rbhtml').script
+puts '***** output *****'
+puts engine.render('helpers1.rbhtml')
+%
+% elsif PERL
+%
+## TODO
+%
+% elsif JS
+%
+## TODO
+%
+% elsif PHP
+%
+## TODO
+% 
+% else raise false
+% end
+%
 .--------------------
 
 .? result:
 .==================== helpers1.result
 $ [%=lang%] helpers1.[%=ext%]
 ***** preprocessed *****
+%
+% if PYTHON
+%
 _buf.extend(('''<p>
 ''', to_str(link_to('Create', action='new')), '''
 <a href="/user/new">Create</a>
 </p>\n''', ));
+%
+% elsif RUBY
+%
+ _buf << %Q`<p>
+#{link_to('Create', :action=>'new')}
+<a href="/user/new">Create</a>
+</p>\n`
+%
+% elsif PERL
+%
+## TODO
+%
+% elsif JS
+%
+## TODO
+%
+% elsif PHP
+%
+## TODO
+% 
+% else raise false
+% end
+%
 ***** output *****
 <p>
 <a href="/user/new">Create</a>
@@ -3462,13 +3728,40 @@ It is able to embed expression which should be evaluated at rendering stage.
 .? helpers2.[%=suffix%]:
 .-------------------- helpers2.[%=suffix%]
 <p>
+%
+% if PYTHON
+%
 #{link_to(escape(user['name']), action='show', id=user['id'])}
 #{{link_to({{*_P("user['name']")*}}, action='show', id={{*_p("user['id']")*}})}}
+%
+% elsif RUBY
+%
+#{link_to(escape(@user['name']), :action=>'show', :id=>@user['id'])}
+#{{link_to({{*_P("@user['name']")*}}, :action=>'show', :id=>{{*_p("@user['id']")*}})}}
+%
+% elsif PERL
+%
+## TODO
+%
+% elsif JS
+%
+## TODO
+%
+% elsif PHP
+%
+## TODO
+% 
+% else raise false
+% end
+%
 </p>
 .--------------------
 
 .? helpers2.[%=ext%]:
 .-------------------- helpers2.[%=ext%]
+%
+% if PYTHON
+%
 ## define helper method
 def link_to(label, href=None, action=None, id=None):
     if not href and action:
@@ -3490,16 +3783,82 @@ print '***** preprocessed *****'
 print engine.get_template('helpers2.pyhtml'{{*, context*}}).script,
 print '***** output *****'
 print engine.render('helpers2.pyhtml'{{*, context*}}),
+%
+% elsif RUBY
+%
+## define helper method
+def link_to(label, opts={})
+  href   = opts[:href]
+  action = opts[:action]
+  id     = opts[:id]
+  if !href && action
+    href = id ? "/#{@controller_name}/#{action}/#{id}" \
+              : "/#{@controller_name}/#{action}"
+  end
+  return "<a href=\"#{href}\">#{label}</a>"
+end
+
+## 
+require 'tenjin'
+{{*context = { :controller_name => 'user',
+               :user => {'id' => 123, 'name' => 'Tom&Jerry'} }*}}
+engine = Tenjin::Engine.new(:preprocess=>true)
+puts '***** preprocessed *****'
+puts engine.get_template('helpers2.rbhtml'{{*, context*}}).script
+puts '***** output *****'
+puts engine.render('helpers2.rbhtml'{{*, context*}})
+%
+% elsif PERL
+%
+## TODO
+%
+% elsif JS
+%
+## TODO
+%
+% elsif PHP
+%
+## TODO
+% 
+% else raise false
+% end
+%
 .--------------------
 
 .? result:
 .==================== helpers2.result
 $ [%=lang%] helpers2.[%=ext%]
 ***** preprocessed *****
+%
+% if PYTHON
+%
 _buf.extend(('''<p>
 ''', to_str(link_to(escape(user['name']), action='show', id=user['id'])), '''
 <a href="/user/show/''', {{*to_str(user['id'])*}}, '''">''', {{*escape(to_str(user['name']))*}}, '''</a>
 </p>\n''', ));
+%
+% elsif RUBY
+%
+ _buf << %Q`<p>
+#{link_to(escape(@user['name']), :action=>'show', :id=>@user['id'])}
+<a href="/user/show/{{*#{@user['id']}*}}">{{*#{escape((@user['name']).to_s)}*}}</a>
+</p>\n`
+%
+% elsif PERL
+%
+## TODO
+%
+% elsif JS
+%
+## TODO
+%
+% elsif PHP
+%
+## TODO
+% 
+% else raise false
+% end
+%
 ***** output *****
 <p>
 <a href="/user/show/123">Tom&amp;Jerry</a>
