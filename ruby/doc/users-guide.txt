@@ -1,0 +1,1857 @@
+.=title:	rbTenjin User's Guide
+.?lastupdate:	$Date$
+.?release:	$Release$
+.?stylesheet:	docstyle.css
+
+.#Release: $Release$
+
+
+Table of Contents:
+
+.<<< users-guide.toc
+
+
+
+.$ Introduction		| intro
+
+
+
+.$$ Overview		| overview
+
+
+rbTenjin is a very fast and lightweight template engine based on embedded Ruby.
+You can embed Ruby statements and expressions into your text file.
+rbTenjin converts it into Ruby script and evaluate it.
+
+
+The following is an example of rbTenjin.
+
+.? File 'ex.rbhtml':
+.-------------------- ex.rbhtml
+Hello {{*#{@name}*}}!
+<ul>
+{{*<?rb for item in @items ?>*}}
+ <li>{{*${item}*}}</li>
+{{*<?rb end ?>*}}
+</ul>
+.--------------------
+
+Here is the notation:
+
+.[ {{,<?rb ... ?>,}} ]	Ruby statements.
+.[ {{,#{...},}} ]	Ruby expression.
+.[ {{,${...},}} ]	Ruby expression (HTML escaped)
+
+.? Result of covertion into Ruby script:
+.==================== ex_source.result
+$ rbtenjin -s ex.rbhtml
+_buf = '';  _buf << %Q`Hello {{*#{@name}*}}!
+<ul>\n`
+{{*for item in @items*}}
+ _buf << %Q` <li>{{*#{escape((item).to_s)}*}}</li>\n`
+{{*end*}}
+ _buf << %Q`</ul>\n`
+_buf.to_s
+.====================
+
+
+.? Output of execution with context data:
+.==================== ex.result
+$ rbtenjin -c "@name='World'; @items=['<AAA>','B&B','\"CCC\"']" ex.rbhtml
+Hello World!
+<ul>
+ <li>&lt;AAA&gt;</li>
+ <li>B&amp;B</li>
+ <li>&quot;CCC&quot;</li>
+</ul>
+.====================
+
+
+.? Example of Ruby script
+.-------------------- ex.script
+require 'tenjin'
+engine = Tenjin::Engine.new()
+context = { :name=>'World', :items=>['<AAA>', 'B&B', '"CCC"'] }
+output = engine.render('ex.rbhtml', context)
+print output
+.--------------------
+
+
+
+.#+++
+.==================== ex_script.result
+$ ruby ex.script
+Hello World!
+<ul>
+ <li>&lt;AAA&gt;</li>
+ <li>B&amp;B</li>
+ <li>&quot;CCC&quot;</li>
+</ul>
+.====================
+.#---
+
+
+
+
+.$$ Features		| features
+
+rbTenjin has the following features:
+
+.* rbTenjin runs very fast. It works about three times as fast as ERB.
+.* rbTenjin doesn't break HTML design because it uses XML Processing
+  Instructions (PI) as embedded notation for Ruby statements.
+.* rbTenjin is secure because it supports escaping expression value by default.
+.* rbTenjin is small and lightweight. It is very easy to include rbTenjin
+  into your application.
+.* rbTenjin supports auto caching of converted Ruby code.
+.* rbTenjin supports partial template and layout template.
+  These are very useful especially for web application.
+.* rbTenjin supports partial capturing of template.
+.* rbTenjin can load YAML file as context data. Using rbTenjin, it is able to
+  separate template file and data file.
+
+
+
+
+
+
+
+
+.$$ Benchmark		| benchmark
+
+Benchmark script is contained in rbTenjin archive.
+The following is an example of benchmark.
+
+
+
+.? MacOS X 10.4 Tiger, Intel CoreDuo 1.83GHz, Memory 2GB
+.====================
+$ cd rbtenjin-X.X.X/benchmark
+$ ruby -v
+ruby 1.8.6 (2007-03-13 patchlevel 0) [i686-darwin8.9.1]
+$ ruby bench.rb -n 10000
+                          user     system      total        real
+eruby                 12.02000    0.27000   12.29000 (  12.34855)
+eruby-cache           11.09000    0.43000   11.53000 (  11.58262)
+erb                   36.32000    0.41000   36.73000 (  36.89404)
+erb-cache             11.13000    0.45000   11.57000 (  11.62259)
+erb-reuse             10.78000    0.03000   10.81000 (  10.85908)
+erb-defmethod          5.82000    0.02000    5.84000 (   5.86168)
+erubis                10.31000    0.32000   10.64000 (  10.68644)
+erubis-cache           7.02000    0.43000    7.45000 (   7.50923)
+erubis-reuse           4.43000    0.01000    4.44000 (   4.45338)
+tenjin                 6.87000    0.47000    7.34000 (   7.37263)
+tenjin-nocache         8.73000    0.36000    9.10000 (   9.14337)
+tenjin-reuse           4.45000    0.07000    4.52000 (   4.53931)
+.#
+.#                          user     system      total        real
+.#eruby                12.250000   0.260000  12.510000 ( 12.543581)
+.#eruby-cache          11.330000   0.430000  11.760000 ( 11.804727)
+.#erb                  36.240000   0.390000  36.630000 ( 36.759454)
+.#erb-cache            11.060000   0.440000  11.500000 ( 11.548973)
+.#erb-reuse            10.730000   0.020000  10.750000 ( 10.801543)
+.#erubis               10.150000   0.310000  10.460000 ( 10.501336)
+.#erubis-cache          6.900000   0.420000   7.320000 (  7.348610)
+.#erubis-reuse          6.400000   0.010000   6.410000 (  6.446206)
+.#tenjin                 6.650000   0.430000   7.080000 (  7.106622)
+.#tenjin-nocache         8.250000   0.360000   8.610000 (  8.643487)
+.#tenjin-reuse           4.370000   0.060000   4.430000 (  4.453653)
+.#
+.#                          user     system      total        real
+.#tenjin-arrbuf          6.640000   0.420000   7.060000 (  7.090081)
+.#tenjin-arrbuf-nocache 10.150000   0.370000  10.520000 ( 10.561252)
+.#tenjin-arrbuf-reuse    4.070000   0.070000   4.140000 (  4.157313)
+.#$ ruby -v
+.#ruby 1.8.5 (2006-08-25) [i686-darwin8.6.2]
+.#$ ruby bench.rb -n 10000
+.#                     user     system      total        real
+.#eruby           25.260000   0.570000  25.830000 ( 29.417001)
+.#eruby-cache     23.380000   0.880000  24.260000 ( 27.428129)
+.#erb             73.100000   0.970000  74.070000 ( 83.774299)
+.#erb-reuse       22.960000   0.120000  23.080000 ( 26.189293)
+.#erubis          20.630000   0.640000  21.270000 ( 23.976988)
+.#erubis-reuse    13.240000   0.060000  13.300000 ( 15.011609)
+.#tenjin           13.200000   0.810000  14.010000 ( 15.860334)
+.#tenjin-nocache   16.210000   0.710000  16.920000 ( 19.148423)
+.#tenjin-reuse      8.580000   0.330000   8.910000 ( 10.311393)
+.====================
+
+This shows that rbTenjin is much faster than any other eRuby implementations.
+
+
+
+.$ Installation			| installation
+
+
+rbTenjin requires Ruby 1.8 or later.
+
+.* If you have installed RubyGems, just type '{{,gem install rbtenjin,}}'.
+.* Or if you have administrator privilegde, install with setup.rb.
+   .====================
+   $ tar xjf rbtenjin_X.X.X.tar.bz
+   $ cd rbtenjin_X.X.X/
+   $ ruby setup.rb --help | more
+   $ ruby setup.rb config
+   $ ruby setup.rb setup
+   $ sudo ruby setup.rb install
+   .====================
+.* Or copy 'lib/tenjin.rb' and 'bin/rbtenjin' to proper directories.
+   .====================
+   $ tar xjf rbtenjin_X.X.X.tar.bz
+   $ cd rbtenjin_X.X.X/
+   $ cp lib/tenjin.rb $HOME/lib/ruby/
+   $ cp bin/rbtenjin $HOME/bin/
+   .====================
+
+
+
+
+.$ Designer's Guide		| desguide
+
+This section shows how to use rbTenjin for designer.
+
+If you want to know how to use rbTenjin in your program, see {{<Developer's Guide|#devguide>}} section.
+
+
+
+.$$ Notation			| des-notation
+
+The following is the notation of rbTenjin.
+
+.* '{{,<?rb ... ?>,}}' : Ruby statement
+.* '{{,#{...},}}' : Ruby expression
+.* '{{,${...},}}' : Ruby expression with HTML escape
+
+
+.? File 'example1.rbhtml':
+.-------------------- example1.rbhtml
+<table>
+  <tbody>
+{{*<?rb i = 0 ?>*}}
+{{*<?rb for item in ['<foo>', 'bar&bar', '"baz"'] ?>*}}
+{{*<?rb     i += 1 ?>*}}
+    <tr>
+      <td>{{*#{item}*}}</td>
+      <td>{{*${item}*}}</td>
+    </tr>
+{{*<?rb end ?>*}}
+  <tbody>
+</table>
+.#<html>
+.# <body>
+.#  <ul>
+.#{{*<?rb i = 0 ?>*}}
+.#{{*<?rb for item in ['<foo>', 'bar&bar', '"baz"'] ?>*}}
+.#{{*<?rb     i += 1 ?>*}}
+.#   <li>{{*#{item}*}}
+.#       {{*${item}*}}</li>
+.#{{*<?rb end ?>*}}
+.#  </ul>
+.# </body>
+.#</html>
+.--------------------
+
+
+
+The following is the result of executing 'example1.rbhtml'.
+
+.? Result:
+.==================== example1.result
+$ rbtenjin example1.rbhtml
+<table>
+  <tbody>
+    <tr>
+      <td>{{*<foo>*}}</td>
+      <td>{{*&lt;foo&gt;*}}</td>
+    </tr>
+    <tr>
+      <td>{{*bar&bar*}}</td>
+      <td>{{*bar&amp;bar*}}</td>
+    </tr>
+    <tr>
+      <td>{{*"baz"*}}</td>
+      <td>{{*&quot;baz&quot;*}}</td>
+    </tr>
+  <tbody>
+</table>
+.#<html>
+.# <body>
+.#  <ul>
+.#   <li>{{*<foo>*}}
+.#       {{*&lt;foo&gt;*}}</li>
+.#   <li>{{*bar&bar*}}
+.#       {{*bar&amp;bar*}}</li>
+.#   <li>{{*"baz"*}}
+.#       {{*&quot;baz&quot;*}}</li>
+.#  </ul>
+.# </body>
+.#</html>
+.====================
+
+
+
+
+
+
+
+
+.$$ Convert into Ruby Code	| des-convert
+
+Command-line option '-s' converts embedded files into Ruby code.
+
+.? Result:
+.==================== example1_source.result
+$ rbtenjin {{*-s*}} example1.rbhtml
+_buf = '';  _buf << %Q`<table>
+  <tbody>\n`
+{{*i = 0*}}
+{{*for item in ['<foo>', 'bar&bar', '"baz"']*}}
+    {{*i += 1*}}
+ _buf << %Q`    <tr>
+      <td>{{*#{item}*}}</td>
+      <td>{{*#{escape((item).to_s)}*}}</td>
+    </tr>\n`
+{{*end*}}
+ _buf << %Q`  <tbody>
+</table>\n`
+_buf.to_s
+.#_buf = '';  _buf << %Q`<html>
+.# <body>
+.#  <ul>\n`
+.#{{*i = 0*}}
+.#{{*for item in ['<foo>', 'bar&bar', '"baz"']*}}
+.#    {{*i += 1*}}
+.# _buf << %Q`   <li>{{*#{item}*}}
+.#       {{*#{escape((item).to_s)}*}}</li>\n`
+.#{{*end*}}
+.# _buf << %Q`  </ul>
+.# </body>
+.#</html>\n`
+.#_buf.to_s
+.====================
+
+
+
+
+.* Variable {{,@_buf,}} is a String.
+.* Function {{,escape(),}} (= {{,Tenjin::Context.escape(),}}) escapes {{,'& < > "',}} into {{,'&amp; &lt; &gt; &quot;',}}.
+  Command-line option {{,--escapefunc={{/func/}},}} makes rbtenjin to use {{,{{/func/}}(),}} instead of {{,escape(),}}.
+.* End-of-line character ("\n" or "\r\n") is automatically detected by rbTenjin.
+
+
+'{{,_buf = '';,}}' is called as preamble and '{{,_buf.to_s,}}' is called as postamble.
+Command-line option '{{,-b,}}' removes preamble and postamble.
+
+
+.? File 'example2.rbhtml'
+.-------------------- example2.rbhtml
+<?rb for i in [1, 2, 3] ?>
+<p>#{item}</p>
+<?rb end ?>
+.--------------------
+
+.? Result:
+.==================== example2_sb.result2
+.#$ cat example2.rbhtml
+.#<?rb for i in [1, 2, 3] ?>
+.#<p>#{item}</p>
+.#<?rb end ?>
+$ rbtenjin -s example2.rbhtml
+{{*_buf = '';*}} for i in [1, 2, 3]
+ _buf << %Q`<p>#{item}</p>\n`
+end
+{{*_buf.to_s*}}
+$ rbtenjin -s{{*b*}} example2.rbhtml
+for i in [1, 2, 3]
+ _buf << %Q`<p>#{item}</p>\n`
+end
+.====================
+.#.? Result:
+.#.==================== example2_b_source.result
+.#$ rbtenjin {{*-sb*}} example2.rbhtml
+.# _buf << %Q`<table>
+.#  <tbody>\n`
+.#i = 0
+.#for item in ['<foo>', 'bar&bar', '"baz"']
+.#    i += 1
+.# _buf << %Q`    <tr>
+.#      <td>#{item}</td>
+.#      <td>#{escape((item).to_s)}</td>
+.#    </tr>\n`
+.#end
+.# _buf << %Q`  <tbody>
+.#</table>\n`
+.# _buf << %Q`<html>
+.# <body>
+.#  <ul>\n`
+.#i = 0
+.#for item in ['<foo>', 'bar&bar', '"baz"']
+.#    i += 1
+.# _buf << %Q`   <li>#{item}
+.#       #{escape((item).to_s)}</li>\n`
+.#end
+.# _buf << %Q`  </ul>
+.# </body>
+.#</html>\n`
+.#.====================
+
+
+
+Command-line option '-S' also show converted Ruby code but it doesn't print text part.
+This is useful to check Ruby code for debugging.
+
+
+.? Result:
+.==================== example1_S.result
+$ rbtenjin {{*-S*}} example1.rbhtml
+_buf = ''; 
+
+i = 0
+for item in ['<foo>', 'bar&bar', '"baz"']
+    i += 1
+
+
+          escape((item).to_s); 
+
+end
+
+
+_buf.to_s
+.====================
+
+
+In addition, the following command-line options are available.
+
+.[ -N ]	     Add line number.
+.[ -X ]	     Delete expressions.
+.[ -C ]	     Remove empty lines (compact-mode).
+.[ -U ]	     Compress empty lines to a line (uniq-mode).
+
+
+.? Result:
+.==================== example1_SXNC.result
+$ rbtenjin {{*-SUNX*}} example1.rbhtml
+    1:  _buf = ''; 
+
+    3:  i = 0
+    4:  for item in ['<foo>', 'bar&bar', '"baz"']
+    5:      i += 1
+
+   10:  end
+
+   13:  _buf.to_s
+.====================
+
+
+
+
+
+
+.$$ Syntax Checking			| des-syntaxchk
+
+Command-line option '{{,-z,}}' checks syntax error in embedded Ruby code
+and command-line option '{{,-w,}}' sets warning level to 2.
+It is recommended to use '-w' when you specify '-z'.
+
+.? File example3.rbhtml:
+.-------------------- example3.rbhtml
+<ul>
+<?rb for item in items ?>
+  <li>${item}</li>
+<?rb {{*ende*}} ?>
+</ul>
+.--------------------
+
+
+.? Result:
+.==================== example3_syntaxcheck.result
+$ rbtenjin {{*-wz*}} example3.rbhtml
+example3.rbhtml:5: syntax error, unexpected $end, expecting kEND
+.====================
+
+
+Command-line option '-wz' is more convenient than '{{,rbtenjin -s file | ruby -wc,}}'
+because the former can take several filenames.
+
+Command-line option '-q' (quiet-mode) prints nothing if it has no errors.
+
+
+
+
+.$$ Context Data File			| des-contextdata
+
+
+rbTenjin allows you to specify context data by YAML file or Ruby script.
+
+
+.? File 'example4.rbhtml':
+.-------------------- example4.rbhtml
+<p>
+  ${@text}
+  #{@num}
+  #{@flag}
+</p>
+
+<?rb for item in @items ?>
+<p>${item}</p>
+<?rb end ?>
+
+<?rb for key, value in @hash ?>
+<p>#{key} = ${value}</p>
+<?rb end ?>
+.--------------------
+
+
+
+.? File 'datafile.yaml':
+.-------------------- datafile.yaml
+text:   foo
+num:    3.14
+flag:   yes
+items:
+  - foo
+  - bar
+  - baz
+hash:
+  x: 1
+  y: 2
+.--------------------
+
+
+.? Result:
+.==================== example4_yaml.result
+$ rbtenjin {{*-f datafile.yaml*}} example4.rbhtml
+<p>
+  foo
+  3.14
+  true
+</p>
+
+<p>foo</p>
+<p>bar</p>
+<p>baz</p>
+
+<p>x = 1</p>
+<p>y = 2</p>
+.====================
+
+
+
+
+.? File 'datafile.rb':
+.-------------------- datafile.rb
+@text  = "foo"
+@num   = 3.14
+@flag  = true
+@items = ["foo", "bar", "baz"]
+@hash  = {:x=>1, :y=>2}
+.--------------------
+
+
+.? Result:
+.==================== example4_datafile_rb.result
+$ rbtenjin {{*-f datafile.rb*}} example4.rbhtml
+<p>
+  foo
+  3.14
+  true
+</p>
+
+<p>foo</p>
+<p>bar</p>
+<p>baz</p>
+
+<p>x = 1</p>
+<p>y = 2</p>
+.====================
+
+
+
+
+
+
+.$$ Command-line Context Data		| des-cmlinecontext
+
+Command-line option '{{,-c,}}' specifies context data in YAML format or Ruby code.
+
+.? File 'example5.rbhtml':
+.-------------------- example5.rbhtml
+text:  #{@text}
+items:
+<?rb for item in @items ?>
+  - #{item}
+<?rb end ?>
+hash:
+<?rb for key, val in @hash ?>
+  #{key}: #{val}
+<?rb end ?>
+.--------------------
+
+
+
+.? Result of context data in ruby code:
+.==================== example5_datastr_rb.result
+$ rbtenjin {{*-c '@text="foo"; @items=%w[a b c]; @hash={"x"=>1,"y"=>2}'*}} example5.rbhtml
+text:  foo
+items:
+  - a
+  - b
+  - c
+hash:
+  x: 1
+  y: 2
+.====================
+
+
+
+.? Result of context data in yaml format:
+.==================== example5_datastr_yaml.result
+$ rbtenjin {{*-c '{text: foo, items: [a, b, c], hash: {x: 1, y: 2} }'*}} example5.rbhtml
+text:  foo
+items:
+  - a
+  - b
+  - c
+hash:
+  x: 1
+  y: 2
+.====================
+
+
+
+
+
+
+
+.$$ Nested Template			| des-nested-template
+
+
+Template can include other templates.
+Included templates can also include other templates.
+
+The following function is available to include other templates.
+
+.#.[ import(template_name, append_to_buf=true) ]
+.[ import(template_name) ]
+    Include other template.
+    .#If second argument is true then included template is appended into {{,_buf,}}
+    .#(ex. {{,<?rb include(template_name) ?>,}}),
+    .#else return it as string (ex. {{,#{include(template_name, false)},}} or
+    .#{{,<?rb var = include(template_name, false),}}).
+
+
+.? File 'example6.rbhtml':
+.-------------------- example6.rbhtml
+<html>
+  <body>
+
+    <div id="sidemenu">
+{{*<?rb import 'sidemenu.rbhtml' ?>*}}
+    </div>
+
+    <div id="main-content">
+<?rb for item in @items ?>
+      <p>${item}</p>
+<?rb end ?>
+    </div>
+
+    <div id="footer">
+{{*#{import 'footer.rbhtml', false}*}}
+    </div>
+
+  </body>
+</table>
+.--------------------
+
+.? File 'sidemenu.rbhtml':
+.-------------------- sidemenu.rbhtml
+<ul>
+<?rb for item in @menu ?>
+  <li><a href="${item['url']}">${item['name']}</a></li>
+<?rb end ?>
+</ul>
+.--------------------
+
+.? File 'footer.rbhtml':
+.-------------------- footer.rbhtml
+<hr />
+<address>
+  <a href="mailto:${@webmaster_email}">${@webmaster_email}</a>
+</address>
+.--------------------
+
+
+.? File 'contextdata.rb':
+.-------------------- contextdata.rb
+@items = [ '<FOO>', '&BAR', '"BAZ"' ]
+@webmaster_email = 'webmaster@example.com'
+@menu  = [
+    {'name'=> 'Top',      'url'=> '/' },
+    {'name'=> 'Products', 'url'=> '/prod' },
+    {'name'=> 'Support',  'url'=> '/support' },
+]
+.--------------------
+
+
+
+.? Result:
+.==================== example6_nested.result
+$ rbtenjin -f contextdata.rb example6.rbhtml
+<html>
+  <body>
+
+    <div id="sidemenu">
+{{*<ul>*}}
+  {{*<li><a href="/">Top</a></li>*}}
+  {{*<li><a href="/prod">Products</a></li>*}}
+  {{*<li><a href="/support">Support</a></li>*}}
+{{*</ul>*}}
+    </div>
+
+    <div id="main-content">
+      <p>&lt;FOO&gt;</p>
+      <p>&amp;BAR</p>
+      <p>&quot;BAZ&quot;</p>
+    </div>
+
+    <div id="footer">
+{{*<hr />*}}
+{{*<address>*}}
+{{*  <a href="mailto:webmaster@example.com">webmaster@example.com</a>*}}
+{{*</address>*}}
+
+    </div>
+
+  </body>
+</table>
+.====================
+
+
+Function '{{,import(),}}' can take template filename
+(ex. 'user_main.rbhtml') or template short name (ex. :main).
+Template short name is a Symbol.
+
+
+
+To make template short name available, command-line option '{{,--prefix,}}' and
+'{{,--postfix,}}' are required.
+For example, '{{,include("user_main.rbhtml"),}}' can be described as '{{,include(:main),}}'
+when '{{,--prefix="user_",}}' and '{{,--postfix=".rbhtml",}}' are specified in command-line.
+
+
+
+
+.$$ Layout Template			| des-layout
+
+
+Command-line option '{{,--layout=templatename,}}' specifies layout template name.
+
+For example, 'exmample6.rbhtml' template in the previous section can be divided
+into layout file 'layout6.rbhtml' and content file 'content6.rbhtml'.
+Variable '{{,@_content,}}' in layout template represents the result of content file.
+
+
+
+
+.? File 'layout6.rbhtml':
+.-------------------- layout6.rbhtml
+<html>
+  <body>
+
+    <div id="sidemenu">
+<?rb import 'sidemenu.rbhtml' ?>
+    </div>
+
+    <div id="main-content">
+{{*#{@_content}*}}
+    </div>
+
+    <div id="footer">
+#{import 'footer.rbhtml', false}
+    </div>
+
+  </body>
+</table>
+.--------------------
+
+.? File 'content6.rbhtml':
+.-------------------- content6.rbhtml
+<?rb for item in @items ?>
+  <p>${item}</p>
+<?rb end ?>
+.--------------------
+
+
+
+
+.? Result:
+.==================== example6_layout.result
+$ rbtenjin -f contextdata.rb {{*--layout=layout6.rbhtml*}} content6.rbhtml
+<html>
+  <body>
+
+    <div id="sidemenu">
+<ul>
+  <li><a href="/">Top</a></li>
+  <li><a href="/prod">Products</a></li>
+  <li><a href="/support">Support</a></li>
+</ul>
+    </div>
+
+    <div id="main-content">
+{{*  <p>&lt;FOO&gt;</p>*}}
+{{*  <p>&amp;BAR</p>*}}
+{{*  <p>&quot;BAZ&quot;</p>*}}
+
+    </div>
+
+    <div id="footer">
+<hr />
+<address>
+  <a href="mailto:webmaster@example.com">webmaster@example.com</a>
+</address>
+
+    </div>
+
+  </body>
+</table>
+.====================
+
+
+.#Target temlate and layout template shares the same context object.
+.#If you set some variables in target template, they are available in layout template.
+Target template and layout template don't share local variables.
+It means that local variables set in a template are not available in layout template.
+
+
+If you want variables set in a temlate to be available in layout template,
+use instance variables instead of local variables.
+
+.? File 'layout7.rbhtml':
+.-------------------- layout7.rbhtml
+...
+<h1>{{*${@title}*}}</h1>
+
+<div id="main-content">
+#{@_content}
+<div>
+
+<a href="{{*${@url}*}}">Next page</a>
+...
+.--------------------
+
+.? File 'content7.rbhtml':
+.-------------------- content7.rbhtml
+{{*<?rb @title = 'Document Title' ?>*}}
+{{*<?rb @url = '/next/page' ?>*}}
+<table>
+  ...content...
+</table>
+.--------------------
+
+
+
+.? Result:
+.==================== example7_layout2.result
+$ rbtenjin --layout=layout7.rbhtml content7.rbhtml
+...
+<h1>{{*Document Title*}}</h1>
+
+<div id="main-content">
+<table>
+  ...content...
+</table>
+
+<div>
+
+<a href="{{*/next/page*}}">Next page</a>
+...
+.====================
+
+
+Using '@_layout' variable, it is able to specify layout template name in each template file.
+If you assigned false to '@_layout' variable, no layout template is used.
+
+
+
+.? File 'content8.rbhtml':
+.-------------------- content8.rbhtml
+{{*<?rb @_layout = :layout8_xhtml ?>*}}
+<h1>Hello World!</h1>
+.--------------------
+
+.? File 'layout8_html.rbhtml':
+.-------------------- layout8_html.rbhtml
+<html>
+  <body>
+#{@_content}
+  </body>
+</html>
+.--------------------
+
+.? File 'layout8_xhtml.rbhtml':
+.-------------------- layout8_xhtml.rbhtml
+<?xml version="1.0" encoding="UTF-8"?>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+  <body>
+#{@_content}
+  </body>
+</html>
+.--------------------
+
+.? Result: ':layout8_html' is specified in command-line option but ':layout8_xhtml' is used
+.==================== example8_layout3.result
+$ rbtenjin --postfix='.rbhtml' {{*--layout=':layout8_html'*}} content8.rbhtml
+<?xml version="1.0" encoding="UTF-8"?>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+  <body>
+<h1>Hello World!</h1>
+
+  </body>
+</html>
+.====================
+
+
+
+.$$ Capturing				| des-capturing
+
+It is able to capture any part of template.
+
+.? File 'example9.rbhtml':
+.-------------------- example9.rbhtml
+<?rb @title = 'Capture Test' ?>
+<html>
+  <body>
+
+{{*<?rb start_capture(:content_part) ?>*}}
+    <ul>
+<?rb for i in [0, 1, 2] ?>
+      <li>i = #{i}</li>
+<?rb end ?>
+    </ul>
+{{*<?rb stop_capture() ?>*}}
+
+{{*<?rb start_capture('footer_part') ?>*}}
+    <div class="footer">copyright&copy; 2007 kuwata-lab.com</div>
+{{*<?rb stop_capture() ?>*}}
+
+  </body>
+</html>
+.--------------------
+
+Captured strings are accessable as local variables.
+For example, you can get captured string as a variable '{{,content_part,}}' in the above example.
+
+A template can contain several capturing.
+It is not able to nest capturing.
+
+In layout file, it is able to use strings captured in templates.
+
+.? File 'layout9.rbhtml':
+.-------------------- layout9.rbhtml
+<html lang="en">
+  <head>
+    <title>${@title}</title>
+  </head>
+  <body>
+
+    <!-- HEADER -->
+{{*<?rb unless captured_as('header_part') ?>*}}
+    <h1>${@title}</h1>
+{{*<?rb end ?>*}}
+    <!-- /HEADER -->
+
+    <!-- CONTENT -->
+{{*#{@content_part}*}}
+    <!-- /CONTENT -->
+
+    <!-- FOOTER -->
+{{*<?rb unless captured_as('footer_part') ?>*}}
+    <hr />
+    <address>webmaster@localhost</address>
+{{*<?rb end ?>*}}
+    <!-- /FOOTER -->
+
+  </body>
+</html>
+.--------------------
+
+
+.#'{{,stop_capture(true),}}' is equivarent to '{{,@{{/varname/}} = stop_capture(),}}'.
+'{{,unless captured_as("name") ... end,}}' is equivarent to the following.
+.--------------------
+<?rb if @name ?>
+<?rb   _buf << @name ?>
+<?rb else ?>
+       ...
+<?rb end ?>
+.--------------------
+
+The following result shows that content part and footer part are overrided by capturing in content template but header part is not.
+
+.? Result:
+.==================== example9_capture.result
+$ rbtenjin --layout=layout9.rbhtml example9.rbhtml
+<html lang="en">
+  <head>
+    <title>Capture Test</title>
+  </head>
+  <body>
+
+    <!-- HEADER -->
+    <h1>Capture Test</h1>
+    <!-- /HEADER -->
+
+    <!-- CONTENT -->
+    {{*<ul>*}}
+      {{*<li>i = 0</li>*}}
+      {{*<li>i = 1</li>*}}
+      {{*<li>i = 2</li>*}}
+    {{*</ul>*}}
+
+    <!-- /CONTENT -->
+
+    <!-- FOOTER -->
+    {{*<div class="footer">copyright&copy; 2007 kuwata-lab.com</div>*}}
+    <!-- /FOOTER -->
+
+  </body>
+</html>
+.====================
+
+
+
+
+.$$ Template Arguments			| des-args
+
+It is able to specify template arguments in template files.
+Template arguments are variables which are passed by main program via context object.
+In the following example, '{{,title,}}' and '{{,name,}}' are template arguments.
+
+
+.? File 'example10.rbhtml':
+.-------------------- example10.rbhtml
+<?xml version="1.0"?>
+{{*<?rb #@ARGS title, name ?>*}}
+<h1>${title}</h1>
+<p>Hello ${name}!</p>
+.--------------------
+
+Template arguments line is converted into assignment statements of local variables.
+
+.==================== example10_template_args.result
+$ rbtenjin -s example10.rbhtml
+_buf = '';  _buf << %Q`<?xml version="1.0"?>\n`
+{{* title = @title; name = @name;*}}
+ _buf << %Q`<h1>#{escape((title).to_s)}</h1>
+<p>Hello #{escape((name).to_s)}!</p>\n`
+_buf.to_s
+.====================
+
+
+If template arguments are specified, other variables passed by context object are not set.
+
+.? File 'example11.rbhtml':
+.-------------------- example11.rbhtml
+{{*<?rb #@ARGS x ?>*}}
+<p>
+x = #{x}
+y = #{y}   # NameError
+</p>
+.--------------------
+
+.? Result:
+.==================== example11_template_args_result
+$ rbtenjin {{*-c '@x=10;@y=20'*}} example11.rbhtml
+example12.rbhtml:4:in `_render': undefined local variable or method `y' (NameError)
+.====================
+
+
+
+
+.$$ Preprocessing			| des-preprocess
+
+rbTenjin supports preprocessing of template.
+Preprocessing executes some logics when templates are loaded and that logics are not executed when rendering.
+Preprocessing makes your application much faster.
+
+Notation of preprocessing is the following.
+.* {{,<?RB ... ?>,}} represents preprocessing statement.
+.* {{,#{{...}},}} represents preprocessing expression (without HTML escape).
+.* {{,${{...}},}} represents preprocessing expression (with HTML escape).
+
+For example, assume the following template.
+
+.? File 'example12.rbhtml':
+.-------------------- example12.rbhtml
+{{*<?RB states = { "CA" => "California", ?>*}}
+{{*<?RB            "NY" => "New York", ?>*}}
+{{*<?RB            "FL" => "Florida",  ?>*}}
+{{*<?RB            "TX" => "Texas",  ?>*}}
+{{*<?RB            "HI" => "Hawaii", } ?>*}}
+<?rb chk = { @params['state'] => ' selected="selected"' } ?>
+<select name="state">
+  <option value="">-</option>
+{{*<?RB for code in states.keys.sort ?>*}}
+  <option value="{{*#{{code}}*}}"#{chk[{{*#{{code.inspect}}*}}]}>{{*${{states[code]}}*}}</option>
+{{*<?RB end ?>*}}
+</select>
+.--------------------
+
+If preprocessing is activated, the above will be converted into the following when template is loaded.
+(Command-line option {{,-P,}} shows the result of preprocessing.)
+
+.? Result of preprocessing:
+.==================== example12_preprocessed.result
+$ rbtenjin {{*-P*}} example12.rbhtml
+<?rb chk = { @params['state'] => ' selected="selected"' } ?>
+<select name="state">
+  <option value="">-</option>
+  <option value="CA"#{chk["CA"]}>California</option>
+  <option value="FL"#{chk["FL"]}>Florida</option>
+  <option value="HI"#{chk["HI"]}>Hawaii</option>
+  <option value="NY"#{chk["NY"]}>New York</option>
+  <option value="TX"#{chk["TX"]}>Texas</option>
+</select>
+.====================
+
+This means that for-loop is executed only once when template is loaded and is not executed when rendering.
+In the result, rendering speed becomes to be much faster.
+
+And the Ruby code is here. This shows that there is no for-loop.
+
+.? Translated script code:
+.==================== example12_preprocessed_source.result
+$ rbtenjin {{*--preprocess*}} -sb example12.rbhtml
+chk = { @params['state'] => ' selected="selected"' }
+ _buf << %Q`<select name="state">
+  <option value="">-</option>
+  <option value="CA"#{chk["CA"]}>California</option>
+  <option value="FL"#{chk["FL"]}>Florida</option>
+  <option value="HI"#{chk["HI"]}>Hawaii</option>
+  <option value="NY"#{chk["NY"]}>New York</option>
+  <option value="TX"#{chk["TX"]}>Texas</option>
+</select>\n`
+.====================
+
+If you have errors on preprocessing, you should check source script by {{,-Ps,}} option{{(Command-line option '-Ps' is available but '-PS' is not availabe. This is a current restriction of rbtenjin. )}}.
+
+
+
+
+The following is an another example.
+Assume that {{,link_to(),}} is a helper method which takes label and url and generate
+{{,<a></a>,}} tag.
+In this case, label and url can be parameterized by {{,_p("..."),}} and {{,_P("..."),}}.
+The former is converted into {{,#{...},}} and the latter converted into {{,${...},}}
+by preprocessor.
+
+.? File 'example13.rbhtml':
+.-------------------- example13.rbhtml
+<?RB require 'cgi' ?>
+<?RB ## ex. link_to('Show', '/show/1')  => <a href="/show/1">Show</a> ?>
+<?RB def link_to(label, url) ?>
+<?RB     return "<a href=\"#{CGI.unescape(url)}\">#{label}</a>" ?>
+<?RB end ?>
+#{{link_to 'Show '+{{*_P('@params["name"]')*}}, '/items/show/'+{{*_p('@params["id"]')*}}}}
+.--------------------
+
+.? Preprocessed template:
+.==================== example13_preprocessed.result
+$ rbtenjin {{*-P*}} example13.rbhtml
+<a href="/items/show/{{*#{@params["id"]}"*}}>Show {{*${@params["name"]}*}}</a>
+.====================
+
+.? Translated script code:
+.==================== example13_preprocessed_source.result
+$ rbtenjin {{*--preprocess*}} -sb example13.rbhtml
+ _buf << %Q`<a href="/items/show/{{*#{@params["id"]}*}}">Show {{*#{escape((@params["name"]).to_s)}*}}</a>\n`
+.====================
+
+There are many web-application framework and they provides helper functions.
+These helper functions are divided into two groups.
+.* {{,link_to(),}} or {{,_(),}} (function for M17N) return the same result
+   when the same arguments are passed.
+   These functions can be expanded by preprocessor.
+.* Some functions return the different result even if the same arguments are passed.
+   These functions can't be expaned by preprocessor.
+
+Preprocessor has the power to make your application much faster,
+but it may make the debugging difficult.
+You should use it carefully.
+
+
+
+
+
+
+.$$ Other Options			| des-otheropts
+
+
+
+.* Command-line option '{{,--escapefunc=func1,}}' changes {{,escape(),}} function name to {{,func1,}}.
+   For example, '{{,--escapefunc=h,}}' changes escape function from {{,escape(),}} to {{,h(),}}.
+.* It is not able to contain '{{,},}}' character in '{{,${...},}}'.
+   For example, '{{,${hash["}"]},}}' will be converted into '{{,_buf << %Q`#{escape((hash[").to_s)}"]},}}` and not '{{,_buf << %Q`#{escape((hash["}"]).to_s)}`,}}'.
+   There is no such restriction about '{{,#{...},}}'.
+.* It is not able to contain '{{,\,}}' and '{{,`,}}' characters in '{{,#{...},}}'
+   because these characters are escaped.
+   For example, '{{,#{hash["\n"]},}}' will be converted into '{{,_buf << %Q`hash["\n"]`,}}'.
+   There is no such restriction about '{{,${...},}}'.
+.* Command-line option '{{,--path=dir1,dir2,...,}}' sepcifies template directory path.
+
+
+
+
+.$ Developer's Guide		| devguide
+
+
+This section shows how to use rbTenjin in your Ruby script.
+
+If you want to know the notation or features of rbTenjin, see {{<Designer's Guide|#desguide>}} section.
+
+
+
+.$$ An Example			| dev-example
+
+The following is an example to use rbTenjin in Ruby.
+
+
+.? Example:
+.--------------------
+require 'tenjin'
+engine = Tenjin::Engine.new()
+context = { :title=>'rbTenjin Example', :items=>['AAA', 'BBB', 'CCC'] }
+filename = 'file.rbhtml'
+output = engine.render(filename, context)
+print output
+.--------------------
+
+If you want to define helper functions for template, see {{<Add Your Helper Functions|#dev-helpers>}} section.
+
+
+
+.#.$$ Classes and Functions in rbTenjin	| dev-classes
+.#
+.#
+.#rbTenjin has the follwoing classes.
+.#
+.#.[ Tenjin::Template ]
+.#    This class represents a template file.
+.#    Main responsibilities of this class are:
+.#    .- Convert template file into ruby script
+.#    .- Render converted ruby script with context data
+.#
+.#.[ Tenjin::Engine ]
+.#    This class provides many features such as:
+.#    .- Search template files
+.#    .- Nestable layout template
+.#    .- Partial template
+.#    .- File caching
+.#    .- Preprocessing
+.#    .- and so on
+.#
+.#% if context_class && !context_class.empty?
+.#.[ Tenjin::Context ]
+.#    This class represents context data.
+.#% end 
+.#
+.#
+.#% if PYTHON
+.#%   mod = 'tenjin.helpers.'
+.#% elsif RUBY
+.#%   mod = ''
+.#% elsif PERL
+.#%   mod = 'Tenjin::Context'
+.#% elsif JS
+.#%   mod = 'Tenjin.Util'
+.#% elsif PHP
+.#%   mod = 'XXXX'
+.#% else assert false 
+.#% end 
+.#
+.#
+.#% if PYTHON
+.#rbTenjin has the following utility functions.
+.#These are defined at tenjin.helpers module.
+.#% elsif RUBY
+.#rbTenjin has the following utility functions.
+.#These are defined at Tenjin::HtmlHelper module and Tenjin::Context class includes it.
+.#% elsif PERL
+.#rbTenjin has the following utility functions.
+.#% elsif JS
+.#.#rbTenjin has the following utility functions.
+.#% elsif PHP
+.#.#rbTenjin has the following utility functions.
+.#% else assert false 
+.#% end 
+.#
+.#% if PYTHON
+.#.[ to_str(value) ]
+.#    Convert value into string.
+.#    Return empty string if value is None else return value of {{,str(value),}}.
+.#% end 
+.#
+.#.[ escape(str) ]
+.#    Escape '{{,& < > ",}}' in string into '{{,&amp; &lt; &gt; &quot;,}}'.
+.#
+.#% if PYTHON
+.#.[ generate_tostrfunc(str) ]
+.#    Generate 'to_str' function which encodes unicode to str.
+.#    This is used when handling non-ascii characters in template file.
+.#    See {{<Template Encoding|#dev-encoding>}} section for details.
+.#% end
+.#
+
+
+.$$ Class Tenjin::Template		| dev-templateclass
+
+
+Tenjin::Template class represents a template file.
+An object of Tenjin::Template corresponds to a template file.
+Main responsibilities of this class are:
+
+.- Convert template file into ruby script
+.- Render converted ruby script with context data
+
+This class has the following methods and attributes.
+
+
+.[ Tenjin::Template.new(filename=nil, :escapefunc=>'escape') ]
+    Create template object. If filename is given, read and convert it to Ruby code.
+
+.[ Tenjin::Template#convert(input, filename=None) ]
+    Convert input text into Ruby code and return it.
+
+.[ Tenjin::Template#convert_file(filename) ]
+    Convert file into Ruby code and return it.
+    This is equivarent to {{,Tenjin::Template#convert(File.read(filename), filename),}}
+
+.#.[ Tenjin::Template#render(context=nil, _buf=nil) ]
+.[ Tenjin::Template#render(context=nil) ]
+    Compile Ruby code, evaluate it with context data, and return the result of evaluation.
+    .#If {{,_buf,}} is nil then new String is created as {{,_buf,}} and returned.
+    .#If {{,_buf,}} is not nil then the result of evaluation is appended
+    .#into {{,_buf,}} and returns nil.
+
+.[ Tenjin::Template#script ]
+    Converted Ruby code
+
+
+
+The followings are examples to use Tenjin::Template in Ruby script.
+
+
+
+.? File 'example14.rbhtml':
+.-------------------- example14.rbhtml
+<h1>#{@title}</h1>
+<ul>
+<?rb for item in @items ?>
+ <li>${item}</li>
+<?rb end ?>
+</ul>
+.--------------------
+
+.? File 'example14.rb':
+.-------------------- example14.rb
+## template file
+filename = 'example14.rbhtml'
+
+## convert into ruby code
+require 'tenjin'
+template = {{*Tenjin::Template.new(filename)*}}
+## or
+# template = Tenjin::Template.new()
+# script = {{*template.convert_file(filename)*}}
+## or
+# template = Tenjin::Template.new()
+# input = File.read(filename)
+# script = {{*template.convert(input, filename)*}}  # filename is optional
+
+## show converted ruby code
+puts "---- ruby code ----"
+puts {{*template.script*}}
+
+## evaluate ruby code
+hash = {:title=>'rbTenjin Example', :items=>['<AAA>','B&B','"CCC"']}
+output = {{*template.render(hash)*}}
+puts "---- output ----"
+puts output
+## or
+#hash = {:title=>'rbTenjin Example', :items=>['<AAA>','B&B','"CCC"']}
+#context = {{*Tenjin::Context.new(hash)*}}
+#output = {{*template.render(context)*}}
+## or
+# context = Tenjin::Context.new
+# context[:title] = 'rbTenjin Example'
+# context[:items] = ['<AAA>','B&B','"CCC"']
+# output = template.render(context)
+.--------------------
+
+.? Result:
+.==================== example14_tmplclass.result
+$ ruby example14.rb
+---- ruby code ----
+ _buf << %Q`<h1>#{@title}</h1>
+<ul>\n`
+for item in @items
+ _buf << %Q` <li>#{escape((item).to_s)}</li>\n`
+end
+ _buf << %Q`</ul>\n`
+---- output ----
+<h1>rbTenjin Example</h1>
+<ul>
+ <li>&lt;AAA&gt;</li>
+ <li>B&amp;B</li>
+ <li>&quot;CCC&quot;</li>
+</ul>
+.====================
+
+
+
+
+Constructor of Tenjin::Template can take the follwoing options.
+
+
+.* '{{,escapefunc,}}' (string) specifies function name to escape string.
+  Default is '{{,escape,}}' (= {{,Tenjin::Context#escape,}}).
+
+
+Constructor of Tenjin::Engine can also take the same options as above.
+These options given to constructor of Tenjin::Engine are passed to constructor of Tenjin::Template internally.
+
+
+
+.? File 'example15.rb':
+.-------------------- example15.rb
+require 'tenjin'
+filename = 'example14.rbhtml'
+template = Tenjin::Template.new(filename, {{*:escapefunc=>'CGI.escapeHTML'*}})
+print template.script, "\n"
+
+require 'cgi'
+title = 'rbTenjin Example'
+items = ['<foo>', '&bar', '"baz"']
+output = template.render(:title=>title, :items=>items)
+print output
+.--------------------
+
+
+
+
+.? Result:
+.==================== example15_escapefunc.result
+$ ruby example15.rb
+ _buf << %Q`<h1>#{@title}</h1>
+<ul>\n`
+for item in @items
+ _buf << %Q` <li>#{{{*CGI.escapeHTML*}}((item).to_s)}</li>\n`
+end
+ _buf << %Q`</ul>\n`
+
+<h1>rbTenjin Example</h1>
+<ul>
+ <li>&lt;foo&gt;</li>
+ <li>&amp;bar</li>
+ <li>&quot;baz&quot;</li>
+</ul>
+.====================
+
+
+
+
+.$$ Class Tenjin::Engine		| dev-engineclass
+
+
+Tenjin::Engine class contains some template objects.
+It can handle nested template and layout template.
+This class provides many features such as:
+.- Search template files
+.- Nestable layout template
+.- Partial template
+.- {{=File caching=}} (caching feature is separated to tenjin.CacheStorage class.)
+.- Preprocessing
+.- and so on
+
+
+This class has the following methods.
+
+
+
+.[ Tenjin::Engine.new(:prefix=>'', :postfix=>'', :layout=>nil, :path=nil, :cache=>true, :preprocess=>false, :templateclass=>Tenjin::Template) ]
+    Create Engine object.
+    {{,:path,}} represents template search path and it should be an Array of directory name.
+    Other arguments are passed to Tenjin::Template.new() internally.
+
+.[ Tenjin::Engine#render(template_name, context=nil, layout=nil) ]
+    Convert template into Ruby code, evaluate it with context data, and return the result of it.
+    If {{,layout,}} is true or nil then layout template name specified by constructor option is
+    used as layout template, else if false then layout template is not used,
+    else if string then it is regarded as layout template name.
+
+Argument {{,template_name,}} in render() methods is filename or short name of template.
+Template short name is a Symbol.
+For example, '{{,render(:list, context),}}' is equivarent to '{{,render("user_list.rbhtml", context),}}' if prefix option is '{{,user_,}}' and postfix option is '{{,.rbhtml,}}'.
+
+
+
+
+
+
+
+
+.$$ Variables and Functions	| dev-vars-and-funcs
+
+
+In template file, the following variables and functions are available.
+
+.[ @_content ]
+    This variable represents the result of evaluation of other template.
+    This is available only in layout template file.
+
+.[ @_context ]
+    This variable represents context data dictionary and same as the 2nd argument of tenjin.Engine.render().
+    You can tweak this dict. For example if you set {{,_context['title']="Example",}} in your template file, {{,title,}} variable will be available in layout template file.
+
+.[ import(template_name) ]
+.#.[ import(template_name, append_to_buf=true) ]
+    Include and evaluate other template.
+    .#if second argument is true then result of it is appended into {{,_buf,}},
+    .#else returns result as string.
+    This method is an instance method of Tenjin::Context class.
+
+
+.[ start_capture(name) ]
+    Start capturing. Result will be stored into {{,@{{/name/}},}}.
+
+.[ stop_capture() ]
+    Stop capturing.
+.#.[ stop_capture(store_to_context=true) ]
+.#    Stop capturing. If argument {{,store_to_context,}} is true,
+.#    the result of capturing is stored into
+.#    {{,@{{/varname/}},}}.
+.#    .#It means that '{{,stop_capture(true),}}' is equivarent to '{{,@{{/varname/}} = stop_capture(),}}'.
+.#    Return the result of capturing.
+
+.[ captured_as(varname) ]
+    If captured string as {{/varname/}} is exist then append it into
+    {{,@_buf,}} and return true, else return false.
+    This is a helper function for layout template.
+
+
+
+The followings are example of Tenjin::Engine class.
+
+
+
+.? File 'user_form.rbhtml':
+.-------------------- user_form.rbhtml
+<?rb #@ARGS params ?>
+<p>
+  Name:  <input type="text" name="name"  value="${params['name']}" /><br />
+  Email: <input type="text" name="email" value="${params['email']}" /><br />
+  Gender:
+<?rb gender = @params['gender'] ?>
+<?rb chk = { true=>' checked="checked"', false=>'' } ?>
+  <input type="radio" name="gender" value="m" #{chk[gender=='m']} />Male
+  <input type="radio" name="gender" value="f" #{chk[gender=='f']} />Female
+</p>
+.--------------------
+
+.? File 'user_create.rbhtml':
+.-------------------- user_create.rbhtml
+<?rb #@ARGS ?>
+<form action="user_app.cgi" method="post">
+  <input type="hidden" name="action" value="create" />
+{{*<?rb import :form ?>*}}
+  <input type="submit" value="Create" />
+</form>
+.--------------------
+
+.? File 'user_edit.rbhtml':
+.-------------------- user_edit.rbhtml
+<?rb #@ARGS params ?>
+<form action="user_app.cgi" method="post">
+  <input type="hidden" name="action" value="edit" />
+  <input type="hidden" name="id" value="${params['id']}" />
+{{*<?rb import :form ?>*}}
+  <input type="submit" value="Edit" />
+</form>
+.--------------------
+
+.? File 'user_layout.rbhtml':
+.-------------------- user_layout.rbhtml
+<?rb #@ARGS _content, title ?>
+<html>
+  <body>
+
+    <h1>${title}</h1>
+
+    <div id="main-content">
+{{*#{_content}*}}
+    </div>
+
+    <div id="footer">
+{{*<?rb import 'footer.html' ?>*}}
+    </div>
+
+  </body>
+</html>
+.--------------------
+
+.? File 'footer.html':
+.-------------------- footer.html
+<?rb #@ARGS ?>
+<hr />
+<address>
+  <a href="mailto:webmaster@example.com">webmaster@example.com</a>
+</address>
+.--------------------
+
+.? File 'user_app.cgi':
+.-------------------- user_app.cgi
+#!/usr/bin/env ruby
+
+require 'cgi'
+{{*require 'tenjin'*}}
+
+## set action ('create' or 'edit')
+action = nil
+cgi = nil
+if ENV['REQUEST_METHOD']
+  cgi = CGI.new
+  action = cgi['action']
+elsif ARGV[0]
+  action = ARGV[0]
+end
+action = 'create' unless ['create', 'edit'].include?(action)
+
+## set context data
+if action == 'create'
+  title = 'Create User'
+  params = {}
+else
+  title = 'Edit User'
+  params = {:name=>'Margalette',
+            :email=>'meg@example.com',
+	    :gender=>'f',
+	    :id=>123 }
+end
+{{*context = { :title=>title, :params=>params }*}}
+{{*# or context = Tenjin::Context.new(:title=>title, :params=>params)*}}
+
+## create engine object
+layout = :layout   # or 'user_layout.rbhtml'
+{{*engine = Tenjin::Engine.new(:prefix=>'user_', :postfix=>'.rbhtml', :layout=>layout)*}}
+
+## evaluate template
+template_name = action.intern   # :create or :edit
+{{*output = engine.render(template_name, context)*}}
+print cgi.header() if cgi
+print output
+.--------------------
+
+
+
+.? Result:
+.==================== user_app.result
+$ ruby user_app.cgi create
+<html>
+  <body>
+
+    <h1>Create User</h1>
+
+    <div id="main-content">
+{{*<form action="user_app.cgi" method="post">*}}
+{{*  <input type="hidden" name="action" value="create" />*}}
+{{*<p>*}}
+{{*  Name:  <input type="text" name="name"  value="" /><br />*}}
+{{*  Email: <input type="text" name="email" value="" /><br />*}}
+{{*  Gender:*}}
+{{*  <input type="radio" name="gender" value="m"  />Male*}}
+{{*  <input type="radio" name="gender" value="f"  />Female*}}
+{{*</p>*}}
+{{*  <input type="submit" value="Create" />*}}
+{{*</form>*}}
+
+    </div>
+
+    <div id="footer">
+{{*<hr />*}}
+{{*<address>*}}
+{{*  <a href="mailto:webmaster@example.com">webmaster@example.com</a>*}}
+{{*</address>*}}
+    </div>
+
+  </body>
+</html>
+.====================
+
+
+
+
+
+
+
+
+
+
+
+
+.$$ Add Your Helper Functions	| dev-helpers
+
+There are several ways to use helper functions.
+
+
+
+Assume the following template.
+
+.? File 'example16.rbhtml':
+.-------------------- example16.rbhtml
+<?rb #@ARGS label, url ?>
+<ul>
+  <li>#{{{*link_to(label, url)*}}}</li>
+</ul>
+.--------------------
+
+(A) Define helper functions as global function.
+
+.? File 'example16a.rb':
+.-------------------- example16a.rb
+require 'tenjin'
+
+def link_to(label, url)
+  return "<a href=\"#{escape_xml(url)}\">#{escape_xml(label)}</a>"
+end
+
+engine = Tenjin::Engine.new()
+context = { :label=>'Top', :url=>'/' }
+output = engine.render('example16.rbhtml', context)
+print output
+.--------------------
+
+.? Result:
+.==================== example16a.result
+$ ruby example16a.rb
+<ul>
+  <li><a href="/">Top</a></li>
+</ul>
+.====================
+
+
+(B) Define helper functions as module function of Tenjin::ContextHelper module.
+
+.? File 'example16b.rb':
+.-------------------- example16b.rb
+require 'tenjin'
+
+{{*module Tenjin::ContextHelper*}}
+  module_function
+  def link_to(label, url)
+    return "<a href=\"#{escape_xml(url)}\">#{escape_xml(label)}</a>"
+  end
+{{*end*}}
+
+engine = Tenjin::Engine.new()
+context = { :label=>'Top', :url=>'/' }
+output = engine.render('example16.rbhtml', context)
+print output
+.--------------------
+
+.? Result:
+.==================== example16b.result
+$ ruby example16b.rb
+<ul>
+  <li><a href="/">Top</a></li>
+</ul>
+.====================
+
+
+(C) Define subclass of Tenjin::Context and define helper functions as instance method.
+
+.? File 'example16c.rb':
+.-------------------- example16c.rb
+require 'tenjin'
+
+{{*class MyContext < Tenjin::Context*}}
+  def link_to(label, url)
+    return "<a href=\"#{escape_xml(url)}\">#{escape_xml(label)}</a>"
+  end
+{{*end*}}
+
+engine = Tenjin::Engine.new()
+{{*context = MyContext.new(:label=>'Top', :url=>'/')*}}
+output = engine.render('example16.rbhtml', context)
+print output
+.--------------------
+
+.? Result:
+.==================== example16c.result
+$ ruby example16c.rb
+<ul>
+  <li><a href="/">Top</a></li>
+</ul>
+.====================
+
+
+(D) Define helper functions in current class, set context data as instance variables, and pass self as context object
+
+.? File 'example16d.rb':
+.-------------------- example16d.rb
+require 'tenjin'
+
+class MyClass
+  {{*include Tenjin::ContextHelper*}}
+  {{*#include Tenjin::HtmlHelper*}}  # optional
+
+  def link_to(label, url)    # define helper functions in current class
+    return "<a href=\"#{escape(url)}\">#{escape(label)}</a>"
+  end
+
+  def render_template(template_name)
+    engine = Tenjin::Engine.new()
+    output = engine.render(template_name, {{*self*}})  # pass self as context object
+    return output
+  end
+
+  def main
+    ## set context data as instance variables
+    {{*@label = 'Top'*}}
+    {{*@url = '/'*}}
+    output = render_template('example16.rbhtml')
+    print output
+  end
+
+end
+
+MyClass.new.main()
+.--------------------
+
+.? Result:
+.==================== example16d.result
+$ ruby example16d.rb
+<ul>
+  <li><a href="/">Top</a></li>
+</ul>
+.====================
+
+
+
+
+
+
+.$$ Other Topics		| dev-othertopics
+
+
+.* Tenjin::Template detects newline character ("\n" or "\r\n") automatically.
+   If input file contains "\r\n", rbTenjin generates output which contains "\r\n".
+
+.* Tenjin::Template#render() can be called many times.
+   If you create a Tenjin::Template object, you can call render() method many times.
+
+.* Tenjin::Template#convert() also can be called many times.
+  If you create a Tenjin::Template object, you can call convert() (and also render()) method many times.
+
+.# * Tenjin::Template object is not thread-safe. It is not able to share Template objects with several threads.
+

@@ -1,0 +1,1286 @@
+.=title:	rbTenjin FAQ
+.?lastupdate:	$Date$
+.?release:	$Release$
+.?stylesheet:	docstyle.css
+
+.#Release:	$Release$
+
+Table of contents:
+.<<< faq.toc
+
+
+
+
+.$ Basic	| faq-basic
+
+
+
+.$$ I got an SyntaxError exception.	| faq-syntax-error
+
+
+Command-line option '-z' checks syntax of template file.
+You should check template by it.
+
+
+
+.? File 'ex1.rbhtml':
+.-------------------- ex1.rbhtml
+<ul>
+<?rb (0..10).each { |i| ?>
+  <li>#{i}</li>
+<?rb end ?>
+</ul>
+.--------------------
+
+.? Result:
+.==================== ex1_chksyntax.result
+$ rbtenjin {{*-wz*}} ex1.rbhtml
+ex1.rbhtml:4: syntax error, unexpected kEND, expecting '}'
+ex1.rbhtml:5: syntax error, unexpected $end, expecting '}'
+.====================
+
+
+
+
+
+
+
+
+
+
+.$$ '#{@_content}' includes extra newline at end. Can I delete it?	| faq-delete-newline
+
+
+
+Yes. You can use '{{,<?rb echo(@_content) ?>,}}' or '{{,<?rb _buf << @_content ?>,}}' instead of '{{,#{@_conent},}}'.
+
+
+.? File 'ex2-layout.rbhtml':
+.-------------------- ex2-layout.rbhtml
+<!-- -->
+{{*#{@_content}*}}
+<!-- -->
+
+<!-- -->
+{{*<?rb echo(@_content) ?>*}}
+<!-- -->
+
+<!-- -->
+{{*<?rb _buf << @_content ?>*}}
+<!-- -->
+.--------------------
+
+.? File 'ex2-content.rbhtml':
+.-------------------- ex2-content.rbhtml
+foo
+bar
+baz
+.--------------------
+
+.? Result:
+.==================== ex2_removenl.result
+$ rbtenjin --layout=ex2-layout.rbhtml ex2-content.rbhtml
+<!-- -->
+foo
+bar
+baz
+
+<!-- -->
+
+<!-- -->
+foo
+bar
+baz
+<!-- -->
+
+<!-- -->
+foo
+bar
+baz
+<!-- -->
+.====================
+
+
+
+
+
+
+
+.$$ Can I change 'escape()' function name?	| faq-change-funcname
+
+Yes. You can change them by setting {{,:escapefunc,}} option for Tenjin::Template.new() or Tenjin::Engine.new().
+
+
+
+
+
+
+
+.? File 'ex3.rb':
+.-------------------- ex3.rb
+require 'tenjin'
+engine = Tenjin::Engine.new({{*:escapefunc=>'CGI.escapeHTML'*}})
+template = engine.get_template('ex3.rbhtml')
+print template.script
+.--------------------
+
+.? File 'ex3.rbhtml':
+.-------------------- ex3.rbhtml
+Hello ${@name}!
+.--------------------
+
+.? Result:
+.-------------------- ex3_escapefunc1.result
+$ ruby ex3.rb
+ _buf << %Q`Hello #{{{*CGI.escapeHTML*}}((@name).to_s)}!\n`
+.--------------------
+
+Command-line option '--escapefunc={{/name/}}' is equivarent to the above.
+
+.? Result:
+.-------------------- ex3_escapefunc2.result
+$ rbtenjin -sb {{*--escapefunc=CGI.escapeHTML*}} ex3.rbhtml
+ _buf << %Q`Hello #{{{*CGI.escapeHTML*}}((@name).to_s)}!\n`
+.--------------------
+
+
+
+
+
+
+.$$ Can I change '_buf' variable name?	| faq-change-bufname
+
+No. Variable name '_buf' should not and will never be changed.
+
+
+
+
+
+
+
+
+
+
+
+
+.$ Template		| faq-template
+
+
+.$$ Is it able to specify variables passed to template?	| faq-template-args
+
+Yes. You can specify template arguments by '{{,<?rb #@ARGS arg1, arg2, arg3 ?>,}}'.
+
+
+
+.? File 'ex5-layout.rbhtml'
+.-------------------- ex5.rbhtml
+<?xml version="1.0 ?>
+{{*<?rb #@ARGS x, y ?>*}}
+<p>
+  x = #{x}
+  y = #{y}
+  z = #{z}
+</p>
+.--------------------
+
+
+Template arguments line is converted into local variable assignment statements.
+
+.? Source code
+.==================== ex5_template_args.source
+$ rbtenjin -s ex5.rbhtml
+_buf = '';  _buf << %Q`<?xml version="1.0 ?>\n`
+{{* x = @x; y = @y;*}}
+ _buf << %Q`<p>
+  x = #{x}
+  y = #{y}
+  z = #{z}
+</p>\n`
+_buf.to_s
+.====================
+
+
+Undeclared arguments are not available even when they are passed via context object.
+
+.? Result:
+.#.==================== ex5_template_args.result
+.====================
+$ rbtenjin -c 'x=10; y=20; z=30' ex5.rbhtml
+ex5.rbhtml:6:in `_render': undefined local variable or method `z' for #<Tenjin::Context:0x35a9e4> (NameError)
+.====================
+
+
+
+
+
+.$$ Is there any way to use eRuby template?	| faq-eruby-template
+
+Yes. It is able to use eRuby template files by Tenjin::ErubisTemplate class.
+
+It is required to install {{<Erubis|http://www.kuwata-lab.com/erubis>}} to use Tenjin::ErubisTemplate class.
+
+
+.? File 'ex6-layout.rhtml'
+.-------------------- ex6-layout.rhtml
+<html>
+ <body>
+  <h1>{{*<%=h @title %>*}}</h1>
+{{*<%= @_content %>*}}
+ </body>
+</html>
+.--------------------
+
+.? File 'ex6-content.rhtml'
+.-------------------- ex6-content.rhtml
+  {{*<% @title = 'eRuby template example' %>*}}
+  <ul>
+  {{*<% for item in @items %>*}}
+   <li>{{*<%=h item %>*}}</li>
+  {{*<% end %>*}}
+  </ul>
+.--------------------
+
+.? File 'ex6-main.rb':
+.-------------------- ex6.rb
+{{*require 'erubis'*}}
+require 'tenjin'
+
+include Erubis::XmlHelper
+
+context = { :items => ['<AAA>', 'B&B', '"CCC"'] }
+engine = Tenjin::Engine.new(:layout=>'ex6-layout.rhtml',
+                           {{*:templateclass=>Tenjin::ErubisTemplate*}})
+output = engine.render('ex6-content.rhtml', context)
+print output
+.--------------------
+
+.? Result:
+.==================== ex6_eruby.result
+$ ruby ex6.rb
+<html>
+ <body>
+  <h1>eRuby template example</h1>
+  <ul>
+   <li>&lt;AAA&gt;</li>
+   <li>B&amp;B</li>
+   <li>&quot;CCC&quot;</li>
+  </ul>
+
+ </body>
+</html>
+.====================
+
+
+
+
+.$$ Is it able to change embedded expression pattern?	| faq-exprpat
+
+Yes, you can create subclass of Template class and override embedded expression pattern.
+
+
+
+
+
+.? ex7-expr-pattern.rbhtml:
+.-------------------- ex7-expr-pattern.rbhtml
+<p>HTML escaped: ${@value}</p>
+<p>not escaped:  #{@value}</p>
+<p>not escaped:  {{*<%= @value %>*}}</p>
+.--------------------
+
+.? ex7-expr-pattern.rb:
+.-------------------- ex7-expr-pattern.rb
+require 'tenjin'
+
+class MyTemplate < Tenjin::Template
+
+  ## return pattern object for embedded expressions
+  def {{*expr_pattern()*}}
+    return /([$#])\{(.*?)\}|<%=(.*?)%>/m
+  end
+
+  ## if you don't use '#{...}', you must escape '#' in addition to '\\' and '`'
+  #def escape_str(str)
+  #  return str.gsub(/[\\`\#]/, '\\\\\&')
+  #end
+
+  ## return expression string and flag whether escape or not from matched object
+  def {{*get_expr_and_escapeflag(match)*}}
+    if match[1]
+      expr = match[2]
+      escapeflag = match[1] == '$'
+    else
+      expr = match[3].strip()
+      escapeflag = false
+    end
+    return expr, escapeflag
+  end
+
+end
+
+if __FILE__ == $0
+  context = { :value => 'AAA&BBB' }
+  engine = Tenjin::Engine.new({{*:templateclass=>MyTemplate*}})
+  output = engine.render('ex7-expr-pattern.rbhtml', context)
+  puts output
+end
+.--------------------
+
+.? Result:
+.==================== ex7_expr_pattern.result
+$ ruby ex7-expr-pattern.rb
+<p>HTML escaped: AAA&amp;BBB</p>
+<p>not escaped:  AAA&BBB</p>
+<p>not escaped:  AAA&BBB</p>
+.====================
+
+
+
+
+
+.$$ Does rbTenjin support M17N?	| faq-m17n
+
+No. rbTenjin doesn't provide M17 feature.
+
+rbTenjin doesn't provide M17N feature directly because requirements for M17N are
+different for each applications or frameworks.
+Some applications or frameworks adapt GetText library and others use their original M17N library.
+What rbTenjin should do is not to provide M17N feature but to show an example to support M17N.
+
+But using preprocessing, you can make your M17N template files much faster.
+See the next section for details.
+
+
+.$$ Is it possible to create separated template chaches for each language? | faq-m17n-cache
+
+Yes.
+
+
+The point is:
+.* Change cache filename according to language.
+   For example, create cache file 'file.rbhtml.en.cache', 'file.rbhtml.fr.cache', 'file.rbhtml.it.cache', and so on from template file 'file.rbhtml'.
+   This can be done by overriding CacheStorage#_cachename().
+.* Create Engine object for each language.
+.* Use preprocessing to create different cache content for each language.
+
+The following is an example to generate M17N pages from a template file.
+
+
+
+
+.? ex8-m18n.rbhtml:
+.-------------------- ex8-m18n.rbhtml
+<div>
+<?RB ## '_()' represents translator method ?>
+ <p>{{*${{{}}{_('Hello')}}*}} ${@username}!</p>
+</div>
+.--------------------
+
+
+.? ex8-m18n.rb:
+.-------------------- ex8-m18n.rb
+require 'tenjin'
+
+##
+## message catalog to translate message
+##
+MESSAGE_CATALOG = {
+  'en' => { 'Hello'   => 'Hello',
+            'Good bye'=> 'Good bye', },
+  'fr' => { 'Hello'   => 'Bonjour',
+            'Good bye'=> 'Au revoir', },
+}
+
+
+##
+## add translation method to ContextHelper module
+## (Tenjin::Context class includes this module)
+##
+module Tenjin::ContextHelper
+
+  def _(message_key)
+    message_dict = MESSAGE_CATALOG[@_lang]
+    return message_key unless message_dict
+    return message_dict[message_key] || message_key
+  end
+
+end
+
+
+##
+## engine class which supports M17N
+##
+class M17NEngine < Tenjin::Engine
+
+  {{*attr_accessor :lang*}}
+
+  ## constructor takes ':lang' options
+  def initialize(properties={})
+    super(properties)
+    @lang = properties[:lang] || 'en'   # set language
+  end
+
+  ## change cache filename to 'file.html.lang.cache'
+  {{*def cachename(filename)*}}
+    {{*return "#{filename}.#{@lang}.cache"*}}
+  {{*end*}}
+
+  ## set language to context object
+  def hook_context(context)
+    context = super(context)
+    context['_lang'] = @lang
+    return context
+  end
+
+end
+
+
+##
+## test program
+##
+if $0 == __FILE__
+
+  template_name = 'ex8-m18n.rbhtml'
+  context = { :username => 'World' }
+  
+  ## engine for english
+  engine = {{*M17NEngine*}}.new(:preprocess=>true)
+  output = engine.render(template_name, context)   # same template
+  puts "--- lang: %s ---" %  engine.lang
+  puts output
+  puts
+  
+  ## engine for French
+  engine = {{*M17NEngine*}}.new(:preprocess=>true, {{*:lang=>'fr'*}})
+  output = engine.render(template_name, context)   # same template
+  puts "--- lang: %s ---" %  engine.lang
+  puts output
+
+end
+.--------------------
+
+.? Result:
+.==================== ex8_m18n.result
+$ ruby ex8-m18n.rb
+--- lang: en ---
+<div>
+ <p>{{*Hello*}} World!</p>
+</div>
+
+--- lang: fr ---
+<div>
+ <p>{{*Bonjour*}} World!</p>
+</div>
+.====================
+
+
+
+
+
+.$ Layout Template	| faq-layout
+
+
+
+.$$ Can I change layout template name in a template file?	| faq-change-layout-template
+
+Yes. If you set {{,@_layout,}},
+its value is regarded as layout template name.
+
+
+.* You can specify template file name (ex. 'user_list.rbhtml') or template short name (ex. :list).
+.* If you set true to '@_layout', default layout template name is used instead.
+.* It is able to N-th level nested template.
+
+
+See the next section for details.
+
+
+
+.$$ Can I nest layout templates for any depth?		| faq-nested-layout-template
+
+
+Yes. If you set {{,@_layout,}},
+you can nest layout templates in any depth.
+
+The following example shows that:
+.* 'ex8-content.rbhtml' uses 'ex8-mylayout.rbhtml' as layout template.
+.* 'ex8-mylayout.rbhtml' uses 'ex8-baselayout.rbhtml' as layout template.
+
+
+
+
+.? File 'ex9-content.rbhtml':
+.-------------------- ex9-content.rbhtml
+<?rb @title = 'Changing Layout Template Test' ?>
+<?rb ## specify layout template name ?>
+{{*<?rb @_layout = 'ex9-mylayout.rbhtml' ?>*}}
+foo
+bar
+baz
+.--------------------
+
+.? File 'ex9-mylayout.rbhtml':
+.-------------------- ex9-mylayout.rbhtml
+<?rb ## use default layout template name ?>
+{{*<?rb @_layout = true ?>*}}
+<div id="content">
+{{*<?rb _buf << @_content ?>*}}
+</div>
+.--------------------
+
+.? File 'ex9-baselayout.rbhtml':
+.-------------------- ex9-baselayout.rbhtml
+<html>
+  <body>
+<?rb if @title ?>
+    <h1>${@title}</h1>
+<?rb end ?>
+{{*<?rb _buf << @_content ?>*}}
+  </body>
+</html>
+.--------------------
+
+
+.? Result:
+.==================== ex9_changelayout.result
+$ rbtenjin --layout=ex9-baselayout.rbhtml ex9-content.rbhtml
+<html>
+  <body>
+    <h1>Changing Layout Template Test</h1>
+<div id="content">
+foo
+bar
+baz
+</div>
+  </body>
+</html>
+.====================
+
+
+
+
+.$$ Can I disable default layout template for a certain template?	| faq-diable-layout
+
+
+Yes. If you set false to @_layout, default layout template will not be applied.
+
+
+
+
+.$$ Is Django-like "Template Inheritance" supported?	| faq-template-inheritance
+
+
+No, but you can emulate it partially by combination of template capturing and '@_layout'.
+
+
+
+
+.? File 'ex10-baselayout.rbhtml':
+.-------------------- ex10-baselayout.rbhtml
+<html>
+ <body>
+
+<?rb ## if variable '@header_part' is defined then print it, ?>
+<?rb ## else print default header part. ?>
+  <div id="header">
+{{*<?rb unless captured_as(:header_part) ?>*}}
+   <img src="img/logo.png" alt="logo" ?>
+{{*<?rb end ?>*}}
+  </div>
+
+<?rb ## main content part ?>
+  <div id="content">
+<?rb _buf << @content_part ?>
+  </div>
+
+<?rb ## if variable '@footer_part' is defined then print it, ?>
+<?rb ## else print default footer part. ?>
+  <div id="footer">
+{{*<?rb unless captured_as(:footer_part) ?>*}}
+   <hr />
+   <em>webmaster@example.com</em>
+{{*<?rb end ?>*}}
+  </div>
+  
+ </body>
+</html>
+.--------------------
+
+.? File 'ex10-customlayout.rbhtml':
+.-------------------- ex10-customlayout.rbhtml
+<?rb ## '@_layout' variable is equivarent to '{% extends "foobar.html" %}' ?>
+<?rb ## in Django template engine. ?>
+{{*<?rb @_layout = 'ex10-baselayout.rbhtml' ?>*}}
+
+<?rb ## you can override header or footer by capturing. ?>
+{{*<?rb start_capture(:footer_part) ?>*}}
+<address style="text-align:right">
+  copyright&copy; 2007 kuwata-lab all rights reserved<br />
+  <a href="webmaster&#64;kuwata-lab.com">webmaster&#64;kuwata-lab.com</a>
+</address>
+{{*<?rb stop_capture() ?>*}}
+.--------------------
+
+.? File 'ex10-content.rbhtml':
+.-------------------- ex10-content.rbhtml
+<?rb ## '@_layout' variable is equivarent to '{% extends "foobar.html" %}' ?>
+<?rb ## in Django template engine. ?>
+{{*<?rb @_layout = 'ex10-customlayout.rbhtml' ?>*}}
+
+<?rb ## main content part ?>
+{{*<?rb start_capture(:content_part) ?>*}}
+<ul>
+<?rb for item in @items ?>
+  <li>${item}</li>
+<?rb end ?>
+</ul>
+{{*<?rb stop_capture() ?>*}}
+.--------------------
+
+'{{,captured_as(),}}' is a pre-defined helper function.
+For example,
+
+.--------------------
+<?rb {{*unless captured_as(:header_part):*}} ?>
+   <img src="img/logo.png" alt="logo" ?>
+<?rb {{*end*}} ?>
+.--------------------
+
+is equivarent to the following.
+
+.--------------------
+<?rb {{*if @header_part:*}} ?>
+<?rb     {{*_buf << @header_part*}} ?>
+<?rb {{*else*}} ?>
+   <img src="img/logo.png" alt="logo" ?>
+<?rb {{*end*}} ?>
+.--------------------
+
+
+
+
+The following is the result. It shows that footer part in baselayout is overrided by other templates.
+
+.? Result:
+.==================== ex10_inherit.result
+$ rbtenjin -c "@items=['AAA', 'BBB', 'CCC']" ex10-content.rbhtml
+<html>
+ <body>
+
+  <div id="header">
+   <img src="img/logo.png" alt="logo" ?>
+  </div>
+
+  <div id="content">
+<ul>
+  <li>AAA</li>
+  <li>BBB</li>
+  <li>CCC</li>
+</ul>
+  </div>
+
+  <div id="footer">
+<address style="text-align:right">
+  copyright&copy; 2007 kuwata-lab all rights reserved<br />
+  <a href="webmaster&#64;kuwata-lab.com">webmaster&#64;kuwata-lab.com</a>
+</address>
+  </div>
+  
+ </body>
+</html>
+.====================
+
+
+
+
+
+
+
+.$ Preprocessing	| faq-preprocessing
+
+
+.$$ What is preprocessing?	| faq-what-is-pp
+
+Preprocessing is a feature to evaluate a part of logics embedded in template files at when template is loaded.
+
+Tenjin has two stages for rendering:
+.: Convertion stage
+	Convert template into Ruby script.
+	This stage is invoked only once for each template files.
+.: Evaluation stage
+	Evaluate converted script with given context data.
+	This stage is invoked every time when template is rendered.
+
+Normally, embedded logics in template files are evaluated at Evaluation stage.
+rbTenjin can also evaluate a part of logics at convertion stage.
+It is called preprocessing.
+
+Preprocessed logics are evaluated only once because it is evaluated at convertion stage.
+It means that preprocessed logics are not evaluated at rendering template.
+
+.? Notation of embedded logics
+.+============================================================
+kind                         .,  non-preprocessing  .,  preprocessing
+.------------------------------------------------------------
+statements                   .,  <?rb ... ?>       .,  <?RB ... ?>
+expression (with escape)     .,  ${...} .,  ${{...}}
+expression (without escape)  .,  #{...}  .,  #{{...}}
+.+============================================================
+
+
+.$$ What is the merit of preprocessing?		| faq-pp-merit
+
+The merit of preprocessing is the speed of rendering templates.
+
+Preprocessed logics are evaluated only once because it is evaluated at convertion stage and not evaluated at rendering templates.
+It means that preprocessed logics are no-weight when rendering time.
+
+For example, assume an helper function 'link_to()' which generates <a></a> tag.
+If you embed it to your template file such as '#{link_to("Create", action="new")}', this function will be evaluated whenever template is rendered.
+
+.? Without preprocessing
+.--------------------
+template file:
+  #{link_to("Create", action="new")}
+
+converted script:
+  _buf << ({{*link_to("Create", action="new")*}}).to_s
+
+output:
+  <a href="/new">Create</a>
+.--------------------
+
+However, if you use preprocessing such as '#{{link_to("Create", action="new")}}', this function will be evaluated only once when template is loaded.
+
+.? With preprocessing
+.--------------------
+template file:
+  {{*#{{*}}link_to('Create', action='new'){{*}}*}}
+
+converted script:
+  _buf << {{*%Q`<a href="/new">Create</a>`*}}
+
+output:
+  <a href="/new">Create</a>
+.--------------------
+
+In the result, rendering template will be much faster because function evaluation is eliminated when rendering.
+
+
+.$$ Is there any examples of preprocessing?    | faq-pp-examples
+
+
+.$$$ Loop expantion
+
+Using preprocessing, it is able to expand loop in advance.
+It makes rendering speed much faster.
+
+
+.? weekday1.rbhtml:
+.-------------------- weekday1.rbhtml
+{{*<?RB*}} weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] ?>
+<select name="weekday">
+  <option>-</option>
+{{*<?RB*}} i = 0 ?>
+{{*<?RB*}} for wday in weekdays ?>
+{{*<?RB*}}   i += 1?>
+  <option value="{{*#{{{}}{*}}i{{*}}*}}">{{*#{{{}}{*}}wday{{*}}*}}</option>
+{{*<?RB*}} end ?>
+</select>
+.--------------------
+
+.? weekday1.rb:
+.-------------------- weekday1.rb
+require 'tenjin'
+engine = Tenjin::Engine.new(:preprocess=>true)
+puts '***** preprocessed *****'
+puts engine.get_template('weekday1.rbhtml').script
+puts '***** output *****'
+puts engine.render('weekday1.rbhtml')
+.--------------------
+
+.? result:
+.==================== weekday1.result
+$ ruby weekday1.rb
+***** preprocessed *****
+ _buf << %Q`<select name="weekday">
+  <option>-</option>
+  <option value="1">Sun</option>
+  <option value="2">Mon</option>
+  <option value="3">Tue</option>
+  <option value="4">Wed</option>
+  <option value="5">Thu</option>
+  <option value="6">Fri</option>
+  <option value="7">Sat</option>
+</select>\n`
+***** output *****
+<select name="weekday">
+  <option>-</option>
+  <option value="1">Sun</option>
+  <option value="2">Mon</option>
+  <option value="3">Tue</option>
+  <option value="4">Wed</option>
+  <option value="5">Thu</option>
+  <option value="6">Fri</option>
+  <option value="7">Sat</option>
+</select>
+.====================
+
+If you want to add selected attribute (' selected="selected"') dinamically, see the following.
+
+.? weekday2.rbhtml:
+.-------------------- weekday2.rbhtml
+<?RB weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] ?>
+<select name="weekday">
+{{*<?rb selected = { @params['weekday'].to_s => ' selected="selected"' } ?>*}}
+  <option>-</option>
+<?RB i = 0 ?>
+<?RB for wday in weekdays ?>
+<?RB   i += 1?>
+  <option value="#{{{}}{i}}"{{*#{selected['#{{i}}']}*}}>#{{{}}{wday}}</option>
+<?RB end ?>
+</select>
+.--------------------
+
+.? weekday2.rb:
+.-------------------- weekday2.rb
+## render with preprocessing
+require 'tenjin'
+engine = Tenjin::Engine.new(:preprocess=>true)
+{{*context = { :params => { 'weekday'=>3, 'day'=>19 } }*}}
+puts '***** preprocessed *****'
+puts engine.get_template('weekday2.rbhtml').script
+puts '***** output *****'
+puts engine.render('weekday2.rbhtml'{{*, context*}})
+.--------------------
+
+result:
+.==================== weekday2.result
+$ ruby weekday2.rb
+***** preprocessed *****
+ _buf << %Q`<select name="weekday">\n`
+selected = { @params['weekday'].to_s => ' selected="selected"' }
+ _buf << %Q`  <option>-</option>
+  <option value="1"#{selected['1']}>Sun</option>
+  <option value="2"#{selected['2']}>Mon</option>
+  <option value="3"#{selected['3']}>Tue</option>
+  <option value="4"#{selected['4']}>Wed</option>
+  <option value="5"#{selected['5']}>Thu</option>
+  <option value="6"#{selected['6']}>Fri</option>
+  <option value="7"#{selected['7']}>Sat</option>
+</select>\n`
+***** output *****
+<select name="weekday">
+  <option>-</option>
+  <option value="1">Sun</option>
+  <option value="2">Mon</option>
+  <option value="3"{{* selected="selected"*}}>Tue</option>
+  <option value="4">Wed</option>
+  <option value="5">Thu</option>
+  <option value="6">Fri</option>
+  <option value="7">Sat</option>
+</select>
+.====================
+
+It is possible to make helper function to generate <select> and <option> tags.
+
+.? weekday3.rbhtml:
+.-------------------- weekday3.rbhtml
+<form>
+{{*#{{pp_select_weekday_tag("@params['weekday']", 'weekday')}}*}}
+</form>
+.--------------------
+
+.? weekday3.rb:
+.-------------------- weekday3.rb
+## helper function
+WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+def pp_select_weekday_tag(expr_str, name='weekday')
+  buf = ""
+  buf <<   "<?rb _selected = { (#{expr_str}).to_s => ' selected=\"selected\"' } ?>\n"
+  buf <<   "<select name=\"#{name}\">\n"
+  buf <<   "  <option>-</option>\n"
+  WEEKDAYS.each_with_index do |wday, i|
+    buf << "  <option value=\"#{i+1}\"\#{_selected['#{i+1}']}>#{wday}</option>\n"
+  end
+  buf <<   "</select>"
+  return buf
+end
+
+##
+require 'tenjin'
+engine = Tenjin::Engine.new(:preprocess=>true)
+{{*context = { :params => { 'weekday'=>3, 'day'=>19 } }*}}
+puts '***** preprocessed *****'
+puts engine.get_template('weekday3.rbhtml').script
+puts '***** output *****'
+puts engine.render('weekday3.rbhtml'{{*, context*}})
+.--------------------
+
+.? result:
+.==================== weekday3.result
+$ ruby weekday3.rb
+***** preprocessed *****
+ _buf << %Q`<form>\n`
+_selected = { (@params['weekday']).to_s => ' selected="selected"' }
+ _buf << %Q`<select name="weekday">
+  <option>-</option>
+  <option value="1"#{_selected['1']}>Sun</option>
+  <option value="2"#{_selected['2']}>Mon</option>
+  <option value="3"#{_selected['3']}>Tue</option>
+  <option value="4"#{_selected['4']}>Wed</option>
+  <option value="5"#{_selected['5']}>Thu</option>
+  <option value="6"#{_selected['6']}>Fri</option>
+  <option value="7"#{_selected['7']}>Sat</option>
+</select>
+</form>\n`
+***** output *****
+<form>
+<select name="weekday">
+  <option>-</option>
+  <option value="1">Sun</option>
+  <option value="2">Mon</option>
+  <option value="3"{{* selected="selected"*}}>Tue</option>
+  <option value="4">Wed</option>
+  <option value="5">Thu</option>
+  <option value="6">Fri</option>
+  <option value="7">Sat</option>
+</select>
+</form>
+.====================
+
+
+.$$$ Helper methods execution in advance	| faq-pp-helpers
+
+Many web frameworks provides their own helper functions for view layer.
+Some of them can be executed in advance.
+Using preprocessing, it is able to execute these helper functions in advance, and view layer will be much faster in the result.
+
+
+.? helpers1.rbhtml:
+.-------------------- helpers1.rbhtml
+<p>
+#{link_to('Create', :action=>'new')}
+#{{link_to('Create', :action=>'new')}}
+</p>
+.--------------------
+
+.? helpers1.rb:
+.-------------------- helpers1.rb
+## define helper method
+def link_to(label, opts={})
+  href = opts[:href]
+  action = opts[:action]
+  if !href && action
+    href = "/#{controller_name()}/#{action}"
+  end
+  return "<a href=\"#{href}\">#{label}</a>"
+end
+## 
+def controller_name; 'user'; end
+require 'tenjin'
+engine = Tenjin::Engine.new(:preprocess=>true)
+puts '***** preprocessed *****'
+puts engine.get_template('helpers1.rbhtml').script
+puts '***** output *****'
+puts engine.render('helpers1.rbhtml')
+.--------------------
+
+.? result:
+.==================== helpers1.result
+$ ruby helpers1.rb
+***** preprocessed *****
+ _buf << %Q`<p>
+#{link_to('Create', :action=>'new')}
+<a href="/user/new">Create</a>
+</p>\n`
+***** output *****
+<p>
+<a href="/user/new">Create</a>
+<a href="/user/new">Create</a>
+</p>
+.====================
+
+It is able to embed expression which should be evaluated at rendering stage.
+.* {{,_p("..."),}} is equivarent to {{,#{...},}}
+.* {{,_P("..."),}} is equivarent to {{,${...},}}
+
+.? helpers2.rbhtml:
+.-------------------- helpers2.rbhtml
+<p>
+#{link_to(escape(@user['name']), :action=>'show', :id=>@user['id'])}
+#{{link_to({{*_P("@user['name']")*}}, :action=>'show', :id=>{{*_p("@user['id']")*}})}}
+</p>
+.--------------------
+
+.? helpers2.rb:
+.-------------------- helpers2.rb
+## define helper method
+def link_to(label, opts={})
+  href   = opts[:href]
+  action = opts[:action]
+  id     = opts[:id]
+  if !href && action
+    href = id ? "/#{@controller_name}/#{action}/#{id}" \
+              : "/#{@controller_name}/#{action}"
+  end
+  return "<a href=\"#{href}\">#{label}</a>"
+end
+
+## 
+require 'tenjin'
+{{*context = { :controller_name => 'user',
+               :user => {'id' => 123, 'name' => 'Tom&Jerry'} }*}}
+engine = Tenjin::Engine.new(:preprocess=>true)
+puts '***** preprocessed *****'
+puts engine.get_template('helpers2.rbhtml'{{*, context*}}).script
+puts '***** output *****'
+puts engine.render('helpers2.rbhtml'{{*, context*}})
+.--------------------
+
+.? result:
+.==================== helpers2.result
+$ ruby helpers2.rb
+***** preprocessed *****
+ _buf << %Q`<p>
+#{link_to(escape(@user['name']), :action=>'show', :id=>@user['id'])}
+<a href="/user/show/{{*#{@user['id']}*}}">{{*#{escape((@user['name']).to_s)}*}}</a>
+</p>\n`
+***** output *****
+<p>
+<a href="/user/show/123">Tom&amp;Jerry</a>
+<a href="/user/show/123">Tom&amp;Jerry</a>
+</p>
+.====================
+
+
+.$$$ M17N (Multilingualization)		| faq-pp-m18n
+
+Preprocessing is also effective for M17N (Multilingualization), because the runtime cost of M17N can be almost zero by preprocessing.
+
+See {{<this section|#faq-m17n-cache>}} for M17N example using preprocessing.
+
+
+
+.$ Performance		| faq-performance
+
+
+
+.$$ How fast is rbTenjin compared with other solutions?	| faq-how-fast
+
+
+rbTenjin contains benchmark script.
+This shows that rbTenjin works much faster than other solutions.
+
+
+.? MacOS X 10.4 Tiger, Intel CoreDuo 1.83GHz, Memory 2GB
+.====================
+$ cd rbtenjin-X.X.X/benchmark
+$ ruby -v
+ruby 1.8.6 (2007-03-13 patchlevel 0) [i686-darwin8.9.1]
+$ ruby bench.rb -n 10000
+                     user     system      total        real
+eruby           12.190000   0.260000  12.450000 ( 12.464225)
+eruby-cache     11.320000   0.410000  11.730000 ( 11.756440)
+erb             36.190000   0.370000  36.560000 ( 36.694964)
+erb-reuse       10.720000   0.020000  10.740000 ( 10.770338)
+erubis          10.130000   0.310000  10.440000 ( 10.476733)
+erubis-reuse     6.380000   0.010000   6.390000 (  6.405158)
+tenjin           6.600000   0.410000   7.010000 (  7.021953)
+tenjin-nocache   8.180000   0.360000   8.540000 (  8.562649)
+tenjin-reuse     4.370000   0.180000   4.550000 (  4.549724)
+.#$ ruby -v
+.#ruby 1.8.5 (2006-08-25) [i686-darwin8.6.2]
+.#$ ruby bench.rb -n 10000
+.#                     user     system      total        real
+.#eruby           25.260000   0.570000  25.830000 ( 29.417001)
+.#eruby-cache     23.380000   0.880000  24.260000 ( 27.428129)
+.#erb             73.100000   0.970000  74.070000 ( 83.774299)
+.#erb-reuse       22.960000   0.120000  23.080000 ( 26.189293)
+.#erubis          20.630000   0.640000  21.270000 ( 23.976988)
+.#erubis-reuse    13.240000   0.060000  13.300000 ( 15.011609)
+.#tenjin          13.200000   0.810000  14.010000 ( 15.860334)
+.#tenjin-nocache  16.210000   0.710000  16.920000 ( 19.148423)
+.#tenjin-reuse     8.580000   0.330000   8.910000 ( 10.311393)
+.====================
+
+
+In addition, module size of rbTenjin is small, and it is very light-weight to import it.
+This is important for CGI program.
+Other solutions may be very heavy to import the module and suitable only for apache module or FastCGI.
+
+
+.$$ Why rbTenjin is so fast?	     	    	| faq-why-so-fast
+
+Because it doesn't use template engine original language.
+
+Other template engines, such as Template-Toolkit(perl), Django(python), or Smarty(php),
+has their original languages.
+This is not good idea for script language because:
+.* They are slow.
+.* Implementation will be complex.
+.* Learning cost is high.
+
+In addition, rbTenjin is faster than Jakarta Velocity which is a very popular template engine in Java.
+(It means that {{*dynamic Java is slower than script languages*}}!)
+
+Template engine should use their host language directly unless there are some kind of reasons.
+
+
+
+.$$ Is there any way to get more speed?		| faq-performance-tuning
+
+
+
+ .* Tenjin::ArrayBufferTemplate may be a litte faster than Tenjin::Template.
+    Tenjin::ArrayBufferTemplate generates Ruby code which use Array buffer and Array#push() method.
+    .#Using Array#push() method, it is able to eliminate method call.
+    
+	.? File 'ex11.rbhtml':
+	.-------------------- ex11.rbhtml
+	<table>
+	<?rb @items.each_with_index do |item, i| ?>
+	  <tr>
+	    <td>#{i}</td>
+	    <td>${item}</td>
+	  </tr>
+	<?rb end ?>
+	</table>
+	.--------------------
+	
+	.? Ruby code:
+	.==================== ex11.source
+	$ rbtenjin -s {{*--templateclass=Tenjin::ArrayBufferTemplate*}} ex11.rbhtml
+	{{*_buf = []*}};  {{*_buf.push*}}('<table>
+	'); @items.each_with_index do |item, i|
+	 {{*_buf.push*}}('  <tr>
+	    <td>', (i).to_s, '</td>
+	    <td>', escape((item).to_s), '</td>
+	  </tr>
+	'); end
+	 {{*_buf.push*}}('</table>
+	'); 
+	_buf.to_s
+	.====================
+	
+	.? File 'ex11.rb':
+	.-------------------- ex11.rb
+	require 'tenjin'
+	engine = Tenjin::Engine.new({{*:templateclass=>Tenjin::ArrayBufferTemplate*}})
+	context = { :items=>['AAA', 'BBB', 'CCC'] }
+	output = engine.render('ex11.rbhtml', context)
+	puts output
+	.--------------------
+	
+	.? Result:
+	.==================== ex11_arraybuffer.result
+	$ ruby ex11.rb
+	<table>
+	  <tr>
+	    <td>0</td>
+	    <td>AAA</td>
+	  </tr>
+	  <tr>
+	    <td>1</td>
+	    <td>BBB</td>
+	  </tr>
+	  <tr>
+	    <td>2</td>
+	    <td>CCC</td>
+	  </tr>
+	</table>
+	.====================
+	
+    The following is an example of benchmark of Tenjin::Template and Tenjin::ArrayBufferTemplate.
+    This shows that Tenjin::ArrayBufferTemplate is faster than Tenjin::Template when template object (or template engine object) is able to be reused.
+    
+	.? Result:
+	.====================
+	$ ruby bench.rb -n 10000 tenjin tenjin-nocache tenjin-reuse \
+	    tenjin-arrbuf tenjin-arrbuf-nocache tenjin-arrbuf-reuse
+	                          user     system      total        real
+	tenjin                 6.660000   0.430000   7.090000 (  7.106619)
+	tenjin-nocache         8.260000   0.360000   8.620000 (  8.655595)
+	tenjin-reuse           4.360000   0.060000   {{*4.420000*}} (  4.439242)
+	tenjin-arrbuf          6.630000   0.430000   7.060000 (  7.078775)
+	tenjin-arrbuf-nocache 10.150000   0.370000  10.520000 ( 10.574526)
+	tenjin-arrbuf-reuse    4.080000   0.070000   {{*4.150000*}} (  4.160438)
+	.====================
+	
+    Notice that Tenjin::ArrayBufferTemplate is an experimental.
+    
+ .* '{{,<?rb _buf << @_content ?>,}}' may be a litte faster than '{{,#{@_content},}}' if @_content is large.
+    
+	.? File 'ex11-layout1.rbhtml':
+	.-------------------- ex11-layout1.rbhtml
+	<html>
+	  <body>
+	{{*#{@_content}*}}
+	  </body>
+	</html>
+	.--------------------
+	
+	.? File 'ex11-layout2.rbhtml':
+	.-------------------- ex11-layout2.rbhtml
+	<html>
+	  <body>
+	{{*<?rb _buf << @_content ?>*}}
+	
+	  </body>
+	</html>
+	.--------------------
+	
+	.? File 'ex11-content.rbhtml':
+	.-------------------- ex11-content.rbhtml'
+	<table>
+	  <tbody>
+	<?rb for i in (1..100) ?>
+	    <tr id="row#{i}">
+	      <td>#{i}</td>
+	    </tr>
+	<?rb end ?>
+	  </tbody>
+	</table>
+	.--------------------
+	
+	.? File 'ex11-bench.rb':
+	.-------------------- ex11-bench.rb
+	## create Engine object for each layout file
+	require 'tenjin'
+	engine1 = Tenjin::Engine.new(:layout=>'ex11-layout1.rbhtml')
+	engine2 = Tenjin::Engine.new(:layout=>'ex11-layout2.rbhtml')
+	
+	## warm up
+	filename = 'ex11-content.rbhtml'
+	output1 = engine1.render(filename)
+	output2 = engine2.render(filename)
+	raise "*** output1 != output2" if output1 != output2
+	
+	## do benchmark
+	require 'benchmark'
+	N = 10000
+	Benchmark.bm(20) do |job|
+	  GC.start()
+	  job.report('layout1') do
+	    N.times do
+	      output1 = engine1.render(filename)
+	    end
+	  end
+	  GC.start()
+	  job.report('layout2') do
+	    N.times do
+	      output2 = engine2.render(filename)
+	    end
+	  end
+	end
+	.--------------------
+	
+	.? Result: (MacOS 10.4 Tiger, Intel CoreDuo 1.83GHz, Memory 2GB)
+	.====================
+	$ ruby ex11-bench.rb
+	                          user     system      total        real
+	layout1               3.920000   0.200000   4.120000 (  4.201779)
+	layout2               3.900000   0.190000   4.090000 (  4.179283)
+	.====================
+   
+   
