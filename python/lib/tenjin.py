@@ -296,7 +296,7 @@ def _create_html_module():
            ''
         """
         if 'klass' in kwargs: kwargs['class'] = kwargs.pop('klass')
-        return ' '.join(['%s="%s"' % (k, escape_xml(to_str(v))) for k, v in kwargs.items() if v])
+        return ''.join([' %s="%s"' % (k, escape_xml(to_str(v))) for k, v in kwargs.items() if v])
 
     def checked(expr):
         """return ' checked="checked"' if expr is true."""
@@ -339,7 +339,7 @@ def _create_html_module():
         if checked:  kwargs['checked'] = 'checked'
         if disabled: kwargs['disabled'] = 'disabled'
         if 'klass' in kwargs: kwargs['class'] = kwargs.pop('klass')
-        return kwargs and s + ' ' + tagattrs(**kwargs) or s
+        return kwargs and s + tagattrs(**kwargs) or s
 
     def new_cycle(*values):
         """Generate cycle object.
