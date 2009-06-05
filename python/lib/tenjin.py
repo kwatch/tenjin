@@ -287,15 +287,15 @@ def _create_html_module():
         if value is None: value = expr
         return ' %s="%s"' % (name, escape_xml(to_str(value)))
 
-    def tagattrs(klass=None, **kwargs):
+    def tagattrs(**kwargs):
         """(experimental) built html tag attribtes.
            ex.
-           >>> tagattrs(src='img.png', size=20)
-           ' src="img.png" size="20"'
-           >>> tagattrs(src='', size=0)
+           >>> tagattrs(klass='main', size=20)
+           ' class="main" size="20"'
+           >>> tagattrs(klass='', size=0)
            ''
         """
-        if klass: kwargs['class'] = klass
+        if 'klass' in kwargs: kwargs['class'] = kwargs.pop('klass')
         return ' '.join(['%s="%s"' % (k, escape_xml(to_str(v))) for k, v in kwargs.items() if v])
 
     def checked(expr):
