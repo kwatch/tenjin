@@ -13,11 +13,11 @@ from tenjin.helpers import escape, to_str
 
 class HtmlHelperTest(unittest.TestCase, TestCaseHelper):
 
-    def test_tagattr(self):
-        tagattr = tenjin.helpers.html.tagattr
-        self.assertEquals('src="img.png" size="20"', tagattr(src="img.png", size=20))
-        self.assertEquals('',                        tagattr(src='', size=0))
-        self.assertEquals('class="error"',           tagattr(klass='error'))
+    def test_tagattrs(self):
+        tagattrs = tenjin.helpers.html.tagattrs
+        self.assertEquals('src="img.png" size="20"', tagattrs(src="img.png", size=20))
+        self.assertEquals('',                        tagattrs(src='', size=0))
+        self.assertEquals('class="error"',           tagattrs(klass='error'))
 
     def test_checked(self):
         checked = tenjin.helpers.html.checked

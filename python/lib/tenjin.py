@@ -280,12 +280,12 @@ def _create_html_module():
         return _escape_pattern.sub(_escape_callable, s)
         #return s.replace('&','&amp;').replace('<','&lt;').replace('>','&gt;').replace('"','&quot;')
 
-    def tagattr(klass=None, **kwargs):
+    def tagattrs(klass=None, **kwargs):
         """(experimental) built html tag attribtes.
            ex.
-           >>> tagattr(src='img.png', size=20)
+           >>> tagattrs(src='img.png', size=20)
            ' src="img.png" size="20"'
-           >>> tagattr(src='', size=0)
+           >>> tagattrs(src='', size=0)
            ''
         """
         if klass: kwargs['class'] = klass
@@ -332,7 +332,7 @@ def _create_html_module():
         if klass:    kwargs['class'] = klass
         if checked:  kwargs['checked'] = 'checked'
         if disabled: kwargs['disabled'] = 'disabled'
-        return kwargs and s + ' ' + tagattr(**kwargs) or s
+        return kwargs and s + ' ' + tagattrs(**kwargs) or s
 
     def new_cycle(*values):
         """Generate cycle object.
@@ -355,7 +355,7 @@ def _create_html_module():
     mod._escape_table = _escape_table
     mod.escape_xml = escape_xml
     mod.escape     = escape_xml
-    mod.tagattr    = tagattr
+    mod.tagattrs   = tagattrs
     mod.checked    = checked
     mod.selected   = selected
     mod.disabled   = disabled
