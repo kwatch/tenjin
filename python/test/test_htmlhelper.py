@@ -13,6 +13,14 @@ from tenjin.helpers import escape, to_str
 
 class HtmlHelperTest(unittest.TestCase, TestCaseHelper):
 
+    def test_tagattr(self):
+        tagattr = tenjin.helpers.html.tagattr
+        self.assertEquals(' size="20"',     tagattr('size', 20))
+        self.assertEquals('',               tagattr('size', 0))
+        self.assertEquals(' size="large"',  tagattr('size', 20, 'large'))
+        self.assertEquals('',               tagattr('size', 0, 'zero'))
+        self.assertEquals(' title="&lt;&gt;&amp;&quot;"', tagattr('title', '<>&"'))
+
     def test_tagattrs(self):
         tagattrs = tenjin.helpers.html.tagattrs
         self.assertEquals('src="img.png" size="20"', tagattrs(src="img.png", size=20))

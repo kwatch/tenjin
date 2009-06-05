@@ -280,6 +280,13 @@ def _create_html_module():
         return _escape_pattern.sub(_escape_callable, s)
         #return s.replace('&','&amp;').replace('<','&lt;').replace('>','&gt;').replace('"','&quot;')
 
+    def tagattr(name, expr, value=None):
+        """(experimental) Return ' name="value"' if expr is true value, else '' (empty string).
+           If value is not specified, expr is used as value instead."""
+        if not expr: return ''
+        if value is None: value = expr
+        return ' %s="%s"' % (name, escape_xml(to_str(value)))
+
     def tagattrs(klass=None, **kwargs):
         """(experimental) built html tag attribtes.
            ex.
@@ -355,6 +362,7 @@ def _create_html_module():
     mod._escape_table = _escape_table
     mod.escape_xml = escape_xml
     mod.escape     = escape_xml
+    mod.tagattr    = tagattr
     mod.tagattrs   = tagattrs
     mod.checked    = checked
     mod.selected   = selected
