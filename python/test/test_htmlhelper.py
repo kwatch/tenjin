@@ -20,6 +20,7 @@ class HtmlHelperTest(unittest.TestCase, TestCaseHelper):
         self.assertEquals(' size="large"',  tagattr('size', 20, 'large'))
         self.assertEquals('',               tagattr('size', 0, 'zero'))
         self.assertEquals(' title="&lt;&gt;&amp;&quot;"', tagattr('title', '<>&"'))
+        self.assertEquals(' title="<>&""',                tagattr('title', '<>&"', escape=False))
 
     def test_tagattrs(self):
         tagattrs = tenjin.helpers.html.tagattrs
