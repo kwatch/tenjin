@@ -322,7 +322,7 @@ def _create_html_module():
             return ''
         return nl2br(escape_xml(text).replace('  ', ' &nbsp;'))
 
-    def nv(name, value, sep=None, klass=None, checked=None, disabled=None, **kwargs):
+    def nv(name, value, sep=None, checked=None, disabled=None, **kwargs):
         """(experimental) Build name and value attributes.
            ex.
            >>> nv('rank', 'A')
@@ -336,9 +336,9 @@ def _create_html_module():
         """
         s = sep and 'name="%s" value="%s" id="%s"' % (name, value, name+sep+value) \
                 or  'name="%s" value="%s"'         % (name, escape_xml(value))
-        if klass:    kwargs['class'] = klass
         if checked:  kwargs['checked'] = 'checked'
         if disabled: kwargs['disabled'] = 'disabled'
+        if 'klass' in kwargs: kwargs['class'] = kwargs.pop('klass')
         return kwargs and s + ' ' + tagattrs(**kwargs) or s
 
     def new_cycle(*values):
