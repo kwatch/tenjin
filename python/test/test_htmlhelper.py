@@ -58,6 +58,21 @@ class HtmlHelperTest(unittest.TestCase, TestCaseHelper):
         self.assertEqual('name="rank" value="A" style="color:red"',
                          nv('rank', 'A', style="color:red"))
 
+    def test_new_cycle(self):
+        cycle = tenjin.helpers.html.new_cycle('odd', 'even')
+        self.assertEqual('odd',  cycle())
+        self.assertEqual('even', cycle())
+        self.assertEqual('odd',  cycle())
+        self.assertEqual('even', cycle())
+        #
+        cycle = tenjin.helpers.html.new_cycle('A', 'B', 'C')
+        self.assertEqual('A', cycle())
+        self.assertEqual('B', cycle())
+        self.assertEqual('C', cycle())
+        self.assertEqual('A', cycle())
+        self.assertEqual('B', cycle())
+        self.assertEqual('C', cycle())
+
 
 remove_unmatched_test_methods(HtmlHelperTest)
 

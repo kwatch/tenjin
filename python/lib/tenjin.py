@@ -334,6 +334,23 @@ def _create_html_module():
         if disabled: kwargs['disabled'] = 'disabled'
         return kwargs and s + ' ' + tagattr(**kwargs) or s
 
+    def new_cycle(*values):
+        """Generate cycle object.
+           ex.
+             cycle = new_cycle('odd', 'even')
+             print(cycle())   #=> 'odd'
+             print(cycle())   #=> 'even'
+             print(cycle())   #=> 'odd'
+             print(cycle())   #=> 'even'
+        """
+        def gen(values):
+            n = len(values)
+            i = 0
+            while True:
+                yield values[i]
+                i = (i + 1) % n
+        return gen(values).next
+
     mod = _create_module('tenjin.helpers.html')
     mod._escape_table = _escape_table
     mod.escape_xml = escape_xml
@@ -345,6 +362,7 @@ def _create_html_module():
     mod.nl2br      = nl2br
     mod.text2html  = text2html
     mod.nv         = nv
+    mod.new_cycle  = new_cycle
     return mod
 
 helpers.html = _create_html_module()
