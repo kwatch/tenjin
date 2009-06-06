@@ -176,6 +176,38 @@ class TemplateTest(unittest.TestCase, TestCaseHelper):
             template.convert(input)
         self.assertRaises(ValueError, f)
 
+    def test_dummy_if_stmt(self):
+        input = r"""
+<html>
+  <body>
+    <ul>
+      <?py if items: ?>
+      <?py   for item in items: ?>
+      <li>#{item}</li>
+      <?py   #endfor ?>
+      <?py #endif ?>
+    </ul>
+  </body>
+</html>
+"""[1:]
+        expected = r"""
+_buf.extend(('''<html>
+  <body>
+    <ul>\n''', ));
+if True: ## dummy
+      if items:
+        for item in items:
+            _buf.extend(('''      <li>''', to_str(item), '''</li>\n''', ));
+        #endfor
+      #endif
+      _buf.extend(('''    </ul>
+  </body>
+</html>\n''', ));
+"""[1:]
+        t = tenjin.Template()
+        actual = t.convert(input)
+        self.assertTextEqual(expected, actual)
+
 
 remove_unmatched_test_methods(TemplateTest)
 

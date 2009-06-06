@@ -460,6 +460,7 @@ class Template(object):
                 self.newline = "\r\n"
             else:
                 self.newline = "\n"
+        self._stmt_not_added_yet = True
 
     def before_convert(self, buf):
         #buf.append('_buf = []; ')
@@ -677,6 +678,11 @@ class Template(object):
             buf.extend((self.escapefunc, "(", self.tostrfunc, "(", code, ")), "))
 
     def add_stmt(self, buf, code):
+        if self._stmt_not_added_yet:
+            # insert dummy if-stmt between buf[-2] and buf[-1]
+            if buf and buf[-1] != "\n" and buf[-1].isspace():
+                buf[-1:-1] = ("if True: ## dummy\n", )
+            self._stmt_not_added_yet = False
         if self.newline == "\r\n":
             code = code.replace("\r\n", "\n")
         buf.append(code)
