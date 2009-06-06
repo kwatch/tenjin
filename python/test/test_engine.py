@@ -321,6 +321,47 @@ class EngineTest(unittest.TestCase, TestCaseHelper):
         finally:
             _remove_files(filenames.values())
 
+    def test_cachefile_timestamp(self):
+        """engine should clear cache not only template is newer but also template is older than cache."""
+        data = EngineTest.testdata['test_cachefile']
+        filenames = { 'layout': 'layout.pyhtml',
+                      'page': 'account_create.pyhtml',
+                      'form': 'account_form.pyhtml',
+                    }
+        expected = data['expected']
+        context = { 'params': { } }
+        cache_filenames = ['account_create.pyhtml.cache', 'account_form.pyhtml.cache']
+        try:
+            for key, filename in filenames.items():
+                write_file(filename, data[key])
+            props = { 'prefix': 'account_', 'postfix':'.pyhtml', 'layout':'layout.pyhtml', 'cache':True }
+            ## create cache files and check them
+            time.sleep(1)
+            curr_time = time.time()
+            engine = tenjin.Engine(**props)
+            output = engine.render(':create', context)
+            for fname in filenames.values():
+                self.assertExists(fname)                         # file created?
+                self.assertTrue(engine.get_template(fname).timestamp < curr_time)
+                self.assertEquals(os.path.getmtime(fname), engine.get_template(fname).timestamp)
+            ## save current cached object
+            cached = {}
+            for fname in filenames.values():
+                cached[fname] = engine.get_template(fname)
+            ## confirm that get_template() returns the same object
+            for fname in filenames.values():
+                self.assertEquals(id(engine.get_template(fname)), id(cached[fname]))
+            ## change timestamp of templates to be old
+            for fname in filenames.values():
+                atime = mtime = os.path.getmtime(fname) - 10
+                os.utime(fname, (atime, mtime))
+            ## check whether new caches are created
+            for fname in filenames.values():
+                t = engine.get_template(fname)
+                self.assertNotEqual(id(t), id(cached[fname]))
+                self.assertEquals(os.path.getmtime(fname), t.timestamp)
+        finally:
+            _remove_files(filenames.values())
 
     def test_change_layout(self):
         data = EngineTest.testdata['test_change_layout']

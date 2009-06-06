@@ -1118,19 +1118,21 @@ class Engine(object):
         assert filename and fullpath
         cache = self.cache
         template = cache and cache.get(fullpath, self.templateclass) or None
+        mtime = None
         if template:
             assert template.timestamp is not None
-            if template.timestamp < os.path.getmtime(filename):
+            mtime = os.path.getmtime(filename)
+            if template.timestamp != mtime:
                 #if cache: cache.delete(path)
                 template = None
                 if logger: logger.info("[tenjin.Engine] cache is old (filename=%s, template=%s)" % (repr(filename), repr(template)))
         if not template:
-            curr_time = time.time()
+            if not mtime: mtime = os.path.getmtime(filename)
             if self.preprocess:   ## required for preprocess
                 if _context is None: _context = {}
                 if _globals is None: _globals = sys._getframe(1).f_globals
             template = self._create_template(filename, _context, _globals)
-            template.timestamp = curr_time
+            template.timestamp = mtime
             if cache:
                 if not template.bytecode: template.compile()
                 cache.set(fullpath, template)
