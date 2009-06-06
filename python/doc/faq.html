@@ -50,6 +50,8 @@
           <ul>
             <li><a href="#faq-template-args">Is it able to specify variables passed to template?</a></li>
 
+            <li><a href="#faq-optional-args">It is hard to specify all template arguments. Any good idea?</a></li>
+
             <li><a href="#faq-exprpat">Is it able to change embedded expression pattern?</a></li>
 
             <li><a href="#faq-m17n">Does pyTenjin support M17N?</a></li>
@@ -528,22 +530,85 @@ $ pytenjin -c 'x=10; y=20; z=30' ex6.pyhtml
     z = #{z}
 NameError: name 'z' is not defined
 </pre><br>
+      <a name="faq-optional-args" id="faq-optional-args"></a>
+
+      <h3 class="section2">It is hard to specify all template arguments. Any good idea?</h3>
+
+      <p>There may be some cases that it is hard to specify all template arguments. But <code>_context.get('varname', None)</code> is much hard and pain.</p>
+
+      <p>One idea is to expand <code>@varname</code> into <code>_context.get('varname', None)</code> automaticaly.</p><a name="ex7-expandargs.py" id="ex7-expandargs.py"></a>
+
+      <div class="program_caption">
+        File 'ex7-expandargs.py':
+      </div>
+      <pre class="program">
+import tenjin
+from tenjin.helpers import *
+import re
+
+def _expand(code):
+    """expand '@var' into '_context.get("var", None)'"""
+    return re.sub(r"@(\w+)", r"_context.get('\1', None)", code)
+
+class MyTemplate(tenjin.Template):
+
+    def add_stmt(self, buf, code):
+        tenjin.Template.add_stmt(self, buf, _expand(code))
+
+    def add_expr(self, buf, code, flag_escape=None):
+        tenjin.Template.add_expr(self, buf, _expand(code), flag_escape)
+
+print("----- script -----")
+print(MyTemplate('ex7-expandargs.pyhtml').script)
+
+print("----- result -----")
+tenjin.Engine.templateclass = MyTemplate
+engine = tenjin.Engine()
+html = engine.render('ex7-expandargs.pyhtml')
+print(html)
+</pre><a name="ex7-expandargs.pyhtml" id="ex7-expandargs.pyhtml"></a>
+
+      <div class="program_caption">
+        File 'ex7-expandargs.pyhtml':
+      </div>
+      <pre class="program">
+&lt;p&gt;Hello #{<strong>@user</strong> or 'guest'}!&lt;p&gt;
+&lt;?py if <strong>@message</strong>: ?&gt;
+&lt;p&gt;#{@message}&lt;/p&gt;
+&lt;?py #endif ?&gt;
+</pre><a name="ex7-expandargs.result" id="ex7-expandargs.result"></a>
+
+      <div class="terminal_caption">
+        Result:
+      </div>
+      <pre class="terminal">
+$ python ex7-expandargs.py
+----- script -----
+_buf.extend(('''&lt;p&gt;Hello ''', to_str(<strong>_context.get('user', None)</strong> or 'guest'), '''!&lt;p&gt;\n''', ));
+if <strong>_context.get('message', None)</strong>:
+    _buf.extend(('''&lt;p&gt;''', to_str(<strong>_context.get('message', None)</strong>), '''&lt;/p&gt;\n''', ));
+#endif
+
+----- result -----
+&lt;p&gt;Hello guest!&lt;p&gt;
+
+</pre><br>
       <a name="faq-exprpat" id="faq-exprpat"></a>
 
       <h3 class="section2">Is it able to change embedded expression pattern?</h3>
 
-      <p>Yes, you can create subclass of Template class and override embedded expression pattern.</p><a name="ex7-expr-pattern.pyhtml" id="ex7-expr-pattern.pyhtml"></a>
+      <p>Yes, you can create subclass of Template class and override embedded expression pattern.</p><a name="ex8-expr-pattern.pyhtml" id="ex8-expr-pattern.pyhtml"></a>
 
       <div class="program_caption">
-        ex7-expr-pattern.pyhtml:
+        ex8-expr-pattern.pyhtml:
       </div>
       <pre class="program">
 &lt;p&gt;HTML escaped: <strong>[|value|]</strong>&lt;/p&gt;
 &lt;p&gt;not escaped:  <strong>[:value:]</strong>&lt;/p&gt;
-</pre><a name="ex7-expr-pattern.py" id="ex7-expr-pattern.py"></a>
+</pre><a name="ex8-expr-pattern.py" id="ex8-expr-pattern.py"></a>
 
       <div class="program_caption">
-        ex7-expr-pattern.py:
+        ex8-expr-pattern.py:
       </div>
       <pre class="program">
 import tenjin, re
@@ -567,15 +632,15 @@ class MyTemplate(tenjin.Template):
 if __name__ == '__main__':
     context = {'value': 'AAA&amp;BBB'}
     engine = tenjin.Engine(<strong>templateclass=MyTemplate</strong>)
-    output = engine.render('ex7-expr-pattern.pyhtml', context)
+    output = engine.render('ex8-expr-pattern.pyhtml', context)
     print output,
-</pre><a name="ex7_expr_pattern.result" id="ex7_expr_pattern.result"></a>
+</pre><a name="ex8_expr_pattern.result" id="ex8_expr_pattern.result"></a>
 
       <div class="terminal_caption">
         Result:
       </div>
       <pre class="terminal">
-$ python ex7-expr-pattern.py
+$ python ex8-expr-pattern.py
 &lt;p&gt;HTML escaped: AAA&amp;amp;BBB&lt;/p&gt;
 &lt;p&gt;not escaped:  AAA&amp;BBB&lt;/p&gt;
 </pre><br>
@@ -604,20 +669,20 @@ $ python ex7-expr-pattern.py
         <li>Use preprocessing to create different cache content for each language.</li>
       </ul>
 
-      <p>The following is an example to generate M17N pages from a template file.</p><a name="ex8-m18n.pyhtml" id="ex8-m18n.pyhtml"></a>
+      <p>The following is an example to generate M17N pages from a template file.</p><a name="ex9-m18n.pyhtml" id="ex9-m18n.pyhtml"></a>
 
       <div class="program_caption">
-        ex8-m18n.pyhtml:
+        ex9-m18n.pyhtml:
       </div>
       <pre class="program">
 &lt;div&gt;
 &lt;?PY ## '_()' represents translator method ?&gt;
  &lt;p&gt;<strong>${{_('Hello')}}</strong> ${username}!&lt;/p&gt;
 &lt;/div&gt;
-</pre><a name="ex8-m18n.py" id="ex8-m18n.py"></a>
+</pre><a name="ex9-m18n.py" id="ex9-m18n.py"></a>
 
       <div class="program_caption">
-        ex8-m18n.py:
+        ex9-m18n.py:
       </div>
       <pre class="program">
 # -*- coding: utf-8 -*-
@@ -674,7 +739,7 @@ class M17nCacheStorage(tenjin.MarshalCacheStorage):
 ##
 if __name__ == '__main__':
 
-    template_name = 'ex8-m18n.pyhtml'
+    template_name = 'ex9-m18n.pyhtml'
     common_context = { 'username': 'World' }
 
     ## create cache storage and engine for English
@@ -698,13 +763,13 @@ if __name__ == '__main__':
     html = engine.render(template_name, context)
     print("--- lang: fr ---")
     print(html)
-</pre><a name="ex8_m18n.result" id="ex8_m18n.result"></a>
+</pre><a name="ex9_m18n.result" id="ex9_m18n.result"></a>
 
       <div class="terminal_caption">
         Result:
       </div>
       <pre class="terminal">
-$ python ex8-m18n.py
+$ python ex9-m18n.py
 --- lang: en ---
 &lt;div&gt;
  &lt;p&gt;<strong>Hello</strong> World!&lt;/p&gt;
@@ -719,20 +784,20 @@ $ python ex8-m18n.py
 
       <p>After that, you can find two cache files are created.</p>
       <pre class="terminal">
-$ ls ex8-m18n.pyhtml*
-ex8-m18n.pyhtml  ex8-m18n.pyhtml.<strong>en</strong>.cache  ex8-m18n.pyhtml.<strong>fr</strong>.cache
+$ ls ex9-m18n.pyhtml*
+ex9-m18n.pyhtml  ex9-m18n.pyhtml.<strong>en</strong>.cache  ex9-m18n.pyhtml.<strong>fr</strong>.cache
 </pre>
 
       <p>And each cache files have different content.</p>
       <pre class="terminal">
 ### "_('Hello')" is translated into "Hello" in Engilish cache file
-$ pytenjin -a dump ex8-m18n.pyhtml.en.cache
+$ pytenjin -a dump ex9-m18n.pyhtml.en.cache
 _buf.extend(('''&lt;div&gt;
  &lt;p&gt;<strong>Hello</strong> ''', escape(to_str(username)), '''!&lt;/p&gt;
 &lt;/div&gt;\n''', ));
 
 ### "_('Hello')" is translated into "Bonjour" in French cache file
-$ pytenjin -a dump ex8-m18n.pyhtml.fr.cache
+$ pytenjin -a dump ex9-m18n.pyhtml.fr.cache
 _buf.extend(('''&lt;div&gt;
  &lt;p&gt;<strong>Bonjour</strong> ''', escape(to_str(username)), '''!&lt;/p&gt;
 &lt;/div&gt;\n''', ));
@@ -764,25 +829,25 @@ _buf.extend(('''&lt;div&gt;
       <p>The following example shows that:</p>
 
       <ul type="disc">
-        <li>'ex8-content.pyhtml' uses 'ex8-mylayout.pyhtml' as layout template.</li>
+        <li>'ex9-content.pyhtml' uses 'ex9-mylayout.pyhtml' as layout template.</li>
 
-        <li>'ex8-mylayout.pyhtml' uses 'ex8-baselayout.pyhtml' as layout template.</li>
-      </ul><a name="ex9-content.pyhtml" id="ex9-content.pyhtml"></a>
+        <li>'ex9-mylayout.pyhtml' uses 'ex9-baselayout.pyhtml' as layout template.</li>
+      </ul><a name="ex10-content.pyhtml" id="ex10-content.pyhtml"></a>
 
       <div class="program_caption">
-        File 'ex9-content.pyhtml':
+        File 'ex10-content.pyhtml':
       </div>
       <pre class="program">
 &lt;?py _context['title'] = 'Changing Layout Template Test' ?&gt;
 &lt;?py ## specify layout template name ?&gt;
-<strong>&lt;?py _context['_layout'] = 'ex9-mylayout.pyhtml' ?&gt;</strong>
+<strong>&lt;?py _context['_layout'] = 'ex10-mylayout.pyhtml' ?&gt;</strong>
 foo
 bar
 baz
-</pre><a name="ex9-mylayout.pyhtml" id="ex9-mylayout.pyhtml"></a>
+</pre><a name="ex10-mylayout.pyhtml" id="ex10-mylayout.pyhtml"></a>
 
       <div class="program_caption">
-        File 'ex9-mylayout.pyhtml':
+        File 'ex10-mylayout.pyhtml':
       </div>
       <pre class="program">
 &lt;?py ## use default layout template name ?&gt;
@@ -790,10 +855,10 @@ baz
 &lt;div id="content"&gt;
 <strong>&lt;?py _buf.append(_content) ?&gt;</strong>
 &lt;/div&gt;
-</pre><a name="ex9-baselayout.pyhtml" id="ex9-baselayout.pyhtml"></a>
+</pre><a name="ex10-baselayout.pyhtml" id="ex10-baselayout.pyhtml"></a>
 
       <div class="program_caption">
-        File 'ex9-baselayout.pyhtml':
+        File 'ex10-baselayout.pyhtml':
       </div>
       <pre class="program">
 &lt;html&gt;
@@ -804,13 +869,13 @@ baz
 <strong>&lt;?py _buf.append(_content) ?&gt;</strong>
   &lt;/body&gt;
 &lt;/html&gt;
-</pre><a name="ex9_changelayout.result" id="ex9_changelayout.result"></a>
+</pre><a name="ex10_changelayout.result" id="ex10_changelayout.result"></a>
 
       <div class="terminal_caption">
         Result:
       </div>
       <pre class="terminal">
-$ pytenjin --layout=ex9-baselayout.pyhtml ex9-content.pyhtml
+$ pytenjin --layout=ex10-baselayout.pyhtml ex10-content.pyhtml
 &lt;html&gt;
   &lt;body&gt;
     &lt;h1&gt;Changing Layout Template Test&lt;/h1&gt;
@@ -831,10 +896,10 @@ baz
 
       <h3 class="section2">Is Django-like "Template Inheritance" supported?</h3>
 
-      <p>No, but you can emulate it partially by combination of template capturing and '_context['_layout']'.</p><a name="ex10-baselayout.pyhtml" id="ex10-baselayout.pyhtml"></a>
+      <p>No, but you can emulate it partially by combination of template capturing and '_context['_layout']'.</p><a name="ex11-baselayout.pyhtml" id="ex11-baselayout.pyhtml"></a>
 
       <div class="program_caption">
-        File 'ex10-baselayout.pyhtml':
+        File 'ex11-baselayout.pyhtml':
       </div>
       <pre class="program">
 &lt;html&gt;
@@ -864,15 +929,15 @@ baz
   
  &lt;/body&gt;
 &lt;/html&gt;
-</pre><a name="ex10-customlayout.pyhtml" id="ex10-customlayout.pyhtml"></a>
+</pre><a name="ex11-customlayout.pyhtml" id="ex11-customlayout.pyhtml"></a>
 
       <div class="program_caption">
-        File 'ex10-customlayout.pyhtml':
+        File 'ex11-customlayout.pyhtml':
       </div>
       <pre class="program">
 &lt;?py ## '_context["_layout"]' is equivarent to '{% extends "foobar.html" %}' ?&gt;
 &lt;?py ## in Django template engine. ?&gt;
-<strong>&lt;?py _context['_layout'] = 'ex10-baselayout.pyhtml' ?&gt;</strong>
+<strong>&lt;?py _context['_layout'] = 'ex11-baselayout.pyhtml' ?&gt;</strong>
 
 &lt;?py ## you can override header or footer by capturing. ?&gt;
 <strong>&lt;?py start_capture('footer_part') ?&gt;</strong>
@@ -881,15 +946,15 @@ baz
   &lt;a href="webmaster&amp;#64;kuwata-lab.com"&gt;webmaster&amp;#64;kuwata-lab.com&lt;/a&gt;
 &lt;/address&gt;
 <strong>&lt;?py stop_capture() ?&gt;</strong>
-</pre><a name="ex10-content.pyhtml" id="ex10-content.pyhtml"></a>
+</pre><a name="ex11-content.pyhtml" id="ex11-content.pyhtml"></a>
 
       <div class="program_caption">
-        File 'ex10-content.pyhtml':
+        File 'ex11-content.pyhtml':
       </div>
       <pre class="program">
 &lt;?py ## '_context["_layout"]' is equivarent to '{% extends "foobar.html" %}' ?&gt;
 &lt;?py ## in Django template engine. ?&gt;
-<strong>&lt;?py _context['_layout'] = 'ex10-customlayout.pyhtml' ?&gt;</strong>
+<strong>&lt;?py _context['_layout'] = 'ex11-customlayout.pyhtml' ?&gt;</strong>
 
 &lt;?py ## main content part ?&gt;
 <strong>&lt;?py start_capture('content_part') ?&gt;</strong>
@@ -917,13 +982,13 @@ baz
 &lt;?py <strong>#end</strong> ?&gt;
 </pre>
 
-      <p>The following is the result. It shows that footer part in baselayout is overrided by other templates.</p><a name="ex10_inherit.result" id="ex10_inherit.result"></a>
+      <p>The following is the result. It shows that footer part in baselayout is overrided by other templates.</p><a name="ex11_inherit.result" id="ex11_inherit.result"></a>
 
       <div class="terminal_caption">
         Result:
       </div>
       <pre class="terminal">
-$ pytenjin -c "items=['AAA', 'BBB', 'CCC']" ex10-content.pyhtml
+$ pytenjin -c "items=['AAA', 'BBB', 'CCC']" ex11-content.pyhtml
 &lt;html&gt;
  &lt;body&gt;
 
@@ -969,10 +1034,10 @@ $ pytenjin -c "items=['AAA', 'BBB', 'CCC']" ex10-content.pyhtml
 
       <h3 class="section2">Can I specify encoding name in template file?</h3>
 
-      <p>Yes. You can contain encoding declaration in template.</p><a name="ex11.pyhtml" id="ex11.pyhtml"></a>
+      <p>Yes. You can contain encoding declaration in template.</p><a name="ex12.pyhtml" id="ex12.pyhtml"></a>
 
       <div class="program_caption">
-        File 'ex11.pyhtml':
+        File 'ex12.pyhtml':
       </div>
       <pre class="program">
 <strong>&lt;?py # -*- coding: utf-8 -*- ?&gt;</strong>
@@ -1223,10 +1288,10 @@ from tenjin.helpers import *
 ## render with preprocessing
 engine = tenjin.Engine(preprocess=True)
 <strong>context = { 'params': { 'weekday': 3, 'day': 19 } }</strong>
-print '***** preprocessed *****'
-print engine.get_template('weekday2.pyhtml').script,
-print '***** output *****'
-print engine.render('weekday2.pyhtml'<strong>, context</strong>),
+print('***** preprocessed *****')
+print(engine.get_template('weekday2.pyhtml').script)
+print('***** output *****')
+print(engine.render('weekday2.pyhtml'<strong>, context</strong>))
 </pre>
 
       <p>result:</p><a name="weekday2.result" id="weekday2.result"></a>
@@ -1244,6 +1309,7 @@ _buf.extend(('''  &lt;option&gt;-&lt;/option&gt;
   &lt;option value="6"''', to_str(selected.get('6')), '''&gt;Fri&lt;/option&gt;
   &lt;option value="7"''', to_str(selected.get('7')), '''&gt;Sat&lt;/option&gt;
 &lt;/select&gt;\n''', ));
+
 ***** output *****
 &lt;select name="weekday"&gt;
   &lt;option&gt;-&lt;/option&gt;
@@ -1255,6 +1321,7 @@ _buf.extend(('''  &lt;option&gt;-&lt;/option&gt;
   &lt;option value="6"&gt;Fri&lt;/option&gt;
   &lt;option value="7"&gt;Sat&lt;/option&gt;
 &lt;/select&gt;
+
 </pre>
 
       <p>It is possible to make helper function to generate &lt;select&gt; and &lt;option&gt; tags.</p><a name="weekday3.pyhtml" id="weekday3.pyhtml"></a>
@@ -1547,10 +1614,10 @@ templetor-reuse         61.46000    0.07000   61.53000   61.68483
 
       <h3 class="section2">Is there any way to get more speed?</h3>
 
-      <p>You can get more speed by including 'escape()' and 'to_str()' functions to context data.</p><a name="ex12a.py" id="ex12a.py"></a>
+      <p>You can get more speed by including 'escape()' and 'to_str()' functions to context data.</p><a name="ex13a.py" id="ex13a.py"></a>
 
       <div class="program_caption">
-        File 'ex12a.py':
+        File 'ex13a.py':
       </div>
       <pre class="program">
 import tenjin
@@ -1562,13 +1629,13 @@ context = { 'title': 'Example', 'items': ['A', 'B', 'C'] }
 <strong>context['to_str'] = to_str</strong>
 
 engine = tenjin.Engine()
-output = engine.render('ex12a.pyhtml', context)
+output = engine.render('ex13a.pyhtml', context)
 </pre>
 
-      <p>You can get more and more speed by deleting implicit call of 'to_str()' function. Of course, you have to call it properly in your templates.</p><a name="ex12b.py" id="ex12b.py"></a>
+      <p>You can get more and more speed by deleting implicit call of 'to_str()' function. Of course, you have to call it properly in your templates.</p><a name="ex13b.py" id="ex13b.py"></a>
 
       <div class="program_caption">
-        File 'ex12b.py':
+        File 'ex13b.py':
       </div>
       <pre class="program">
 import tenjin
@@ -1583,17 +1650,17 @@ context['to_str'] = to_str
 engine = tenjin.Engine(<strong>tostrfunc=''</strong>)
 
 ## show python code and output
-filename = 'ex12b.pyhtml'
+filename = 'ex13b.pyhtml'
 template = engine.get_template(filename)
 output = engine.render(filename, context)
 print "--- python code ---"
 print template.script
 print "--- output ---"
 print output,
-</pre><a name="ex12b.pyhtml" id="ex12b.pyhtml"></a>
+</pre><a name="ex13b.pyhtml" id="ex13b.pyhtml"></a>
 
       <div class="program_caption">
-        File 'ex12b.pyhtml':
+        File 'ex13b.pyhtml':
       </div>
       <pre class="program">
 &lt;h1&gt;${title}&lt;/h1&gt;
@@ -1602,13 +1669,13 @@ print output,
   &lt;li&gt;#{<strong>to_str(i)</strong>}: #{item}&lt;/li&gt;
 &lt;?py #end ?&gt;
 &lt;/ul&gt;
-</pre><a name="ex12b_deltostr.result" id="ex12b_deltostr.result"></a>
+</pre><a name="ex13b_deltostr.result" id="ex13b_deltostr.result"></a>
 
       <div class="terminal_caption">
         Result:
       </div>
       <pre class="terminal">
-$ python ex12b.py
+$ python ex13b.py
 --- python code ---
 _buf.extend(('''&lt;h1&gt;''', <strong>escape((title))</strong>, '''&lt;/h1&gt;
 &lt;ul&gt;\n''', ));
