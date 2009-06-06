@@ -297,6 +297,9 @@ def _create_html_module():
            ''
         """
         if 'klass' in kwargs: kwargs['class'] = kwargs.pop('klass')
+        if 'checked'  in kwargs: kwargs['checked']  = kwargs.pop('checked')  and 'checked'  or None
+        if 'selected' in kwargs: kwargs['selected'] = kwargs.pop('selected') and 'selected' or None
+        if 'disabled' in kwargs: kwargs['disabled'] = kwargs.pop('disabled') and 'disabled' or None
         return ''.join([' %s="%s"' % (k, escape_xml(to_str(v))) for k, v in kwargs.items() if v])
 
     def checked(expr):
