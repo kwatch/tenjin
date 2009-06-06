@@ -5,9 +5,18 @@ CHANGES
 Release 0.8.0 (2009-06-07)
 --------------------------
 
+* [Bugfix]
+
+  * !!IMPORTANT!!
+    Template caching is changed to keep template file's timestamp
+    instead of create time of cached object. See
+    http://groups.google.com/group/kuwata-lab-products/browse_thread/thread/a0d447c282fb383d#msg_de39557405c9b656
+    for details. (Thanks Steve)
+
 * [Changes]
 
-  * HTML helper function 'tagattr()' is renamed to 'tagattrs()'.
+  * !!IMPORTANT!!
+    HTML helper function 'tagattr()' is renamed to 'tagattrs()'.
     (Notice that new 'tagattr()' is added. See below.)
 
   * 'tagattrs()' is changed to add ' ' (space) at the first character.
@@ -80,12 +89,6 @@ Release 0.8.0 (2009-06-07)
 
   * Update User's Guide and FAQ.
 
-* [Bugfix]
-
-  * Template caching is changed to keep template file's timestamp
-    instead of create time of cached object. See
-    http://groups.google.com/group/kuwata-lab-products/browse_thread/thread/a0d447c282fb383d#msg_de39557405c9b656
-    for details. (Thanks Steve)
 
 
 Release 0.7.0 (2009-05-24)
