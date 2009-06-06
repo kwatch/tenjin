@@ -2,6 +2,92 @@
 CHANGES
 =======
 
+Release 0.8.0 (2009-06-07)
+--------------------------
+
+* [Changes]
+
+  * HTML helper function 'tagattr()' is renamed to 'tagattrs()'.
+    (Notice that new 'tagattr()' is added. See below.)
+
+  * 'tagattrs()' is changed to add ' ' (space) at the first character.
+    ex.
+      (0.7.0)  tagattr(klass='error')     #=> 'class="error"'
+      (0.7.1)  tagattrs(klass='error')    #=> ' class="error"'
+
+  * 'tagattrs()' is changed to handle 'checked', 'selected', and
+    'disabled' attributes.
+    ex.
+       >>> from tenjin.helpers.html import *
+       >>> tagattrs(checked=True, selected='Y', disabled=1)
+       ' checked="checked" selected="selected" disabled="disabled"'
+       >>> tagattrs(checked=False, selected='', disabled=0)
+       ''
+
+* [Enhancements]
+
+  * Add new HTML helper function 'tagattr()'.
+    (Notice that 'tagattr()' in 0.7.0 is renamed into 'tagattrs()'.)
+    ex.
+      >>> from tenjin.helpers.html import *
+      >>> tagattr('size', 20)
+      ' size="20"'
+      >>> tagattr('size', 0)
+      ''
+      >>> tagattr('size', 20, 'large')
+      ' size="large"'
+      >>> size = 20        # you can use tagattrs() instead of tagattr()
+      >>> tagattrs(size=(size and 'large'))
+      ' size="large"'
+
+  * Add new HTML helper function 'new_cycle()'.
+    ex.
+      >>> from tenjin.helpers.html import *
+      >>> cycle = new_cycle('odd, 'even')
+      >>> cycle()
+      'odd'
+      >>> cycle()
+      'even'
+      >>> cycle()
+      'odd'
+      >>> cycle()
+      'even'
+
+  * (experimental) Template converter is changed to add dummy if-statement
+    when first Python statement is indented. (Thanks Steve)
+    ex.
+      $ cat ex.pyhtml
+      <html>
+        <body>
+          <ul>
+            <?py for item in items: ?>
+            <li>${item}</li>
+            <?py #end ?>
+          </ul>
+        </body>
+      </html>
+      $ pytenjin -sb ex.pyhtml
+      _buf.extend(('''<html>
+        <body>
+          <ul>\n''', ));
+      if True: ## dummy
+            for item in items:
+                _buf.extend(('''      <li>''', escape(to_str(item)), '''</li>\n''', ));
+            #end
+            _buf.extend(('''    </ul>
+        </body>
+      </html>\n''', ));
+
+  * Update User's Guide and FAQ.
+
+* [Bugfix]
+
+  * Template caching is changed to keep template file's timestamp
+    instead of create time of cached object. See
+    http://groups.google.com/group/kuwata-lab-products/browse_thread/thread/a0d447c282fb383d#msg_de39557405c9b656
+    for details. (Thanks Steve)
+
+
 Release 0.7.0 (2009-05-24)
 --------------------------
 
