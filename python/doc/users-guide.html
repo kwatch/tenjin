@@ -52,6 +52,8 @@
 
             <li><a href="#des-syntaxchk">Syntax Checking</a></li>
 
+            <li><a href="#des-htmlhelpers">HTML Helper Functions</a></li>
+
             <li><a href="#des-contextdata">Context Data File</a></li>
 
             <li><a href="#des-cmlinecontext">Command-line Context Data</a></li>
@@ -612,6 +614,43 @@ example3.pyhtml:4:3: unindent does not match any outer indentation level
       <p>Error message is the same format as gcc compiler or java compiler. Error jump in Emacs or other editor is available.</p>
 
       <p>Command-line option '-q' (quiet-mode) prints nothing if it has no errors.</p><br>
+      <a name="des-htmlhelpers" id="des-htmlhelpers"></a>
+
+      <h3 class="section2">HTML Helper Functions</h3>
+
+      <p>pyTenjin provides small but useful HTML helper functions. See <a href="#dev-htmlhelpers">this section</a> for details.</p><a name="htmlhelpers.pyhtml" id="htmlhelpers.pyhtml"></a>
+
+      <div class="program_caption">
+        example of HTML helper functions:
+      </div>
+      <pre class="program">
+&lt;table&gt;
+&lt;?py <strong>cycle = new_cycle('odd', 'even')</strong> ?&gt;
+&lt;?py curr_id = params['item_id'] ?&gt;
+&lt;?py for item in items: ?&gt;
+  &lt;tr class="#{<strong>cycle()</strong>}" #{<strong>tagattrs(style=(item.readonly and 'color:gray'))</strong>}&gt;
+    &lt;td&gt;&lt;input type="checkbox" name="items" value="#{item.id}" #{<strong>checked(curr_id==item.id)</strong>} /&gt;&lt;/td&gt;
+    &lt;td&gt;${item.name}&lt;/td&gt;
+  &lt;/tr&gt;
+&lt;?py #endfor ?&gt;
+&lt;/table&gt;
+</pre><a name="htmlhelpers.output" id="htmlhelpers.output"></a>
+
+      <div class="program_caption">
+        output example:
+      </div>
+      <pre class="program">
+&lt;table&gt;
+  &lt;tr class="<strong>odd</strong>" &gt;
+    &lt;td&gt;&lt;input type="checkbox" name="items" value="1"  /&gt;&lt;/td&gt;
+    &lt;td&gt;Foo&lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr class="<strong>even</strong>"  <strong>style="color:gray"</strong>&gt;
+    &lt;td&gt;&lt;input type="checkbox" name="items" value="2"  <strong>checked="checked"</strong> /&gt;&lt;/td&gt;
+    &lt;td&gt;Bar&lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/table&gt;
+</pre><br>
       <a name="des-contextdata" id="des-contextdata"></a>
 
       <h3 class="section2">Context Data File</h3>
@@ -1889,85 +1928,108 @@ $ python user_app.cgi create
       <p>pyTenjin provides some useful helper functions for HTML. These are defined in tenjin.helpers.html module.</p>
 
       <dl class="dl3">
-        <dt class="dt3"><b>tenjin.helpers.html.checked(<em>expr</em>)</b></dt>
+        <dt class="dt3"><b>checked(<em>expr</em>)</b></dt>
 
         <dd class="dd3">Return <code>' checked="checked"'</code> if <em>expr</em> is true.</dd>
       </dl>
 
       <dl class="dl3">
-        <dt class="dt3"><b>tenjin.helpers.html.selected(<em>expr</em>)</b></dt>
+        <dt class="dt3"><b>selected(<em>expr</em>)</b></dt>
 
         <dd class="dd3">Return <code>' selected="selected"'</code> if <em>expr</em> is true.</dd>
       </dl>
 
       <dl class="dl3">
-        <dt class="dt3"><b>tenjin.helpers.html.disabled(<em>expr</em>)</b></dt>
+        <dt class="dt3"><b>disabled(<em>expr</em>)</b></dt>
 
         <dd class="dd3">Return <code>' disabled="disabled"'</code> if <em>expr</em> is true.</dd>
       </dl>
 
       <dl class="dl3">
-        <dt class="dt3"><b>tenjin.helpers.html.nl2br(<em>str</em>)</b></dt>
+        <dt class="dt3"><b>nl2br(<em>str</em>)</b></dt>
 
         <dd class="dd3">Relplace "\n" in <em>str</em> into "&lt;br /&gt;\n" and return it.</dd>
       </dl>
 
       <dl class="dl3">
-        <dt class="dt3"><b>tenjin.helpers.html.nv(<em>name</em>, <em>value</em>, <em>sep</em>=None, <em>klass</em>=None, <em>checked</em>=None, <em>disabled</em>=None, **<em>kwargs</em>)</b></dt>
+        <dt class="dt3"><b>tagattr(<em>name</em>, <em>expr</em>, <em>value</em>=None, <em>escape</em>=True)</b></dt>
 
         <dd class="dd3">
-          Return ' name="<em>name</em>" value="<em>value</em>"' string.
-
-          <ul type="circle">
-            <li>If <em>sep</em> is specified, ' id="<em>name</em> <em>sep</em> <em>value</em>' will be added.</li>
-
-            <li>If <em>klass</em> is specified, ' class="<em>klass</em>"' will be added.</li>
-
-            <li>If <em>checked</em> is true value, ' checked="checked"' will be added.</li>
-
-            <li>If <em>disabled</em> is true value, ' disabled="disabled"' will be added.</li>
-          </ul>
-
-          <div class="program_caption">
-            ex:
-          </div>
+          <strong>(experimental)</strong> Return <code>' <em>name</em>="<em>value</em>"'</code> string if <em>expr</em> is true value, else return '' (empty string). If <em>value</em> is not specified then <em>expr</em> is used as value instead.
           <pre class="program">
-&gt;&gt;&gt; nv('gender', 'F')
-' name="gender" value="F"'
-&gt;&gt;&gt; nv('gender', 'F', '.')
-' name="gender" value="F" id="gender.F"'
-&gt;&gt;&gt; nv('gender', 'F', '.', klass='error')
-' name="gender" value="F" id="gender.F" class="error"'
-&gt;&gt;&gt; nv('gender', 'F', '.', checked=True)
-' name="gender" value="F" id="gender.F" checked="checked"'
-&gt;&gt;&gt; nv('gender', 'F', '.', style="color:red")
-' name="gender" value="F" id="gender.F" style="color:red"'
+&gt;&gt;&gt; from tenjin.helpers.html import *
+&gt;&gt;&gt; tagattr('size', 20)
+' size="20"'
+&gt;&gt;&gt; tagattr('size', 0)
+''
+&gt;&gt;&gt; tagattr('size', 0, 'large')
+' size="large"'
 </pre>
         </dd>
       </dl>
 
       <dl class="dl3">
-        <dt class="dt3"><b>tenjin.helpers.html.tagattr(<em>name1</em>=<em>value1</em>, <em>name2</em>=<em>value2</em>, <em>...</em>)</b></dt>
+        <dt class="dt3"><b>tagattrs(**<em>kwargs</em>)</b></dt>
 
         <dd class="dd3">
-          <strong>(experimental)</strong> Return '<code><em>name1</em>="<em>value1</em>" <em>name2</em>="<em>value2</em>"</code>'.
-
-          <ul type="circle">
-            <li>If <em>valueN</em> is false value, that pair is ignored.</li>
-
-            <li>If <em>nameN</em> is 'klass', then 'class="<em>valueN</em>"' will be added.</li>
-          </ul>
-
-          <div class="program_caption">
-            ex:
-          </div>
+          <strong>(experimental)</strong> Return <code>' <em>name1</em>="<em>value2</em>" <em>name2</em>=<em>value2</em> ...'</code>.<br>
+          If <em>valueN</em> is false value, both key and value are ignored.<br>
+          If <em>keyN</em> is 'klass' then it will be converted into 'class'.<br>
+          If <em>keyN</em> is 'checked', 'selected', or 'disabled', then <em>keyN</em> is used as value. For example, <code>tagattrs(checked=1)</code> returns ' <code>checked="checked"</code>'.
           <pre class="program">
-&gt;&gt;&gt; tagattr(colspan=40, rowspan=4)
-'colspan="40" rowspan="4"'
-&gt;&gt;&gt; tagattr(colspan=0, rowspan=False)
+&gt;&gt;&gt; from tenjin.helpers.html import *
+&gt;&gt;&gt; tagattrs(klass='error', size=20, checked=True)
+' class="error" size="20" checked="checked"'
+&gt;&gt;&gt; tagattrs(klass='', size=0, checked=False)
 ''
-&gt;&gt;&gt; tagattr(klass='error')    # 'klass' will be renamed to 'class'
-'class="error"'
+</pre>Tips: 'and' operator may help you.
+          <pre class="program">
+&gt;&gt;&gt; from tenjin.helpers.html import *
+&gt;&gt;&gt; color = 'red'
+&gt;&gt;&gt; tagattrs(style=(color and 'color:%s' % color))
+' style="color:red"'
+&gt;&gt;&gt; color = None
+&gt;&gt;&gt; tagattrs(style=(color and 'color:%s' % color))
+''
+</pre>
+        </dd>
+      </dl>
+
+      <dl class="dl3">
+        <dt class="dt3"><b>nv(<em>name</em>, <em>value</em>, <em>sep</em>=None, **<em>kwargs</em>)</b></dt>
+
+        <dd class="dd3">
+          Return <code>' name="<em>name</em>" value="<em>value</em>"'</code> string.<br>
+          If <em>sep</em> is specified, <code>' id="<em>name</em> <em>sep</em> <em>value</em>'</code> will be added.<br>
+          <em>kwargs</em> are converted into tag attributes by tagattrs() function.
+          <pre class="program">
+&gt;&gt;&gt; from tenjin.helpers.html import *
+&gt;&gt;&gt; nv('gender', 'F')
+' name="gender" value="F"'
+&gt;&gt;&gt; nv('gender', 'F', '.')
+' name="gender" value="F" id="gender.F"'
+&gt;&gt;&gt; nv('gender', 'F', '.', klass='error', checked=True, style="color:red")
+' name="gender" value="F" id="gender.F" class="error" checked="checked" style="color:red"'
+</pre>
+        </dd>
+      </dl>
+
+      <dl class="dl3">
+        <dt class="dt3"><b>new_cycle(*<em>values</em>)</b></dt>
+
+        <dd class="dd3">
+          Cycle each value in <em>values</em>.
+          <pre class="program">
+&gt;&gt;&gt; from tenjin.helpers.html import *
+&gt;&gt;&gt; cycle = new_cycle('odd', 'even')
+&gt;&gt;&gt; cycle()
+'odd'
+&gt;&gt;&gt; cycle()
+'even'
+&gt;&gt;&gt; cycle()
+'odd'
+&gt;&gt;&gt; cycle()
+'even'
 </pre>
         </dd>
       </dl><br>

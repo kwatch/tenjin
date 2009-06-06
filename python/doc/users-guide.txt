@@ -601,7 +601,6 @@ $ pytenjin {{*-SUNX*}} example1.pyhtml
 
 
 
-
 .$$ Syntax Checking			| des-syntaxchk
 
 Command-line option '{{,-z,}}' checks syntax error in embedded Python code.
@@ -630,6 +629,74 @@ Error jump in Emacs or other editor is available.
 
 Command-line option '-q' (quiet-mode) prints nothing if it has no errors.
 
+
+
+.$$ HTML Helper Functions			| des-htmlhelpers
+
+pyTenjin provides small but useful HTML helper functions.
+See {{<this section|#dev-htmlhelpers>}} for details.
+
+.? example of HTML helper functions:
+.-------------------- htmlhelpers.pyhtml
+<table>
+<?py {{*cycle = new_cycle('odd', 'even')*}} ?>
+<?py curr_id = params['item_id'] ?>
+<?py for item in items: ?>
+  <tr class="#{{{*cycle()*}}}" #{{{*tagattrs(style=(item.readonly and 'color:gray'))*}}}>
+    <td><input type="checkbox" name="items" value="#{item.id}" #{{{*checked(curr_id==item.id)*}}} /></td>
+    <td>${item.name}</td>
+  </tr>
+<?py #endfor ?>
+</table>
+.--------------------
+
+.? output example:
+.-------------------- htmlhelpers.output
+<table>
+  <tr class="{{*odd*}}" >
+    <td><input type="checkbox" name="items" value="1"  /></td>
+    <td>Foo</td>
+  </tr>
+  <tr class="{{*even*}}"  {{*style="color:gray"*}}>
+    <td><input type="checkbox" name="items" value="2"  {{*checked="checked"*}} /></td>
+    <td>Bar</td>
+  </tr>
+</table>
+.--------------------
+
+.#++++++++++
+.-------------------- htmlhelpers.py
+class Item(object):
+  def __init__(self, id, name, readonly=False):
+    self.id = id
+    self.name = name
+    self.readonly = readonly
+items = [ Item(1, 'Foo'), Item(2, 'Bar', True) ]
+params = {'item_id': 2}
+import tenjin
+from tenjin.helpers import *
+from tenjin.helpers.html import *
+engine = tenjin.Engine()
+html = engine.render('htmlhelpers.pyhtml', {'items': items, 'params': params})
+import sys
+sys.stdout.write(html)
+.--------------------
+
+.==================== htmlhelpers.result
+$ python htmlhelpers.py
+<table>
+  <tr class="{{*odd*}}" >
+    <td><input type="checkbox" name="items" value="1"  /></td>
+    <td>Foo</td>
+  </tr>
+  <tr class="{{*even*}}"  {{*style="color:gray"*}}>
+    <td><input type="checkbox" name="items" value="2"  {{*checked="checked"*}} /></td>
+    <td>Bar</td>
+  </tr>
+</table>
+.====================
+
+.#----------
 
 
 
@@ -2025,52 +2092,89 @@ pyTenjin provides some useful helper functions for HTML.
 These are defined in tenjin.helpers.html module.
 
 
-.[ tenjin.helpers.html.checked({{/expr/}}) ]
+.[ checked({{/expr/}}) ]
     Return {{,' checked="checked"',}} if {{/expr/}} is true.
 
-.[ tenjin.helpers.html.selected({{/expr/}}) ]
+.[ selected({{/expr/}}) ]
     Return {{,' selected="selected"',}} if {{/expr/}} is true.
 
-.[ tenjin.helpers.html.disabled({{/expr/}}) ]
+.[ disabled({{/expr/}}) ]
     Return {{,' disabled="disabled"',}} if {{/expr/}} is true.
 
-.[ tenjin.helpers.html.nl2br({{/str/}}) ]
+.[ nl2br({{/str/}}) ]
     Relplace "\n" in {{/str/}} into "<br />\n" and return it.
 
-.[ tenjin.helpers.html.nv({{/name/}}, {{/value/}}, {{/sep/}}=None, {{/klass/}}=None, {{/checked/}}=None, {{/disabled/}}=None, **{{/kwargs/}}) ]
-    Return ' name="{{/name/}}" value="{{/value/}}"' string.
-    .- If {{/sep/}} is specified, ' id="{{/name/}} {{/sep/}} {{/value/}}' will be added.
-    .- If {{/klass/}} is specified, ' class="{{/klass/}}"' will be added.
-    .- If {{/checked/}} is true value, ' checked="checked"' will be added.
-    .- If {{/disabled/}} is true value, ' disabled="disabled"' will be added.
-    .? ex:
-    .--------------------
-    >>> nv('gender', 'F')
-    ' name="gender" value="F"'
-    >>> nv('gender', 'F', '.')
-    ' name="gender" value="F" id="gender.F"'
-    >>> nv('gender', 'F', '.', klass='error')
-    ' name="gender" value="F" id="gender.F" class="error"'
-    >>> nv('gender', 'F', '.', checked=True)
-    ' name="gender" value="F" id="gender.F" checked="checked"'
-    >>> nv('gender', 'F', '.', style="color:red")
-    ' name="gender" value="F" id="gender.F" style="color:red"'
-    .--------------------
+.[ tagattr({{/name/}}, {{/expr/}}, {{/value/}}=None, {{/escape/}}=True) ]
+	{{*(experimental)*}}
+	Return {{,' {{/name/}}="{{/value/}}"',}} string if {{/expr/}} is true value, else return '' (empty string).
+	If {{/value/}} is not specified then {{/expr/}} is used as value instead.
+	.--------------------
+	>>> from tenjin.helpers.html import *
+	>>> tagattr('size', 20)
+	' size="20"'
+	>>> tagattr('size', 0)
+	''
+	>>> tagattr('size', 0, 'large')
+	' size="large"'
+	.--------------------
 
-.[ tenjin.helpers.html.tagattr({{/name1/}}={{/value1/}}, {{/name2/}}={{/value2/}}, {{/.../}}) ]
-    {{*(experimental)*}}
-    Return '{{,{{/name1/}}="{{/value1/}}" {{/name2/}}="{{/value2/}}",}}'.
-    .- If {{/valueN/}} is false value, that pair is ignored.
-    .- If {{/nameN/}} is 'klass', then 'class="{{/valueN/}}"' will be added.
-    .? ex:
-    .--------------------
-    >>> tagattr(colspan=40, rowspan=4)
-    'colspan="40" rowspan="4"'
-    >>> tagattr(colspan=0, rowspan=False)
-    ''
-    >>> tagattr(klass='error')    # 'klass' will be renamed to 'class'
-    'class="error"'
-    .--------------------
+
+.[ tagattrs(**{{/kwargs/}}) ]
+	{{*(experimental)*}}
+	Return {{,' {{/name1/}}="{{/value2/}}" {{/name2/}}={{/value2/}} ...',}}..^
+	If {{/valueN/}} is false value, both key and value are ignored..^
+	If {{/keyN/}} is 'klass' then it will be converted into 'class'..^
+	If {{/keyN/}} is 'checked', 'selected', or 'disabled', then {{/keyN/}} is used as value.
+	For example, {{,tagattrs(checked=1),}} returns '{{, checked="checked",}}'.
+	.--------------------
+	>>> from tenjin.helpers.html import *
+	>>> tagattrs(klass='error', size=20, checked=True)
+	' class="error" size="20" checked="checked"'
+	>>> tagattrs(klass='', size=0, checked=False)
+	''
+	.--------------------
+	Tips: 'and' operator may help you.
+	.--------------------
+	>>> from tenjin.helpers.html import *
+	>>> color = 'red'
+	>>> tagattrs(style=(color and 'color:%s' % color))
+	' style="color:red"'
+	>>> color = None
+	>>> tagattrs(style=(color and 'color:%s' % color))
+	''
+	.--------------------
+
+
+.[ nv({{/name/}}, {{/value/}}, {{/sep/}}=None, **{{/kwargs/}}) ]
+	Return {{,' name="{{/name/}}" value="{{/value/}}"',}} string..^
+	If {{/sep/}} is specified, {{,' id="{{/name/}} {{/sep/}} {{/value/}}',}} will be added..^
+	{{/kwargs/}} are converted into tag attributes by tagattrs() function.
+	.--------------------
+	>>> from tenjin.helpers.html import *
+	>>> nv('gender', 'F')
+	' name="gender" value="F"'
+	>>> nv('gender', 'F', '.')
+	' name="gender" value="F" id="gender.F"'
+	>>> nv('gender', 'F', '.', klass='error', checked=True, style="color:red")
+	' name="gender" value="F" id="gender.F" class="error" checked="checked" style="color:red"'
+	.--------------------
+
+
+.[ new_cycle(*{{/values/}}) ]
+	Cycle each value in {{/values/}}.
+	.--------------------
+	>>> from tenjin.helpers.html import *
+	>>> cycle = new_cycle('odd', 'even')
+	>>> cycle()
+	'odd'
+	>>> cycle()
+	'even'
+	>>> cycle()
+	'odd'
+	>>> cycle()
+	'even'
+	.--------------------
+
 
 
 
