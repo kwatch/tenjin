@@ -1103,6 +1103,67 @@ $ [%= command %] example[%= n %].[%= suffix %]
 .====================
 
 
+%
+% if PYTHON
+%
+
+{{*(Experimental)*}}
+Since version 0.8.0, it is allowed to indent [%=Lang%] statements.
+[%=name%] inserts dummy if-statement automatically when the first [%=Lang%] statement is indented.
+
+For example:
+
+.-------------------- dummy-if-stmt1.[%= suffix %]
+<html>
+  <body>
+    <ul>
+      <?py for item in items: ?>
+      <li>${item}</li>
+      <?py #end ?>
+    </ul>
+  </body>
+</html>
+.--------------------
+
+The above is regarded as:
+
+.-------------------- dummy-if-stmt2.[%= suffix %]
+<html>
+  <body>
+    <ul>
+{{*<?py if True: ?>*}}
+      <?py for item in items: ?>
+      <li>${item}</li>
+      <?py #end ?>
+    </ul>
+  </body>
+</html>
+.--------------------
+
+.#++++++++++
+
+.==================== dummy-if-stmt1.result
+$ [%=command%] -sb dummy-if-stmt1.[%=suffix%]
+_buf.extend(('''<html>
+  <body>
+    <ul>\n''', ));
+if True: ## dummy
+      for item in items:
+          _buf.extend(('''      <li>''', escape(to_str(item)), '''</li>\n''', ));
+      #end
+      _buf.extend(('''    </ul>
+  </body>
+</html>\n''', ));
+.====================
+
+.#----------
+
+
+%
+% end #if PYTHON
+%
+
+
 % if PHP
 
 [%=name%]'s error reporting may be not useful because it doesn't report filename on which error happended in default{{(This is a restriction of [%=name%] because {{,eval(),}} of PHP can't take filename as argument.)}}.
