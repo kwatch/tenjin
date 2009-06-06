@@ -1809,253 +1809,6 @@ $ [%= command %] {{*-SUNX*}} example[%= n %].[%= suffix %]
 % n += 1 
 
 
-% if false && ! JS   ######################################## 
-.$$ Helper Functions			| des-helpers
-
-[%= name %] provides the following helper functions for HTML.
-% if PYTHON
-{{(These helper functions are defined in tenjin.helpers.html module.)}}
-% elsif RUBY
-{{(These helper functions are defined in Tenjin::HtmlHelper module, and Tenjin::Context class includes this module.)}}
-% elsif PERL
-{{(These helper functions are defined in Tenjin::Context package.)}}
-% elsif JS
-% elsif PHP
-% else assert false 
-% end 
-
-% if PYTHON
-.[ to_str(value) ]
-    Nearly equal to '{{,str(value),}}' except that {{,to_str(value),}} returns empty string ({{,"",}}) if value is None.
-% elsif RUBY
-% elsif PERL
-% elsif JS
-% elsif PHP
-% else assert false 
-% end 
-
-% if JS
-.[ escapeXml(str) ]
-% else 
-.[ escape(str), escape_xml(str) ]
-% end 
-    Convert '{{,& < > ",}}' into '{{,&amp &lt; &gt; &quot;,}}'.
-
-.[ checked(condition) ]
-    Return {{,' checked="checked"',}} if condition is true else return empty string.
-
-.[ selected(condition) ]
-    Return {{,' selected="selected"',}} if condition is true else return empty string.
-
-.[ disabled(condition) ]
-    Return {{,' disabled="disabled"',}} if condition is true else return empty string.
-
-% if !PHP
-.[ nl2br(str) ]
-    Replace "\n" in str into "<br />\n" and return it.
-% end
-
-% if PYTHON
-.[ tagattr(tagname, expression, value=None, escape=True) ]
-    {{*(experimental)*}}
-    if expression is true then return '{{, {{/tagname/}}="{{/value/}}",}}', else
-    return empty string.
-    if value is None, value of expression is used instead.
-    if escape is true, value is escaped by escape() function.
-% elsif RUBY
-.[ tagattr(tagname, expression, value=nil, escape=true) ]
-    {{*(experimental)*}}
-    if expression is true then return '{{, {{/tagname/}}="{{/value/}}",}}', else
-    return empty string.
-    if value is None, value of expression is used instead.
-    if escape is true, value is escaped by escape() function.
-% elsif PERL
-.[ tagattr(tagname, expression, value=undef) ]
-    {{*(experimental)*}}
-    if expression is true then return '{{, {{/tagname/}}="{{/value/}}",}}', else
-    return empty string.
-    if value is undef, value of expression is used instead.
-    .#if escape is true, value is escaped by escape() function.
-% elsif JS
-.[ tagattr(tagname, expression, value=undef) ]
-    {{*(experimental)*}}
-    if expression is true then return '{{, {{/tagname/}}="{{/value/}}",}}', else
-    return empty string.
-    if value is undef, value of expression is used instead.
-    .#if escape is true, value is escaped by escape() function.
-% elsif PHP
-% else assert false 
-% end 
-
-
-% n += 1 
-% if PYTHON
-
-.? File 'example[%= n %].[%= suffix %]':
-.-------------------- example[%= n %].[%= suffix %]':
-to_str(123):     #{repr(to_str(123))}
-to_str(None):    #{repr(to_str(None))}
-checked(1==1):   #{repr(checked(1==1))}
-checked(1==0):   #{repr(checked(1==0))}
-selected(1==1):  #{repr(selected(1==1))}
-selected(1==0):  #{repr(selected(1==0))}
-disabled(1==1):  #{repr(disabled(1==1))}
-disabled(1==0):  #{repr(disabled(1==0))}
-nl2br("foo\nbbar\n"):   #{repr(nl2br("foo\nbar\n"))}
-tagattr("size", 1, 9):  #{repr(tagattr("size", 1, 9))}
-tagattr("size", 1):     #{repr(tagattr("size", 1))}
-tagattr("size", 0):     #{repr(tagattr("size", 0))}
-.--------------------
-
-Result:
-.==================== example[%= n %]_helpers.result
-$ [%= command %] example[%= n %].[%= suffix %]
-to_str(123):     '123'
-to_str(None):    ''
-checked(1==1):   ' checked="checked"'
-checked(1==0):   ''
-selected(1==1):  ' selected="selected"'
-selected(1==0):  ''
-disabled(1==1):  ' disabled="disabled"'
-disabled(1==0):  ''
-nl2br("foo\nbbar\n"):   'foo<br />\nbar<br />\n'
-tagattr("size", 1, 9):  ' size="9"'
-tagattr("size", 1):     ' size="1"'
-tagattr("size", 0):     ''
-.====================
-
-% elsif RUBY
-
-.? File 'example[%= n %].[%= suffix %]':
-.-------------------- example[%= n %].[%= suffix %]':
-checked(1==1):   #{checked(1==1).inspect}
-checked(1==0):   #{checked(1==0).inspect}
-selected(1==1):  #{selected(1==1).inspect}
-selected(1==0):  #{selected(1==0).inspect}
-disabled(1==1):  #{disabled(1==1).inspect}
-disabled(1==0):  #{disabled(1==0).inspect}
-nl2br("foo\nbbar\n"):   #{nl2br("foo\nbar\n").inspect}
-tagattr("size", 1, 9):  #{tagattr("size", 1, 9).inspect}
-tagattr("size", 1):     #{tagattr("size", 1).inspect}
-tagattr("size", nil):   #{tagattr("size", nil).inspect}
-.--------------------
-
-Result:
-.==================== example[%= n %]_helpers.result
-$ [%= command %] example[%= n %].[%= suffix %]
-checked(1==1):   " checked=\"checked\""
-checked(1==0):   ""
-selected(1==1):  " selected=\"selected\""
-selected(1==0):  ""
-disabled(1==1):  " disabled=\"disabled\""
-disabled(1==0):  ""
-nl2br("foo\nbbar\n"):   "foo\\nbar\\n"
-tagattr("size", 1, 9):  " size=\"9\""
-tagattr("size", 1):     " size=\"1\""
-tagattr("size", nil):   ""
-.====================
-
-% elsif PERL
-
-.? File 'example[%= n %].[%= suffix %]':
-.-------------------- example[%= n %].[%= suffix %]':
-<?pl use Data::Dumper; ?>
-checked(1==1):          [== Dumper(checked(1==1)) ==]
-checked(1==0):          [== Dumper(checked(1==0)) ==]
-selected(1==1):         [== Dumper(selected(1==1)) ==]
-selected(1==0):         [== Dumper(selected(1==0)) ==]
-disabled(1==1):         [== Dumper(disabled(1==1)) ==]
-disabled(1==0):         [== Dumper(disabled(1==0)) ==]
-nl2br("foo\nbbar\n"):   [== Dumper(nl2br("foo\nbar\n")) ==]
-tagattr("size", 1, 9):  [== Dumper(tagattr("size", 1, 9)) ==]
-tagattr("size", 1):     [== Dumper(tagattr("size", 1)) ==]
-tagattr("size", 0):     [== Dumper(tagattr("size", 0)) ==]
-.--------------------
-
-Result:
-.==================== example[%= n %]_helpers.result
-$ [%= command %] example[%= n %].[%= suffix %]
-checked(1==1):          $VAR1 = ' checked="checked"';
-checked(1==0):          $VAR1 = '';
-selected(1==1):         $VAR1 = ' selected="selected"';
-selected(1==0):         $VAR1 = '';
-disabled(1==1):         $VAR1 = ' disabled="disabled"';
-disabled(1==0):         $VAR1 = '';
-nl2br("foo\nbbar\n"):   $VAR1 = 'foo<br />
-bar<br />
-';
-tagattr("size", 1, 9):  $VAR1 = ' size="9"';
-tagattr("size", 1):     $VAR1 = ' size="1"';
-tagattr("size", 0):     $VAR1 = '';
-.====================
-
-% elsif JS
-
-.#.? File 'example[%= n %].[%= suffix %]':
-.#.-------------------- example[%= n %].[%= suffix %]':
-.#checked(1==1):   #{checked(1==1).inspect}
-.#checked(1==0):   #{checked(1==0).inspect}
-.#selected(1==1):  #{selected(1==1).inspect}
-.#selected(1==0):  #{selected(1==0).inspect}
-.#disabled(1==1):  #{disabled(1==1).inspect}
-.#disabled(1==0):  #{disabled(1==0).inspect}
-.#nl2br("foo\nbbar\n"):   #{nl2br("foo\nbar\n").inspect}
-.#tagattr("size", 1, 9):  #{tagattr("size", 1, 9).inspect}
-.#tagattr("size", 1):     #{tagattr("size", 1).inspect}
-.#tagattr("size", nil):   #{tagattr("size", nil).inspect}
-.#.--------------------
-.#
-.#Result:
-.#.==================== example[%= n %]_helpers.result
-.#$ [%= command %] example[%= n %].[%= suffix %]
-.#checked(1==1):   " checked=\"checked\""
-.#checked(1==0):   ""
-.#selected(1==1):  " selected=\"selected\""
-.#selected(1==0):  ""
-.#disabled(1==1):  " disabled=\"disabled\""
-.#disabled(1==0):  ""
-.#nl2br("foo\nbbar\n"):   "foo\\nbar\\n"
-.#tagattr("size", 1, 9):  " size=\"9\""
-.#tagattr("size", 1):     " size=\"1\""
-.#tagattr("size", nil):   ""
-.#.====================
-
-% elsif PHP
-
-.? File 'example[%= n %].[%= suffix %]':
-.-------------------- example[%= n %].[%= suffix %]':
-checked(1==1):   {==var_export(checked(1==1), true)=}
-checked(1==0):   {==var_export(checked(1==0), true)=}
-selected(1==1):  {==var_export(selected(1==1), true)=}
-selected(1==0):  {==var_export(selected(1==0), true)=}
-disabled(1==1):  {==var_export(disabled(1==1), true)=}
-disabled(1==0):  {==var_export(disabled(1==0), true)=}
-.#nl2br("foo\nbbar\n"):   {==var_export(nl2br("foo\nbar\n"), true)=}
-tagattr("size", 1, 9):  {==var_export(tagattr("size", 1, 9), true)=}
-tagattr("size", 1):     {==var_export(tagattr("size", 1), true)=}
-tagattr("size", nil):   {==var_export(tagattr("size", null), true)=}
-.--------------------
-
-Result:
-.==================== example[%= n %]_helpers.result
-$ [%= command %] example[%= n %].[%= suffix %]
-checked(1==1):   ' checked="checked"'
-checked(1==0):   ''
-selected(1==1):  ' selected="selected"'
-selected(1==0):  ''
-disabled(1==1):  ' disabled="disabled"'
-disabled(1==0):  ''
-.#nl2br("foo\nbbar\n"):   "foo\nbar\n"
-tagattr("size", 1, 9):  ' size="9"'
-tagattr("size", 1):     ' size="1"'
-tagattr("size", nil):   ''
-.====================
-
-% else assert false 
-% end 
-
-% end  ######################################## 
-
 
 .$$ Syntax Checking			| des-syntaxchk
 
@@ -2194,6 +1947,110 @@ because the former can take several filenames.
 Command-line option '-q' (quiet-mode) prints nothing if it has no errors.
 % end 
 
+
+
+.$$ HTML Helper Functions			| des-htmlhelpers
+
+[%=name%] provides small but useful HTML helper functions.
+See {{<this section|#dev-htmlhelpers>}} for details.
+
+.? example of HTML helper functions:
+.-------------------- htmlhelpers.[%=suffix%]
+%
+% if PYTHON
+%
+<table>
+<?py {{*cycle = new_cycle('odd', 'even')*}} ?>
+<?py curr_id = params['item_id'] ?>
+<?py for item in items: ?>
+  <tr class="#{{{*cycle()*}}}" #{{{*tagattrs(style=(item.readonly and 'color:gray'))*}}}>
+    <td><input type="checkbox" name="items" value="#{item.id}" #{{{*checked(curr_id==item.id)*}}} /></td>
+    <td>${item.name}</td>
+  </tr>
+<?py #endfor ?>
+</table>
+%
+% elsif RUBY
+%
+%
+% elsif PERL
+%
+%
+% elsif JS
+%
+%
+% elsif PHP
+%
+%
+% else assert false 
+% end 
+.--------------------
+
+.? output example:
+.-------------------- htmlhelpers.output
+<table>
+  <tr class="{{*odd*}}" >
+    <td><input type="checkbox" name="items" value="1"  /></td>
+    <td>Foo</td>
+  </tr>
+  <tr class="{{*even*}}"  {{*style="color:gray"*}}>
+    <td><input type="checkbox" name="items" value="2"  {{*checked="checked"*}} /></td>
+    <td>Bar</td>
+  </tr>
+</table>
+.--------------------
+
+.#++++++++++
+.-------------------- htmlhelpers.[%=ext%]
+%
+% if PYTHON
+%
+class Item(object):
+  def __init__(self, id, name, readonly=False):
+    self.id = id
+    self.name = name
+    self.readonly = readonly
+items = [ Item(1, 'Foo'), Item(2, 'Bar', True) ]
+params = {'item_id': 2}
+import tenjin
+from tenjin.helpers import *
+from tenjin.helpers.html import *
+engine = tenjin.Engine()
+html = engine.render('htmlhelpers.pyhtml', {'items': items, 'params': params})
+import sys
+sys.stdout.write(html)
+%
+% elsif RUBY
+%
+%
+% elsif PERL
+%
+%
+% elsif JS
+%
+%
+% elsif PHP
+%
+%
+% else assert false 
+% end 
+.--------------------
+
+.==================== htmlhelpers.result
+$ [%=lang%] htmlhelpers.[%=ext%]
+<table>
+  <tr class="{{*odd*}}" >
+    <td><input type="checkbox" name="items" value="1"  /></td>
+    <td>Foo</td>
+  </tr>
+  <tr class="{{*even*}}"  {{*style="color:gray"*}}>
+    <td><input type="checkbox" name="items" value="2"  {{*checked="checked"*}} /></td>
+    <td>Bar</td>
+  </tr>
+</table>
+.====================
+
+.#----------
 
 
 
@@ -6118,38 +5975,32 @@ These are defined in [%=htmlhelper%] module.
 % end
 
 
-.[ [%= mod %]checked({{/expr/}}) ]
+.[ checked({{/expr/}}) ]
     Return {{,' checked="checked"',}} if {{/expr/}} is true.
 
-.[ [%= mod %]selected({{/expr/}}) ]
+.[ selected({{/expr/}}) ]
     Return {{,' selected="selected"',}} if {{/expr/}} is true.
 
-.[ [%= mod %]disabled({{/expr/}}) ]
+.[ disabled({{/expr/}}) ]
     Return {{,' disabled="disabled"',}} if {{/expr/}} is true.
 
-.[ [%= mod %]nl2br({{/str/}}) ]
+.[ nl2br({{/str/}}) ]
     Relplace "\n" in {{/str/}} into "<br />\n" and return it.
 
-.[ [%= mod %]nv({{/name/}}, {{/value/}}, {{/sep/}}=[%=NULL%], {{/klass/}}=[%=NULL%], {{/checked/}}=[%=NULL%], {{/disabled/}}=[%=NULL%], **{{/kwargs/}}) ]
-    Return ' name="{{/name/}}" value="{{/value/}}"' string.
-    .- If {{/sep/}} is specified, ' id="{{/name/}} {{/sep/}} {{/value/}}' will be added.
-    .- If {{/klass/}} is specified, ' class="{{/klass/}}"' will be added.
-    .- If {{/checked/}} is true value, ' checked="checked"' will be added.
-    .- If {{/disabled/}} is true value, ' disabled="disabled"' will be added.
 % if PYTHON
-    .? ex:
-    .--------------------
-    >>> nv('gender', 'F')
-    ' name="gender" value="F"'
-    >>> nv('gender', 'F', '.')
-    ' name="gender" value="F" id="gender.F"'
-    >>> nv('gender', 'F', '.', klass='error')
-    ' name="gender" value="F" id="gender.F" class="error"'
-    >>> nv('gender', 'F', '.', checked=True)
-    ' name="gender" value="F" id="gender.F" checked="checked"'
-    >>> nv('gender', 'F', '.', style="color:red")
-    ' name="gender" value="F" id="gender.F" style="color:red"'
-    .--------------------
+.[ tagattr({{/name/}}, {{/expr/}}, {{/value/}}=None, {{/escape/}}=True) ]
+	{{*(experimental)*}}
+	Return {{,' {{/name/}}="{{/value/}}"',}} string if {{/expr/}} is true value, else return '' (empty string).
+	If {{/value/}} is not specified then {{/expr/}} is used as value instead.
+	.--------------------
+	>>> from tenjin.helpers.html import *
+	>>> tagattr('size', 20)
+	' size="20"'
+	>>> tagattr('size', 0)
+	''
+	>>> tagattr('size', 0, 'large')
+	' size="large"'
+	.--------------------
 % elsif RUBY
 % elsif PERL
 % elsif JS
@@ -6157,27 +6008,84 @@ These are defined in [%=htmlhelper%] module.
 % else assert false 
 % end
 
-.[ [%= mod %]tagattr({{/name1/}}={{/value1/}}, {{/name2/}}={{/value2/}}, {{/.../}}) ]
-    {{*(experimental)*}}
-    Return '{{,{{/name1/}}="{{/value1/}}" {{/name2/}}="{{/value2/}}",}}'.
-    .- If {{/valueN/}} is false value, that pair is ignored.
-    .- If {{/nameN/}} is 'klass', then 'class="{{/valueN/}}"' will be added.
+
 % if PYTHON
-    .? ex:
-    .--------------------
-    >>> tagattr(colspan=40, rowspan=4)
-    'colspan="40" rowspan="4"'
-    >>> tagattr(colspan=0, rowspan=False)
-    ''
-    >>> tagattr(klass='error')    # 'klass' will be renamed to 'class'
-    'class="error"'
-    .--------------------
+.[ tagattrs(**{{/kwargs/}}) ]
+	{{*(experimental)*}}
+	Return {{,' {{/name1/}}="{{/value2/}}" {{/name2/}}={{/value2/}} ...',}}..^
+	If {{/valueN/}} is false value, both key and value are ignored..^
+	If {{/keyN/}} is 'klass' then it will be converted into 'class'..^
+	If {{/keyN/}} is 'checked', 'selected', or 'disabled', then {{/keyN/}} is used as value.
+	For example, {{,tagattrs(checked=1),}} returns '{{, checked="checked",}}'.
+	.--------------------
+	>>> from tenjin.helpers.html import *
+	>>> tagattrs(klass='error', size=20, checked=True)
+	' class="error" size="20" checked="checked"'
+	>>> tagattrs(klass='', size=0, checked=False)
+	''
+	.--------------------
+	Tips: 'and' operator may help you.
+	.--------------------
+	>>> from tenjin.helpers.html import *
+	>>> color = 'red'
+	>>> tagattrs(style=(color and 'color:%s' % color))
+	' style="color:red"'
+	>>> color = None
+	>>> tagattrs(style=(color and 'color:%s' % color))
+	''
+	.--------------------
 % elsif RUBY
 % elsif PERL
 % elsif JS
 % elsif PHP
 % else assert false 
 % end
+
+
+% if PYTHON
+.[ nv({{/name/}}, {{/value/}}, {{/sep/}}=[%=NULL%], **{{/kwargs/}}) ]
+	Return {{,' name="{{/name/}}" value="{{/value/}}"',}} string..^
+	If {{/sep/}} is specified, {{,' id="{{/name/}} {{/sep/}} {{/value/}}',}} will be added..^
+	{{/kwargs/}} are converted into tag attributes by tagattrs() function.
+	.--------------------
+	>>> from tenjin.helpers.html import *
+	>>> nv('gender', 'F')
+	' name="gender" value="F"'
+	>>> nv('gender', 'F', '.')
+	' name="gender" value="F" id="gender.F"'
+	>>> nv('gender', 'F', '.', klass='error', checked=True, style="color:red")
+	' name="gender" value="F" id="gender.F" class="error" checked="checked" style="color:red"'
+	.--------------------
+% elsif RUBY
+% elsif PERL
+% elsif JS
+% elsif PHP
+% else assert false 
+% end
+
+
+% if PYTHON
+.[ new_cycle(*{{/values/}}) ]
+	Cycle each value in {{/values/}}.
+	.--------------------
+	>>> from tenjin.helpers.html import *
+	>>> cycle = new_cycle('odd', 'even')
+	>>> cycle()
+	'odd'
+	>>> cycle()
+	'even'
+	>>> cycle()
+	'odd'
+	>>> cycle()
+	'even'
+	.--------------------
+% elsif RUBY
+% elsif PERL
+% elsif JS
+% elsif PHP
+% else assert false 
+% end
+
 
 
 % end                    #################### 
