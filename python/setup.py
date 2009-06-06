@@ -1,5 +1,5 @@
 ###
-### $Release: 0.7.0 $
+### $Release: 0.8.0 $
 ### copyright(c) 2007-2009 kuwata-lab.com all rights reserved.
 ###
 
@@ -16,7 +16,7 @@ else:
 
 
 name     = 'Tenjin'
-version  = '0.7.0'
+version  = '0.8.0'
 author   = 'makoto kuwata'
 email    = 'kwa@kuwata-lab.com'
 maintainer = author
@@ -41,6 +41,12 @@ classifiers = [
     'License :: OSI Approved :: MIT License',
     'Operating System :: OS Independent',
     'Programming Language :: Python',
+    'Programming Language :: Python :: 2.3',
+    'Programming Language :: Python :: 2.4',
+    'Programming Language :: Python :: 2.5',
+    'Programming Language :: Python :: 2.6',
+    'Programming Language :: Python :: 3',
+    'Programming Language :: Python :: 3.0',
     'Topic :: Software Development :: Libraries :: Python Modules',
     'Topic :: Internet :: WWW/HTTP :: Dynamic Content :: CGI Tools/Libraries',
 ]
