@@ -1257,6 +1257,72 @@ Notice: Undefined variable: z in /usr/local/lib/php/Tenjin.php(497) : eval()'d c
 % end 
 
 
+% if $PYTHON
+
+.$$ It is hard to specify all template arguments. Any good idea?	| faq-optional-args
+
+There may be some cases that it is hard to specify all template arguments.
+But {{,_context.get('varname', None),}} is much hard and pain.
+
+One idea is to expand {{,@varname,}} into {{,_context.get('varname', None),}} automaticaly.
+
+
+% n += 1 
+
+.? File 'ex[%=n%]-expandargs.[%=ext%]':
+.-------------------- ex[%=n%]-expandargs.[%=ext%]
+import tenjin
+from tenjin.helpers import *
+import re
+
+def _expand(code):
+    """expand '@var' into '_context.get("var", None)'"""
+    return re.sub(r"@(\w+)", r"_context.get('\1', None)", code)
+
+class MyTemplate(tenjin.Template):
+
+    def add_stmt(self, buf, code):
+        tenjin.Template.add_stmt(self, buf, _expand(code))
+
+    def add_expr(self, buf, code, flag_escape=None):
+        tenjin.Template.add_expr(self, buf, _expand(code), flag_escape)
+
+print("----- script -----")
+print(MyTemplate('ex[%=n%]-expandargs.pyhtml').script)
+
+print("----- result -----")
+tenjin.Engine.templateclass = MyTemplate
+engine = tenjin.Engine()
+html = engine.render('ex[%=n%]-expandargs.[%=suffix%]')
+print(html)
+.--------------------
+
+
+.? File 'ex[%=n%]-expandargs.[%=suffix%]':
+.-------------------- ex[%=n%]-expandargs.[%=suffix%]
+<p>Hello #{{{*@user*}} or 'guest'}!<p>
+<?py if {{*@message*}}: ?>
+<p>#{@message}</p>
+<?py #endif ?>
+.--------------------
+
+
+.? Result:
+.==================== ex[%=n%]-expandargs.result
+$ [%=lang%] ex[%=n%]-expandargs.[%=ext%]
+----- script -----
+_buf.extend(('''<p>Hello ''', to_str({{*_context.get('user', None)*}} or 'guest'), '''!<p>\n''', ));
+if {{*_context.get('message', None)*}}:
+    _buf.extend(('''<p>''', to_str({{*_context.get('message', None)*}}), '''</p>\n''', ));
+#endif
+
+----- result -----
+<p>Hello guest!<p>
+
+.====================
+
+
+% end
 
 
 % if $RUBY
@@ -3371,6 +3437,7 @@ _buf.extend(('''  <option>-</option>
   <option value="6"''', to_str(selected.get('6')), '''>Fri</option>
   <option value="7"''', to_str(selected.get('7')), '''>Sat</option>
 </select>\n''', ));
+
 %
 % elsif RUBY
 %
@@ -3412,6 +3479,9 @@ selected = { @params['weekday'].to_s => ' selected="selected"' }
   <option value="6">Fri</option>
   <option value="7">Sat</option>
 </select>
+% if PYTHON
+
+% end
 .====================
 
 It is possible to make helper function to generate <select> and <option> tags.
