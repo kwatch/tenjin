@@ -374,6 +374,35 @@ $ pytenjin example1.pyhtml
     &lt;/tr&gt;
   &lt;tbody&gt;
 &lt;/table&gt;
+</pre>
+
+      <p><strong>(Experimental)</strong> Since version 0.8.0, it is allowed to indent Python statements. pyTenjin inserts dummy if-statement automatically when the first Python statement is indented.</p>
+
+      <p>For example:</p><a name="dummy-if-stmt1.pyhtml" id="dummy-if-stmt1.pyhtml"></a>
+      <pre class="program">
+&lt;html&gt;
+  &lt;body&gt;
+    &lt;ul&gt;
+      &lt;?py for item in items: ?&gt;
+      &lt;li&gt;${item}&lt;/li&gt;
+      &lt;?py #end ?&gt;
+    &lt;/ul&gt;
+  &lt;/body&gt;
+&lt;/html&gt;
+</pre>
+
+      <p>The above is regarded as:</p><a name="dummy-if-stmt2.pyhtml" id="dummy-if-stmt2.pyhtml"></a>
+      <pre class="program">
+&lt;html&gt;
+  &lt;body&gt;
+    &lt;ul&gt;
+<strong>&lt;?py if True: ?&gt;</strong>
+      &lt;?py for item in items: ?&gt;
+      &lt;li&gt;${item}&lt;/li&gt;
+      &lt;?py #end ?&gt;
+    &lt;/ul&gt;
+  &lt;/body&gt;
+&lt;/html&gt;
 </pre><br>
       <a name="des-styles" id="des-styles"></a>
 
