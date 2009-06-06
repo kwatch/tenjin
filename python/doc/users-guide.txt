@@ -375,6 +375,9 @@ The above is regarded as:
 </html>
 .--------------------
 
+Notice: dummy if-statement changes error line number.
+For example, if got error report on line 6, the real line number in template file is 5.
+
 .#++++++++++
 
 .==================== dummy-if-stmt1.result
@@ -388,7 +391,7 @@ if True: ## dummy
       #end
       _buf.extend(('''    </ul>
   </body>
-</html>\n''', ));k
+</html>\n''', ));
 .====================
 
 .#----------
