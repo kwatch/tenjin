@@ -1401,7 +1401,7 @@
    "js": |
   errormsg*:
    "python": name 'b' is not defined
-   "ruby": "undefined local variable or method `b' for #<Tenjin::Context>"
+   "ruby": "undefined local variable or method `b' for #<Tenjin::Context:0x12345>"
    "perl": |
 	*** Error: content.plhtml
 	Global symbol "$y" requires explicit package name at (eval 999) line 3.
@@ -2037,3 +2037,40 @@
 	  <input type="submit" value="&quot;Update&quot;">\n\
 	</form>\n');
 	_buf.join('')
+
+
+- name:  test_include_with_preprocess
+  testopts:  { preprocess: true }
+  index_html*:
+    "python": |
+	## TODO (index.pyhtml)
+    "ruby": |
+        <?rb @val = 10 ?>
+	<?rb import "show.rbhtml" ?>
+	<?rb @val = 20 ?>
+	<?rb import "show.rbhtml" ?>
+	<?rb @val = 30 ?>
+	<?rb import "show.rbhtml" ?>
+    "perl": |
+	## TODO (index.plhtml)
+    "js": |
+	## TODO (index.jshtml)
+    "php": |
+	## TODO (index.phphtml)
+
+  show_html*:
+    "python": |
+        ## TODO (show.pyhtml)
+    "ruby": |
+        value is #{@val}
+    "perl": |
+        ## TODO (show.plhtml)
+    "js": |
+        ## TODO (show.jshtml)
+    "php": |
+        ## TODO (show.phphtml)
+
+  expected: |
+        value is 10
+        value is 20
+        value is 30
