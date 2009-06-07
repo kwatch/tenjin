@@ -192,8 +192,13 @@ Table of contents:
 
 
 
+.######################################################################
+
+
 .$ Basic	| faq-basic
 
+
+.######################################################################
 
 
 .$$ I got an SyntaxError exception.	| faq-syntax-error
@@ -331,303 +336,483 @@ Notice that the above message shows that error is on line 5 but in fact the erro
 % end 
 
 
+.######################################################################
+
+
+.######################################################################
+
+
+.$$ Does [%= name %] support M17N?	| faq-m17n
+
+No. [%=name%] doesn't provide M17 feature.
+
+[%= name %] doesn't provide M17N feature directly because requirements for M17N are
+different for each applications or frameworks.
+Some applications or frameworks adapt GetText library and others use their original M17N library.
+What [%= name %] should do is not to provide M17N feature but to show an example to support M17N.
+
+But using preprocessing, you can make your M17N template files much faster.
+See {{<this section|#faq-m17n-cache>}} for details.
+
+
+.######################################################################
+
 
 % if $PYTHON
 
-.$$ Is there any way to 'escape' or 'remove' newline at the end of line?	| faq-escape-newline
+.$$ Is [%=name%] ready for Google App Engine?		| faq-google-appengine
 
-Yes, but it is not beautiful very much.
+Yes. You can use [%=name%] in Google App Engine (GAE).
 
-% n += 1 
+Compared to Django template engine, there are some merits to use [%=name%] in Google AppEngine:
 
-Assume that you want to generate CSV file.
-The following is a wrong example.
+.* [%=name%] runs much faster than Django template engine.
+   If you are facing with CPU quota, you should try [%=name%].
 
-.? File 'ex[%=n%]a.pycsv': (wrong)
-.-------------------- ex[%=n%]a.pycsv
-<?py 
-table = [
-  ( "A",  10,  20,  30, ),
-  ( "B",  11,  21,  31, ),
-  ( "C",  12,  22,  23, ),
-]
-?>
-<?py for line in table: ?>
-<?py     sep = '' ?>
-<?py     for cell in line: ?>
-#{sep}#{cell}
-<?py         sep = ', ' ?>
-<?py     #end ?>
-<?py #end ?>
+.* [%=name%] library is consist of only one file.
+   If you are facing with number of files quota, you should try [%=name%].
+
+The following is an example to use Tenjin in Google AppEngine with memcache.
+
+.? gae-example1.py
+.-------------------- gae-example1.py
+from google.appengine.ext import webapp
+from google.appengine.ext.webapp.util import run_wsgi_app
+
+{{*import tenjin*}}
+{{*from tenjin.helpers import **}}
+{{*shared_cache = tenjin.GaeMemcacheCacheStorage()*}}
+{{*engine = tenjin.Engine(cache=shared_cache)*}}
+
+## it is recommended to configure logging
+import logging
+logging.basicConfig(level=logging.DEBUG)
+{{*tenjin.logger = logging*}}
+
+class MainPage(webapp.RequestHandler):
+  def get(self):
+    context = {'title': 'Tenjin Example',
+               'items': ['<AAA>','B&B','"CCC"'] }
+    {{*html = engine.render("index.pyhtml", context)*}}
+    self.response.out.write(html)
+
+application = webapp.WSGIApplication([('/', MainPage)], debug=True)
+
+def main():
+  run_wsgi_app(application)
+
+if __name__ == "__main__":
+  main()
 .--------------------
 
-.? Result: (wrong)
-.==================== ex[%=n%]a_pycsv.result
-$ [%= command %] ex[%=n%]a.pycsv
-A
-, 10
-, 20
-, 30
-B
-, 11
-, 21
-, 31
-C
-, 12
-, 22
-, 23
-.====================
-
-The following is corrected template.
-
-.? File 'ex[%=n%]b.pycsv':
-.-------------------- ex[%=n%]b.pycsv
-<?py 
-table = [
-  ( "A",  10,  20,  30, ),
-  ( "B",  11,  21,  31, ),
-  ( "C",  12,  22,  23, ),
-]
-?>
-<?py
-for line in table:
-    sep = ''
-    for cell in line:
-?>#{sep}#{cell}<?py
-        sep = ', '
-    #end
-?>
-
-<?py
-#end
-?>
-.--------------------
-
-.? Result:
-.==================== ex[%=n%]b_pycsv.result
-$ [%= command %] ex[%=n%]b.pycsv
-A, 10, 20, 30
-B, 11, 21, 31
-C, 12, 22, 23
-.====================
-
-But it is a little complex and not beautiful.
-In this case, you may prefer to use '_buf' variable directly.
-
-.? File 'ex[%=n%]c.pycsv':
-.-------------------- ex[%=n%]c.pycsv
-<?py 
-table = [
-  ( "A",  10,  20,  30),
-  ( "B",  11,  21,  31),
-  ( "C",  12,  22,  23),
-]
-?>
-<?py
-for line in table:
-    sep = ''
-    for cell in line:
-        if sep: _buf.append(sep)
-	_buf.append(to_str(cell))
-	sep = ', '
-    #end
-    _buf.append("\n")
-#end
-?>
-.--------------------
-
-.? Result:
-.==================== ex[%=n%]c_pycsv.result
-$ [%= command %] ex[%=n%]c.pycsv
-A, 10, 20, 30
-B, 11, 21, 31
-C, 12, 22, 23
-.====================
-
-% elsif $RUBY
-
-% elsif $PERL
-
-% elsif $JS
-
-% elsif $PHP
-
-% else assert false 
-% end 
-
-
-
-
-% if $PYTHON|| $RUBY|| $JS
-
-.$$ '#{[%= prefix %]_content}' includes extra newline at end. Can I delete it?	| faq-delete-newline
-
-% elsif $PERL
-
-.$$ '[== $_content =]' includes extra newline at end. Can I delete it?	| faq-delete-newline
-
-% elsif $PHP
-
-.$$ '{== $_content =}' includes extra newline at end. Can I delete it?	| faq-delete-newline
-
-% else assert false 
-% end 
-
-
-% if $PYTHON
-Yes. You can use '{{,<?py echo(_content) ?>,}}' or '{{,<?py _buf.append(_content),}} ?>' instead of '{{,#{_content},}}'.
-% elsif $RUBY
-Yes. You can use '{{,<?rb echo(@_content) ?>,}}' or '{{,<?rb _buf << @_content ?>,}}' instead of '{{,#{@_conent},}}'.
-% elsif $PERL
-Yes. You can use '<?pl echo($_content); ?>' or '{{,<?pl push(@_buf, $_context); ?>,}} or '{{,[== $_context ==],}}' instead of '{{,[== $_context =],}}'.
-% elsif $JS
-Yes. You can use '{{,<?js echo(_content); ?>,}}' or '{{,<?js _buf.push(_content); ?>,}}' instead of '{{,#{_conent},}}'.
-% elsif $PHP
-Yes. You can use '<?php echo($_content); ?>' instead of '{{,[== $_context =],}}'.
-% else assert false 
-% end 
-
-% n += 1 
-
-.? File 'ex[%=n%]-layout.[%= suffix %]':
-.-------------------- ex[%=n%]-layout.[%= suffix %]
-<!-- -->
-% if $PYTHON
-{{*#{[%= prefix %]_content}*}}
-% elsif $RUBY
-{{*#{[%= prefix %]_content}*}}
-% elsif $PERL
-{{*[== $_content =]*}}
-% elsif $JS
-{{*#{[%= prefix %]_content}*}}
-% elsif $PHP
-{{*{== $_content =}*}}
-% else assert false 
-% end 
-<!-- -->
-
-<!-- -->
-% if $PYTHON
-{{*<?py echo(_content) ?>*}}
-% elsif $RUBY
-{{*<?rb echo(@_content) ?>*}}
-% elsif $PERL
-{{*[== $_content ==]*}}
-% elsif $JS
-{{*<?js echo(_content); ?>*}}
-% elsif $PHP
-{{*<?php echo($_content); ?>*}}
-% else assert false 
-% end 
-<!-- -->
-% if !$PHP
-
-<!-- -->
-% if $PYTHON
-{{*<?py _buf.append(_content) ?>*}}
-% elsif $RUBY
-{{*<?rb _buf << @_content ?>*}}
-% elsif $PERL
-{{*<?pl push(@_buf, $_content); ?>*}}
-% elsif $JS
-{{*<?js _buf.push(_content); ?>*}}
-% else assert false 
-% end 
-<!-- -->
 % end
-.--------------------
 
-.? File 'ex[%=n%]-content.[%= suffix %]':
-.-------------------- ex[%=n%]-content.[%= suffix %]
-foo
-bar
-baz
-.--------------------
 
-.? Result:
-.==================== ex[%=n%]_removenl.result
-$ [%= command %] --layout=ex[%=n%]-layout.[%= suffix %] ex[%=n%]-content.[%= suffix %]
-<!-- -->
-foo
-bar
-baz
+.######################################################################
 
-<!-- -->
 
-<!-- -->
-foo
-bar
-baz
-<!-- -->
-% if !$PHP
+.$ Template		| faq-template
 
-<!-- -->
-foo
-bar
-baz
-<!-- -->
-%end
-.====================
+
+.######################################################################
+
+
+% unless $RUBY
+.$$ Is it able to specify default value when variable is not set?	| faq-default-value
+% n += 1 
+% end
 
 
 % if $PYTHON
 
-[experimental] If you pass 'smarttrim=True' option to tenjin.Template() or tenjin.Engine(),
-"\n#{expr}\n" will be trimmed into "\n#{expr}".
-And command-line option '--smarttrim' is the same as 'smarttrim=True' option.
+Yes. It is able to specify default value by {{,_context.get('{{/varname/}}', {{/defaultvalue/}}),}}.
 
-The following example shows that an empty line is not appread when '--smarttrim' is specified.
+.? File 'ex[%=n%].[%= suffix %]':
+.-------------------- ex[%=n%].[%= suffix %]
+Hello ${{{*_context.get('username', 'Guest')*}}}!
+.--------------------
 
 .? Result:
-.==================== ex[%=n%]_smarttrim.result
-$ [%= command %] {{*--smarttrim*}} --layout=ex[%=n%]-layout.[%= suffix %] ex[%=n%]-content.[%= suffix %]
-<!-- -->
-foo
-bar
-baz
-<!-- -->
-
-<!-- -->
-foo
-bar
-baz
-<!-- -->
-
-<!-- -->
-foo
-bar
-baz
-<!-- -->
+.====================
+$ [%= command %] -c 'username="Tenjin"' ex[%=n%].[%= suffix %]
+Hello Tenjin!
+$ [%= command %] ex[%=n%].[%= suffix %]
+Hello Guest!
 .====================
 
-.#.? File 'ex[%=n%]-layout2.[%= suffix %]':
-.#.-------------------- ex[%=n%]-layout.[%= suffix %]
-.#<!-- -->
-.#{{*#{_buf.append(_content)}*}}
-.#<!-- -->
-.#.--------------------
-.#
-.#.? File 'ex[%=n%].py':
-.#.-------------------- ex[%=n%].py
-.#import tenjin
-.#from tenjin.helpers import *  # or escape, to_str
-.#engine = tenjin.Engine({{*smarttrim=True*}})
-.#output = engine.render('ex-[%=n%].[%=suffix%]', layout='ex[%=n%]-layout2.[%=suffix%]')
-.#print output,
-.#.--------------------
-.#
-.#.? Result (notice that empty line is not appeard!):
-.#.====================
-.#$ [%=lang%] ex[%=n%].py
-.#<!-- -->
-.#foo
-.#bar
-.#baz
-.#<!-- -->
-.#.====================
+.#+++
+.? Result:
+.==================== ex[%=n%]a_defaultval.result
+$ [%= command %] -c 'username="Tenjin"' ex[%=n%].[%= suffix %]
+Hello Tenjin!
+.====================
 
+.==================== ex[%=n%]b_defaultval.result
+$ [%= command %] ex[%=n%].[%= suffix %]
+Hello Guest!
+.====================
+.#---
+
+
+% elsif $RUBY
+
+
+
+% elsif $PERL
+
+Yes, by {{,$_context->{{{/varname/}}},}}.
+It is able to check whether value is set or not by inspecting special variable '{{,$_context,}}' which represents context values.
+
+.? File 'ex[%=n%].[%= suffix %]':
+.-------------------- ex[%=n%].[%= suffix %]
+<?pl {{*my $user = defined($_context->{'user'}) ? $_context->{'user'} : 'Guest'; *}} ?>
+Hello [={{*$user*}}=]!
+.--------------------
+
+.? Result:
+.====================
+$ [%= command %] -c 'user=>"Tenjin"' ex[%=n%].[%= suffix %]
+Hello Tenjin!
+$ [%= command %] ex[%=n%].[%= suffix %]
+Hello Guest!
+.====================
+
+.#+++
+.? Result:
+.==================== ex[%=n%]a_defaultval.result
+$ [%= command %] -c 'user=>"Tenjin"' ex[%=n%].[%= suffix %]
+Hello Tenjin!
+.====================
+
+.==================== ex[%=n%]b_defaultval.result
+$ [%= command %] ex[%=n%].[%= suffix %]
+Hello Guest!
+.====================
+.#---
+
+% elsif $JS
+
+Yes, by {{,_context['{{/varname/}}'],}}.
+It is able to check whether value is set or not by inspecting special variable '{{,_context,}}' which represents context values.
+
+.? File 'ex[%=n%].[%= suffix %]':
+.-------------------- ex[%=n%].[%= suffix %]
+<?js {{*var user = typeof(_context.user) == 'undefined' ? 'Guest' : _context.user;*}} ?>
+Hello ${{{*user*}}}!
+.--------------------
+
+.? Result:
+.====================
+$ [%= command %] -c 'user:"Tenjin"' ex[%=n%].[%= suffix %]
+Hello Tenjin!
+$ [%= command %] ex[%=n%].[%= suffix %]
+Hello Guest!
+.====================
+
+.#+++
+.? Result:
+.==================== ex[%=n%]a_defaultval.result
+$ [%= command %] -c 'user:"Tenjin"' ex[%=n%].[%= suffix %]
+Hello Tenjin!
+.====================
+
+.==================== ex[%=n%]b_defaultval.result
+$ [%= command %] ex[%=n%].[%= suffix %]
+Hello Guest!
+.====================
+.#---
+
+
+% elsif $PHP
+
+Yes, by {{,$_context['{{/varname/}}'],}}.
+It is able to check whether value is set or not by inspecting special variable '{{,$_context,}}' which represents context values.
+
+.? File 'ex[%=n%].[%= suffix %]':
+.-------------------- ex[%=n%].[%= suffix %]
+<?php {{*$user = array_key_exists('user', $_context) ? $_context['user'] : 'Guest';*}} ?>
+Hello {={{*$user*}}=}!
+.--------------------
+
+.? Result:
+.====================
+$ [%= command %] -c '$user="Tenjin";' ex[%=n%].[%= suffix %]
+Hello Tenjin!
+$ [%= command %] ex[%=n%].[%= suffix %]
+Hello Guest!
+.====================
+
+.#+++
+.? Result:
+.==================== ex[%=n%]a_defaultval.result
+$ [%= command %] -c '$user="Tenjin";' ex[%=n%].[%= suffix %]
+Hello Tenjin!
+.====================
+
+.==================== ex[%=n%]b_defaultval.result
+$ [%= command %] ex[%=n%].[%= suffix %]
+Hello Guest!
+.====================
+.#---
+
+
+% else assert false 
 % end 
 
+
+.######################################################################
+
+
+.$$ Is it able to specify variables passed to template?	| faq-template-args
+
+Yes. You can specify template arguments by '{{,<?[%=pi%] [%=comment%]@ARGS arg1, arg2, arg3 ?>,}}'.
+
+
+% n += 1 
+
+.? File 'ex[%=n%]-layout.[%=suffix%]'
+% if $PYTHON
+.-------------------- ex[%=n%].[%=suffix%]
+<?xml version="1.0 ?>
+{{*<?py #@ARGS x, y ?>*}}
+<p>
+  x = #{x}
+  y = #{y}
+  z = #{z}
+</p>
+.--------------------
+% elsif $RUBY
+.-------------------- ex[%=n%].[%=suffix%]
+<?xml version="1.0 ?>
+{{*<?rb #@ARGS x, y ?>*}}
+<p>
+  x = #{x}
+  y = #{y}
+  z = #{z}
+</p>
+.--------------------
+% elsif $PERL
+.-------------------- ex[%=n%].[%=suffix%]
+<?xml version="1.0 ?>
+{{*<?pl #@ARGS x, y ?>*}}
+<p>
+  x = [=$x=]
+  y = [=$y=]
+  z = [=$z=]
+</p>
+.--------------------
+% elsif $JS
+.-------------------- ex[%=n%].[%=suffix%]
+<?xml version="1.0 ?>
+{{*<?js //@ARGS x, y ?>*}}
+<p>
+  x = #{x}
+  y = #{y}
+  z = #{z}
+</p>
+.--------------------
+% elsif $PHP
+.-------------------- ex[%=n%].[%=suffix%]
+<?xml version="1.0 ?>
+{{*<?php //@ARGS x, y ?>*}}
+<p>
+  x = {==$x=}
+  y = {==$y=}
+  z = {==$z=}
+</p>
+.--------------------
+% else assert false 
+% end 
+
+
+Template arguments line is converted into local variable assignment statements.
+
+.? Source code
+% if $PYTHON
+.==================== ex[%=n%]_template_args.source
+$ [%=command%] -s ex[%=n%].[%=suffix%]
+_buf = []; _buf.extend(('''<?xml version="1.0 ?>\n''', ));
+{{*x = _context.get('x'); y = _context.get('y'); *}}
+_buf.extend(('''<p>
+  x = ''', to_str(x), '''
+  y = ''', to_str(y), '''
+  z = ''', to_str(z), '''
+</p>\n''', ));
+print ''.join(_buf)
+.====================
+% elsif $RUBY
+.==================== ex[%=n%]_template_args.source
+$ [%=command%] -s ex[%=n%].[%=suffix%]
+_buf = '';  _buf << %Q`<?xml version="1.0 ?>\n`
+{{* x = @x; y = @y;*}}
+ _buf << %Q`<p>
+  x = #{x}
+  y = #{y}
+  z = #{z}
+</p>\n`
+_buf.to_s
+.====================
+% elsif $PERL
+.==================== ex[%=n%]_template_args.source
+$ [%=command%] -s ex[%=n%].[%=suffix%]
+my @_buf = (); push(@_buf, q`<?xml version="1.0 ?>
+`, ); my $x = $_context->{x}; my $y = $_context->{y}; 
+push(@_buf, q`<p>
+  x = `, escape($x), q`
+  y = `, escape($y), q`
+  z = `, escape($z), q`
+</p>
+`, ); join('', @_buf);
+.====================
+% elsif $JS
+.==================== ex[%=n%]_template_args.source
+$ [%=command%] -s ex[%=n%].[%=suffix%]
+var _buf = [];  _buf.push('<?xml version="1.0 ?>\n');
+ var x = _context['x']; var y = _context['y'];
+ _buf.push('<p>\n\
+  x = ', x, '\n\
+  y = ', y, '\n\
+  z = ', z, '\n\
+</p>\n');
+_buf.join('')
+.====================
+% elsif $PHP
+.==================== ex[%=n%]_template_args.source
+$ [%=command%] -s ex[%=n%].[%=suffix%]
+<?php  echo '<?xml version="1.0 ?>
+'; $x = @$_context['x']; $y = @$_context['y'];
+echo '<p>
+  x = ', $x, '
+  y = ', $y, '
+  z = ', $z, '
+</p>
+';
+?>
+.====================
+% else assert false 
+% end 
+
+
+Undeclared arguments are not available even when they are passed via context object.
+
+.? Result:
+% if $PYTHON
+.#.==================== ex[%=n%]_template_args.result
+.====================
+$ [%=command%] -c 'x=10; y=20; z=30' ex[%=n%].[%=suffix%]
+  File "ex[%=n%].[%=suffix%]", line 6, in <module>
+    z = #{z}
+NameError: name 'z' is not defined
+.====================
+% elsif $RUBY
+.#.==================== ex[%=n%]_template_args.result
+.====================
+$ [%=command%] -c 'x=10; y=20; z=30' ex[%=n%].[%=suffix%]
+ex[%=n%].[%=suffix%]:6:in `_render': undefined local variable or method `z' for #<Tenjin::Context:0x35a9e4> (NameError)
+.====================
+% elsif $PERL
+.==================== ex[%=n%]_template_args.result
+$ [%=command%] -wc 'x=>10, y=>20' ex[%=n%].[%=suffix%]
+*** Error: ex[%=n%].[%=suffix%]
+Global symbol "$z" requires explicit package name at (eval 4) line 6.
+.====================
+% elsif $JS
+.==================== ex[%=n%]_template_args.result
+$ [%=command%] -c 'x:10, y:20, z:30' ex[%=n%].[%=suffix%]
+*** Error:
+ex[%=n%].[%=suffix%]:3: ReferenceError: "z" is not defined.
+.#ex[%=n%].[%=suffix%]:6: ReferenceError: z is not defined.    # spidermonkey
+.#*** ERROR:
+.#ex[%=n%].[%=suffix%]: z is not defined
+.====================
+% elsif $PHP
+.==================== ex[%=n%]_template_args.result
+$ [%=command%] -c '$x=10; $y=20; $z=30;' ex[%=n%].[%=suffix%]
+<?xml version="1.0 ?>
+<p>
+  x = 10
+  y = 20
+  z = 
+Notice: Undefined variable: z in /usr/local/lib/php/Tenjin.php(497) : eval()'d code on line 6
+
+</p>
+.====================
+% else assert false 
+% end 
+
+
+.######################################################################
+
+
+% if $PYTHON
+
+.$$ I don't like {{,_context.get('var'),}} nor template arguments. Any other solution?	| faq-optional-args
+
+There may be some cases that it is hard to specify all template arguments.
+But {{,_context.get('varname', None),}} is much hard and pain.
+
+One idea is to expand {{,@varname,}} into {{,_context.get('varname', None),}} automaticaly.
+
+
+% n += 1 
+
+.? File 'ex[%=n%]-expandargs.[%=ext%]':
+.-------------------- ex[%=n%]-expandargs.[%=ext%]
+import tenjin
+from tenjin.helpers import *
+import re
+
+def _expand(code):
+    """expand '@var' into '_context.get("var", None)'"""
+    return re.sub(r"@(\w+)", r"_context.get('\1', None)", code)
+
+class MyTemplate(tenjin.Template):
+
+    def add_stmt(self, buf, code):
+        tenjin.Template.add_stmt(self, buf, _expand(code))
+
+    def add_expr(self, buf, code, flag_escape=None):
+        tenjin.Template.add_expr(self, buf, _expand(code), flag_escape)
+
+print("----- script -----")
+print(MyTemplate('ex[%=n%]-expandargs.pyhtml').script)
+
+print("----- result -----")
+tenjin.Engine.templateclass = MyTemplate
+engine = tenjin.Engine()
+html = engine.render('ex[%=n%]-expandargs.[%=suffix%]')
+print(html)
+.--------------------
+
+
+.? File 'ex[%=n%]-expandargs.[%=suffix%]':
+.-------------------- ex[%=n%]-expandargs.[%=suffix%]
+<p>Hello #{{{*@user*}} or 'guest'}!<p>
+<?py if {{*@message*}}: ?>
+<p>#{@message}</p>
+<?py #endif ?>
+.--------------------
+
+
+.? Result:
+.==================== ex[%=n%]-expandargs.result
+$ [%=lang%] ex[%=n%]-expandargs.[%=ext%]
+----- script -----
+_buf.extend(('''<p>Hello ''', to_str({{*_context.get('user', None)*}} or 'guest'), '''!<p>\n''', ));
+if {{*_context.get('message', None)*}}:
+    _buf.extend(('''<p>''', to_str({{*_context.get('message', None)*}}), '''</p>\n''', ));
+#endif
+
+----- result -----
+<p>Hello guest!<p>
+
+.====================
+
+
+% end
+
+
+.######################################################################
 
 
 % if $PYTHON
@@ -855,6 +1040,8 @@ $ [%= command %] -s {{*--escapefunc=escapeHTML*}} ex[%=n%].[%= suffix %]
 % end 
 
 
+.######################################################################
+
 
 % if bufname && !bufname.empty?
 
@@ -865,531 +1052,10 @@ No. Variable name '[%= bufname %]' should not and will never be changed.
 % end
 
 
+.######################################################################
 
-% if $PYTHON
 
-
-.$$ Is it able to specify default value if a variable is not set?	| faq-default-value
-
-Yes. It is able to specify default value by {{,_context.get('{{/varname/}}', {{/defaultvalue/}}),}}.
-
-% n += 1 
-
-.? File 'ex[%=n%].[%= suffix %]':
-.-------------------- ex[%=n%].[%= suffix %]
-Hello ${{{*_context.get('username', 'Guest')*}}}!
-.--------------------
-
-.? Result:
-.====================
-$ [%= command %] -c 'username="Tenjin"' ex[%=n%].[%= suffix %]
-Hello Tenjin!
-$ [%= command %] ex[%=n%].[%= suffix %]
-Hello Guest!
-.====================
-
-.#+++
-.? Result:
-.==================== ex[%=n%]a_defaultval.result
-$ [%= command %] -c 'username="Tenjin"' ex[%=n%].[%= suffix %]
-Hello Tenjin!
-.====================
-
-.==================== ex[%=n%]b_defaultval.result
-$ [%= command %] ex[%=n%].[%= suffix %]
-Hello Guest!
-.====================
-.#---
-
-
-% elsif $RUBY
-
-
-% n += 1 
-
-
-% elsif $PERL
-
-
-.$$ Is it able to specify default value if a variable is not set?	| faq-default-value
-
-Yes, by {{,$_context->{{{/varname/}}},}}.
-It is able to check whether value is set or not by inspecting special variable '{{,$_context,}}' which represents context values.
-
-% n += 1 
-
-.? File 'ex[%=n%].[%= suffix %]':
-.-------------------- ex[%=n%].[%= suffix %]
-<?pl {{*my $user = defined($_context->{'user'}) ? $_context->{'user'} : 'Guest'; *}} ?>
-Hello [={{*$user*}}=]!
-.--------------------
-
-.? Result:
-.====================
-$ [%= command %] -c 'user=>"Tenjin"' ex[%=n%].[%= suffix %]
-Hello Tenjin!
-$ [%= command %] ex[%=n%].[%= suffix %]
-Hello Guest!
-.====================
-
-.#+++
-.? Result:
-.==================== ex[%=n%]a_defaultval.result
-$ [%= command %] -c 'user=>"Tenjin"' ex[%=n%].[%= suffix %]
-Hello Tenjin!
-.====================
-
-.==================== ex[%=n%]b_defaultval.result
-$ [%= command %] ex[%=n%].[%= suffix %]
-Hello Guest!
-.====================
-.#---
-
-
-% elsif $JS
-
-
-.$$ Is it able to specify default value if a variable is not set?	| faq-default-value
-
-Yes, by {{,_context['{{/varname/}}'],}}.
-It is able to check whether value is set or not by inspecting special variable '{{,_context,}}' which represents context values.
-
-% n += 1 
-
-.? File 'ex[%=n%].[%= suffix %]':
-.-------------------- ex[%=n%].[%= suffix %]
-<?js {{*var user = typeof(_context.user) == 'undefined' ? 'Guest' : _context.user;*}} ?>
-Hello ${{{*user*}}}!
-.--------------------
-
-.? Result:
-.====================
-$ [%= command %] -c 'user:"Tenjin"' ex[%=n%].[%= suffix %]
-Hello Tenjin!
-$ [%= command %] ex[%=n%].[%= suffix %]
-Hello Guest!
-.====================
-
-.#+++
-.? Result:
-.==================== ex[%=n%]a_defaultval.result
-$ [%= command %] -c 'user:"Tenjin"' ex[%=n%].[%= suffix %]
-Hello Tenjin!
-.====================
-
-.==================== ex[%=n%]b_defaultval.result
-$ [%= command %] ex[%=n%].[%= suffix %]
-Hello Guest!
-.====================
-.#---
-
-
-% elsif $PHP
-
-
-.$$ Is it able to specify default value if a variable is not set?	| faq-default-value
-
-Yes, by {{,$_context['{{/varname/}}'],}}.
-It is able to check whether value is set or not by inspecting special variable '{{,$_context,}}' which represents context values.
-
-% n += 1 
-
-.? File 'ex[%=n%].[%= suffix %]':
-.-------------------- ex[%=n%].[%= suffix %]
-<?php {{*$user = array_key_exists('user', $_context) ? $_context['user'] : 'Guest';*}} ?>
-Hello {={{*$user*}}=}!
-.--------------------
-
-.? Result:
-.====================
-$ [%= command %] -c '$user="Tenjin";' ex[%=n%].[%= suffix %]
-Hello Tenjin!
-$ [%= command %] ex[%=n%].[%= suffix %]
-Hello Guest!
-.====================
-
-.#+++
-.? Result:
-.==================== ex[%=n%]a_defaultval.result
-$ [%= command %] -c '$user="Tenjin";' ex[%=n%].[%= suffix %]
-Hello Tenjin!
-.====================
-
-.==================== ex[%=n%]b_defaultval.result
-$ [%= command %] ex[%=n%].[%= suffix %]
-Hello Guest!
-.====================
-.#---
-
-
-% else assert false 
-% end 
-
-
-% if $PYTHON
-
-.$$ Is [%=name%] ready for Google App Engine?		| faq-google-appengine
-
-Yes. You can use [%=name%] in Google App Engine (GAE).
-
-Compared to Django template engine, there are some merits to use [%=name%] in Google AppEngine:
-
-.* [%=name%] runs much faster than Django template engine.
-   If you are facing with CPU quota, you should try [%=name%].
-
-.* [%=name%] library is consist of only one file.
-   If you are facing with number of files quota, you should try [%=name%].
-
-The following is an example to use Tenjin in Google AppEngine with memcache.
-
-.? gae-example1.py
-.-------------------- gae-example1.py
-from google.appengine.ext import webapp
-from google.appengine.ext.webapp.util import run_wsgi_app
-
-{{*import tenjin*}}
-{{*from tenjin.helpers import **}}
-{{*shared_cache = tenjin.GaeMemcacheCacheStorage()*}}
-{{*engine = tenjin.Engine(cache=shared_cache)*}}
-
-## it is recommended to configure logging
-import logging
-logging.basicConfig(level=logging.DEBUG)
-{{*tenjin.logger = logging*}}
-
-class MainPage(webapp.RequestHandler):
-  def get(self):
-    context = {'title': 'Tenjin Example',
-               'items': ['<AAA>','B&B','"CCC"'] }
-    {{*html = engine.render("index.pyhtml", context)*}}
-    self.response.out.write(html)
-
-application = webapp.WSGIApplication([('/', MainPage)], debug=True)
-
-def main():
-  run_wsgi_app(application)
-
-if __name__ == "__main__":
-  main()
-.--------------------
-
-% end
-
-
-.$ Template		| faq-template
-
-
-.$$ Is it able to specify variables passed to template?	| faq-template-args
-
-Yes. You can specify template arguments by '{{,<?[%=pi%] [%=comment%]@ARGS arg1, arg2, arg3 ?>,}}'.
-
-
-% n += 1 
-
-.? File 'ex[%=n%]-layout.[%=suffix%]'
-% if $PYTHON
-.-------------------- ex[%=n%].[%=suffix%]
-<?xml version="1.0 ?>
-{{*<?py #@ARGS x, y ?>*}}
-<p>
-  x = #{x}
-  y = #{y}
-  z = #{z}
-</p>
-.--------------------
-% elsif $RUBY
-.-------------------- ex[%=n%].[%=suffix%]
-<?xml version="1.0 ?>
-{{*<?rb #@ARGS x, y ?>*}}
-<p>
-  x = #{x}
-  y = #{y}
-  z = #{z}
-</p>
-.--------------------
-% elsif $PERL
-.-------------------- ex[%=n%].[%=suffix%]
-<?xml version="1.0 ?>
-{{*<?pl #@ARGS x, y ?>*}}
-<p>
-  x = [=$x=]
-  y = [=$y=]
-  z = [=$z=]
-</p>
-.--------------------
-% elsif $JS
-.-------------------- ex[%=n%].[%=suffix%]
-<?xml version="1.0 ?>
-{{*<?js //@ARGS x, y ?>*}}
-<p>
-  x = #{x}
-  y = #{y}
-  z = #{z}
-</p>
-.--------------------
-% elsif $PHP
-.-------------------- ex[%=n%].[%=suffix%]
-<?xml version="1.0 ?>
-{{*<?php //@ARGS x, y ?>*}}
-<p>
-  x = {==$x=}
-  y = {==$y=}
-  z = {==$z=}
-</p>
-.--------------------
-% else assert false 
-% end 
-
-
-Template arguments line is converted into local variable assignment statements.
-
-.? Source code
-% if $PYTHON
-.==================== ex[%=n%]_template_args.source
-$ [%=command%] -s ex[%=n%].[%=suffix%]
-_buf = []; _buf.extend(('''<?xml version="1.0 ?>\n''', ));
-{{*x = _context.get('x'); y = _context.get('y'); *}}
-_buf.extend(('''<p>
-  x = ''', to_str(x), '''
-  y = ''', to_str(y), '''
-  z = ''', to_str(z), '''
-</p>\n''', ));
-print ''.join(_buf)
-.====================
-% elsif $RUBY
-.==================== ex[%=n%]_template_args.source
-$ [%=command%] -s ex[%=n%].[%=suffix%]
-_buf = '';  _buf << %Q`<?xml version="1.0 ?>\n`
-{{* x = @x; y = @y;*}}
- _buf << %Q`<p>
-  x = #{x}
-  y = #{y}
-  z = #{z}
-</p>\n`
-_buf.to_s
-.====================
-% elsif $PERL
-.==================== ex[%=n%]_template_args.source
-$ [%=command%] -s ex[%=n%].[%=suffix%]
-my @_buf = (); push(@_buf, q`<?xml version="1.0 ?>
-`, ); my $x = $_context->{x}; my $y = $_context->{y}; 
-push(@_buf, q`<p>
-  x = `, escape($x), q`
-  y = `, escape($y), q`
-  z = `, escape($z), q`
-</p>
-`, ); join('', @_buf);
-.====================
-% elsif $JS
-.==================== ex[%=n%]_template_args.source
-$ [%=command%] -s ex[%=n%].[%=suffix%]
-var _buf = [];  _buf.push('<?xml version="1.0 ?>\n');
- var x = _context['x']; var y = _context['y'];
- _buf.push('<p>\n\
-  x = ', x, '\n\
-  y = ', y, '\n\
-  z = ', z, '\n\
-</p>\n');
-_buf.join('')
-.====================
-% elsif $PHP
-.==================== ex[%=n%]_template_args.source
-$ [%=command%] -s ex[%=n%].[%=suffix%]
-<?php  echo '<?xml version="1.0 ?>
-'; $x = @$_context['x']; $y = @$_context['y'];
-echo '<p>
-  x = ', $x, '
-  y = ', $y, '
-  z = ', $z, '
-</p>
-';
-?>
-.====================
-% else assert false 
-% end 
-
-
-Undeclared arguments are not available even when they are passed via context object.
-
-.? Result:
-% if $PYTHON
-.#.==================== ex[%=n%]_template_args.result
-.====================
-$ [%=command%] -c 'x=10; y=20; z=30' ex[%=n%].[%=suffix%]
-  File "ex[%=n%].[%=suffix%]", line 6, in <module>
-    z = #{z}
-NameError: name 'z' is not defined
-.====================
-% elsif $RUBY
-.#.==================== ex[%=n%]_template_args.result
-.====================
-$ [%=command%] -c 'x=10; y=20; z=30' ex[%=n%].[%=suffix%]
-ex[%=n%].[%=suffix%]:6:in `_render': undefined local variable or method `z' for #<Tenjin::Context:0x35a9e4> (NameError)
-.====================
-% elsif $PERL
-.==================== ex[%=n%]_template_args.result
-$ [%=command%] -wc 'x=>10, y=>20' ex[%=n%].[%=suffix%]
-*** Error: ex[%=n%].[%=suffix%]
-Global symbol "$z" requires explicit package name at (eval 4) line 6.
-.====================
-% elsif $JS
-.==================== ex[%=n%]_template_args.result
-$ [%=command%] -c 'x:10, y:20, z:30' ex[%=n%].[%=suffix%]
-*** Error:
-ex[%=n%].[%=suffix%]:3: ReferenceError: "z" is not defined.
-.#ex[%=n%].[%=suffix%]:6: ReferenceError: z is not defined.    # spidermonkey
-.#*** ERROR:
-.#ex[%=n%].[%=suffix%]: z is not defined
-.====================
-% elsif $PHP
-.==================== ex[%=n%]_template_args.result
-$ [%=command%] -c '$x=10; $y=20; $z=30;' ex[%=n%].[%=suffix%]
-<?xml version="1.0 ?>
-<p>
-  x = 10
-  y = 20
-  z = 
-Notice: Undefined variable: z in /usr/local/lib/php/Tenjin.php(497) : eval()'d code on line 6
-
-</p>
-.====================
-% else assert false 
-% end 
-
-
-% if $PYTHON
-
-.$$ It is hard to specify all template arguments. Any good idea?	| faq-optional-args
-
-There may be some cases that it is hard to specify all template arguments.
-But {{,_context.get('varname', None),}} is much hard and pain.
-
-One idea is to expand {{,@varname,}} into {{,_context.get('varname', None),}} automaticaly.
-
-
-% n += 1 
-
-.? File 'ex[%=n%]-expandargs.[%=ext%]':
-.-------------------- ex[%=n%]-expandargs.[%=ext%]
-import tenjin
-from tenjin.helpers import *
-import re
-
-def _expand(code):
-    """expand '@var' into '_context.get("var", None)'"""
-    return re.sub(r"@(\w+)", r"_context.get('\1', None)", code)
-
-class MyTemplate(tenjin.Template):
-
-    def add_stmt(self, buf, code):
-        tenjin.Template.add_stmt(self, buf, _expand(code))
-
-    def add_expr(self, buf, code, flag_escape=None):
-        tenjin.Template.add_expr(self, buf, _expand(code), flag_escape)
-
-print("----- script -----")
-print(MyTemplate('ex[%=n%]-expandargs.pyhtml').script)
-
-print("----- result -----")
-tenjin.Engine.templateclass = MyTemplate
-engine = tenjin.Engine()
-html = engine.render('ex[%=n%]-expandargs.[%=suffix%]')
-print(html)
-.--------------------
-
-
-.? File 'ex[%=n%]-expandargs.[%=suffix%]':
-.-------------------- ex[%=n%]-expandargs.[%=suffix%]
-<p>Hello #{{{*@user*}} or 'guest'}!<p>
-<?py if {{*@message*}}: ?>
-<p>#{@message}</p>
-<?py #endif ?>
-.--------------------
-
-
-.? Result:
-.==================== ex[%=n%]-expandargs.result
-$ [%=lang%] ex[%=n%]-expandargs.[%=ext%]
------ script -----
-_buf.extend(('''<p>Hello ''', to_str({{*_context.get('user', None)*}} or 'guest'), '''!<p>\n''', ));
-if {{*_context.get('message', None)*}}:
-    _buf.extend(('''<p>''', to_str({{*_context.get('message', None)*}}), '''</p>\n''', ));
-#endif
-
------ result -----
-<p>Hello guest!<p>
-
-.====================
-
-
-% end
-
-
-% if $RUBY
-
-.$$ Is there any way to use eRuby template?	| faq-eruby-template
-
-Yes. It is able to use eRuby template files by Tenjin::ErubisTemplate class.
-
-It is required to install {{<Erubis|http://www.kuwata-lab.com/erubis>}} to use Tenjin::ErubisTemplate class.
-
-% n += 1 
-
-.? File 'ex[%=n%]-layout.rhtml'
-.-------------------- ex[%=n%]-layout.rhtml
-<html>
- <body>
-  <h1>{{*<%=h @title %>*}}</h1>
-{{*<%= @_content %>*}}
- </body>
-</html>
-.--------------------
-
-.? File 'ex[%=n%]-content.rhtml'
-.-------------------- ex[%=n%]-content.rhtml
-  {{*<% @title = 'eRuby template example' %>*}}
-  <ul>
-  {{*<% for item in @items %>*}}
-   <li>{{*<%=h item %>*}}</li>
-  {{*<% end %>*}}
-  </ul>
-.--------------------
-
-.? File 'ex[%=n%]-main.rb':
-.-------------------- ex[%=n%].rb
-{{*require 'erubis'*}}
-require 'tenjin'
-
-include Erubis::XmlHelper
-
-context = { :items => ['<AAA>', 'B&B', '"CCC"'] }
-engine = Tenjin::Engine.new(:layout=>'ex[%=n%]-layout.rhtml',
-                           {{*:templateclass=>Tenjin::ErubisTemplate*}})
-output = engine.render('ex[%=n%]-content.rhtml', context)
-print output
-.--------------------
-
-.? Result:
-.==================== ex[%=n%]_eruby.result
-$ [%=lang%] ex[%=n%].rb
-<html>
- <body>
-  <h1>eRuby template example</h1>
-  <ul>
-   <li>&lt;AAA&gt;</li>
-   <li>B&amp;B</li>
-   <li>&quot;CCC&quot;</li>
-  </ul>
-
- </body>
-</html>
-.====================
-
-% end 
-
-
-
-.$$ Is it able to change embedded expression pattern?	| faq-exprpat
+.$$ Can I change embedded expression pattern?	| faq-exprpat
 
 Yes, you can create subclass of Template class and override embedded expression pattern.
 
@@ -1670,21 +1336,374 @@ $ [%=lang%] ex[%=n%]-expr-pattern.[%=pi%]
 % end
 
 
-
-.$$ Does [%= name %] support M17N?	| faq-m17n
-
-No. [%=name%] doesn't provide M17 feature.
-
-[%= name %] doesn't provide M17N feature directly because requirements for M17N are
-different for each applications or frameworks.
-Some applications or frameworks adapt GetText library and others use their original M17N library.
-What [%= name %] should do is not to provide M17N feature but to show an example to support M17N.
-
-But using preprocessing, you can make your M17N template files much faster.
-See the next section for details.
+.######################################################################
 
 
-.$$ Is it possible to create separated template chaches for each language? | faq-m17n-cache
+% if $RUBY
+
+.$$ Is there any way to use eRuby template?	| faq-eruby-template
+
+Yes. It is able to use eRuby template files by Tenjin::ErubisTemplate class.
+
+It is required to install {{<Erubis|http://www.kuwata-lab.com/erubis>}} to use Tenjin::ErubisTemplate class.
+
+% n += 1 
+
+.? File 'ex[%=n%]-layout.rhtml'
+.-------------------- ex[%=n%]-layout.rhtml
+<html>
+ <body>
+  <h1>{{*<%=h @title %>*}}</h1>
+{{*<%= @_content %>*}}
+ </body>
+</html>
+.--------------------
+
+.? File 'ex[%=n%]-content.rhtml'
+.-------------------- ex[%=n%]-content.rhtml
+  {{*<% @title = 'eRuby template example' %>*}}
+  <ul>
+  {{*<% for item in @items %>*}}
+   <li>{{*<%=h item %>*}}</li>
+  {{*<% end %>*}}
+  </ul>
+.--------------------
+
+.? File 'ex[%=n%]-main.rb':
+.-------------------- ex[%=n%].rb
+{{*require 'erubis'*}}
+require 'tenjin'
+
+include Erubis::XmlHelper
+
+context = { :items => ['<AAA>', 'B&B', '"CCC"'] }
+engine = Tenjin::Engine.new(:layout=>'ex[%=n%]-layout.rhtml',
+                           {{*:templateclass=>Tenjin::ErubisTemplate*}})
+output = engine.render('ex[%=n%]-content.rhtml', context)
+print output
+.--------------------
+
+.? Result:
+.==================== ex[%=n%]_eruby.result
+$ [%=lang%] ex[%=n%].rb
+<html>
+ <body>
+  <h1>eRuby template example</h1>
+  <ul>
+   <li>&lt;AAA&gt;</li>
+   <li>B&amp;B</li>
+   <li>&quot;CCC&quot;</li>
+  </ul>
+
+ </body>
+</html>
+.====================
+
+% end 
+
+
+% if $PYTHON
+
+.$$ Is there any way to 'escape' or 'remove' newline at the end of line?	| faq-escape-newline
+
+Yes, but it is not beautiful very much.
+
+% n += 1 
+
+Assume that you want to generate CSV file.
+The following is a wrong example.
+
+.? File 'ex[%=n%]a.pycsv': (wrong)
+.-------------------- ex[%=n%]a.pycsv
+<?py 
+table = [
+  ( "A",  10,  20,  30, ),
+  ( "B",  11,  21,  31, ),
+  ( "C",  12,  22,  23, ),
+]
+?>
+<?py for line in table: ?>
+<?py     sep = '' ?>
+<?py     for cell in line: ?>
+#{sep}#{cell}
+<?py         sep = ', ' ?>
+<?py     #end ?>
+<?py #end ?>
+.--------------------
+
+.? Result: (wrong)
+.==================== ex[%=n%]a_pycsv.result
+$ [%= command %] ex[%=n%]a.pycsv
+A
+, 10
+, 20
+, 30
+B
+, 11
+, 21
+, 31
+C
+, 12
+, 22
+, 23
+.====================
+
+The following is corrected template.
+
+.? File 'ex[%=n%]b.pycsv':
+.-------------------- ex[%=n%]b.pycsv
+<?py 
+table = [
+  ( "A",  10,  20,  30, ),
+  ( "B",  11,  21,  31, ),
+  ( "C",  12,  22,  23, ),
+]
+?>
+<?py
+for line in table:
+    sep = ''
+    for cell in line:
+?>#{sep}#{cell}<?py
+        sep = ', '
+    #end
+?>
+
+<?py
+#end
+?>
+.--------------------
+
+.? Result:
+.==================== ex[%=n%]b_pycsv.result
+$ [%= command %] ex[%=n%]b.pycsv
+A, 10, 20, 30
+B, 11, 21, 31
+C, 12, 22, 23
+.====================
+
+But it is a little complex and not beautiful.
+In this case, you may prefer to use '_buf' variable directly.
+
+.? File 'ex[%=n%]c.pycsv':
+.-------------------- ex[%=n%]c.pycsv
+<?py 
+table = [
+  ( "A",  10,  20,  30),
+  ( "B",  11,  21,  31),
+  ( "C",  12,  22,  23),
+]
+?>
+<?py
+for line in table:
+    sep = ''
+    for cell in line:
+        if sep: _buf.append(sep)
+	_buf.append(to_str(cell))
+	sep = ', '
+    #end
+    _buf.append("\n")
+#end
+?>
+.--------------------
+
+.? Result:
+.==================== ex[%=n%]c_pycsv.result
+$ [%= command %] ex[%=n%]c.pycsv
+A, 10, 20, 30
+B, 11, 21, 31
+C, 12, 22, 23
+.====================
+
+% elsif $RUBY
+
+% elsif $PERL
+
+% elsif $JS
+
+% elsif $PHP
+
+% else assert false 
+% end 
+
+
+.######################################################################
+
+
+% if $PYTHON|| $RUBY|| $JS
+
+.$$ '#{[%= prefix %]_content}' includes extra newline at end. Can I delete it?	| faq-delete-newline
+
+% elsif $PERL
+
+.$$ '[== $_content =]' includes extra newline at end. Can I delete it?	| faq-delete-newline
+
+% elsif $PHP
+
+.$$ '{== $_content =}' includes extra newline at end. Can I delete it?	| faq-delete-newline
+
+% else assert false 
+% end 
+
+
+% if $PYTHON
+Yes. You can use '{{,<?py echo(_content) ?>,}}' or '{{,<?py _buf.append(_content),}} ?>' instead of '{{,#{_content},}}'.
+% elsif $RUBY
+Yes. You can use '{{,<?rb echo(@_content) ?>,}}' or '{{,<?rb _buf << @_content ?>,}}' instead of '{{,#{@_conent},}}'.
+% elsif $PERL
+Yes. You can use '<?pl echo($_content); ?>' or '{{,<?pl push(@_buf, $_context); ?>,}} or '{{,[== $_context ==],}}' instead of '{{,[== $_context =],}}'.
+% elsif $JS
+Yes. You can use '{{,<?js echo(_content); ?>,}}' or '{{,<?js _buf.push(_content); ?>,}}' instead of '{{,#{_conent},}}'.
+% elsif $PHP
+Yes. You can use '<?php echo($_content); ?>' instead of '{{,[== $_context =],}}'.
+% else assert false 
+% end 
+
+% n += 1 
+
+.? File 'ex[%=n%]-layout.[%= suffix %]':
+.-------------------- ex[%=n%]-layout.[%= suffix %]
+<!-- -->
+% if $PYTHON
+{{*#{[%= prefix %]_content}*}}
+% elsif $RUBY
+{{*#{[%= prefix %]_content}*}}
+% elsif $PERL
+{{*[== $_content =]*}}
+% elsif $JS
+{{*#{[%= prefix %]_content}*}}
+% elsif $PHP
+{{*{== $_content =}*}}
+% else assert false 
+% end 
+<!-- -->
+
+<!-- -->
+% if $PYTHON
+{{*<?py echo(_content) ?>*}}
+% elsif $RUBY
+{{*<?rb echo(@_content) ?>*}}
+% elsif $PERL
+{{*[== $_content ==]*}}
+% elsif $JS
+{{*<?js echo(_content); ?>*}}
+% elsif $PHP
+{{*<?php echo($_content); ?>*}}
+% else assert false 
+% end 
+<!-- -->
+% if !$PHP
+
+<!-- -->
+% if $PYTHON
+{{*<?py _buf.append(_content) ?>*}}
+% elsif $RUBY
+{{*<?rb _buf << @_content ?>*}}
+% elsif $PERL
+{{*<?pl push(@_buf, $_content); ?>*}}
+% elsif $JS
+{{*<?js _buf.push(_content); ?>*}}
+% else assert false 
+% end 
+<!-- -->
+% end
+.--------------------
+
+.? File 'ex[%=n%]-content.[%= suffix %]':
+.-------------------- ex[%=n%]-content.[%= suffix %]
+foo
+bar
+baz
+.--------------------
+
+.? Result:
+.==================== ex[%=n%]_removenl.result
+$ [%= command %] --layout=ex[%=n%]-layout.[%= suffix %] ex[%=n%]-content.[%= suffix %]
+<!-- -->
+foo
+bar
+baz
+
+<!-- -->
+
+<!-- -->
+foo
+bar
+baz
+<!-- -->
+% if !$PHP
+
+<!-- -->
+foo
+bar
+baz
+<!-- -->
+%end
+.====================
+
+
+% if $PYTHON
+
+[experimental] If you pass 'smarttrim=True' option to tenjin.Template() or tenjin.Engine(),
+"\n#{expr}\n" will be trimmed into "\n#{expr}".
+And command-line option '--smarttrim' is the same as 'smarttrim=True' option.
+
+The following example shows that an empty line is not appread when '--smarttrim' is specified.
+
+.? Result:
+.==================== ex[%=n%]_smarttrim.result
+$ [%= command %] {{*--smarttrim*}} --layout=ex[%=n%]-layout.[%= suffix %] ex[%=n%]-content.[%= suffix %]
+<!-- -->
+foo
+bar
+baz
+<!-- -->
+
+<!-- -->
+foo
+bar
+baz
+<!-- -->
+
+<!-- -->
+foo
+bar
+baz
+<!-- -->
+.====================
+
+.#.? File 'ex[%=n%]-layout2.[%= suffix %]':
+.#.-------------------- ex[%=n%]-layout.[%= suffix %]
+.#<!-- -->
+.#{{*#{_buf.append(_content)}*}}
+.#<!-- -->
+.#.--------------------
+.#
+.#.? File 'ex[%=n%].py':
+.#.-------------------- ex[%=n%].py
+.#import tenjin
+.#from tenjin.helpers import *  # or escape, to_str
+.#engine = tenjin.Engine({{*smarttrim=True*}})
+.#output = engine.render('ex-[%=n%].[%=suffix%]', layout='ex[%=n%]-layout2.[%=suffix%]')
+.#print output,
+.#.--------------------
+.#
+.#.? Result (notice that empty line is not appeard!):
+.#.====================
+.#$ [%=lang%] ex[%=n%].py
+.#<!-- -->
+.#foo
+.#bar
+.#baz
+.#<!-- -->
+.#.====================
+
+% end 
+
+
+.######################################################################
+
+
+.$$ Is it possible to create separated template caches for each language? | faq-m17n-cache
 
 Yes.
 
@@ -2261,9 +2280,13 @@ $ [%= lang %] ex[%=n%]-m18n.[%=pi%]
 % end
 
 
+.######################################################################
+
 
 .$ Layout Template	| faq-layout
 
+
+.######################################################################
 
 
 .$$ Can I change layout template name in a template file?	| faq-change-layout-template
@@ -2279,6 +2302,8 @@ its value is regarded as layout template name.
 
 See the next section for details.
 
+
+.######################################################################
 
 
 .$$ Can I nest layout templates for any depth?		| faq-nested-layout-template
@@ -2480,6 +2505,7 @@ baz
 .====================
 
 
+.######################################################################
 
 
 .$$ Can I disable default layout template for a certain template?	| faq-diable-layout
@@ -2488,6 +2514,7 @@ baz
 Yes. If you set [%= FALSE %] to [%= layout_varname %], default layout template will not be applied.
 
 
+.######################################################################
 
 
 .$$ Is Django-like "Template Inheritance" supported?	| faq-template-inheritance
@@ -2969,10 +2996,15 @@ $ [%= command %] -c '$items=array("AAA","BBB","CCC");' ex[%=n%]-content.[%= suff
 
 
 
+.######################################################################
+
 
 % if $PYTHON
 
 .$ Encoding	| faq-encoding
+
+
+.######################################################################
 
 
 .$$ How to specify template encoding?		| faq-template-encoding
@@ -2993,6 +3025,8 @@ See {{<User's Guide|users-guide.html#dev-encoding>}} for details.
 In Python 3.0, [%=name%] supports only unicode-based approach because str object represents unicode.
 
 
+.######################################################################
+
 
 .$$ Can I specify encoding name in template file?	| faq-encoding-decl
 
@@ -3011,6 +3045,8 @@ s2 = ${s2}  # OK
 .--------------------
 
 
+.######################################################################
+
 
 .$$ I got 'SyntaxError: encoding declaration in Unicode string'	| faq-encoding-syntaxerr
 
@@ -3021,6 +3057,8 @@ Solution:
 .* If you specify encoding option to tenjin.Engine() or tenjin.Template(), remove encoding declaration from your template file.
 .* If you want to add encoding declaration into your template file, don't specify encoding option to tenjin.Engine() or tenjin.Template().
 
+
+.######################################################################
 
 
 .$$ I got UnicodeDecodeError, but I can't find what is wrong  | faq-encoding-unicodedecodeerror
@@ -3059,8 +3097,13 @@ If you got UnicodeDecodeError, you should do the following solutions.
 % end 
 
 
+.######################################################################
+
 
 .$ Preprocessing	| faq-preprocessing
+
+
+.######################################################################
 
 
 .$$ What is preprocessing?	| faq-what-is-pp
@@ -3090,6 +3133,9 @@ statements                   .,  <?[%=pi%] ... ?>       .,  <?[%=PI%] ... ?>
 expression (with escape)     .,  [%= embexpr!('...') %] .,  [%= ppexpr!('...') %]
 expression (without escape)  .,  [%= embexpr('...') %]  .,  [%= ppexpr('...') %]
 .+============================================================
+
+
+.######################################################################
 
 
 .$$ What is the merit of preprocessing?		| faq-pp-merit
@@ -3161,6 +3207,9 @@ output:
 .--------------------
 
 In the result, rendering template will be much faster because function evaluation is eliminated when rendering.
+
+
+.######################################################################
 
 
 .$$ Is there any examples of preprocessing?    | faq-pp-examples
@@ -3945,8 +3994,13 @@ See {{<this section|#faq-m17n-cache>}} for M17N example using preprocessing.
 
 
 
+.######################################################################
+
+
 .$ Performance		| faq-performance
 
+
+.######################################################################
 
 
 .$$ How fast is [%= name %] compared with other solutions?	| faq-how-fast
@@ -4135,6 +4189,9 @@ This is important for CGI program.
 Other solutions may be very heavy to import the module and suitable only for apache module or FastCGI.
 
 
+.######################################################################
+
+
 .$$ Why [%=name%] is so fast?	     	    	| faq-why-so-fast
 
 Because it doesn't use template engine original language.
@@ -4151,6 +4208,9 @@ In addition, [%=name%] is faster than Jakarta Velocity which is a very popular t
 
 Template engine should use their host language directly unless there are some kind of reasons.
 
+
+
+.######################################################################
 
 
 % if ! $JS && !$PHP
