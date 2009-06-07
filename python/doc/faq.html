@@ -30,15 +30,7 @@
           <ul>
             <li><a href="#faq-syntax-error">I got an SyntaxError exception.</a></li>
 
-            <li><a href="#faq-escape-newline">Is there any way to 'escape' or 'remove' newline at the end of line?</a></li>
-
-            <li><a href="#faq-delete-newline">'#{_content}' includes extra newline at end. Can I delete it?</a></li>
-
-            <li><a href="#faq-change-funcname">Can I change 'escape()' and 'to_str()' function name?</a></li>
-
-            <li><a href="#faq-change-bufname">Can I change '_buf' variable name?</a></li>
-
-            <li><a href="#faq-default-value">Is it able to specify default value if a variable is not set?</a></li>
+            <li><a href="#faq-m17n">Does pyTenjin support M17N?</a></li>
 
             <li><a href="#faq-google-appengine">Is pyTenjin ready for Google App Engine?</a></li>
           </ul>
@@ -48,15 +40,25 @@
           <a href="#faq-template">Template</a>
 
           <ul>
+            <li><a href="#faq-default-value">Is it able to specify default value when variable is not set?</a></li>
+
             <li><a href="#faq-template-args">Is it able to specify variables passed to template?</a></li>
 
-            <li><a href="#faq-optional-args">It is hard to specify all template arguments. Any good idea?</a></li>
+            <li><a href="#faq-optional-args">I don't like <code>_context.get('var')</code> nor template arguments. Any other solution?</a></li>
 
-            <li><a href="#faq-exprpat">Is it able to change embedded expression pattern?</a></li>
+            <li><a href="#faq-change-funcname">Can I change 'escape()' and 'to_str()' function name?</a></li>
 
-            <li><a href="#faq-m17n">Does pyTenjin support M17N?</a></li>
+            <li><a href="#faq-change-bufname">Can I change '_buf' variable name?</a></li>
 
-            <li><a href="#faq-m17n-cache">Is it possible to create separated template chaches for each language?</a></li>
+            <li><a href="#faq-exprpat">Can I change embedded expression pattern?</a></li>
+
+            <li><a href="#faq-flexibleindent">Is it possible to change indent restriction more flexible?</a></li>
+
+            <li><a href="#faq-escape-newline">Is there any way to 'escape' or 'remove' newline at the end of line?</a></li>
+
+            <li><a href="#faq-delete-newline">'#{_content}' includes extra newline at end. Can I delete it?</a></li>
+
+            <li><a href="#faq-m17n-cache">Is it possible to create separated template caches for each language?</a></li>
           </ul>
         </li>
 
@@ -151,285 +153,15 @@ ex1.pyhtml:4:9: invalid syntax
   4:     else
              ^
 </pre><br>
-      <a name="faq-escape-newline" id="faq-escape-newline"></a>
+      <a name="faq-m17n" id="faq-m17n"></a>
 
-      <h3 class="section2">Is there any way to 'escape' or 'remove' newline at the end of line?</h3>
+      <h3 class="section2">Does pyTenjin support M17N?</h3>
 
-      <p>Yes, but it is not beautiful very much.</p>
+      <p>No. pyTenjin doesn't provide M17 feature.</p>
 
-      <p>Assume that you want to generate CSV file. The following is a wrong example.</p><a name="ex2a.pycsv" id="ex2a.pycsv"></a>
+      <p>pyTenjin doesn't provide M17N feature directly because requirements for M17N are different for each applications or frameworks. Some applications or frameworks adapt GetText library and others use their original M17N library. What pyTenjin should do is not to provide M17N feature but to show an example to support M17N.</p>
 
-      <div class="program_caption">
-        File 'ex2a.pycsv': (wrong)
-      </div>
-      <pre class="program">
-&lt;?py 
-table = [
-  ( "A",  10,  20,  30, ),
-  ( "B",  11,  21,  31, ),
-  ( "C",  12,  22,  23, ),
-]
-?&gt;
-&lt;?py for line in table: ?&gt;
-&lt;?py     sep = '' ?&gt;
-&lt;?py     for cell in line: ?&gt;
-#{sep}#{cell}
-&lt;?py         sep = ', ' ?&gt;
-&lt;?py     #end ?&gt;
-&lt;?py #end ?&gt;
-</pre><a name="ex2a_pycsv.result" id="ex2a_pycsv.result"></a>
-
-      <div class="terminal_caption">
-        Result: (wrong)
-      </div>
-      <pre class="terminal">
-$ pytenjin ex2a.pycsv
-A
-, 10
-, 20
-, 30
-B
-, 11
-, 21
-, 31
-C
-, 12
-, 22
-, 23
-</pre>
-
-      <p>The following is corrected template.</p><a name="ex2b.pycsv" id="ex2b.pycsv"></a>
-
-      <div class="program_caption">
-        File 'ex2b.pycsv':
-      </div>
-      <pre class="program">
-&lt;?py 
-table = [
-  ( "A",  10,  20,  30, ),
-  ( "B",  11,  21,  31, ),
-  ( "C",  12,  22,  23, ),
-]
-?&gt;
-&lt;?py
-for line in table:
-    sep = ''
-    for cell in line:
-?&gt;#{sep}#{cell}&lt;?py
-        sep = ', '
-    #end
-?&gt;
-
-&lt;?py
-#end
-?&gt;
-</pre><a name="ex2b_pycsv.result" id="ex2b_pycsv.result"></a>
-
-      <div class="terminal_caption">
-        Result:
-      </div>
-      <pre class="terminal">
-$ pytenjin ex2b.pycsv
-A, 10, 20, 30
-B, 11, 21, 31
-C, 12, 22, 23
-</pre>
-
-      <p>But it is a little complex and not beautiful. In this case, you may prefer to use '_buf' variable directly.</p><a name="ex2c.pycsv" id="ex2c.pycsv"></a>
-
-      <div class="program_caption">
-        File 'ex2c.pycsv':
-      </div>
-      <pre class="program">
-&lt;?py 
-table = [
-  ( "A",  10,  20,  30),
-  ( "B",  11,  21,  31),
-  ( "C",  12,  22,  23),
-]
-?&gt;
-&lt;?py
-for line in table:
-    sep = ''
-    for cell in line:
-        if sep: _buf.append(sep)
-        _buf.append(to_str(cell))
-        sep = ', '
-    #end
-    _buf.append("\n")
-#end
-?&gt;
-</pre><a name="ex2c_pycsv.result" id="ex2c_pycsv.result"></a>
-
-      <div class="terminal_caption">
-        Result:
-      </div>
-      <pre class="terminal">
-$ pytenjin ex2c.pycsv
-A, 10, 20, 30
-B, 11, 21, 31
-C, 12, 22, 23
-</pre><br>
-      <a name="faq-delete-newline" id="faq-delete-newline"></a>
-
-      <h3 class="section2">'#{_content}' includes extra newline at end. Can I delete it?</h3>
-
-      <p>Yes. You can use '<code>&lt;?py echo(_content) ?&gt;</code>' or '<code>&lt;?py _buf.append(_content)</code> ?&gt;' instead of '<code>#{_content}</code>'.</p><a name="ex3-layout.pyhtml" id="ex3-layout.pyhtml"></a>
-
-      <div class="program_caption">
-        File 'ex3-layout.pyhtml':
-      </div>
-      <pre class="program">
-&lt;!-- --&gt;
-<strong>#{_content}</strong>
-&lt;!-- --&gt;
-
-&lt;!-- --&gt;
-<strong>&lt;?py echo(_content) ?&gt;</strong>
-&lt;!-- --&gt;
-
-&lt;!-- --&gt;
-<strong>&lt;?py _buf.append(_content) ?&gt;</strong>
-&lt;!-- --&gt;
-</pre><a name="ex3-content.pyhtml" id="ex3-content.pyhtml"></a>
-
-      <div class="program_caption">
-        File 'ex3-content.pyhtml':
-      </div>
-      <pre class="program">
-foo
-bar
-baz
-</pre><a name="ex3_removenl.result" id="ex3_removenl.result"></a>
-
-      <div class="terminal_caption">
-        Result:
-      </div>
-      <pre class="terminal">
-$ pytenjin --layout=ex3-layout.pyhtml ex3-content.pyhtml
-&lt;!-- --&gt;
-foo
-bar
-baz
-
-&lt;!-- --&gt;
-
-&lt;!-- --&gt;
-foo
-bar
-baz
-&lt;!-- --&gt;
-
-&lt;!-- --&gt;
-foo
-bar
-baz
-&lt;!-- --&gt;
-</pre>
-
-      <p>[experimental] If you pass 'smarttrim=True' option to tenjin.Template() or tenjin.Engine(), "\n#{expr}\n" will be trimmed into "\n#{expr}". And command-line option '--smarttrim' is the same as 'smarttrim=True' option.</p>
-
-      <p>The following example shows that an empty line is not appread when '--smarttrim' is specified.</p><a name="ex3_smarttrim.result" id="ex3_smarttrim.result"></a>
-
-      <div class="terminal_caption">
-        Result:
-      </div>
-      <pre class="terminal">
-$ pytenjin <strong>--smarttrim</strong> --layout=ex3-layout.pyhtml ex3-content.pyhtml
-&lt;!-- --&gt;
-foo
-bar
-baz
-&lt;!-- --&gt;
-
-&lt;!-- --&gt;
-foo
-bar
-baz
-&lt;!-- --&gt;
-
-&lt;!-- --&gt;
-foo
-bar
-baz
-&lt;!-- --&gt;
-</pre><br>
-      <a name="faq-change-funcname" id="faq-change-funcname"></a>
-
-      <h3 class="section2">Can I change 'escape()' and 'to_str()' function name?</h3>
-
-      <p>Yes. You can change them by setting 'escapefunc' and 'tostrfunc' options for tenjin.Template() or tenjin.Engine().</p><a name="ex4.py" id="ex4.py"></a>
-
-      <div class="program_caption">
-        File 'ex4.py':
-      </div>
-      <pre class="program">
-import tenjin
-engine = tenjin.Engine(<strong>escapefunc='cgi.escape'</strong>, <strong>tostrfunc='str'</strong>)
-template = engine.get_template('ex4.pyhtml')
-print template.script,
-</pre><a name="ex4.pyhtml" id="ex4.pyhtml"></a>
-
-      <div class="program_caption">
-        File 'ex4.pyhtml':
-      </div>
-      <pre class="program">
-Hello ${name}!
-&lt;?py for item in items: ?&gt;
-#{item}
-&lt;?py #end ?&gt;
-</pre><a name="ex4_escapefunc1.result" id="ex4_escapefunc1.result"></a>
-
-      <div class="program_caption">
-        Result:
-      </div>
-      <pre class="program">
-$ python ex4.py
-_buf.extend(('''Hello ''', <strong>cgi.escape</strong>(<strong>str</strong>(name)), '''!\n''', ));
-for item in items:
-    _buf.extend((<strong>str</strong>(item), '''\n''', ));
-#end
-</pre>
-
-      <p>Command-line option '--escapefunc=<em>name</em>' and '--tostrfunc=<em>name</em>' is equivarent to the above.</p><a name="ex4_escapefunc2.result" id="ex4_escapefunc2.result"></a>
-
-      <div class="program_caption">
-        Result:
-      </div>
-      <pre class="program">
-$ pytenjin -sb <strong>--escapefunc=cgi.escape</strong> <strong>--tostrfunc=str</strong> ex4.pyhtml
-_buf.extend(('''Hello ''', <strong>cgi.escape</strong>(<strong>str</strong>(name)), '''!\n''', ));
-for item in items:
-    _buf.extend((<strong>str</strong>(item), '''\n''', ));
-#end
-</pre><br>
-      <a name="faq-change-bufname" id="faq-change-bufname"></a>
-
-      <h3 class="section2">Can I change '_buf' variable name?</h3>
-
-      <p>No. Variable name '_buf' should not and will never be changed.</p><br>
-      <a name="faq-default-value" id="faq-default-value"></a>
-
-      <h3 class="section2">Is it able to specify default value if a variable is not set?</h3>
-
-      <p>Yes. It is able to specify default value by <code>_context.get('<em>varname</em>', <em>defaultvalue</em>)</code>.</p><a name="ex5.pyhtml" id="ex5.pyhtml"></a>
-
-      <div class="program_caption">
-        File 'ex5.pyhtml':
-      </div>
-      <pre class="program">
-Hello ${<strong>_context.get('username', 'Guest')</strong>}!
-</pre>
-
-      <div class="terminal_caption">
-        Result:
-      </div>
-      <pre class="terminal">
-$ pytenjin -c 'username="Tenjin"' ex5.pyhtml
-Hello Tenjin!
-$ pytenjin ex5.pyhtml
-Hello Guest!
-</pre><br>
+      <p>But using preprocessing, you can make your M17N template files much faster. See <a href="#faq-m17n-cache">this section</a> for details.</p><br>
       <a name="faq-google-appengine" id="faq-google-appengine"></a>
 
       <h3 class="section2">Is pyTenjin ready for Google App Engine?</h3>
@@ -483,14 +215,36 @@ if __name__ == "__main__":
       <br>
       <a name="faq-template" id="faq-template"></a>
 
-      <h2 class="section1">Template</h2><a name="faq-template-args" id="faq-template-args"></a>
+      <h2 class="section1">Template</h2><a name="faq-default-value" id="faq-default-value"></a>
+
+      <h3 class="section2">Is it able to specify default value when variable is not set?</h3>
+
+      <p>Yes. It is able to specify default value by <code>_context.get('<em>varname</em>', <em>defaultvalue</em>)</code>.</p><a name="ex2.pyhtml" id="ex2.pyhtml"></a>
+
+      <div class="program_caption">
+        File 'ex2.pyhtml':
+      </div>
+      <pre class="program">
+Hello ${<strong>_context.get('username', 'Guest')</strong>}!
+</pre>
+
+      <div class="terminal_caption">
+        Result:
+      </div>
+      <pre class="terminal">
+$ pytenjin -c 'username="Tenjin"' ex2.pyhtml
+Hello Tenjin!
+$ pytenjin ex2.pyhtml
+Hello Guest!
+</pre><br>
+      <a name="faq-template-args" id="faq-template-args"></a>
 
       <h3 class="section2">Is it able to specify variables passed to template?</h3>
 
-      <p>Yes. You can specify template arguments by '<code>&lt;?py #@ARGS arg1, arg2, arg3 ?&gt;</code>'.</p><a name="ex6.pyhtml" id="ex6.pyhtml"></a>
+      <p>Yes. You can specify template arguments by '<code>&lt;?py #@ARGS arg1, arg2, arg3 ?&gt;</code>'.</p><a name="ex3.pyhtml" id="ex3.pyhtml"></a>
 
       <div class="program_caption">
-        File 'ex6-layout.pyhtml'
+        File 'ex3-layout.pyhtml'
       </div>
       <pre class="program">
 &lt;?xml version="1.0 ?&gt;
@@ -502,13 +256,13 @@ if __name__ == "__main__":
 &lt;/p&gt;
 </pre>
 
-      <p>Template arguments line is converted into local variable assignment statements.</p><a name="ex6_template_args.source" id="ex6_template_args.source"></a>
+      <p>Template arguments line is converted into local variable assignment statements.</p><a name="ex3_template_args.source" id="ex3_template_args.source"></a>
 
       <div class="terminal_caption">
         Source code
       </div>
       <pre class="terminal">
-$ pytenjin -s ex6.pyhtml
+$ pytenjin -s ex3.pyhtml
 _buf = []; _buf.extend(('''&lt;?xml version="1.0 ?&gt;\n''', ));
 <strong>x = _context.get('x'); y = _context.get('y'); </strong>
 _buf.extend(('''&lt;p&gt;
@@ -525,21 +279,21 @@ print ''.join(_buf)
         Result:
       </div>
       <pre class="terminal">
-$ pytenjin -c 'x=10; y=20; z=30' ex6.pyhtml
-  File "ex6.pyhtml", line 6, in &lt;module&gt;
+$ pytenjin -c 'x=10; y=20; z=30' ex3.pyhtml
+  File "ex3.pyhtml", line 6, in &lt;module&gt;
     z = #{z}
 NameError: name 'z' is not defined
 </pre><br>
       <a name="faq-optional-args" id="faq-optional-args"></a>
 
-      <h3 class="section2">It is hard to specify all template arguments. Any good idea?</h3>
+      <h3 class="section2">I don't like <code>_context.get('var')</code> nor template arguments. Any other solution?</h3>
 
       <p>There may be some cases that it is hard to specify all template arguments. But <code>_context.get('varname', None)</code> is much hard and pain.</p>
 
-      <p>One idea is to expand <code>@varname</code> into <code>_context.get('varname', None)</code> automaticaly.</p><a name="ex7-expandargs.py" id="ex7-expandargs.py"></a>
+      <p>One idea is to expand <code>@varname</code> into <code>_context.get('varname', None)</code> automaticaly.</p><a name="ex4-expandargs.py" id="ex4-expandargs.py"></a>
 
       <div class="program_caption">
-        File 'ex7-expandargs.py':
+        File 'ex4-expandargs.py':
       </div>
       <pre class="program">
 import tenjin
@@ -559,30 +313,30 @@ class MyTemplate(tenjin.Template):
         tenjin.Template.add_expr(self, buf, _expand(code), flag_escape)
 
 print("----- script -----")
-print(MyTemplate('ex7-expandargs.pyhtml').script)
+print(MyTemplate('ex4-expandargs.pyhtml').script)
 
 print("----- result -----")
 tenjin.Engine.templateclass = MyTemplate
 engine = tenjin.Engine()
-html = engine.render('ex7-expandargs.pyhtml')
+html = engine.render('ex4-expandargs.pyhtml')
 print(html)
-</pre><a name="ex7-expandargs.pyhtml" id="ex7-expandargs.pyhtml"></a>
+</pre><a name="ex4-expandargs.pyhtml" id="ex4-expandargs.pyhtml"></a>
 
       <div class="program_caption">
-        File 'ex7-expandargs.pyhtml':
+        File 'ex4-expandargs.pyhtml':
       </div>
       <pre class="program">
 &lt;p&gt;Hello #{<strong>@user</strong> or 'guest'}!&lt;p&gt;
 &lt;?py if <strong>@message</strong>: ?&gt;
 &lt;p&gt;#{@message}&lt;/p&gt;
 &lt;?py #endif ?&gt;
-</pre><a name="ex7-expandargs.result" id="ex7-expandargs.result"></a>
+</pre><a name="ex4-expandargs.result" id="ex4-expandargs.result"></a>
 
       <div class="terminal_caption">
         Result:
       </div>
       <pre class="terminal">
-$ python ex7-expandargs.py
+$ python ex4-expandargs.py
 ----- script -----
 _buf.extend(('''&lt;p&gt;Hello ''', to_str(<strong>_context.get('user', None)</strong> or 'guest'), '''!&lt;p&gt;\n''', ));
 if <strong>_context.get('message', None)</strong>:
@@ -593,22 +347,76 @@ if <strong>_context.get('message', None)</strong>:
 &lt;p&gt;Hello guest!&lt;p&gt;
 
 </pre><br>
-      <a name="faq-exprpat" id="faq-exprpat"></a>
+      <a name="faq-change-funcname" id="faq-change-funcname"></a>
 
-      <h3 class="section2">Is it able to change embedded expression pattern?</h3>
+      <h3 class="section2">Can I change 'escape()' and 'to_str()' function name?</h3>
 
-      <p>Yes, you can create subclass of Template class and override embedded expression pattern.</p><a name="ex8-expr-pattern.pyhtml" id="ex8-expr-pattern.pyhtml"></a>
+      <p>Yes. You can change them by setting 'escapefunc' and 'tostrfunc' options for tenjin.Template() or tenjin.Engine().</p><a name="ex5.py" id="ex5.py"></a>
 
       <div class="program_caption">
-        ex8-expr-pattern.pyhtml:
+        File 'ex5.py':
+      </div>
+      <pre class="program">
+import tenjin
+engine = tenjin.Engine(<strong>escapefunc='cgi.escape'</strong>, <strong>tostrfunc='str'</strong>)
+template = engine.get_template('ex5.pyhtml')
+print template.script,
+</pre><a name="ex5.pyhtml" id="ex5.pyhtml"></a>
+
+      <div class="program_caption">
+        File 'ex5.pyhtml':
+      </div>
+      <pre class="program">
+Hello ${name}!
+&lt;?py for item in items: ?&gt;
+#{item}
+&lt;?py #end ?&gt;
+</pre><a name="ex5_escapefunc1.result" id="ex5_escapefunc1.result"></a>
+
+      <div class="program_caption">
+        Result:
+      </div>
+      <pre class="program">
+$ python ex5.py
+_buf.extend(('''Hello ''', <strong>cgi.escape</strong>(<strong>str</strong>(name)), '''!\n''', ));
+for item in items:
+    _buf.extend((<strong>str</strong>(item), '''\n''', ));
+#end
+</pre>
+
+      <p>Command-line option '--escapefunc=<em>name</em>' and '--tostrfunc=<em>name</em>' is equivarent to the above.</p><a name="ex5_escapefunc2.result" id="ex5_escapefunc2.result"></a>
+
+      <div class="program_caption">
+        Result:
+      </div>
+      <pre class="program">
+$ pytenjin -sb <strong>--escapefunc=cgi.escape</strong> <strong>--tostrfunc=str</strong> ex5.pyhtml
+_buf.extend(('''Hello ''', <strong>cgi.escape</strong>(<strong>str</strong>(name)), '''!\n''', ));
+for item in items:
+    _buf.extend((<strong>str</strong>(item), '''\n''', ));
+#end
+</pre><br>
+      <a name="faq-change-bufname" id="faq-change-bufname"></a>
+
+      <h3 class="section2">Can I change '_buf' variable name?</h3>
+
+      <p>No. Variable name '_buf' should not and will never be changed.</p><br>
+      <a name="faq-exprpat" id="faq-exprpat"></a>
+
+      <h3 class="section2">Can I change embedded expression pattern?</h3>
+
+      <p>Yes, you can create subclass of Template class and override embedded expression pattern.</p><a name="ex6-expr-pattern.pyhtml" id="ex6-expr-pattern.pyhtml"></a>
+
+      <div class="program_caption">
+        ex6-expr-pattern.pyhtml:
       </div>
       <pre class="program">
 &lt;p&gt;HTML escaped: <strong>[|value|]</strong>&lt;/p&gt;
 &lt;p&gt;not escaped:  <strong>[:value:]</strong>&lt;/p&gt;
-</pre><a name="ex8-expr-pattern.py" id="ex8-expr-pattern.py"></a>
+</pre><a name="ex6-expr-pattern.py" id="ex6-expr-pattern.py"></a>
 
       <div class="program_caption">
-        ex8-expr-pattern.py:
+        ex6-expr-pattern.py:
       </div>
       <pre class="program">
 import tenjin, re
@@ -632,30 +440,396 @@ class MyTemplate(tenjin.Template):
 if __name__ == '__main__':
     context = {'value': 'AAA&amp;BBB'}
     engine = tenjin.Engine(<strong>templateclass=MyTemplate</strong>)
-    output = engine.render('ex8-expr-pattern.pyhtml', context)
+    output = engine.render('ex6-expr-pattern.pyhtml', context)
     print output,
-</pre><a name="ex8_expr_pattern.result" id="ex8_expr_pattern.result"></a>
+</pre><a name="ex6_expr_pattern.result" id="ex6_expr_pattern.result"></a>
 
       <div class="terminal_caption">
         Result:
       </div>
       <pre class="terminal">
-$ python ex8-expr-pattern.py
+$ python ex6-expr-pattern.py
 &lt;p&gt;HTML escaped: AAA&amp;amp;BBB&lt;/p&gt;
 &lt;p&gt;not escaped:  AAA&amp;BBB&lt;/p&gt;
 </pre><br>
-      <a name="faq-m17n" id="faq-m17n"></a>
+      <a name="faq-flexibleindent" id="faq-flexibleindent"></a>
 
-      <h3 class="section2">Does pyTenjin support M17N?</h3>
+      <h3 class="section2">Is it possible to change indent restriction more flexible?</h3>
 
-      <p>No. pyTenjin doesn't provide M17 feature.</p>
+      <p>You may want pyTenjin to be more flexible about indentation of statements. For example, You may not like such as:</p>
+      <pre class="program">
+&lt;html&gt;
+  &lt;body&gt;
+    &lt;div id="main-content"&gt;
+&lt;?py if items: ?&gt;
+      &lt;table&gt;
+        &lt;tbody&gt;
+    &lt;?py for item in itmes: ?&gt;
+          &lt;tr&gt;
+        &lt;?py if item.name: ?&gt;
+            &lt;td&gt;${item.name}&lt;/td&gt;
+            &lt;td&gt;${item.value}&lt;/td&gt;
+        &lt;?py else: ?&gt;
+            &lt;td colspan="2"&gt;${item.value}&lt;/td&gt;
+        &lt;?py end ?&gt;
+        &lt;/tr&gt;
+    &lt;?py #endfor ?&gt;
+        &lt;/tbody&gt;
+      &lt;/table&gt;
+&lt;?py #endif ?&gt;
+    &lt;/div&gt;
+  &lt;/body&gt;
+&lt;/html&gt;
+</pre>
 
-      <p>pyTenjin doesn't provide M17N feature directly because requirements for M17N are different for each applications or frameworks. Some applications or frameworks adapt GetText library and others use their original M17N library. What pyTenjin should do is not to provide M17N feature but to show an example to support M17N.</p>
+      <p>And you may prefer the following:</p><a name="flexibleindent.pyhtml" id="flexibleindent.pyhtml"></a>
 
-      <p>But using preprocessing, you can make your M17N template files much faster. See the next section for details.</p><br>
+      <div class="program_caption">
+        File 'flexibleindent.pyhtml':
+      </div>
+      <pre class="program">
+&lt;html&gt;
+  &lt;body&gt;
+    &lt;?py if items: ?&gt;
+    &lt;div class="items" id="items"&gt;
+      &lt;span&gt;#{len(items)} items:&lt;/span&gt;
+      &lt;table&gt;
+        &lt;tbody&gt;
+          &lt;?py for item in items: ?&gt;
+          &lt;tr&gt;
+            &lt;?py if item.name: ?&gt;
+            &lt;td&gt;${item.name}&lt;/td&gt;
+            &lt;td&gt;${item.value}&lt;/td&gt;
+            &lt;?py else: ?&gt;
+            &lt;td colspan="2"&gt;${item.value}&lt;/td&gt;
+            &lt;?py #endif ?&gt;
+          &lt;/tr&gt;
+          &lt;?py #endfor ?&gt;
+        &lt;/tbody&gt;
+      &lt;/table&gt;
+    &lt;/div&gt;
+    &lt;?py #endif ?&gt;
+  &lt;/body&gt;
+&lt;/html&gt;
+</pre>
+
+      <p>It is very difficult for pyTenjin to support this style, but you can hack Template class to insert dummy if-statement. This is not complete solution, but can help you.</p><a name="flexibleindent.py" id="flexibleindent.py"></a>
+
+      <div class="program_caption">
+        File 'flexibleindent.py':
+      </div>
+      <pre class="program">
+import tenjin
+from tenjin.helpers import *
+
+class MyTemplate(tenjin.Template):
+
+    def add_stmt(self, buf, code):
+        if buf:
+            s = buf[-1]
+            if s and s.isspace() and s.find("\n") &lt; 0 and len(s) &gt; len(self._spaces):
+                buf[-1:-1] = (self._spaces, "if True: ## dummy\n", )
+        if self.newline == "\r\n":
+            code = code.replace("\r\n", "\n")
+        buf.append(code)
+
+if __name__ == '__main__':
+    import sys
+    if len(sys.argv) &lt; 2: raise "template filename required."
+    template = <strong>MyTemplate</strong>(sys.argv[1], <strong>indent=2</strong>)  # change indent width
+    print(template.script)
+    #<strong>tenjin.Engine.templateclass = MyTemplate</strong>
+    #engine = tenjin.Engine(<strong>indent=2</strong>)
+    #html = engine.render(sys.argv[1])
+    #print(html)
+</pre><a name="flexibleindent.result" id="flexibleindent.result"></a>
+
+      <div class="terminal_caption">
+        Result:
+      </div>
+      <pre class="terminal">
+$ python flexibleindent.py flexibleindent.pyhtml
+_buf.extend(('''&lt;html&gt;
+  &lt;body&gt;\n''', ));
+<strong>if True: ## dummy</strong>
+    if items:
+      _buf.extend(('''    &lt;div class="items" id="items"&gt;
+      &lt;span&gt;''', to_str(len(items)), ''' items:&lt;/span&gt;
+      &lt;table&gt;
+        &lt;tbody&gt;\n''', ));
+      <strong>if True: ## dummy</strong>
+          for item in items:
+            _buf.extend(('''          &lt;tr&gt;\n''', ));
+            if item.name:
+              _buf.extend(('''            &lt;td&gt;''', escape(to_str(item.name)), '''&lt;/td&gt;
+            &lt;td&gt;''', escape(to_str(item.value)), '''&lt;/td&gt;\n''', ));
+            else:
+              _buf.extend(('''            &lt;td colspan="2"&gt;''', escape(to_str(item.value)), '''&lt;/td&gt;\n''', ));
+            #endif
+            _buf.extend(('''          &lt;/tr&gt;\n''', ));
+          #endfor
+          _buf.extend(('''        &lt;/tbody&gt;
+      &lt;/table&gt;
+    &lt;/div&gt;\n''', ));
+    #endif
+    _buf.extend(('''  &lt;/body&gt;
+&lt;/html&gt;\n''', ));
+
+</pre>
+
+      <p>The above example works fine, but the following will not work. This is one of the limitations of current pyTenjin architecture.</p><a name="flexibleindent2.pyhtml" id="flexibleindent2.pyhtml"></a>
+
+      <div class="program_caption">
+        File 'flexibleindent2.pyhtml':
+      </div>
+      <pre class="program">
+&lt;div&gt;
+  &lt;div&gt;
+    &lt;?py if foo: ?&gt;
+    foo
+    &lt;?py #end ?&gt;
+  &lt;/div&gt;
+  &lt;?py if bar: ?&gt;
+  bar
+  &lt;?py #end ?&gt;
+&lt;/div&gt;
+</pre><a name="flexibleindent2.result2" id="flexibleindent2.result2"></a>
+
+      <div class="terminal_caption">
+        Result:
+      </div>
+      <pre class="terminal">
+$ python flexibleindent.py flexibleindent2.pyhtml
+_buf.extend(('''&lt;div&gt;
+  &lt;div&gt;\n''', ));
+if True: ## dummy
+    if foo:
+      _buf.extend(('''    foo\n''', ));
+    #end
+    _buf.extend(('''  &lt;/div&gt;\n''', ));
+  if bar:
+    _buf.extend(('''  bar\n''', ));
+  #end
+  _buf.extend(('''&lt;/div&gt;\n''', ));
+
+</pre>
+
+      <div class="terminal_caption">
+        Check syntax error:
+      </div>
+      <pre class="terminal">
+$ python flexibleindent.py flexibleindent2.pyhtml | python
+  File "&lt;stdin&gt;", line 8
+    if bar:
+          ^
+IndentationError: unindent does not match any outer indentation level
+</pre><br>
+      <a name="faq-escape-newline" id="faq-escape-newline"></a>
+
+      <h3 class="section2">Is there any way to 'escape' or 'remove' newline at the end of line?</h3>
+
+      <p>Yes, but it is not beautiful very much.</p>
+
+      <p>Assume that you want to generate CSV file. The following is a wrong example.</p><a name="ex7a.pycsv" id="ex7a.pycsv"></a>
+
+      <div class="program_caption">
+        File 'ex7a.pycsv': (wrong)
+      </div>
+      <pre class="program">
+&lt;?py 
+table = [
+  ( "A",  10,  20,  30, ),
+  ( "B",  11,  21,  31, ),
+  ( "C",  12,  22,  23, ),
+]
+?&gt;
+&lt;?py for line in table: ?&gt;
+&lt;?py     sep = '' ?&gt;
+&lt;?py     for cell in line: ?&gt;
+#{sep}#{cell}
+&lt;?py         sep = ', ' ?&gt;
+&lt;?py     #end ?&gt;
+&lt;?py #end ?&gt;
+</pre><a name="ex7a_pycsv.result" id="ex7a_pycsv.result"></a>
+
+      <div class="terminal_caption">
+        Result: (wrong)
+      </div>
+      <pre class="terminal">
+$ pytenjin ex7a.pycsv
+A
+, 10
+, 20
+, 30
+B
+, 11
+, 21
+, 31
+C
+, 12
+, 22
+, 23
+</pre>
+
+      <p>The following is corrected template.</p><a name="ex7b.pycsv" id="ex7b.pycsv"></a>
+
+      <div class="program_caption">
+        File 'ex7b.pycsv':
+      </div>
+      <pre class="program">
+&lt;?py 
+table = [
+  ( "A",  10,  20,  30, ),
+  ( "B",  11,  21,  31, ),
+  ( "C",  12,  22,  23, ),
+]
+?&gt;
+&lt;?py
+for line in table:
+    sep = ''
+    for cell in line:
+?&gt;#{sep}#{cell}&lt;?py
+        sep = ', '
+    #end
+?&gt;
+
+&lt;?py
+#end
+?&gt;
+</pre><a name="ex7b_pycsv.result" id="ex7b_pycsv.result"></a>
+
+      <div class="terminal_caption">
+        Result:
+      </div>
+      <pre class="terminal">
+$ pytenjin ex7b.pycsv
+A, 10, 20, 30
+B, 11, 21, 31
+C, 12, 22, 23
+</pre>
+
+      <p>But it is a little complex and not beautiful. In this case, you may prefer to use '_buf' variable directly.</p><a name="ex7c.pycsv" id="ex7c.pycsv"></a>
+
+      <div class="program_caption">
+        File 'ex7c.pycsv':
+      </div>
+      <pre class="program">
+&lt;?py 
+table = [
+  ( "A",  10,  20,  30),
+  ( "B",  11,  21,  31),
+  ( "C",  12,  22,  23),
+]
+?&gt;
+&lt;?py
+for line in table:
+    sep = ''
+    for cell in line:
+        if sep: _buf.append(sep)
+        _buf.append(to_str(cell))
+        sep = ', '
+    #end
+    _buf.append("\n")
+#end
+?&gt;
+</pre><a name="ex7c_pycsv.result" id="ex7c_pycsv.result"></a>
+
+      <div class="terminal_caption">
+        Result:
+      </div>
+      <pre class="terminal">
+$ pytenjin ex7c.pycsv
+A, 10, 20, 30
+B, 11, 21, 31
+C, 12, 22, 23
+</pre><br>
+      <a name="faq-delete-newline" id="faq-delete-newline"></a>
+
+      <h3 class="section2">'#{_content}' includes extra newline at end. Can I delete it?</h3>
+
+      <p>Yes. You can use '<code>&lt;?py echo(_content) ?&gt;</code>' or '<code>&lt;?py _buf.append(_content)</code> ?&gt;' instead of '<code>#{_content}</code>'.</p><a name="ex8-layout.pyhtml" id="ex8-layout.pyhtml"></a>
+
+      <div class="program_caption">
+        File 'ex8-layout.pyhtml':
+      </div>
+      <pre class="program">
+&lt;!-- --&gt;
+<strong>#{_content}</strong>
+&lt;!-- --&gt;
+
+&lt;!-- --&gt;
+<strong>&lt;?py echo(_content) ?&gt;</strong>
+&lt;!-- --&gt;
+
+&lt;!-- --&gt;
+<strong>&lt;?py _buf.append(_content) ?&gt;</strong>
+&lt;!-- --&gt;
+</pre><a name="ex8-content.pyhtml" id="ex8-content.pyhtml"></a>
+
+      <div class="program_caption">
+        File 'ex8-content.pyhtml':
+      </div>
+      <pre class="program">
+foo
+bar
+baz
+</pre><a name="ex8_removenl.result" id="ex8_removenl.result"></a>
+
+      <div class="terminal_caption">
+        Result:
+      </div>
+      <pre class="terminal">
+$ pytenjin --layout=ex8-layout.pyhtml ex8-content.pyhtml
+&lt;!-- --&gt;
+foo
+bar
+baz
+
+&lt;!-- --&gt;
+
+&lt;!-- --&gt;
+foo
+bar
+baz
+&lt;!-- --&gt;
+
+&lt;!-- --&gt;
+foo
+bar
+baz
+&lt;!-- --&gt;
+</pre>
+
+      <p>[experimental] If you pass 'smarttrim=True' option to tenjin.Template() or tenjin.Engine(), "\n#{expr}\n" will be trimmed into "\n#{expr}". And command-line option '--smarttrim' is the same as 'smarttrim=True' option.</p>
+
+      <p>The following example shows that an empty line is not appread when '--smarttrim' is specified.</p><a name="ex8_smarttrim.result" id="ex8_smarttrim.result"></a>
+
+      <div class="terminal_caption">
+        Result:
+      </div>
+      <pre class="terminal">
+$ pytenjin <strong>--smarttrim</strong> --layout=ex8-layout.pyhtml ex8-content.pyhtml
+&lt;!-- --&gt;
+foo
+bar
+baz
+&lt;!-- --&gt;
+
+&lt;!-- --&gt;
+foo
+bar
+baz
+&lt;!-- --&gt;
+
+&lt;!-- --&gt;
+foo
+bar
+baz
+&lt;!-- --&gt;
+</pre><br>
       <a name="faq-m17n-cache" id="faq-m17n-cache"></a>
 
-      <h3 class="section2">Is it possible to create separated template chaches for each language?</h3>
+      <h3 class="section2">Is it possible to create separated template caches for each language?</h3>
 
       <p>Yes.</p>
 
