@@ -1402,6 +1402,226 @@ $ [%=lang%] ex[%=n%].rb
 % end 
 
 
+.######################################################################
+
+
+% if PYTHON
+
+.$$ Is it possible to change indent restriction more flexible?	| faq-flexibleindent
+
+You may want [%=name%] to be more flexible about indentation of statements.
+For example, You may not like such as:
+
+.--------------------
+<html>
+  <body>
+    <div id="main-content">
+<?py if items: ?>
+      <table>
+        <tbody>
+    <?py for item in itmes: ?>
+          <tr>
+        <?py if item.name: ?>
+            <td>${item.name}</td>
+            <td>${item.value}</td>
+        <?py else: ?>
+            <td colspan="2">${item.value}</td>
+        <?py end ?>
+        </tr>
+    <?py #endfor ?>
+        </tbody>
+      </table>
+<?py #endif ?>
+    </div>
+  </body>
+</html>
+.--------------------
+
+And you may prefer the following:
+
+.? File 'flexibleindent.[%=suffix%]':
+.-------------------- flexibleindent.[%=suffix%]
+<html>
+  <body>
+    <?py if items: ?>
+    <div class="items" id="items">
+      <span>#{len(items)} items:</span>
+      <table>
+        <tbody>
+          <?py for item in items: ?>
+          <tr>
+            <?py if item.name: ?>
+            <td>${item.name}</td>
+            <td>${item.value}</td>
+            <?py else: ?>
+            <td colspan="2">${item.value}</td>
+            <?py #endif ?>
+          </tr>
+          <?py #endfor ?>
+        </tbody>
+      </table>
+    </div>
+    <?py #endif ?>
+  </body>
+</html>
+.--------------------
+
+It is very difficult for [%=name%] to support this style, but you can hack Template class to insert dummy if-statement.
+This is not complete solution, but can help you.
+
+.? File 'flexibleindent.[%=ext%]':
+.-------------------- flexibleindent.[%=ext%]
+import tenjin
+from tenjin.helpers import *
+
+class MyTemplate(tenjin.Template):
+
+    def add_stmt(self, buf, code):
+        if buf:
+            s = buf[-1]
+            if s and s.isspace() and s.find("\n") < 0 and len(s) > len(self._spaces):
+                buf[-1:-1] = (self._spaces, "if True: ## dummy\n", )
+        if self.newline == "\r\n":
+            code = code.replace("\r\n", "\n")
+        buf.append(code)
+
+if __name__ == '__main__':
+    import sys
+    if len(sys.argv) < 2: raise "template filename required."
+    template = {{*MyTemplate*}}(sys.argv[1], {{*indent=2*}})  # change indent width
+    print(template.script)
+    #{{*tenjin.Engine.templateclass = MyTemplate*}}
+    #engine = tenjin.Engine({{*indent=2*}})
+    #html = engine.render(sys.argv[1])
+    #print(html)
+.--------------------
+
+.? Result:
+.==================== flexibleindent.result
+$ [%=lang%] flexibleindent.[%=ext%] flexibleindent.[%=suffix%]
+_buf.extend(('''<html>
+  <body>\n''', ));
+{{*if True: ## dummy*}}
+    if items:
+      _buf.extend(('''    <div class="items" id="items">
+      <span>''', to_str(len(items)), ''' items:</span>
+      <table>
+        <tbody>\n''', ));
+      {{*if True: ## dummy*}}
+          for item in items:
+            _buf.extend(('''          <tr>\n''', ));
+            if item.name:
+              _buf.extend(('''            <td>''', escape(to_str(item.name)), '''</td>
+            <td>''', escape(to_str(item.value)), '''</td>\n''', ));
+            else:
+              _buf.extend(('''            <td colspan="2">''', escape(to_str(item.value)), '''</td>\n''', ));
+            #endif
+            _buf.extend(('''          </tr>\n''', ));
+          #endfor
+          _buf.extend(('''        </tbody>
+      </table>
+    </div>\n''', ));
+    #endif
+    _buf.extend(('''  </body>
+</html>\n''', ));
+
+.====================
+
+The above example works fine, but the following will not work.
+This is one of the limitations of current [%=name%] architecture.
+
+.? File 'flexibleindent2.[%=suffix%]':
+.-------------------- flexibleindent2.[%=suffix%]
+<div>
+  <div>
+    <?py if foo: ?>
+    foo
+    <?py #end ?>
+  </div>
+  <?py if bar: ?>
+  bar
+  <?py #end ?>
+</div>
+.--------------------
+
+.? Result:
+.==================== flexibleindent2.result2
+$ [%=lang%] flexibleindent.[%=ext%] flexibleindent2.[%=suffix%]
+_buf.extend(('''<div>
+  <div>\n''', ));
+if True: ## dummy
+    if foo:
+      _buf.extend(('''    foo\n''', ));
+    #end
+    _buf.extend(('''  </div>\n''', ));
+  if bar:
+    _buf.extend(('''  bar\n''', ));
+  #end
+  _buf.extend(('''</div>\n''', ));
+
+.====================
+
+.? Check syntax error:
+.====================
+$ [%=lang%] flexibleindent.[%=ext%] flexibleindent2.[%=suffix%] | [%=lang%]
+  File "<stdin>", line 8
+    if bar:
+          ^
+IndentationError: unindent does not match any outer indentation level
+.====================
+
+
+.#+++
+.-------------------- flexibleindent-test.py
+import sys
+from flexibleindent import MyTemplate
+import tenjin
+from tenjin.helpers import *
+class Item(object):
+    def __init__(self, name, value):
+        self.name  = name
+	self.value = value
+items = [ Item('foo', 100), Item('', 200), Item('baz', 300) ]
+tenjin.Engine.templateclass = MyTemplate
+engine = tenjin.Engine(indent=2)
+html = engine.render(sys.argv[1], {'items':items})
+sys.stdout.write(html)
+.--------------------
+
+.==================== flexibleindent-test.result
+$ python flexibleindent-test.py flexibleindent.pyhtml
+<html>
+  <body>
+    <div class="items" id="items">
+      <span>3 items:</span>
+      <table>
+        <tbody>
+          <tr>
+            <td>foo</td>
+            <td>100</td>
+          </tr>
+          <tr>
+            <td colspan="2">200</td>
+          </tr>
+          <tr>
+            <td>baz</td>
+            <td>300</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </body>
+</html>
+.====================
+.#---
+
+
+% end
+
+
+.######################################################################
+
+
 % if PYTHON
 
 .$$ Is there any way to 'escape' or 'remove' newline at the end of line?	| faq-escape-newline
