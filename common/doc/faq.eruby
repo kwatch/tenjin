@@ -209,7 +209,7 @@ You should check template by it.
 
 % n += 1 
 
-% if $PYTHON
+% if PYTHON
 
 .? File 'ex[%=n%].[%= suffix %]':
 .-------------------- ex[%=n%].[%= suffix %]
@@ -230,7 +230,7 @@ ex[%=n%].[%= suffix %]:4:9: invalid syntax
              ^
 .====================
 
-% elsif $RUBY
+% elsif RUBY
 
 .? File 'ex[%=n%].[%= suffix %]':
 .-------------------- ex[%=n%].[%= suffix %]
@@ -248,7 +248,7 @@ ex[%=n%].rbhtml:4: syntax error, unexpected kEND, expecting '}'
 ex[%=n%].rbhtml:5: syntax error, unexpected $end, expecting '}'
 .====================
 
-% elsif $PERL
+% elsif PERL
 
 Also command-line option '-w' is useful. This option enables 'use strict;' of Perl.
 
@@ -287,7 +287,7 @@ ex[%=n%].[%=suffix%] had compilation errors.
 .#---
 
 
-% elsif $JS
+% elsif JS
 
 .? File 'ex[%=n%].[%= suffix %]':
 .-------------------- ex[%=n%].[%= suffix %]
@@ -309,7 +309,7 @@ ex1.jshtml:2:  for (var i = 0, i <= 10, i++) {
 .#ex[%=n%].[%= suffix %]:2: ...................^
 .====================
 
-% elsif $PHP
+% elsif PHP
 
 .? File 'ex[%=n%].[%= suffix %]':
 .-------------------- ex[%=n%].[%= suffix %]
@@ -358,7 +358,7 @@ See {{<this section|#faq-m17n-cache>}} for details.
 .######################################################################
 
 
-% if $PYTHON
+% if PYTHON
 
 .$$ Is [%=name%] ready for Google App Engine?		| faq-google-appengine
 
@@ -417,13 +417,13 @@ if __name__ == "__main__":
 .######################################################################
 
 
-% unless $RUBY
+% unless RUBY
 .$$ Is it able to specify default value when variable is not set?	| faq-default-value
 % n += 1 
 % end
 
 
-% if $PYTHON
+% if PYTHON
 
 Yes. It is able to specify default value by {{,_context.get('{{/varname/}}', {{/defaultvalue/}}),}}.
 
@@ -454,11 +454,11 @@ Hello Guest!
 .#---
 
 
-% elsif $RUBY
+% elsif RUBY
 
 
 
-% elsif $PERL
+% elsif PERL
 
 Yes, by {{,$_context->{{{/varname/}}},}}.
 It is able to check whether value is set or not by inspecting special variable '{{,$_context,}}' which represents context values.
@@ -490,7 +490,7 @@ Hello Guest!
 .====================
 .#---
 
-% elsif $JS
+% elsif JS
 
 Yes, by {{,_context['{{/varname/}}'],}}.
 It is able to check whether value is set or not by inspecting special variable '{{,_context,}}' which represents context values.
@@ -523,7 +523,7 @@ Hello Guest!
 .#---
 
 
-% elsif $PHP
+% elsif PHP
 
 Yes, by {{,$_context['{{/varname/}}'],}}.
 It is able to check whether value is set or not by inspecting special variable '{{,$_context,}}' which represents context values.
@@ -571,7 +571,7 @@ Yes. You can specify template arguments by '{{,<?[%=pi%] [%=comment%]@ARGS arg1,
 % n += 1 
 
 .? File 'ex[%=n%]-layout.[%=suffix%]'
-% if $PYTHON
+% if PYTHON
 .-------------------- ex[%=n%].[%=suffix%]
 <?xml version="1.0 ?>
 {{*<?py #@ARGS x, y ?>*}}
@@ -581,7 +581,7 @@ Yes. You can specify template arguments by '{{,<?[%=pi%] [%=comment%]@ARGS arg1,
   z = #{z}
 </p>
 .--------------------
-% elsif $RUBY
+% elsif RUBY
 .-------------------- ex[%=n%].[%=suffix%]
 <?xml version="1.0 ?>
 {{*<?rb #@ARGS x, y ?>*}}
@@ -591,7 +591,7 @@ Yes. You can specify template arguments by '{{,<?[%=pi%] [%=comment%]@ARGS arg1,
   z = #{z}
 </p>
 .--------------------
-% elsif $PERL
+% elsif PERL
 .-------------------- ex[%=n%].[%=suffix%]
 <?xml version="1.0 ?>
 {{*<?pl #@ARGS x, y ?>*}}
@@ -601,7 +601,7 @@ Yes. You can specify template arguments by '{{,<?[%=pi%] [%=comment%]@ARGS arg1,
   z = [=$z=]
 </p>
 .--------------------
-% elsif $JS
+% elsif JS
 .-------------------- ex[%=n%].[%=suffix%]
 <?xml version="1.0 ?>
 {{*<?js //@ARGS x, y ?>*}}
@@ -611,7 +611,7 @@ Yes. You can specify template arguments by '{{,<?[%=pi%] [%=comment%]@ARGS arg1,
   z = #{z}
 </p>
 .--------------------
-% elsif $PHP
+% elsif PHP
 .-------------------- ex[%=n%].[%=suffix%]
 <?xml version="1.0 ?>
 {{*<?php //@ARGS x, y ?>*}}
@@ -628,7 +628,7 @@ Yes. You can specify template arguments by '{{,<?[%=pi%] [%=comment%]@ARGS arg1,
 Template arguments line is converted into local variable assignment statements.
 
 .? Source code
-% if $PYTHON
+% if PYTHON
 .==================== ex[%=n%]_template_args.source
 $ [%=command%] -s ex[%=n%].[%=suffix%]
 _buf = []; _buf.extend(('''<?xml version="1.0 ?>\n''', ));
@@ -640,7 +640,7 @@ _buf.extend(('''<p>
 </p>\n''', ));
 print ''.join(_buf)
 .====================
-% elsif $RUBY
+% elsif RUBY
 .==================== ex[%=n%]_template_args.source
 $ [%=command%] -s ex[%=n%].[%=suffix%]
 _buf = '';  _buf << %Q`<?xml version="1.0 ?>\n`
@@ -652,7 +652,7 @@ _buf = '';  _buf << %Q`<?xml version="1.0 ?>\n`
 </p>\n`
 _buf.to_s
 .====================
-% elsif $PERL
+% elsif PERL
 .==================== ex[%=n%]_template_args.source
 $ [%=command%] -s ex[%=n%].[%=suffix%]
 my @_buf = (); push(@_buf, q`<?xml version="1.0 ?>
@@ -664,7 +664,7 @@ push(@_buf, q`<p>
 </p>
 `, ); join('', @_buf);
 .====================
-% elsif $JS
+% elsif JS
 .==================== ex[%=n%]_template_args.source
 $ [%=command%] -s ex[%=n%].[%=suffix%]
 var _buf = [];  _buf.push('<?xml version="1.0 ?>\n');
@@ -676,7 +676,7 @@ var _buf = [];  _buf.push('<?xml version="1.0 ?>\n');
 </p>\n');
 _buf.join('')
 .====================
-% elsif $PHP
+% elsif PHP
 .==================== ex[%=n%]_template_args.source
 $ [%=command%] -s ex[%=n%].[%=suffix%]
 <?php  echo '<?xml version="1.0 ?>
@@ -696,7 +696,7 @@ echo '<p>
 Undeclared arguments are not available even when they are passed via context object.
 
 .? Result:
-% if $PYTHON
+% if PYTHON
 .#.==================== ex[%=n%]_template_args.result
 .====================
 $ [%=command%] -c 'x=10; y=20; z=30' ex[%=n%].[%=suffix%]
@@ -704,19 +704,19 @@ $ [%=command%] -c 'x=10; y=20; z=30' ex[%=n%].[%=suffix%]
     z = #{z}
 NameError: name 'z' is not defined
 .====================
-% elsif $RUBY
+% elsif RUBY
 .#.==================== ex[%=n%]_template_args.result
 .====================
 $ [%=command%] -c 'x=10; y=20; z=30' ex[%=n%].[%=suffix%]
 ex[%=n%].[%=suffix%]:6:in `_render': undefined local variable or method `z' for #<Tenjin::Context:0x35a9e4> (NameError)
 .====================
-% elsif $PERL
+% elsif PERL
 .==================== ex[%=n%]_template_args.result
 $ [%=command%] -wc 'x=>10, y=>20' ex[%=n%].[%=suffix%]
 *** Error: ex[%=n%].[%=suffix%]
 Global symbol "$z" requires explicit package name at (eval 4) line 6.
 .====================
-% elsif $JS
+% elsif JS
 .==================== ex[%=n%]_template_args.result
 $ [%=command%] -c 'x:10, y:20, z:30' ex[%=n%].[%=suffix%]
 *** Error:
@@ -725,7 +725,7 @@ ex[%=n%].[%=suffix%]:3: ReferenceError: "z" is not defined.
 .#*** ERROR:
 .#ex[%=n%].[%=suffix%]: z is not defined
 .====================
-% elsif $PHP
+% elsif PHP
 .==================== ex[%=n%]_template_args.result
 $ [%=command%] -c '$x=10; $y=20; $z=30;' ex[%=n%].[%=suffix%]
 <?xml version="1.0 ?>
@@ -744,7 +744,7 @@ Notice: Undefined variable: z in /usr/local/lib/php/Tenjin.php(497) : eval()'d c
 .######################################################################
 
 
-% if $PYTHON
+% if PYTHON
 
 .$$ I don't like {{,_context.get('var'),}} nor template arguments. Any other solution?	| faq-optional-args
 
@@ -815,7 +815,7 @@ if {{*_context.get('message', None)*}}:
 .######################################################################
 
 
-% if $PYTHON
+% if PYTHON
 
 
 .$$ Can I change 'escape()' and 'to_str()' function name?	| faq-change-funcname
@@ -823,7 +823,7 @@ if {{*_context.get('message', None)*}}:
 Yes. You can change them by setting 'escapefunc' and 'tostrfunc' options for tenjin.Template() or tenjin.Engine().
 
 
-% elsif $RUBY
+% elsif RUBY
 
 
 .$$ Can I change 'escape()' function name?	| faq-change-funcname
@@ -831,7 +831,7 @@ Yes. You can change them by setting 'escapefunc' and 'tostrfunc' options for ten
 Yes. You can change them by setting {{,:escapefunc,}} option for Tenjin::Template.new() or Tenjin::Engine.new().
 
 
-% elsif $PERL
+% elsif PERL
 
 
 .$$ Can I change 'escape()' function name?	| faq-change-funcname
@@ -839,7 +839,7 @@ Yes. You can change them by setting {{,:escapefunc,}} option for Tenjin::Templat
 Yes. You can change them by setting 'escapefunc' option for Tenjin::Template::new() or Tenjin::Engine::new().
 
 
-% elsif $JS
+% elsif JS
 
 
 .$$ Can I change 'escapeXml()' function name?	| faq-change-funcname
@@ -847,7 +847,7 @@ Yes. You can change them by setting 'escapefunc' option for Tenjin::Template::ne
 Yes. You can change them by setting {{,escapefunc,}} option for Tenjin.Template() or Tenjin.Engine().
 
 
-% elsif $PHP
+% elsif PHP
 
 
 .$$ Can I change 'htmlspecialchars()' function name?	| faq-change-funcname
@@ -861,7 +861,7 @@ Yes. You can change them by setting {{,escapefunc,}} property for Tenjin_Templat
 
 % n += 1 
 
-% if $PYTHON
+% if PYTHON
 
 .? File 'ex[%=n%].py':
 .-------------------- ex[%=n%].py
@@ -900,7 +900,7 @@ for item in items:
 .--------------------
 
 
-% elsif $RUBY
+% elsif RUBY
 
 
 .? File 'ex[%=n%].rb':
@@ -931,7 +931,7 @@ $ [%= command %] -sb {{*--escapefunc=CGI.escapeHTML*}} ex[%=n%].[%= suffix %]
 .--------------------
 
 
-% elsif $PERL
+% elsif PERL
 
 
 .? File 'ex[%=n%].pl':
@@ -965,7 +965,7 @@ my @_buf = (); push(@_buf, q`Hello `, {{*HTML::Entities::encode_entities*}}($nam
 .--------------------
 
 
-% elsif $JS
+% elsif JS
 
 
 .? File 'ex[%=n%].js':
@@ -999,7 +999,7 @@ _buf.join('')
 .--------------------
 
 
-% elsif $PHP
+% elsif PHP
 
 
 .? File 'ex[%=n%].[%=pi%]':
@@ -1062,7 +1062,7 @@ Yes, you can create subclass of Template class and override embedded expression 
 
 % n += 1
 
-% if $PYTHON
+% if PYTHON
 
 
 .? ex[%=n%]-expr-pattern.[%=suffix%]:
@@ -1106,7 +1106,7 @@ $ [%=lang%] ex[%=n%]-expr-pattern.[%=pi%]
 .====================
 
 
-% elsif $RUBY
+% elsif RUBY
 
 
 .? ex[%=n%]-expr-pattern.[%=suffix%]:
@@ -1163,7 +1163,7 @@ $ [%=lang%] ex[%=n%]-expr-pattern.[%=pi%]
 .====================
 
 
-% elsif $PERL
+% elsif PERL
 
 
 .? ex[%=n%]-expr-pattern.[%=suffix%]:
@@ -1223,7 +1223,7 @@ $ [%=lang%] ex[%=n%]-expr-pattern.[%=pi%]
 .====================
 
 
-% elsif $JS
+% elsif JS
 
 
 .? ex[%=n%]-expr-pattern.[%=suffix%]:
@@ -1277,7 +1277,7 @@ $ [%=lang%] ex[%=n%]-expr-pattern.[%=pi%]
 .====================
 
 
-% elsif $PHP
+% elsif PHP
 
 
 .? ex[%=n%]-expr-pattern.[%=suffix%]:
@@ -1339,7 +1339,7 @@ $ [%=lang%] ex[%=n%]-expr-pattern.[%=pi%]
 .######################################################################
 
 
-% if $RUBY
+% if RUBY
 
 .$$ Is there any way to use eRuby template?	| faq-eruby-template
 
@@ -1402,7 +1402,7 @@ $ [%=lang%] ex[%=n%].rb
 % end 
 
 
-% if $PYTHON
+% if PYTHON
 
 .$$ Is there any way to 'escape' or 'remove' newline at the end of line?	| faq-escape-newline
 
@@ -1514,13 +1514,13 @@ B, 11, 21, 31
 C, 12, 22, 23
 .====================
 
-% elsif $RUBY
+% elsif RUBY
 
-% elsif $PERL
+% elsif PERL
 
-% elsif $JS
+% elsif JS
 
-% elsif $PHP
+% elsif PHP
 
 % else assert false 
 % end 
@@ -1529,15 +1529,15 @@ C, 12, 22, 23
 .######################################################################
 
 
-% if $PYTHON|| $RUBY|| $JS
+% if PYTHON|| RUBY|| JS
 
 .$$ '#{[%= prefix %]_content}' includes extra newline at end. Can I delete it?	| faq-delete-newline
 
-% elsif $PERL
+% elsif PERL
 
 .$$ '[== $_content =]' includes extra newline at end. Can I delete it?	| faq-delete-newline
 
-% elsif $PHP
+% elsif PHP
 
 .$$ '{== $_content =}' includes extra newline at end. Can I delete it?	| faq-delete-newline
 
@@ -1545,15 +1545,15 @@ C, 12, 22, 23
 % end 
 
 
-% if $PYTHON
+% if PYTHON
 Yes. You can use '{{,<?py echo(_content) ?>,}}' or '{{,<?py _buf.append(_content),}} ?>' instead of '{{,#{_content},}}'.
-% elsif $RUBY
+% elsif RUBY
 Yes. You can use '{{,<?rb echo(@_content) ?>,}}' or '{{,<?rb _buf << @_content ?>,}}' instead of '{{,#{@_conent},}}'.
-% elsif $PERL
+% elsif PERL
 Yes. You can use '<?pl echo($_content); ?>' or '{{,<?pl push(@_buf, $_context); ?>,}} or '{{,[== $_context ==],}}' instead of '{{,[== $_context =],}}'.
-% elsif $JS
+% elsif JS
 Yes. You can use '{{,<?js echo(_content); ?>,}}' or '{{,<?js _buf.push(_content); ?>,}}' instead of '{{,#{_conent},}}'.
-% elsif $PHP
+% elsif PHP
 Yes. You can use '<?php echo($_content); ?>' instead of '{{,[== $_context =],}}'.
 % else assert false 
 % end 
@@ -1563,44 +1563,44 @@ Yes. You can use '<?php echo($_content); ?>' instead of '{{,[== $_context =],}}'
 .? File 'ex[%=n%]-layout.[%= suffix %]':
 .-------------------- ex[%=n%]-layout.[%= suffix %]
 <!-- -->
-% if $PYTHON
+% if PYTHON
 {{*#{[%= prefix %]_content}*}}
-% elsif $RUBY
+% elsif RUBY
 {{*#{[%= prefix %]_content}*}}
-% elsif $PERL
+% elsif PERL
 {{*[== $_content =]*}}
-% elsif $JS
+% elsif JS
 {{*#{[%= prefix %]_content}*}}
-% elsif $PHP
+% elsif PHP
 {{*{== $_content =}*}}
 % else assert false 
 % end 
 <!-- -->
 
 <!-- -->
-% if $PYTHON
+% if PYTHON
 {{*<?py echo(_content) ?>*}}
-% elsif $RUBY
+% elsif RUBY
 {{*<?rb echo(@_content) ?>*}}
-% elsif $PERL
+% elsif PERL
 {{*[== $_content ==]*}}
-% elsif $JS
+% elsif JS
 {{*<?js echo(_content); ?>*}}
-% elsif $PHP
+% elsif PHP
 {{*<?php echo($_content); ?>*}}
 % else assert false 
 % end 
 <!-- -->
-% if !$PHP
+% if !PHP
 
 <!-- -->
-% if $PYTHON
+% if PYTHON
 {{*<?py _buf.append(_content) ?>*}}
-% elsif $RUBY
+% elsif RUBY
 {{*<?rb _buf << @_content ?>*}}
-% elsif $PERL
+% elsif PERL
 {{*<?pl push(@_buf, $_content); ?>*}}
-% elsif $JS
+% elsif JS
 {{*<?js _buf.push(_content); ?>*}}
 % else assert false 
 % end 
@@ -1630,7 +1630,7 @@ foo
 bar
 baz
 <!-- -->
-% if !$PHP
+% if !PHP
 
 <!-- -->
 foo
@@ -1641,7 +1641,7 @@ baz
 .====================
 
 
-% if $PYTHON
+% if PYTHON
 
 [experimental] If you pass 'smarttrim=True' option to tenjin.Template() or tenjin.Engine(),
 "\n#{expr}\n" will be trimmed into "\n#{expr}".
@@ -1707,7 +1707,7 @@ baz
 
 Yes.
 
-% if $PYTHON
+% if PYTHON
 %   cache_storage_supported = true
 % else
 %   cache_storage_supported = false
@@ -1728,7 +1728,7 @@ The following is an example to generate M17N pages from a template file.
 
 % n += 1
 
-% if $PYTHON
+% if PYTHON
 
 
 .? ex[%=n%]-m18n.[%=suffix%]:
@@ -1861,7 +1861,7 @@ _buf.extend(('''<div>
 .====================
 
 
-% elsif $RUBY
+% elsif RUBY
 
 
 .? ex[%=n%]-m18n.[%=suffix%]:
@@ -1970,7 +1970,7 @@ $ [%= lang %] ex[%=n%]-m18n.[%=pi%]
 .====================
 
 
-% elsif $PERL
+% elsif PERL
 
 
 .? ex[%=n%]-m18n.[%=suffix%]:
@@ -2080,7 +2080,7 @@ $ [%= lang %] ex[%=n%]-m18n.[%=pi%]
 .====================
 
 
-% elsif $JS
+% elsif JS
 
 
 .? ex[%=n%]-m18n.[%=suffix%]:
@@ -2176,7 +2176,7 @@ $ [%= lang %] ex[%=n%]-m18n.[%=pi%]
 .====================
 
 
-% elsif $PHP
+% elsif PHP
 
 
 .? ex[%=n%]-m18n.[%=suffix%]:
@@ -2319,7 +2319,7 @@ The following example shows that:
 
 % n += 1 
 
-% if $PYTHON
+% if PYTHON
 
 .? File 'ex[%=n%]-content.[%= suffix %]':
 .-------------------- ex[%=n%]-content.[%= suffix %]
@@ -2352,7 +2352,7 @@ baz
 </html>
 .--------------------
 
-% elsif $RUBY
+% elsif RUBY
 
 .? File 'ex[%=n%]-content.[%= suffix %]':
 .-------------------- ex[%=n%]-content.[%= suffix %]
@@ -2385,7 +2385,7 @@ baz
 </html>
 .--------------------
 
-% elsif $PERL
+% elsif PERL
 
 .? File 'ex[%=n%]-content.[%= suffix %]':
 .-------------------- ex[%=n%]-content.[%= suffix %]
@@ -2419,7 +2419,7 @@ baz
 </html>
 .--------------------
 
-% elsif $JS
+% elsif JS
 
 .? File 'ex[%=n%]-content.[%= suffix %]':
 .-------------------- ex[%=n%]-content.[%= suffix %]
@@ -2452,7 +2452,7 @@ baz
 </html>
 .--------------------
 
-% elsif $PHP
+% elsif PHP
 
 .? File 'ex[%=n%]-content.[%= suffix %]':
 .-------------------- ex[%=n%]-content.[%= suffix %]
@@ -2524,7 +2524,7 @@ No, but you can emulate it partially by combination of template capturing and '[
 
 % n += 1 
 
-% if $PYTHON
+% if PYTHON
 
 .? File 'ex[%=n%]-baselayout.[%= suffix %]':
 .-------------------- ex[%=n%]-baselayout.[%= suffix %]
@@ -2608,7 +2608,7 @@ is equivarent to the following.
 .--------------------
 
 
-% elsif $RUBY
+% elsif RUBY
 
 
 .? File 'ex[%=n%]-baselayout.[%= suffix %]':
@@ -2693,7 +2693,7 @@ is equivarent to the following.
 .--------------------
 
 
-% elsif $PERL
+% elsif PERL
 
 
 .? File 'ex[%=n%]-baselayout.[%= suffix %]':
@@ -2778,7 +2778,7 @@ is equivarent to the following.
 .--------------------
 
 
-% elsif $JS
+% elsif JS
 
 
 .? File 'ex[%=n%]-baselayout.[%= suffix %]':
@@ -2863,7 +2863,7 @@ is equivarent to the following.
 .--------------------
 
 
-% elsif $PHP
+% elsif PHP
 
 
 .? File 'ex[%=n%]-baselayout.[%= suffix %]':
@@ -2956,15 +2956,15 @@ The following is the result. It shows that footer part in baselayout is override
 
 .? Result:
 .==================== ex[%=n%]_inherit.result
-% if $PYTHON
+% if PYTHON
 $ [%= command %] -c "[%= prefix %]items=['AAA', 'BBB', 'CCC']" ex[%=n%]-content.[%= suffix %]
-% elsif $RUBY
+% elsif RUBY
 $ [%= command %] -c "[%= prefix %]items=['AAA', 'BBB', 'CCC']" ex[%=n%]-content.[%= suffix %]
-% elsif $PERL
+% elsif PERL
 $ [%= command %] -c "items=>['AAA', 'BBB', 'CCC']" ex[%=n%]-content.[%= suffix %]
-% elsif $JS
+% elsif JS
 $ [%= command %] -c "items:['AAA','BBB','CCC']" ex[%=n%]-content.[%= suffix %]
-% elsif $PHP
+% elsif PHP
 $ [%= command %] -c '$items=array("AAA","BBB","CCC");' ex[%=n%]-content.[%= suffix %]
 % else assert false 
 % end 
@@ -2999,7 +2999,7 @@ $ [%= command %] -c '$items=array("AAA","BBB","CCC");' ex[%=n%]-content.[%= suff
 .######################################################################
 
 
-% if $PYTHON
+% if PYTHON
 
 .$ Encoding	| faq-encoding
 
@@ -3089,10 +3089,10 @@ If you got UnicodeDecodeError, you should do the following solutions.
 
 
 
-% elsif $RUBY
-% elsif $PERL
-% elsif $JS
-% elsif $PHP
+% elsif RUBY
+% elsif PERL
+% elsif JS
+% elsif PHP
 % else assert false 
 % end 
 
@@ -3151,24 +3151,24 @@ If you embed it to your template file such as '[%= embexpr('link_to("Create", ac
 .? Without preprocessing
 .--------------------
 template file:
-% if $PYTHON || $RUBY || $JS
+% if PYTHON || RUBY || JS
   #{link_to("Create", action="new")}
-% elsif $PERL
+% elsif PERL
   [== link_to("Create", "new") =]
-% elsif $PHP
+% elsif PHP
   {== link_to("Create", "new") =}
 % else raise "**error**" end
 
 converted script:
-% if $PYTHON
+% if PYTHON
   _buf.extend(({{*to_str(link_to("Create", action="new"))*}}, ))
-% elsif $RUBY
+% elsif RUBY
   _buf << ({{*link_to("Create", action="new")*}}).to_s
-% elsif $PERL
+% elsif PERL
   push(@_buf, {{*link_to("Create", 'new')*}});
-% elsif $JS
+% elsif JS
   _buf.push({{*link_to("Create", action="new")*}});
-% elsif $PHP
+% elsif PHP
   <?php echo  {{*link_to("Create", "new")*}} ; ?>
 % else raise "**error**" end
 
@@ -3181,24 +3181,24 @@ However, if you use preprocessing such as '[%= ppexpr('link_to("Create", action=
 .? With preprocessing
 .--------------------
 template file:
-% if $PYTHON || $RUBY || $JS
+% if PYTHON || RUBY || JS
   {{*#{{*}}link_to('Create', action='new'){{*}}*}}
-% elsif $PERL
+% elsif PERL
   {{*[[==*}} link_to("Create", "new") {{*=]]*}}
-% elsif $PHP
+% elsif PHP
   {{*{{==*}} link_to("Create", "new") {{*=}}*}}
 % else raise "**error**" end
 
 converted script:
-% if $PYTHON
+% if PYTHON
   _buf.extend(({{*'''<a href="/new">Create</a>'''*}}, ))
-% elsif $RUBY
+% elsif RUBY
   _buf << {{*%Q`<a href="/new">Create</a>`*}}
-% elsif $PERL
+% elsif PERL
   push(@_buf, {{*q`<a href="/new">Create</a>`*}});
-% elsif $JS
+% elsif JS
   _buf.push({{*'<a href="/new">Create</a>'*}});
-% elsif $PHP
+% elsif PHP
   <?php echo {{*'<a href="/new">Create</a>'*}} ; ?>
 % else raise "**error**" end
 
@@ -3223,7 +3223,7 @@ It makes rendering speed much faster.
 
 .? weekday1.[%=suffix%]:
 .-------------------- weekday1.[%=suffix%]
-% if $PYTHON
+% if PYTHON
 {{*<?PY*}} WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] ?>
 <select name="weekday">
   <option>-</option>
@@ -3233,7 +3233,7 @@ It makes rendering speed much faster.
   <option value="{{*#{{{}}{*}}i{{*}}*}}">{{*#{{{}}{*}}wday{{*}}*}}</option>
 {{*<?PY*}} #end ?>
 </select>
-% elsif $RUBY
+% elsif RUBY
 {{*<?RB*}} weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] ?>
 <select name="weekday">
   <option>-</option>
@@ -3243,7 +3243,7 @@ It makes rendering speed much faster.
   <option value="{{*#{{{}}{*}}i{{*}}*}}">{{*#{{{}}{*}}wday{{*}}*}}</option>
 {{*<?RB*}} end ?>
 </select>
-% elsif $PERL
+% elsif PERL
 {{*<?PY*}} $WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']; ?>
 <select name="weekday">
   <option>-</option>
@@ -3253,9 +3253,9 @@ It makes rendering speed much faster.
   <option value="{{*[[==*}}i{{*=]]*}}">{{*[[==*}}wday{{*=]]*}}</option>
 {{*<?PY*}} } ?>
 </select>
-% elsif $JS
+% elsif JS
 ## TODO
-% elsif $PHP
+% elsif PHP
 ## TODO
 % else assert false 
 % end 
@@ -3263,7 +3263,7 @@ It makes rendering speed much faster.
 
 .? weekday1.[%=ext%]:
 .-------------------- weekday1.[%=ext%]
-% if $PYTHON
+% if PYTHON
 ## import all helper methods
 import tenjin
 {{*from tenjin.helpers import **}}
@@ -3273,22 +3273,22 @@ print '***** preprocessed *****'
 print engine.get_template('weekday1.[%=suffix%]').script,
 print '***** output *****'
 print engine.render('weekday1.[%=suffix%]'),
-% elsif $RUBY
+% elsif RUBY
 require 'tenjin'
 engine = Tenjin::Engine.new(:preprocess=>true)
 puts '***** preprocessed *****'
 puts engine.get_template('weekday1.[%=suffix%]').script
 puts '***** output *****'
 puts engine.render('weekday1.[%=suffix%]')
-% elsif $PERL
+% elsif PERL
 ## TODO
-% elsif $JS
+% elsif JS
 var engine = new Tenjin.Engine({preprocess:true});
 print("***** preprocessed *****\n");
 print(engine.getTemplate('weekday1.[%=suffix%]').script);
 print("***** output *****\n");
 print(engine.render('weekday1.[%=suffix%]'));
-% elsif $PHP
+% elsif PHP
 ## TODO
 % else assert false 
 % end 
@@ -4009,7 +4009,7 @@ See {{<this section|#faq-m17n-cache>}} for M17N example using preprocessing.
 [%= name %] contains benchmark script.
 This shows that [%= name %] works much faster than other solutions.
 
-% if $PYTHON
+% if PYTHON
 
 .? MacOS X 10.4 Tiger, Intel CoreDuo 1.83GHz, Memory 2GB
 .====================
@@ -4070,7 +4070,7 @@ Versions:
 .* Mako 0.1.9
 .* Templetor (web.py) 0.22
 
-% elsif $RUBY
+% elsif RUBY
 
 .? MacOS X 10.4 Tiger, Intel CoreDuo 1.83GHz, Memory 2GB
 .====================
@@ -4103,7 +4103,7 @@ tenjin-reuse     4.370000   0.180000   4.550000 (  4.549724)
 .#tenjin-reuse     8.580000   0.330000   8.910000 ( 10.311393)
 .====================
 
-% elsif $PERL
+% elsif PERL
 
 .? MacOS X 10.4 Tiger, Intel CoreDuo 1.83GHz, Memory 2GB
 .====================
@@ -4123,7 +4123,7 @@ htmltmpl-reuse         30.1700      0.0400     30.2100     31.0000
 .====================
 
 
-% elsif $JS
+% elsif JS
 
 .? MacOS X 10.4 Tiger, Intel CoreDuo 1.83GHz, Memory 2GB
 .====================
@@ -4157,7 +4157,7 @@ time java -server -jar js.jar bench.js -n 10000 tenjin-reuse
        19.15 real        18.59 user         0.42 sys
 .====================
 
-% elsif $PHP
+% elsif PHP
 
 .====================
 $ cd pltenjin-X.X.X/benchmark
@@ -4213,13 +4213,13 @@ Template engine should use their host language directly unless there are some ki
 .######################################################################
 
 
-% if ! $JS && !$PHP
+% if ! JS && !PHP
 .$$ Is there any way to get more speed?		| faq-performance-tuning
 % end 
 
 % n += 1 
 
-% if $PYTHON
+% if PYTHON
 
 You can get more speed by including 'escape()' and 'to_str()' functions to context data.
 
@@ -4294,7 +4294,7 @@ _buf.extend(('''</ul>\n''', ));
 .====================
 
 
-% elsif $RUBY
+% elsif RUBY
 
  .* Tenjin::ArrayBufferTemplate may be a litte faster than Tenjin::Template.
     Tenjin::ArrayBufferTemplate generates Ruby code which use Array buffer and Array#push() method.
@@ -4448,7 +4448,7 @@ _buf.extend(('''</ul>\n''', ));
 	.====================
    
    
-% elsif $PERL
+% elsif PERL
 
 'Tenjin::Template::defun({{/funcname/}}, {{/args/}}, ...)' generates definition of subroutine.
 This may make [%= name %] faster.
@@ -4494,9 +4494,9 @@ push(@_buf, q` </body>
 .====================
 
 
-% elsif $JS
+% elsif JS
 
-% elsif $PHP
+% elsif PHP
 
 % else assert false 
 % end 
