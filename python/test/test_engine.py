@@ -363,6 +363,25 @@ class EngineTest(unittest.TestCase, TestCaseHelper):
         finally:
             _remove_files(filenames.values())
 
+
+    def test_cachefile_unset(self):
+        try:
+            input = "<?py x = 10 ?>"
+            template_name = "cachefile_delete.pyhtml"
+            open(template_name, 'w').write(input)
+            storage = tenjin.MarshalCacheStorage()
+            engine = tenjin.Engine(cache=storage)
+            engine.render(template_name)
+            fullpath = os.path.abspath(template_name)
+            self.assertTrue(fullpath in storage.items)
+            self.assertExists(template_name + '.cache')
+            storage.unset(fullpath)
+            self.assertFalse(fullpath in storage.items)
+            self.assertNotExist(template_name + '.cache')
+        finally:
+            _remove_files([template_name, template_name+'.cache'])
+
+
     def test_change_layout(self):
         data = EngineTest.testdata['test_change_layout']
         ## setup
