@@ -1,5 +1,5 @@
 ###
-### $Release: 0.8.0 $
+### $Release: 0.8.1 $
 ### copyright(c) 2007-2009 kuwata-lab.com all rights reserved.
 ###
 
@@ -16,7 +16,7 @@ else:
 
 
 name     = 'Tenjin'
-version  = '0.8.0'
+version  = '0.8.1'
 author   = 'makoto kuwata'
 email    = 'kwa@kuwata-lab.com'
 maintainer = author

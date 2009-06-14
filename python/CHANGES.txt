@@ -2,6 +2,17 @@
 CHANGES
 =======
 
+Release 0.8.1 (2009-06-14)
+--------------------------
+
+* [Bugfix]
+
+  * Fix bugs on CacheStorage#unset(). (thanks Steve)
+
+  * Fix tenjin.helpers.html.new_cycle() to work on Python 3.0.
+
+
+
 Release 0.8.0 (2009-06-07)
 --------------------------
 

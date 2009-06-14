@@ -12,7 +12,7 @@ import os, re
 from glob import glob
 from kook.utils import read_file, write_file
 
-release = prop('release', '0.8.0')
+release = prop('release', '0.8.1')
 #package = prop('package', 'pyTenjin')
 package = prop('package', 'Tenjin')
 copyright = prop('copyright', "copyright(c) 2007-2009 kuwata-lab.com all rights reserved.")
