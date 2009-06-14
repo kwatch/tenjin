@@ -805,7 +805,7 @@ class CacheStorage(object):
 
     def __init__(self, postfix='.cache'):
         self.postfix = postfix
-        self.items = {}
+        self.items = {}    # key: full path, value: template object
 
     def get(self, fullpath, create_template):
         """get template object. if not found, load attributes from cache file and restore  template object."""
@@ -831,7 +831,7 @@ class CacheStorage(object):
 
     def unset(self, fullpath):
         """remove template object from dict and cache file."""
-        self.items.delete(self)
+        self.items.delete(fullpath)
         return self._delete(fullpath)
 
     def clear(self):
