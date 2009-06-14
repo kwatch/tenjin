@@ -873,7 +873,7 @@ class FileCacheStorage(CacheStorage):
 
     def _delete(self, fullpath):
         cachepath = self._cachename(fullpath)
-        if os.path.isfile(cachepath): os.path.unlink(cachepath)
+        if os.path.isfile(cachepath): os.unlink(cachepath)
 
 
 class MarshalCacheStorage(FileCacheStorage):
