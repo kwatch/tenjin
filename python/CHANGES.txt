@@ -11,6 +11,12 @@ Release 0.8.1 (2009-06-14)
 
   * Fix tenjin.helpers.html.new_cycle() to work on Python 3.0.
 
+* [Changes]
+
+  * Update 'doc/faq.html' and add new section.
+    'Is it possible to change indent restriction more flexible?'
+    http://www.kuwata-lab.com/tenjin/pytenjin-faq.html#faq-flexibleindent
+
 
 
 Release 0.8.0 (2009-06-07)
