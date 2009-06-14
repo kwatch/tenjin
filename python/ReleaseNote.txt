@@ -3,15 +3,8 @@
 I have released pyTenjin 0.8.0
 http://www.kuwata-lab.com/tenjin/
 
-pyTenjin is the fastest template engine for Python.
-
-* Very fast (about 10 times faster than Django template engine)
-* Easy to learn (no need to learn template-original language)
-* Full-featured (layout template, partial template, preprocessing, ...)
-* Very small (only 1,200 lines, one file)
-* Goole AppEngine supported.
-  http://www.kuwata-lab.com/tenjin/pytenjin-faq.html#faq-google-appengine
-
+In this release, I included some ideas that Steve suggested.
+Thank you very much, Steve.
 
 
 Changes from 0.7.0
@@ -103,6 +96,12 @@ Enhancements
 
   * Update User's Guide and FAQ.
 
+
+Have fun!
+
+--
+regards,
+makoto kuwata
 
 
 .######################################################################
