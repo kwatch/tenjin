@@ -461,22 +461,24 @@ $ python ex6-expr-pattern.py
 &lt;html&gt;
   &lt;body&gt;
     &lt;div id="main-content"&gt;
-&lt;?py if items: ?&gt;
+<strong>&lt;?py if items: ?&gt;</strong>
       &lt;table&gt;
         &lt;tbody&gt;
-    &lt;?py for item in itmes: ?&gt;
+    <strong>&lt;?py i = 0 ?&gt;</strong>
+    <strong>&lt;?py for item in items: ?&gt;</strong>
+    <strong>&lt;?py     i += 1 ?&gt;</strong>
           &lt;tr&gt;
-        &lt;?py if item.name: ?&gt;
-            &lt;td&gt;${item.name}&lt;/td&gt;
-            &lt;td&gt;${item.value}&lt;/td&gt;
-        &lt;?py else: ?&gt;
-            &lt;td colspan="2"&gt;${item.value}&lt;/td&gt;
-        &lt;?py end ?&gt;
-        &lt;/tr&gt;
-    &lt;?py #endfor ?&gt;
+            &lt;td&gt;${i}&lt;/td&gt;
+        <strong>&lt;?py if item: ?&gt;</strong>
+            &lt;td&gt;${item}&lt;/td&gt;
+        <strong>&lt;?py else: ?&gt;</strong>
+            &lt;td&gt;-&lt;/td&gt;
+        <strong>&lt;?py #endif ?&gt;</strong>
+          &lt;/tr&gt;
+    <strong>&lt;?py #endfor ?&gt;</strong>
         &lt;/tbody&gt;
       &lt;/table&gt;
-&lt;?py #endif ?&gt;
+<strong>&lt;?py #endif ?&gt;</strong>
     &lt;/div&gt;
   &lt;/body&gt;
 &lt;/html&gt;
@@ -490,30 +492,31 @@ $ python ex6-expr-pattern.py
       <pre class="program">
 &lt;html&gt;
   &lt;body&gt;
-    &lt;?py if items: ?&gt;
-    &lt;div class="items" id="items"&gt;
-      &lt;span&gt;#{len(items)} items:&lt;/span&gt;
+    &lt;div id="main-content"&gt;
+      <strong>&lt;?py if items: ?&gt;</strong>
       &lt;table&gt;
         &lt;tbody&gt;
-          &lt;?py for item in items: ?&gt;
+          <strong>&lt;?py i = 0 ?&gt;</strong>
+          <strong>&lt;?py for item in items: ?&gt;</strong>
+          <strong>&lt;?py   i += 1 ?&gt;</strong>
           &lt;tr&gt;
-            &lt;?py if item.name: ?&gt;
-            &lt;td&gt;${item.name}&lt;/td&gt;
-            &lt;td&gt;${item.value}&lt;/td&gt;
-            &lt;?py else: ?&gt;
-            &lt;td colspan="2"&gt;${item.value}&lt;/td&gt;
-            &lt;?py #endif ?&gt;
+            &lt;td&gt;${i}&lt;/td&gt;
+            <strong>&lt;?py if item: ?&gt;</strong>
+            &lt;td&gt;${item}&lt;/td&gt;
+            <strong>&lt;?py else: ?&gt;</strong>
+            &lt;td&gt;-&lt;/td&gt;
+            <strong>&lt;?py #endif ?&gt;</strong>
           &lt;/tr&gt;
-          &lt;?py #endfor ?&gt;
+        <strong>&lt;?py #endfor ?&gt;</strong>
         &lt;/tbody&gt;
       &lt;/table&gt;
+      <strong>&lt;?py #endif ?&gt;</strong>
     &lt;/div&gt;
-    &lt;?py #endif ?&gt;
   &lt;/body&gt;
 &lt;/html&gt;
 </pre>
 
-      <p>It is very difficult for pyTenjin to support this style, but you can hack Template class to insert dummy if-statement. This is not complete solution, but can help you.</p><a name="flexibleindent.py" id="flexibleindent.py"></a>
+      <p>If you like the latter, you can try <a href="http://gist.github.com/129297">http://gist.github.com/129297</a>. Save this code as 'my_template.py' and try the following:</p><a name="flexibleindent.py" id="flexibleindent.py"></a>
 
       <div class="program_caption">
         File 'flexibleindent.py':
@@ -521,27 +524,16 @@ $ python ex6-expr-pattern.py
       <pre class="program">
 import tenjin
 from tenjin.helpers import *
+from my_template import MyTemplate
 
-class MyTemplate(tenjin.Template):
-
-    def add_stmt(self, buf, code):
-        if buf:
-            s = buf[-1]
-            if s and s.isspace() and s.find("\n") &lt; 0 and len(s) &gt; len(self._spaces):
-                buf[-1:-1] = (self._spaces, "if True: ## dummy\n", )
-        if self.newline == "\r\n":
-            code = code.replace("\r\n", "\n")
-        buf.append(code)
-
-if __name__ == '__main__':
-    import sys
-    if len(sys.argv) &lt; 2: raise "template filename required."
-    template = <strong>MyTemplate</strong>(sys.argv[1], <strong>indent=2</strong>)  # change indent width
-    print(template.script)
-    #<strong>tenjin.Engine.templateclass = MyTemplate</strong>
-    #engine = tenjin.Engine(<strong>indent=2</strong>)
-    #html = engine.render(sys.argv[1])
-    #print(html)
+import sys
+template_name = len(sys.argv) &gt; 1 and sys.argv[1] or 'flexibleindent.pyhtml'
+engine = tenjin.Engine(templateclass=MyTemplate)
+print("-------------------- script")
+print(engine.get_template(template_name).script)
+print("-------------------- html")
+html = engine.render(template_name, {'items': ['AAA', None, 'CCC']})
+print(html)
 </pre><a name="flexibleindent.result" id="flexibleindent.result"></a>
 
       <div class="terminal_caption">
@@ -549,80 +541,56 @@ if __name__ == '__main__':
       </div>
       <pre class="terminal">
 $ python flexibleindent.py flexibleindent.pyhtml
+-------------------- script
 _buf.extend(('''&lt;html&gt;
-  &lt;body&gt;\n''', ));
-<strong>if True: ## dummy</strong>
-    if items:
-      _buf.extend(('''    &lt;div class="items" id="items"&gt;
-      &lt;span&gt;''', to_str(len(items)), ''' items:&lt;/span&gt;
-      &lt;table&gt;
+  &lt;body&gt;
+    &lt;div id="main-content"&gt;\n''', ));
+<strong>if items:</strong>
+    _buf.extend(('''      &lt;table&gt;
         &lt;tbody&gt;\n''', ));
-      <strong>if True: ## dummy</strong>
-          for item in items:
-            _buf.extend(('''          &lt;tr&gt;\n''', ));
-            if item.name:
-              _buf.extend(('''            &lt;td&gt;''', escape(to_str(item.name)), '''&lt;/td&gt;
-            &lt;td&gt;''', escape(to_str(item.value)), '''&lt;/td&gt;\n''', ));
-            else:
-              _buf.extend(('''            &lt;td colspan="2"&gt;''', escape(to_str(item.value)), '''&lt;/td&gt;\n''', ));
-            #endif
-            _buf.extend(('''          &lt;/tr&gt;\n''', ));
-          #endfor
-          _buf.extend(('''        &lt;/tbody&gt;
-      &lt;/table&gt;
-    &lt;/div&gt;\n''', ));
-    #endif
-    _buf.extend(('''  &lt;/body&gt;
+    <strong>i = 0</strong>
+    <strong>for item in items:</strong>
+        <strong>i += 1</strong>
+        _buf.extend(('''          &lt;tr&gt;
+            &lt;td&gt;''', escape(to_str(i)), '''&lt;/td&gt;\n''', ));
+        <strong>if item:</strong>
+            _buf.extend(('''            &lt;td&gt;''', escape(to_str(item)), '''&lt;/td&gt;\n''', ));
+        <strong>else:</strong>
+            _buf.extend(('''            &lt;td&gt;-&lt;/td&gt;\n''', ));
+        <strong>#endif</strong>
+        _buf.extend(('''          &lt;/tr&gt;\n''', ));
+    <strong>#endfor</strong>
+    _buf.extend(('''        &lt;/tbody&gt;
+      &lt;/table&gt;\n''', ));
+<strong>#endif</strong>
+_buf.extend(('''    &lt;/div&gt;
+  &lt;/body&gt;
 &lt;/html&gt;\n''', ));
 
-</pre>
+-------------------- html
+&lt;html&gt;
+  &lt;body&gt;
+    &lt;div id="main-content"&gt;
+      &lt;table&gt;
+        &lt;tbody&gt;
+          &lt;tr&gt;
+            &lt;td&gt;1&lt;/td&gt;
+            &lt;td&gt;AAA&lt;/td&gt;
+          &lt;/tr&gt;
+          &lt;tr&gt;
+            &lt;td&gt;2&lt;/td&gt;
+            &lt;td&gt;-&lt;/td&gt;
+          &lt;/tr&gt;
+          &lt;tr&gt;
+            &lt;td&gt;3&lt;/td&gt;
+            &lt;td&gt;CCC&lt;/td&gt;
+          &lt;/tr&gt;
+        &lt;/tbody&gt;
+      &lt;/table&gt;
+    &lt;/div&gt;
+  &lt;/body&gt;
+&lt;/html&gt;
 
-      <p>The above example works fine, but the following will not work. This is one of the limitations of current pyTenjin architecture.</p><a name="flexibleindent2.pyhtml" id="flexibleindent2.pyhtml"></a>
-
-      <div class="program_caption">
-        File 'flexibleindent2.pyhtml':
-      </div>
-      <pre class="program">
-&lt;div&gt;
-  &lt;div&gt;
-    &lt;?py if foo: ?&gt;
-    foo
-    &lt;?py #end ?&gt;
-  &lt;/div&gt;
-  &lt;?py if bar: ?&gt;
-  bar
-  &lt;?py #end ?&gt;
-&lt;/div&gt;
-</pre><a name="flexibleindent2.result2" id="flexibleindent2.result2"></a>
-
-      <div class="terminal_caption">
-        Result:
-      </div>
-      <pre class="terminal">
-$ python flexibleindent.py flexibleindent2.pyhtml
-_buf.extend(('''&lt;div&gt;
-  &lt;div&gt;\n''', ));
-if True: ## dummy
-    if foo:
-      _buf.extend(('''    foo\n''', ));
-    #end
-    _buf.extend(('''  &lt;/div&gt;\n''', ));
-  if bar:
-    _buf.extend(('''  bar\n''', ));
-  #end
-  _buf.extend(('''&lt;/div&gt;\n''', ));
-
-</pre>
-
-      <div class="terminal_caption">
-        Check syntax error:
-      </div>
-      <pre class="terminal">
-$ python flexibleindent.py flexibleindent2.pyhtml | python
-  File "&lt;stdin&gt;", line 8
-    if bar:
-          ^
-IndentationError: unindent does not match any outer indentation level
 </pre><br>
       <a name="faq-escape-newline" id="faq-escape-newline"></a>
 

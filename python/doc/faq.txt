@@ -415,22 +415,24 @@ For example, You may not like such as:
 <html>
   <body>
     <div id="main-content">
-<?py if items: ?>
+{{*<?py if items: ?>*}}
       <table>
         <tbody>
-    <?py for item in itmes: ?>
+    {{*<?py i = 0 ?>*}}
+    {{*<?py for item in items: ?>*}}
+    {{*<?py     i += 1 ?>*}}
           <tr>
-        <?py if item.name: ?>
-            <td>${item.name}</td>
-            <td>${item.value}</td>
-        <?py else: ?>
-            <td colspan="2">${item.value}</td>
-        <?py end ?>
-        </tr>
-    <?py #endfor ?>
+            <td>${i}</td>
+        {{*<?py if item: ?>*}}
+            <td>${item}</td>
+        {{*<?py else: ?>*}}
+            <td>-</td>
+        {{*<?py #endif ?>*}}
+          </tr>
+    {{*<?py #endfor ?>*}}
         </tbody>
       </table>
-<?py #endif ?>
+{{*<?py #endif ?>*}}
     </div>
   </body>
 </html>
@@ -442,177 +444,250 @@ And you may prefer the following:
 .-------------------- flexibleindent.pyhtml
 <html>
   <body>
-    <?py if items: ?>
-    <div class="items" id="items">
-      <span>#{len(items)} items:</span>
+    <div id="main-content">
+      {{*<?py if items: ?>*}}
       <table>
         <tbody>
-          <?py for item in items: ?>
+          {{*<?py i = 0 ?>*}}
+          {{*<?py for item in items: ?>*}}
+          {{*<?py   i += 1 ?>*}}
           <tr>
-            <?py if item.name: ?>
-            <td>${item.name}</td>
-            <td>${item.value}</td>
-            <?py else: ?>
-            <td colspan="2">${item.value}</td>
-            <?py #endif ?>
+            <td>${i}</td>
+            {{*<?py if item: ?>*}}
+            <td>${item}</td>
+            {{*<?py else: ?>*}}
+            <td>-</td>
+            {{*<?py #endif ?>*}}
           </tr>
-          <?py #endfor ?>
+        {{*<?py #endfor ?>*}}
         </tbody>
       </table>
+      {{*<?py #endif ?>*}}
     </div>
-    <?py #endif ?>
   </body>
 </html>
 .--------------------
 
-It is very difficult for pyTenjin to support this style, but you can hack Template class to insert dummy if-statement.
-This is not complete solution, but can help you.
+If you like the latter, you can try {{<http://gist.github.com/129297>}}.
+Save this code as 'my_template.py' and try the following:
 
 .? File 'flexibleindent.py':
 .-------------------- flexibleindent.py
 import tenjin
 from tenjin.helpers import *
+from my_template import MyTemplate
 
-class MyTemplate(tenjin.Template):
-
-    def add_stmt(self, buf, code):
-        if buf:
-            s = buf[-1]
-            if s and s.isspace() and s.find("\n") < 0 and len(s) > len(self._spaces):
-                buf[-1:-1] = (self._spaces, "if True: ## dummy\n", )
-        if self.newline == "\r\n":
-            code = code.replace("\r\n", "\n")
-        buf.append(code)
-
-if __name__ == '__main__':
-    import sys
-    if len(sys.argv) < 2: raise "template filename required."
-    template = {{*MyTemplate*}}(sys.argv[1], {{*indent=2*}})  # change indent width
-    print(template.script)
-    #{{*tenjin.Engine.templateclass = MyTemplate*}}
-    #engine = tenjin.Engine({{*indent=2*}})
-    #html = engine.render(sys.argv[1])
-    #print(html)
+import sys
+template_name = len(sys.argv) > 1 and sys.argv[1] or 'flexibleindent.pyhtml'
+engine = tenjin.Engine(templateclass=MyTemplate)
+print("-------------------- script")
+print(engine.get_template(template_name).script)
+print("-------------------- html")
+html = engine.render(template_name, {'items': ['AAA', None, 'CCC']})
+print(html)
 .--------------------
 
 .? Result:
 .==================== flexibleindent.result
 $ python flexibleindent.py flexibleindent.pyhtml
+-------------------- script
 _buf.extend(('''<html>
-  <body>\n''', ));
-{{*if True: ## dummy*}}
-    if items:
-      _buf.extend(('''    <div class="items" id="items">
-      <span>''', to_str(len(items)), ''' items:</span>
-      <table>
+  <body>
+    <div id="main-content">\n''', ));
+{{*if items:*}}
+    _buf.extend(('''      <table>
         <tbody>\n''', ));
-      {{*if True: ## dummy*}}
-          for item in items:
-            _buf.extend(('''          <tr>\n''', ));
-            if item.name:
-              _buf.extend(('''            <td>''', escape(to_str(item.name)), '''</td>
-            <td>''', escape(to_str(item.value)), '''</td>\n''', ));
-            else:
-              _buf.extend(('''            <td colspan="2">''', escape(to_str(item.value)), '''</td>\n''', ));
-            #endif
-            _buf.extend(('''          </tr>\n''', ));
-          #endfor
-          _buf.extend(('''        </tbody>
-      </table>
-    </div>\n''', ));
-    #endif
-    _buf.extend(('''  </body>
+    {{*i = 0*}}
+    {{*for item in items:*}}
+        {{*i += 1*}}
+        _buf.extend(('''          <tr>
+            <td>''', escape(to_str(i)), '''</td>\n''', ));
+        {{*if item:*}}
+            _buf.extend(('''            <td>''', escape(to_str(item)), '''</td>\n''', ));
+        {{*else:*}}
+            _buf.extend(('''            <td>-</td>\n''', ));
+        {{*#endif*}}
+        _buf.extend(('''          </tr>\n''', ));
+    {{*#endfor*}}
+    _buf.extend(('''        </tbody>
+      </table>\n''', ));
+{{*#endif*}}
+_buf.extend(('''    </div>
+  </body>
 </html>\n''', ));
 
-.====================
-
-The above example works fine, but the following will not work.
-This is one of the limitations of current pyTenjin architecture.
-
-.? File 'flexibleindent2.pyhtml':
-.-------------------- flexibleindent2.pyhtml
-<div>
-  <div>
-    <?py if foo: ?>
-    foo
-    <?py #end ?>
-  </div>
-  <?py if bar: ?>
-  bar
-  <?py #end ?>
-</div>
-.--------------------
-
-.? Result:
-.==================== flexibleindent2.result2
-$ python flexibleindent.py flexibleindent2.pyhtml
-_buf.extend(('''<div>
-  <div>\n''', ));
-if True: ## dummy
-    if foo:
-      _buf.extend(('''    foo\n''', ));
-    #end
-    _buf.extend(('''  </div>\n''', ));
-  if bar:
-    _buf.extend(('''  bar\n''', ));
-  #end
-  _buf.extend(('''</div>\n''', ));
-
-.====================
-
-.? Check syntax error:
-.====================
-$ python flexibleindent.py flexibleindent2.pyhtml | python
-  File "<stdin>", line 8
-    if bar:
-          ^
-IndentationError: unindent does not match any outer indentation level
-.====================
-
-
-.#+++
-.-------------------- flexibleindent-test.py
-import sys
-from flexibleindent import MyTemplate
-import tenjin
-from tenjin.helpers import *
-class Item(object):
-    def __init__(self, name, value):
-        self.name  = name
-	self.value = value
-items = [ Item('foo', 100), Item('', 200), Item('baz', 300) ]
-tenjin.Engine.templateclass = MyTemplate
-engine = tenjin.Engine(indent=2)
-html = engine.render(sys.argv[1], {'items':items})
-sys.stdout.write(html)
-.--------------------
-
-.==================== flexibleindent-test.result
-$ python flexibleindent-test.py flexibleindent.pyhtml
+-------------------- html
 <html>
   <body>
-    <div class="items" id="items">
-      <span>3 items:</span>
+    <div id="main-content">
       <table>
         <tbody>
           <tr>
-            <td>foo</td>
-            <td>100</td>
+            <td>1</td>
+            <td>AAA</td>
           </tr>
           <tr>
-            <td colspan="2">200</td>
+            <td>2</td>
+            <td>-</td>
           </tr>
           <tr>
-            <td>baz</td>
-            <td>300</td>
+            <td>3</td>
+            <td>CCC</td>
           </tr>
         </tbody>
       </table>
     </div>
   </body>
 </html>
+
 .====================
-.#---
+
+
+.#.? File 'flexibleindent.py':
+.#.-------------------- flexibleindent.py
+.#import tenjin
+.#from tenjin.helpers import *
+.#
+.#class MyTemplate(tenjin.Template):
+.#
+.#    def add_stmt(self, buf, code):
+.#        if buf:
+.#            s = buf[-1]
+.#            if s and s.isspace() and s.find("\n") < 0 and len(s) > len(self._spaces):
+.#                buf[-1:-1] = (self._spaces, "if True: ## dummy\n", )
+.#        if self.newline == "\r\n":
+.#            code = code.replace("\r\n", "\n")
+.#        buf.append(code)
+.#
+.#if __name__ == '__main__':
+.#    import sys
+.#    if len(sys.argv) < 2: raise "template filename required."
+.#    template = {{*MyTemplate*}}(sys.argv[1], {{*indent=2*}})  # change indent width
+.#    print(template.script)
+.#    #{{*tenjin.Engine.templateclass = MyTemplate*}}
+.#    #engine = tenjin.Engine({{*indent=2*}})
+.#    #html = engine.render(sys.argv[1])
+.#    #print(html)
+.#.--------------------
+.#
+.#.? Result:
+.#.==================== flexibleindent.result
+.#$ python flexibleindent.py flexibleindent.pyhtml
+.#_buf.extend(('''<html>
+.#  <body>\n''', ));
+.#{{*if True: ## dummy*}}
+.#    if items:
+.#      _buf.extend(('''    <div class="items" id="items">
+.#      <span>''', to_str(len(items)), ''' items:</span>
+.#      <table>
+.#        <tbody>\n''', ));
+.#      {{*if True: ## dummy*}}
+.#          for item in items:
+.#            _buf.extend(('''          <tr>\n''', ));
+.#            if item.name:
+.#              _buf.extend(('''            <td>''', escape(to_str(item.name)), '''</td>
+.#            <td>''', escape(to_str(item.value)), '''</td>\n''', ));
+.#            else:
+.#              _buf.extend(('''            <td colspan="2">''', escape(to_str(item.value)), '''</td>\n''', ));
+.#            #endif
+.#            _buf.extend(('''          </tr>\n''', ));
+.#          #endfor
+.#          _buf.extend(('''        </tbody>
+.#      </table>
+.#    </div>\n''', ));
+.#    #endif
+.#    _buf.extend(('''  </body>
+.#</html>\n''', ));
+.#
+.#.====================
+.#
+.#The above example works fine, but the following will not work.
+.#This is one of the limitations of current pyTenjin architecture.
+.#
+.#.? File 'flexibleindent2.pyhtml':
+.#.-------------------- flexibleindent2.pyhtml
+.#<div>
+.#  <div>
+.#    <?py if foo: ?>
+.#    foo
+.#    <?py #end ?>
+.#  </div>
+.#  <?py if bar: ?>
+.#  bar
+.#  <?py #end ?>
+.#</div>
+.#.--------------------
+.#
+.#.? Result:
+.#.==================== flexibleindent2.result2
+.#$ python flexibleindent.py flexibleindent2.pyhtml
+.#_buf.extend(('''<div>
+.#  <div>\n''', ));
+.#if True: ## dummy
+.#    if foo:
+.#      _buf.extend(('''    foo\n''', ));
+.#    #end
+.#    _buf.extend(('''  </div>\n''', ));
+.#  if bar:
+.#    _buf.extend(('''  bar\n''', ));
+.#  #end
+.#  _buf.extend(('''</div>\n''', ));
+.#
+.#.====================
+.#
+.#.? Check syntax error:
+.#.====================
+.#$ python flexibleindent.py flexibleindent2.pyhtml | python
+.#  File "<stdin>", line 8
+.#    if bar:
+.#          ^
+.#IndentationError: unindent does not match any outer indentation level
+.#.====================
+
+
+.#.#+++
+.#.-------------------- flexibleindent-test.py
+.#import sys
+.#from flexibleindent import MyTemplate
+.#import tenjin
+.#from tenjin.helpers import *
+.#class Item(object):
+.#    def __init__(self, name, value):
+.#        self.name  = name
+.#	self.value = value
+.#items = [ Item('foo', 100), Item('', 200), Item('baz', 300) ]
+.#tenjin.Engine.templateclass = MyTemplate
+.#engine = tenjin.Engine(indent=2)
+.#html = engine.render(sys.argv[1], {'items':items})
+.#sys.stdout.write(html)
+.#.--------------------
+.#
+.#.==================== flexibleindent-test.result
+.#$ python flexibleindent-test.py flexibleindent.pyhtml
+.#<html>
+.#  <body>
+.#    <div class="items" id="items">
+.#      <span>3 items:</span>
+.#      <table>
+.#        <tbody>
+.#          <tr>
+.#            <td>foo</td>
+.#            <td>100</td>
+.#          </tr>
+.#          <tr>
+.#            <td colspan="2">200</td>
+.#          </tr>
+.#          <tr>
+.#            <td>baz</td>
+.#            <td>300</td>
+.#          </tr>
+.#        </tbody>
+.#      </table>
+.#    </div>
+.#  </body>
+.#</html>
+.#.====================
+.#.#---
 
 
 

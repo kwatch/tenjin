@@ -130,6 +130,9 @@ def file_txt(c):
             i += 1
             fname = re.sub(r'\.result2$', '%s.result' % i, filename)
             open(fname, 'w').write('$ ' + cont)
+    #
+    if name == 'faq':
+        cp('../misc/my_template.py', datadir)
 
 
 @ingreds(testdir + '/test_users_guide.py',
