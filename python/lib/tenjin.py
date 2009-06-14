@@ -357,7 +357,8 @@ def _create_html_module():
             while True:
                 yield values[i]
                 i = (i + 1) % n
-        return gen(values).next
+        if   python2:  return gen(values).next
+        elif python3:  return gen(values).__next__
 
     mod = _create_module('tenjin.helpers.html')
     mod._escape_table = _escape_table
