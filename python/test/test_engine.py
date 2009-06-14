@@ -378,6 +378,9 @@ class EngineTest(unittest.TestCase, TestCaseHelper):
             storage.unset(fullpath)
             self.assertFalse(fullpath in storage.items)
             self.assertNotExist(template_name + '.cache')
+            def f():
+                storage.unset(fullpath)
+            self.assertNotRaise(f)
         finally:
             _remove_files([template_name, template_name+'.cache'])
 

@@ -831,7 +831,7 @@ class CacheStorage(object):
 
     def unset(self, fullpath):
         """remove template object from dict and cache file."""
-        self.items.pop(fullpath)
+        self.items.pop(fullpath, None)
         return self._delete(fullpath)
 
     def clear(self):
