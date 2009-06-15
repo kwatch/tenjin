@@ -50,8 +50,8 @@ def _write_binary_file(filename, content):
     global random
     f = None
     try:
-        if random is None: import random
-        tmpfile = filename + str(random.random())[1:]
+        if random is None: from random import random
+        tmpfile = filename + str(random())[1:]
         f = open(tmpfile, 'wb')
         f.write(content)
     finally:
