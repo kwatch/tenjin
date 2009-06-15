@@ -1,3 +1,50 @@
+.######################################################################
+.$ ANN: pyTenjin 0.8.1 - much faster template engine than Django
+
+I released pyTenjin 0.8.1.
+http://www.kuwata-lab.com/tenjin/
+http://pypi.python.org/pypi/Tenjin/
+
+pyTenjin is the fastest template engine for Python.
+
+* Very fast (about 10 times faster than Django template engine)
+* Easy to learn (no need to learn template-original language)
+* Full-featured (layout template, partial template, preprocessing, ...)
+* Very small (only 1,200 lines, one file)
+
+This is a bug fix release.
+See CHANGES for details.
+  http://www.kuwata-lab.com/tenjin/pytenjin-CHANGES.txt
+
+
+Bugfix from 0.8.1
+-----------------
+
+  * Fix bugs on CacheStorage#unset(). (thanks Steve)
+
+  * Fix tenjin.helpers.html.new_cycle() to work on Python 3.0.
+
+
+Changes from 0.8.1
+------------------
+
+  * Update 'doc/faq.html' and add new section.
+    'Is it possible to change indent restriction more flexible?'
+    http://www.kuwata-lab.com/tenjin/pytenjin-faq.html#faq-flexibleindent
+
+
+Documents
+---------
+
+  * User's Guide
+      http://www.kuwata-lab.com/tenjin/pytenjin-users-guide.html
+  * FAQ
+      http://www.kuwata-lab.com/tenjin/pytenjin-faq.html
+  * CHANGES
+      http://www.kuwata-lab.com/tenjin/pytenjin-CHANGES.txt
+
+
+.######################################################################
 .$ ANN: pyTenjin 0.8.0 - much faster template engine than Django
 
 I have released pyTenjin 0.8.0
