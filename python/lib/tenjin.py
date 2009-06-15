@@ -34,7 +34,8 @@ __license__  = "MIT License"
 __all__      = ['Template', 'Engine', 'helpers', 'html', ]
 
 
-import re, sys, os, time, marshal
+import re, sys, os
+random = marshal = pickle = memcache = unquote = None   # lazy import
 python3 = sys.version_info[0] == 3
 python2 = sys.version_info[0] == 2
 
@@ -46,9 +47,10 @@ logger = None
 ##
 
 def _write_binary_file(filename, content):
+    global random
     f = None
     try:
-        import random
+        if random is None: import random
         tmpfile = filename + str(random.random())[1:]
         f = open(tmpfile, 'wb')
         f.write(content)
@@ -225,9 +227,11 @@ def _create_helpers_module():
 
     def _decode_params(s):
         """decode <`#...#`> and <`$...$`> into #{...} and ${...}"""
-        import urllib
-        if   python2:  from urllib       import unquote
-        elif python3:  from urllib.parse import unquote
+        global unquote
+        if unquote is None:
+            import urllib
+            if   python2:  from urllib       import unquote
+            elif python3:  from urllib.parse import unquote
         dct = { 'lt':'<', 'gt':'>', 'amp':'&', 'quot':'"', '#039':"'", }
         def unescape(s):
             #return s.replace('&lt;', '<').replace('&gt;', '>').replace('&quot;', '"').replace('&#039;', "'").replace('&amp;',  '&')
@@ -879,6 +883,11 @@ class FileCacheStorage(CacheStorage):
 
 class MarshalCacheStorage(FileCacheStorage):
 
+    def __init__(self, postfix='.cache'):
+        global marshal
+        if marshal is None: import marshal
+        FileCacheStorage.__init__(self, postfix)
+
     def _load(self, fullpath):
         cachepath = self._cachename(fullpath)
         if not os.path.isfile(cachepath): return None
@@ -894,9 +903,14 @@ class MarshalCacheStorage(FileCacheStorage):
 
 class PickleCacheStorage(FileCacheStorage):
 
+    def __init__(self, postfix='.cache'):
+        global pickle
+        if pickle is None:
+            try:    import cPickle as pickle
+            except: import pickle
+        FileCacheStorage.__init__(self, postfix)
+
     def _load(self, fullpath):
-        try:    import cPickle as pickle
-        except: import pickle
         cachepath = self._cachename(fullpath)
         if not os.path.isfile(cachepath): return None
         if logger: logger.info("[tenjin.PickleCacheStorage] load cache (file=%s)" % repr(cachepath))
@@ -904,8 +918,6 @@ class PickleCacheStorage(FileCacheStorage):
         return pickle.loads(dump)
 
     def _store(self, fullpath, dict):
-        try:    import cPickle as pickle
-        except: import pickle
         if 'bytecode' in dict: dict.pop('bytecode')
         cachepath = self._cachename(fullpath)
         if logger: logger.info("[tenjin.PickleCacheStorage] store cache (file=%s)" % repr(cachepath))
@@ -970,16 +982,16 @@ class GaeMemcacheCacheStorage(CacheStorage):
     def __init__(self, lifetime=None, postfix='.cache'):
         CacheStorage.__init__(self, postfix)
         if lifetime is not None:  self.lifetime = lifetime
+        global memcache
+        if memcache is None: from google.appengine.api import memcache
 
     def _load(self, fullpath):
-        from google.appengine.api import memcache
         key = self._cachename(fullpath)
         if logger: logger.info("[tenjin.GaeMemcacheCacheStorage] load cache (key=%s)" % repr(key))
         return memcache.get(key)
 
     def _store(self, fullpath, dict):
         if 'bytecode' in dict: dict.pop('bytecode')
-        from google.appengine.api import memcache
         key = self._cachename(fullpath)
         if logger: logger.info("[tenjin.GaeMemcacheCacheStorage] store cache (key=%s)" % repr(key))
         ret = memcache.set(key, dict, self.lifetime)
@@ -987,7 +999,6 @@ class GaeMemcacheCacheStorage(CacheStorage):
             if logger: logger.info("[tenjin.GaeMemcacheCacheStorage: failed to store cache (key=%s)" % repr(key))
 
     def _delete(self, fullpath):
-        from google.appengine.api import memcache
         memcache.delete(self._cachename(fullpath))
 
 
