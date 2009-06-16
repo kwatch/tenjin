@@ -3,6 +3,7 @@
 ## see http://www.kuwata-lab.com/kook  for details.
 ##
 
+names = "tenjin django cheetah kid myghty genshi mako templetor jinja2".split(' ')
 kook_default_product = 'all'
 
 N = 10000
@@ -15,6 +16,6 @@ def task_all(c, *args):
     system(c%'python bench.py -n $(n)')
 
 def task_clean(c):
-    rm_rf('bench_django.*', 'bench_cheetah.*', 'bench_tenjin.*', 'bench_kid.*',
-          'bench_myghty.*', 'bench_genshi.*', 'bench_mako*', 'bench_templetor.*')
+    rm_rf(['bench_%s.*' % name for name in names])
+    rm_rf(['%s.result'  % name for name in names])
     rm_rf('mako_modules')
