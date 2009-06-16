@@ -608,6 +608,50 @@ class TempletorEntry(Entry):
 Entry.register(TempletorEntry)
 
 
+class Jinja2Entry(Entry):
+
+    basename = 'jinja2'
+    template_filename = 'bench_jinja2.html'
+    salts = [None, 'reuse']
+
+    def create_template(cls):
+        content = Entry.create_template(cls.template_filename)
+        open(cls.template_filename, 'w').write(content)
+    create_template = classmethod(create_template)
+
+    def load_library(cls):
+        global jinja2
+        if globals().get('jinja2'): return
+        try:
+            jinja2 = import_module('jinja2')
+        except ImportError:
+            jinja2 = None
+        return jinja2
+    load_library = classmethod(load_library)
+
+    def available(self):
+        global jinja2
+        return jinja2 and True or False
+
+    def _execute(self, context, ntimes):
+        filename = self.template_filename
+        for i in xrange(ntimes):
+            env = jinja2.Environment(loader=jinja2.FileSystemLoader(['.']))
+            template = env.get_template(filename)
+            output = template.render(context)
+        return output
+
+    def _execute_reuse(self, context, ntimes):
+        filename = self.template_filename
+        env = jinja2.Environment(loader=jinja2.FileSystemLoader(['.']))
+        for i in xrange(ntimes):
+            template = env.get_template(filename)
+            output = template.render(context)
+        return output
+
+Entry.register(Jinja2Entry)
+
+
 ## ----------------------------------------
 
 
