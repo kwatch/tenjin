@@ -828,10 +828,10 @@ def execute_benchmark(entries, context, ntimes, print_output):
 
         ## print output
         if print_output:
-            if isinstance(output, str):
+            if isinstance(output, basestring):
                 fname = '%s.result' % entry.name
                 open(fname, 'w').write(output)
-            msg('*** output created: %s\n' % fname)
+                msg('*** output created: %s\n' % fname)
 
 
 if __name__ == '__main__':
