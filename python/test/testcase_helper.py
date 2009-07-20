@@ -16,9 +16,13 @@ python2 = sys.version_info[0] == 2
 if python2:
     _unicode = unicode
     _bytes   = str
+    def _is_str(val):
+        return isinstance(val, (str, unicode))
 elif python3:
     _unicode = str
     _bytes   = bytes
+    def _is_str(val):
+        return isinstance(val, (str, bytes))
 
 
 def read_file(filename, mode='rb'):
@@ -136,21 +140,21 @@ class TestCaseHelper:
         msg = "File %s expected to be newer thant %s." % (repr(filename), repr(arg))
         if identifier: msg = "[%s] %s" % (identifier, msg)
         mtime1 = os.path.getmtime(filename)
-        mtime2 = isinstance(arg, (str, unicode)) and os.path.getmtime(arg) or arg
+        mtime2 = _is_str(arg) and os.path.getmtime(arg) or arg
         self.assertTrue(mtime1 > mtime2, msg)
 
     def assertSameTimestampWith(self, filename, arg, identifier=None):
         msg = "File %s expected to be the same timestampt with %s." % (repr(filename), repr(arg))
         if identifier: msg = "[%s] %s" % (identifier, msg)
         mtime1 = os.path.getmtime(filename)
-        mtime2 = isinstance(arg, (str, unicode)) and os.path.getmtime(arg) or arg
+        mtime2 = _is_str(arg) and os.path.getmtime(arg) or arg
         self.assertTrue(mtime1 == mtime2, msg)
 
     def asertFileOlderThan(self, filename, arg, identifier=None):
         msg = "File %s expected to be older thant %s." % (repr(filename), repr(arg))
         if identifier: msg = "[%s] %s" % (identifier, msg)
         mtime1 = os.path.getmtime(filename)
-        mtime2 = isinstance(arg, (str, unicode)) and os.path.getmtime(arg) or arg
+        mtime2 = _is_str(arg) and os.path.getmtime(arg) or arg
         self.assertTrue(mtime1 < mtime2, msg)
 
     ###
