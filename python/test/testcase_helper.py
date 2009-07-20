@@ -4,7 +4,7 @@
 ###
 
 #import unittest
-import os, sys, difflib, re, traceback
+import os, sys, difflib, re
 import yaml
 
 __all__ = ['TestCaseHelper', 'read_file', 'write_file',
