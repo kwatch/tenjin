@@ -52,6 +52,15 @@ def remove_unmatched_test_methods(testcase_class, pattern=None):
 
 class TestCaseHelper:
 
+    @classmethod
+    def remove_tests_except(cls, test_name):
+        if not test_name: return
+        if not test_name.startswith('test_'):
+            test_name = 'test_' + test_name
+        for name in dir(cls):
+            if name.startswith('test_') and name != test_name:
+                delattr(cls, name)
+
     def _testname(self):
         try:
             return self._TestCase__testMethodName
