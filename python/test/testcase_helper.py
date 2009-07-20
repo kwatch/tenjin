@@ -103,6 +103,49 @@ class TestCaseHelper:
         if os.path.exists(filename):
             self.fail("file exists: " + repr(filename))
 
+    def assertFileExists(self, filename, identifier=None):
+        msg = "File %s expected but nof found." % filename
+        if identifier: msg = "[%s] %s" % (identifier, msg)
+        self.assertTrue(os.path.isfile(filename), msg)
+
+    def assertFileNotExist(self, filename, identifier=None):
+        msg = "File %s expected not to be there but exists." % filename
+        if identifier: msg = "[%s] %s" % (identifier, msg)
+        self.assertFalse(os.path.isfile(filename), msg)
+
+    def assertDirExists(self, dirname, identifier=None):
+        msg = "Directory %s expected but nof found." % dirname
+        if identifier: msg = "[%s] %s" % (identifier, msg)
+        self.assertTrue(os.path.isdir(dirname), msg)
+
+    def assertDirNotExist(self, dirname, identifier=None):
+        msg = "Directory %s expected not to be there but exists." % dirname
+        if identifier: msg = "[%s] %s" % (identifier, msg)
+        self.assertFalse(os.path.isdir(dirname), msg)
+
+    def assertFileNewerThan(self, filename, arg, identifier=None):
+        msg = "File %s expected to be newer thant %s." % (repr(filename), repr(arg))
+        if identifier: msg = "[%s] %s" % (identifier, msg)
+        mtime1 = os.path.getmtime(filename)
+        mtime2 = isinstance(arg, (str, unicode)) and os.path.getmtime(arg) or arg
+        self.assertTrue(mtime1 > mtime2, msg)
+
+    def assertSameTimestampWith(self, filename, arg, identifier=None):
+        msg = "File %s expected to be the same timestampt with %s." % (repr(filename), repr(arg))
+        if identifier: msg = "[%s] %s" % (identifier, msg)
+        mtime1 = os.path.getmtime(filename)
+        mtime2 = isinstance(arg, (str, unicode)) and os.path.getmtime(arg) or arg
+        self.assertTrue(mtime1 == mtime2, msg)
+
+    def asertFileOlderThan(self, filename, arg, identifier=None):
+        msg = "File %s expected to be older thant %s." % (repr(filename), repr(arg))
+        if identifier: msg = "[%s] %s" % (identifier, msg)
+        mtime1 = os.path.getmtime(filename)
+        mtime2 = isinstance(arg, (str, unicode)) and os.path.getmtime(arg) or arg
+        self.assertTrue(mtime1 < mtime2, msg)
+
+    ###
+
     def load_testdata(filename, untabify=True):
         i = filename.rfind('.')
         if filename[i:] != '.yaml' and filename[i:] != '.yml':
