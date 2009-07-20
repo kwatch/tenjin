@@ -198,3 +198,6 @@ class TestCaseHelper:
         code = "\n".join(buf)
         return code
     generate_testcode = staticmethod(generate_testcode)
+
+
+TestCaseHelper.assertRaises2 = TestCaseHelper.assertRaise
