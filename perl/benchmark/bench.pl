@@ -1,188 +1,155 @@
-### $Rev$
-### $Release: 0.0.0 $
+###
+### $Release$
 ### $Copyright$
-
-
-## default values
-my $ntimes = 1000;
-my $flag_print = 0;
-my $use_strict = 0;
-my $mode = 'class';  # or 'hash'
-my @testnames1 = qw[tenjin tenjin-nocache tenjin-reuse];
-my @testnames2 = qw[tenjin-tmpl tenjin-tmpl-cache tenjin-tmpl-reuse tenjin-defun tenjin-compile];
-my @testnames3 = qw[tt tt-reuse htmltmpl htmltmpl-reuse];
-my @testnames_all = ();
-push(@testnames_all, @testnames1, @testnames2, @testnames3);
-my @testnames = ();
-push(@testnames, @testnames1, @testnames3);
-listsub(\@testnames, \@dummy);
-#print "@testnames\n";
+###
 
 ## packages
-push(@INC, '../lib');
+push @INC, '../lib';
 use strict;
-use Benchmark;
-use Getopt::Std;
-use Template;
-use HTML::Template;
-use Tenjin;
 
-## utilities
-sub listsub {
-    my ($list1, $list2) = @_;
-    for my $item (@$list2) {
-        my@l = @$list1;
-        for (my $i = 0; $i <= $#l; $i++) {
-            if ($item eq $list1->[$i]) {
-                splice(@$list1, $i, 1);
-                last;
-            }
-        }
-    }
-    return $list1;
+
+## helper function
+sub read_file {
+    my ($filename) = @_;
+    #Tenjin::Util::write_file($filename, $content);
+    open my $fh, $filename  or die "$filename: $!";
+    read $fh, my $content, (-s $filename);
+    close $fh;
+    return $content;
 }
 
-## command-line options
-my %options;
-getopts('hvpwn:m:x:A', \%options) or die($@);
-@testnames = @ARGV          if (@ARGV);
-@testnames = @testnames_all if ($options{'A'});
-$ntimes = 0 + $options{'n'} if ($options{'n'});
-$flag_print = 1             if ($options{'p'});
-$Tenjin::USE_STRICT = 1     if ($options{'w'});
-$mode = $options{'m'}       if ($options{'m'});
-$mode == 'hash' || $mode == 'class' or die("-m $mode: invalid mode.");
-if ($options{'x'}) {
-    my @names = split(',', $options{'x'});
-    listsub(\@testnames, \@names);
+sub write_file {
+    my ($filename, $content) = @_;
+    #Tenjin::Util::write_file($filename, $content);   # or File::Slurp
+    open my $fh, ">$filename"  or die "$filename: $!";
+    print $fh $content;
+    close $fh;
 }
-#print "*** debug: @testnames\n";
 
-if ($options{'h'}) {
-    print "Usage: python bench.pl [..options..] [testname ...]\n";
-    print "  -h:                help\n";
-    print "  -n N:              repeat loop N times\n";
-    print "  -w:                use strict\n";
-    print "  -p:                print output\n";
-    print "  -m [hash|class]:   mode\n";
-    exit(0);
+sub _touch {
+    my ($src, $dst) = @_;
+    my $mtime = (stat $src)[9];
+    utime $mtime, $mtime, $dst;
 }
 
 
-## template filenames
-my $template_filenames = {
-    tenjin   => 'bench_tenjin.plhtml',
-    tt       => 'bench_tt.tt',
-    htmltmpl => 'bench_htmltmpl.tmpl',
-};
+##
+## base class of benchmark
+##
+package BenchmarkObject;
 
+our @subclasses;
+#our %all_instances;      # 'bench-name' => instance-object
+#our %loaded_packages;    # 'package-name' => boolean
+#our %built_templates;    # 'file-name' => boolean
+#our $continue_when_failed = 1;
 
-## context
-my $context_filename = 'bench_context.pl';
-my $s = Tenjin::Util::read_file($context_filename);
-my $context1 = eval $s;
-$context1->{list} = $context1->{$mode == 'hash' ? 'hash_list' : 'user_list'};
-#use Data::Dumper;
-#print Dumper($context1);
-
-
-## context for html::template
-my $list = $context1->{list};
-my $n = 0;
-my @list2 = ();
-for my $item (@$list) {
-    my %item2 = %$item;
-    delete($item2{name2});
-    $item2{n} = ++$n;
-    $item2{class} = $n % 2 == 0 ? 'even' : 'odd';
-    $item2{minus} = $item->{change} < 0.0;
-    push(@list2, \%item2);
+sub new {
+    my ($class) = @_;
+    my $this = {
+        name => undef,
+    };
+    return bless $this, $class;
 }
-my $context2 = { list=>\@list2 };
-#use Data::Dumper;
-#print Dumper($context2);
+
+sub before_all {
+    return 0;
+}
+
+sub before_each {
+    return 0;
+}
+
+sub after_each {
+    return 0;
+}
+
+sub after_all {
+    return 0;
+}
+
+sub load_package {
+    my ($this, $package_name) = @_;
+    $@ = undef;
+    eval "use $package_name";
+    my $errmsg = $@;
+    return unless $errmsg;
+    warn "*** failed to load package '$package_name'";
+    $@ = undef;
+    return $errmsg;
+}
+
+sub build_template {
+    my ($class, $filename) = @_;
+    my $body   = main::read_file("templates/$filename")    or die $!;
+    my $header = main::read_file("templates/_header.html") or die $!;
+    my $footer = main::read_file("templates/_footer.html") or die $!;
+    main::write_file($filename, $header . $body . $footer);
+}
 
 
-## template-toolkit
-sub bench_tt {
-    my ($n, $template_filename, $context) = @_;
+##
+## Tenjin benchmark
+##
+package TenjinBenchmark;
+our @ISA = ('BenchmarkObject');
+push @BenchmarkObject::subclasses, 'TenjinBenchmark';
+our $template_filename = 'bench_tenjin.plhtml';
+
+sub before_all {
+    my ($class) = @_;
+    $class->build_template($template_filename);
+    $class->load_package('Tenjin')  and return -1;
+}
+
+sub before_each {
+    my ($this) = @_;
+    my $cache = $template_filename.".cache";
+    unlink $cache if -f $cache;
+}
+
+sub _bench_tenjin_template {
+    my ($this, $n, $context) = @_;
     my $output;
     while ($n--) {
-        my $template = Template->new;
-        $output = undef;  # required
-        $template->process($template_filename, $context, \$output);
-    }
-    return $output;
-}
-
-## template-toolkit (reuse)
-sub bench_tt_reuse {
-    my ($n, $template_filename, $context) = @_;
-    my $output;
-    my $template = Template->new;
-    while ($n--) {
-        $output = undef;  # required
-        $template->process($template_filename, $context, \$output);
-    }
-    return $output;
-}
-
-## html::template
-sub bench_htmltmpl {
-    my ($n, $template_filename, $context) = @_;
-    my $output;
-    while ($n--) {
-	my $template = new HTML::Template(filename=>$template_filename);
-	$template->param($context);
-	$output = $template->output;
-    }
-    return $output;
-}
-
-## html::template (reuse)
-sub bench_htmltmpl_reuse {
-    my ($n, $template_filename, $context) = @_;
-    my $output;
-    my $template = new HTML::Template(filename=>$template_filename);
-    while ($n--) {
-	$template->param($context);
-	$output = $template->output;
-    }
-    return $output;
-}
-
-## tenjin template
-sub bench_tenjin_template {
-    my ($n, $template_filename, $context) = @_;
-    my $output;
-    while ($n--) {
-        my $template = new Tenjin::Template($template_filename);
+        my $template = Tenjin::Template->new($template_filename);
         $output = $template->render($context);
     }
     return $output;
 }
 
-## tenjin template (cache)
-sub bench_tenjin_template_cache {
-    my ($n, $template_filename, $context) = @_;
+sub _bench_tenjin_template_cache {
+    my ($this, $n, $context) = @_;
     my $output;
-    my $template = new Tenjin::Template($template_filename);
-    my $script = $template->{'script'};
+    my $template = Tenjin::Template->new($template_filename);
+    my $script = $template->{script};
     my $cache_filename = $template_filename . '.cache';
-    Tenjin::Util::write_file($cache_filename, $script);
+    main::write_file($cache_filename, $script);
     while ($n--) {
-        my $template = new Tenjin::Template();
-        $template->{script} = Tenjin::Util::read_file($cache_filename);
+        my $template = Tenjin::Template->new();
+        $template->{script} = main::read_file($cache_filename);
         $output = $template->render($context);
     }
     return $output;
 }
 
-## tenjin template (reuse)
-sub bench_tenjin_template_reuse {
-    my ($n, $template_filename, $context) = @_;
+sub _bench_tenjin_template_reuse {
+    my ($this, $n, $context) = @_;
     my $output;
-    my $template = new Tenjin::Template($template_filename);
+    my $template = Tenjin::Template->new($template_filename);
+    while ($n--) {
+        $output = $template->render($context);
+    }
+    return $output;
+}
+
+## tenjin::template (compile)
+sub _bench_tenjin_template_compile {
+    my ($this, $n, $context) = @_;
+    my $output;
+    my $template = Tenjin::Template->new($template_filename);
+    my $f = $template->compile();
+    #main::write_file('tenjin_defun.pl', $script);
     while ($n--) {
         $output = $template->render($context);
     }
@@ -191,23 +158,11 @@ sub bench_tenjin_template_reuse {
 
 ## tenjin
 sub bench_tenjin {
-    my ($n, $template_filename, $context) = @_;
+    my ($this, $n, $context) = @_;
     my $output;
-    unlink("$template_filename.cache") if (-f "$template_filename.cache");
+    #unlink "$template_filename.cache" if -f "$template_filename.cache";
     while ($n--) {
-        my $engine = new Tenjin::Engine();
-        $output = $engine->render($template_filename, $context);
-    }
-    return $output;
-}
-
-## tenjin (nocache)
-sub bench_tenjin_nocache {
-    my ($n, $template_filename, $context) = @_;
-    my $output;
-    unlink("$template_filename.cache") if (-f "$template_filename.cache");
-    while ($n--) {
-        my $engine = new Tenjin::Engine({cache=>0});
+        my $engine = Tenjin::Engine->new();
         $output = $engine->render($template_filename, $context);
     }
     return $output;
@@ -215,9 +170,9 @@ sub bench_tenjin_nocache {
 
 ## tenjin (reuse)
 sub bench_tenjin_reuse {
-    my ($n, $template_filename, $context) = @_;
+    my ($this, $n, $context) = @_;
     my $output;
-    unlink("$template_filename.cache") if (-f "$template_filename.cache");
+    #unlink "$template_filename.cache" if -f "$template_filename.cache";
     my $engine = new Tenjin::Engine();
     while ($n--) {
         $output = $engine->render($template_filename, $context);
@@ -225,13 +180,25 @@ sub bench_tenjin_reuse {
     return $output;
 }
 
-## tenjin (defun)
-sub bench_tenjin_defun {
-    my ($n, $template_filename, $context) = @_;
+## tenjin (nocache)
+sub bench_tenjin_nocache {
+    my ($this, $n, $context) = @_;
     my $output;
-    my $template = new Tenjin::Template($template_filename, {escapefunc=>'Tenjin::Util::escape_xml'});
+    #unlink "$template_filename.cache" if -f "$template_filename.cache";
+    while ($n--) {
+        my $engine = Tenjin::Engine->new({cache=>0});
+        $output = $engine->render($template_filename, $context);
+    }
+    return $output;
+}
+
+## tenjin (defun)
+sub _bench_tenjin_defun {
+    my ($this, $n, $context) = @_;
+    my $output;
+    my $template = Tenjin::Template->new($template_filename, {escapefunc=>'Tenjin::Util::escape_xml'});
     my $script = $template->defun('render_tenjin_template', qw[list]);
-    #Tenjin::Util::write_file('tenjin_defun.pl', $script);
+    #main::write_file('tenjin_defun.pl', $script);
     eval $script;
     $@ and die($@);
     while ($n--) {
@@ -240,93 +207,333 @@ sub bench_tenjin_defun {
     return $output;
 }
 
-
-## tenjin (compile)
-use Data::Dumper;
-sub bench_tenjin_compile {
-    my ($n, $template_filename, $context) = @_;
+## tenjin (eval)
+sub _bench_tenjin_eval {
+    my ($this, $n, $context) = @_;
     my $output;
-    my $template = new Tenjin::Template($template_filename);
-    my $f = $template->compile();
-    #Tenjin::Util::write_file('tenjin_defun.pl', $script);
+    my $script;
+    if (-f "bench_tenjin.plhtml.cache") {
+        $script = main::read_file("bench_tenjin.plhtml.cache");
+    } else {
+        my $template = new Tenjin::Template($template_filename, {escapefunc=>'Tenjin::Util::escape_xml'});
+        $script = $template->{script};
+    }
+    my $preamble = <<'END';
+        my $_context = shift;
+        my @_a = ();
+        for (keys %$_context) { push @_a, "my \$$_=\$_context->{$_};"; }
+        #eval join("", @_a);
+END
+    #my $clos = eval "sub { $preamble $script }";  ! $@ or die $@;
+    eval "sub _tmpfunc111 { $preamble $script }";  ! $@ or die $@;
     while ($n--) {
-        $output = $template->render($context);
+        #$output = $clos->($context);
+        my $list = $context->{'list'};
+        $output = _tmpfunc111($context);
     }
     return $output;
 }
 
 
-## benchmark functions
-my $function_table = {
-    'tenjin'            => 'bench_tenjin',
-    'tenjin-nocache'    => 'bench_tenjin_nocache',
-    'tenjin-reuse'      => 'bench_tenjin_reuse',
-    'tenjin-defun'      => 'bench_tenjin_defun',
-    'tenjin-compile'    => 'bench_tenjin_compile',
-    'tenjin-tmpl'       => 'bench_tenjin_template',
-    'tenjin-tmpl-cache' => 'bench_tenjin_template_cache',
-    'tenjin-tmpl-reuse' => 'bench_tenjin_template_reuse',
-    'tt'                => 'bench_tt',
-    'tt-reuse'          => 'bench_tt_reuse',
-    'htmltmpl'          => 'bench_htmltmpl',
-    'htmltmpl-reuse'    => 'bench_htmltmpl_reuse',
-};
+##
+## Template-Toolkit benchmark
+##
+package TemplateToolkitBenchmark;
+our @ISA = ('BenchmarkObject');
+push @BenchmarkObject::subclasses, 'TemplateToolkitBenchmark';
+our $template_filename = 'bench_tt.tt';
 
-
-## create template file
-my $header = Tenjin::Util::read_file("templates/_header.html");
-my $footer = Tenjin::Util::read_file("templates/_footer.html");
-if (grep(/tenjin/, @testnames)) {
-    my $body = Tenjin::Util::read_file("templates/bench_tenjin.plhtml");
-    Tenjin::Util::write_file("bench_tenjin.plhtml", $header . $body . $footer);
-}
-if (grep(/tt/, @testnames)) {
-    my $body = Tenjin::Util::read_file("templates/bench_tt.tt");
-    Tenjin::Util::write_file("bench_tt.tt", $header . $body . $footer);
-}
-if (grep(/htmltmpl/, @testnames)) {
-    my $body = Tenjin::Util::read_file("templates/bench_htmltmpl.tmpl");
-    Tenjin::Util::write_file("bench_htmltmpl.tmpl", $header . $body . $footer);
+sub before_all {
+    my ($this) = @_;
+    $this->build_template($template_filename);
+    $this->load_package('Template')  and return -1;
 }
 
+sub bench_tt {
+    my ($this, $n, $context) = @_;
+    my $output;
+    while ($n--) {
+        my $template = Template->new();
+        $output = undef;  # required
+        $template->process($template_filename, $context, \$output);
+    }
+    return $output;
+}
 
-## main loop
-print "*** n = $ntimes\n";
-print "                          user         sys       total        real\n";
+sub bench_tt_reuse {
+    my ($this, $n, $context) = @_;
+    my $output;
+    my $template = Template->new();
+    while ($n--) {
+        $output = undef;  # required
+        $template->process($template_filename, $context, \$output);
+    }
+    return $output;
+}
 
-for my $testname (@testnames) {
-    ## create template file
-    my @m = split(/[-_]/, $testname);
-    my $template_filename = $template_filenames->{$m[0]};
-    $template_filename or die("$testname: unknown test name.");
 
-    ## call benchmark function
-    my $funcname = $function_table->{$testname};
-    $funcname or die("$testname: unknown test name.");
-    $| = 1;
-    printf("%-18s", $testname);
+##
+## HTML::Template benchmark
+##
+package HtmlTemplateBenchmark;
+our @ISA = ('BenchmarkObject');
+push @BenchmarkObject::subclasses, 'HtmlTemplateBenchmark';
+use File::Basename;
+our $template_filename = "bench_htmltmpl.tmpl";
+
+sub before_all {
+    my ($this) = @_;
+    $this->build_template($template_filename);
+    $this->load_package("HTML::Template")  and return -1;
+}
+
+use Data::Dumper;
+sub _convert_context {
+    my ($this, $context) = @_;
+    my $i = 0;
+    my @list = map {
+        my %item = %$_;
+        delete $item{name2};
+        $item{n} = ++$i;
+        $item{class} = $i % 2 == 0 ? 'even' : 'odd';
+        $item{minus} = $item{change} < 0.0;
+        \%item;
+    } @{$context->{list}};
+    return { list=>\@list };
+}
+
+sub bench_htmltmpl {
+    my ($this, $n, $context) = @_;
+    $context = $this->_convert_context($context);
+    my $output;
+    while ($n--) {
+        my $template = new HTML::Template(filename=>$template_filename);
+        $template->param($context);
+        $output = $template->output;
+    }
+    return $output;
+}
+
+sub bench_htmltmpl_reuse {
+    my ($this, $n, $context) = @_;
+    $context = $this->_convert_context($context);
+    my $output;
+    my $template = new HTML::Template(filename=>$template_filename);
+    while ($n--) {
+        $template->param($context);
+        $output = $template->output;
+    }
+    return $output;
+}
+
+sub bench_htmltmpl_edit_context {
+    my ($this, $n, $context) = @_;
+    $context = $this->_convert_context($context);
+    my $output;
+    my $template = new HTML::Template(filename=>$template_filename);
+    while ($n--) {
+        #
+        my $i = 0;
+        for my $item (@{$context->{list}}) {
+            delete $item->{name2};
+            $item->{n} = ++$i;
+            $item->{class} = $i % 2 == 0 ? 'even' : 'odd';
+            $item->{minus} = $item->{change} < 0.0;
+        }
+        #
+        $template->param($context);
+        $output = $template->output;
+    }
+    return $output;
+}
+
+
+##
+## main application
+##
+package BenchmarkApplication;
+use strict;
+use Data::Dumper;
+use Getopt::Std;
+use Time::HiRes;
+
+sub new {
+    my $class = shift;
+    my $this = {
+        ntimes      => 1000,
+        flag_print  => undef,
+        flag_strict => undef,
+        mode        => 'class',   # or 'hash'
+    };
+    return bless $this, $class;
+}
+
+sub parse_command_options {
+    my ($this) = @_;
+    my %opts;
+    getopts('hvpwn:m:x:A', \%opts) or die $@;
+    $this->{ntimes}     = 0 + $opts{n}  if $opts{n};
+    $this->{flag_print} = 1             if $opts{p};
+    $this->{use_strict} = 1             if $opts{w};
+    $this->{mode}       = $opts{m}      if $opts{m};
+    ! $opts{m} || $opts{m} =~ /^(class|hash)$/  or
+        die "-m $opts{m}: 'class' or 'hash' expected.\n";
+    return \%opts;
+}
+
+sub help_message {
+    my $script = basename(__FILE__);
+    my $msg = <<END;
+Usage: perl $script [..options..] [testname ...]
+  -h:                help
+  -n N:              repeat loop N times
+  -w:                set Tenjin::USE_STRICT = 1
+  -p:                print output
+  -m [hash|class]:   mode
+END
+    return $msg;
+}
+
+sub get_bench_classes {
+    my ($this, $opt_all) = @_;
+    my %dict;   # benchmark-name => class-name
+    for my $klass (@BenchmarkObject::subclasses) {
+        my %symbols = eval "%${klass}::";
+        my $pat = $opt_all ? '^_?bench_' : '/^bench_';
+        for (keys %symbols) {
+            next unless s/$pat//;
+            $dict{$_} = $klass;
+        }
+    }
+    return %dict;
+}
+
+sub get_bench_names {
+    my ($this, $opt_all) = @_;
+    open FH, __FILE__  or die $!;
+    my @lines = <FH>;
+    close FH;
+    my @names;
+    my $pat = $opt_all ? '^ *sub _?bench_(\w+)' : '^ *sub bench_(\w+)';
+    for (@lines) {
+        push @names, $1 if /$pat/;
+    }
+    return @names;
+}
+
+sub load_context_data {
+    my ($this, $mode) = @_;
+    my $context_filename = 'bench_context.pl';
+    my $s = main::read_file($context_filename);
+    my $context = eval $s;
+    $context->{list} = $context->{$mode == 'hash' ? 'hash_list' : 'user_list'};
+    #use Data::Dumper;
+    #print Dumper($context);
+    return $context;
+}
+
+sub do_benchmark {
+    my ($this, $name, $obj, $method, $context) = @_;
+    printf("%-22s  ", $name);
+    my $ntimes = $this->{ntimes};
     my @start_times = times();
-    my $start_time  = time();
-    my $context = $context1;
-    $context = $context2 if ($testname =~ m/htmltmpl/);
-    my $output = eval "$funcname(\$ntimes, \$template_filename, \$context)";
-    $@ and die($@);
-    #$output = $funcname($ntimes, $template_filename, $context);
+    my $start_time  = Time::HiRes::time();
+    my $output = $obj->$method($ntimes, $context);
     my @end_times = times();
-    my $end_time  = time();
-
-    ## result
+    my $end_time  = Time::HiRes::time();
     my $utime = $end_times[0] - $start_times[0];   # user
     my $stime = $end_times[1] - $start_times[1];   # sys
     my $rtime = $end_time - $start_time;           # real
     #printf("%-18s %10.4f  %10.4f  %10.4f  %10.4f\n",
     #    $testname, $utime, $stime, $utime + $stime, $rtime);
-    printf("  %10.4f  %10.4f  %10.4f  %10.4f\n",
+    printf("%10.4f  %10.4f  %10.4f  %10.4f\n",
            $utime, $stime, $utime + $stime, $rtime);
-
-    ## output
-    if ($flag_print) {
-        Tenjin::Util::write_file("output.$testname.html", $output);
-    }
-
+    return $output;
 }
+
+sub main {
+    my ($this) = @_;
+    ## parse command-line options
+    my $opts = $this->parse_command_options();
+    if ($opts->{h}) {
+        print $this->help_message();
+        return;
+    }
+    ## benchmark names to invoke
+    my %bench_classes = $this->get_bench_classes('true');
+    my @target_names;
+    if (@ARGV) {
+        ! $opts->{A}  or die "error: cannot specify both '-A' and arguments.";
+        my @all_bench_names   = $this->get_bench_names('true');
+        for my $name (@ARGV) {
+            if ($name =~ /\*/) {
+                $_ = $name;
+                s/\*/\.*/g;
+                my $pat = '^'.$_.'$';
+                my @matched = grep { /$pat/ } @all_bench_names;
+                @matched  or die "$_: unknown benchmark name.";
+                push @target_names, @matched;
+            }
+            else {
+                defined $bench_classes{$name}  or die "$name: unknown benchmark name.";
+                push @target_names, $name;
+            }
+        }
+    }
+    else {
+        @target_names = $this->get_bench_names($opts->{A});
+    }
+    if ($opts->{x}) {
+        my $pat = join '|', split(',', $opts->{x});
+        @target_names = grep { ! /^$pat$/ } @target_names;
+    }
+    ## context data
+    my $context = $this->load_context_data();
+    #print STDERR '*** debug: ', Dumper($context1);
+    ## class names
+    my @klasses;
+    my %tmp;
+    for (@target_names) {
+        my $klass = $bench_classes{$_};
+        next if defined $tmp{$klass};
+        $tmp{$klass} = 1;
+        push @klasses, $klass;
+    }
+    ## setup
+    my %faileds;
+    for my $klass (@klasses) {
+        $faileds{$klass} = ($klass->before_all() == -1);
+    }
+    ## do benchmark
+    print "*** n = $this->{ntimes}\n";
+    print "                              user         sys       total        real\n";
+    $| = 1;
+    my $output;
+    for my $name (@target_names) {
+        my $klass = $bench_classes{$name};
+        next unless $klass;
+        next if $faileds{$klass};
+        my $obj = $klass->new();
+        my $method = "bench_$name";
+        my %symbols = eval "%${klass}::";
+        $method = "_bench_$name" unless defined $symbols{$method};
+        if ($obj->before_each() != -1) {
+            $output = $this->do_benchmark($name, $obj, $method, $context);
+        }
+        $obj->after_each();
+        main::write_file("output.$name", $output) if $opts->{p};
+    }
+    ## teardown
+    for my $klass (values %bench_classes) {
+        $klass->after_all();
+    }
+}
+
+
+##
+## main package
+##
+
+package main;
+my $app = BenchmarkApplication->new();
+$app->main();
