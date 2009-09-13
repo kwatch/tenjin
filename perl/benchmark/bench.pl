@@ -5,7 +5,8 @@
 
 ## packages
 push @INC, '../lib';
-use strict;
+#use strict;
+use strict qw(vars subs);   # to avoid compile error on '&$var()'
 
 
 ## helper function
@@ -39,10 +40,6 @@ sub _touch {
 package BenchmarkObject;
 
 our @subclasses;
-#our %all_instances;      # 'bench-name' => instance-object
-#our %loaded_packages;    # 'package-name' => boolean
-#our %built_templates;    # 'file-name' => boolean
-#our $continue_when_failed = 1;
 
 sub new {
     my ($class) = @_;
@@ -287,7 +284,6 @@ sub before_all {
     $this->load_package("HTML::Template")  and return -1;
 }
 
-use Data::Dumper;
 sub _convert_context {
     my ($this, $context) = @_;
     my $i = 0;
@@ -345,6 +341,77 @@ sub bench_htmltmpl_edit_context {
         $output = $template->output;
     }
     return $output;
+}
+
+
+##
+## Perl benchmark
+##
+package PerlBenchmark;
+our @ISA = ('BenchmarkObject');
+push @BenchmarkObject::subclasses, 'PerlBenchmark';
+our $template_filename = "bench_mobasif.html";
+our $compiled_filename = "bench_mobasif.bin";
+our $mode = $ENV{'MODE'} || 'func';
+
+sub _invoke_benchmark {
+    my ($name, $n, $_context) = @_;
+    my $s = main::read_file("perlcode/$name.pl");
+    my $ret;
+    if ($mode eq 'func') {
+        my $func = "render_$name";
+        eval "sub $func { my (\$_context) = \@_; $s }";
+        while ($n--) { $ret = &$func($_context); }  # error when 'strict ref' is enabled
+    }
+    elsif ($mode eq 'closure') {
+        my $closure = eval "sub { my (\$_context) = \@_; $s }";
+        while ($n--) { $ret = $closure->($_context); }
+    }
+    elsif ($mode eq 'eval') {
+        while ($n--) { $ret = eval $s; }
+    }
+    my $output = ref($ret) eq 'ARRAY' ? join("", @$ret) : $ret;
+    return $output;
+}
+
+sub _bench_perl_push {
+    my ($this, $n, $_context) = @_;
+    return _invoke_benchmark("perl_push", $n, $_context);
+}
+
+sub _bench_perl_pushjoin {
+    my ($this, $n, $_context) = @_;
+    return _invoke_benchmark("perl_pushjoin", $n, $_context);
+}
+
+sub _bench_perl_push3 {
+    my ($this, $n, $_context) = @_;
+    return _invoke_benchmark("perl_push3", $n, $_context);
+}
+
+sub _bench_perl_pushjoin3 {
+    my ($this, $n, $_context) = @_;
+    return _invoke_benchmark("perl_pushjoin3", $n, $_context);
+}
+
+sub _bench_perl_concat {
+    my ($this, $n, $_context) = @_;
+    return _invoke_benchmark("perl_concat", $n, $_context);
+}
+
+sub _bench_perl_concat2 {
+    my ($this, $n, $_context) = @_;
+    return _invoke_benchmark("perl_concat2", $n, $_context);
+}
+
+sub _bench_perl_concatpush {
+    my ($this, $n, $_context) = @_;
+    return _invoke_benchmark("perl_concatpush", $n, $_context);
+}
+
+sub _bench_perl_concatpushjoin {
+    my ($this, $n, $_context) = @_;
+    return _invoke_benchmark("perl_concatpushjoin", $n, $_context);
 }
 
 
