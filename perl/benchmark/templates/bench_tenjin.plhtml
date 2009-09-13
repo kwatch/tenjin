@@ -1,31 +1,26 @@
 <?pl #@ARGS list ?>
    <tbody>
-<?pl
-my $n = 0;
-for my $itemref (@$list) {
-    my %item = %$itemref;
-    $n += 1;
- ?>
+    <?pl my $n = 0; ?>
+    <?pl for my $item (@$list) { ?>
+    <?pl   $n += 1; ?>
     <tr class="[== $n % 2 == 0 ? 'even' : 'odd' =]">
      <td style="text-align: center">[== $n =]</td>
      <td>
-      <a href="/stocks/[== $item{'symbol'} =]">[== $item{'symbol'} =]</a>
+      <a href="/stocks/[== $item->{symbol} =]">[== $item->{symbol} =]</a>
      </td>
      <td>
-      <a href="[== $item{'url'} =]">[== $item{'name'} =]</a>
+      <a href="[== $item->{url} =]">[== $item->{name} =]</a>
      </td>
      <td>
-      <strong>[== $item{'price'} =]</strong>
+      <strong>[== $item->{price} =]</strong>
      </td>
-    <?pl if ($item{'change'} < 0.0) { ?>
-     <td class="minus">[== $item{'change'} =]</td>
-     <td class="minus">[== $item{'ratio'} =]</td>
-    <?pl } else { ?>
-     <td>[== $item{'change'} =]</td>
-     <td>[== $item{'ratio'} =]</td>
-    <?pl } ?>
+     <?pl if ($item->{change} < 0.0) { ?>
+     <td class="minus">[== $item->{change} =]</td>
+     <td class="minus">[== $item->{ratio} =]</td>
+     <?pl } else { ?>
+     <td>[== $item->{change} =]</td>
+     <td>[== $item->{ratio} =]</td>
+     <?pl } ?>
     </tr>
-<?pl
-}
- ?>
+    <?pl } ?>
    </tbody>
