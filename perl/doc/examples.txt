@@ -1,0 +1,316 @@
+.=title:	plTenjin Examples
+.?lastupdate:	$Date: 2007-10-23 15:29:14 +0900 (Tue, 23 Oct 2007) $
+.?release:	$Release$
+.?stylesheet:	docstyle.css
+
+Release: $Release$
+
+
+Table of Contents:
+.<<< examples.toc
+
+
+
+.$ Bordered Table		| bordered-table
+
+
+
+
+.? Template: 'table.plhtml'
+.-------------------- table/table.plhtml
+<html>
+  <body>
+    <h1>{{*[=$title=]*}}</h1>
+    <table>
+{{*<?pl my $i = 0; ?>*}}
+{{*<?pl for my $item (@$items) { ?>*}}
+{{*<?pl     my $color = ++$i % 2 == 0 ? '#FFCCCC' : '#CCCCFF'; ?>*}}
+      <tr bgcolor="{{*[==$color=]*}}">
+        <td>{{*[==$i=]*}}</td>
+        <td>{{*[=$item=]*}}</td>
+      </tr>
+{{*<?pl } ?>*}}
+    </table>
+  </body>
+</html>
+.--------------------
+
+.? Convert into Python script:
+.==================== table/table_s.result
+$ pltenjin -a convert table.plhtml
+my @_buf = (); push(@_buf, q`<html>
+  <body>
+    <h1>`, escape($title), q`</h1>
+    <table>
+`, ); my $i = 0;
+for my $item (@$items) {
+    my $color = ++$i % 2 == 0 ? '#FFCCCC' : '#CCCCFF';
+push(@_buf, q`      <tr bgcolor="`, $color, q`">
+        <td>`, $i, q`</td>
+        <td>`, escape($item), q`</td>
+      </tr>
+`, ); }
+push(@_buf, q`    </table>
+  </body>
+</html>
+`, ); join('', @_buf);
+.====================
+
+.? Main program: 'table.pl'
+.-------------------- table/table.pl
+## create Engine object
+use strict;
+use Tenjin;
+$Tenjin::USE_STRICT = 1;  # optional
+{{*my $engine = new Tenjin::Engine();*}}
+
+## render template with context data
+my $context = { title=>'Bordered Table Example',
+                items=>[ '<AAA>', 'B&B', '"CCC"' ] };
+{{*my $output = $engine->render('table.plhtml', $context);*}}
+print $output;
+.--------------------
+
+
+
+
+.? Result:
+.==================== table/table.result
+$ perl table.pl
+<html>
+  <body>
+    <h1>Bordered Table Example</h1>
+    <table>
+      <tr bgcolor="{{*#CCCCFF*}}">
+        <td>{{*1*}}</td>
+        <td>{{*&lt;AAA&gt;*}}</td>
+      </tr>
+      <tr bgcolor="{{*#FFCCCC*}}">
+        <td>{{*2*}}</td>
+        <td>{{*B&amp;B*}}</td>
+      </tr>
+      <tr bgcolor="{{*#CCCCFF*}}">
+        <td>{{*3*}}</td>
+        <td>{{*&quot;CCC&quot;*}}</td>
+      </tr>
+    </table>
+  </body>
+</html>
+.====================
+
+
+
+.$ Form		| form
+
+
+
+
+.? Template: 'form.plhtml':
+.-------------------- form/form.plhtml
+{{*<?pl #@ARGS action, params, label ?>*}}
+<form action="{{*[=$action=]*}}" method="post">
+  <p>
+    <label>Name:</label>
+    <input type="text" name="name" value="{{*[=$params->{name}=]*}}" />
+  </p>
+  <p>
+    <label>Gender:</label>
+{{*<?pl my $gender = $params->{gender}; ?>*}}
+    <input type="radio" name="gender" value="M" {{*[==checked($gender eq 'M')=]*}} />Man
+    <input type="radio" name="gender" value="W" {{*[==checked($gender eq 'W')=]*}} />Woman
+  </p>
+  <input type="submit" value="{{*[=$label=]*}}" />
+</form>
+.--------------------
+
+.? Template: 'create.plhtml':
+.-------------------- form/create.plhtml
+<?pl $_context->{title} = 'Create user'; ?>
+<?pl $_context->{label} = 'Create'; ?>
+<?pl $_context->{action} = 'action.cgi'; ?>
+{{*<?pl include(':form'); ?>*}}
+.--------------------
+
+.? Template: 'update.plhtml':
+.-------------------- form/update.plhtml
+<?pl $_context->{title} = 'Update user'; ?>
+<?pl $_context->{label} = 'Update'; ?>
+<?pl $_context->{action} = 'update.cgi'; ?>
+{{*<?pl include(':form'); ?>*}}
+.--------------------
+
+.? Layout template: 'layout.plhtml'
+.-------------------- form/layout.plhtml
+<html>
+ <body>
+  <h1>[=$title=]</h1>
+  <div class="main-content">
+{{*[==$_content==]*}}
+  </div>
+ </body>
+</html>
+.--------------------
+
+.? Main program: 'main.pl':
+.-------------------- form/main.pl
+use strict;
+
+## create Engine object
+use Tenjin;
+$Tenjin::USE_STRICT = 1;   # optional
+{{*my $engine = new Tenjin::Engine({postfix=>'.plhtml', layout=>'layout.plhtml'});*}}
+
+## render template with context data
+my $params = { name=>'Foo', gender=>'M' };
+my $context = { params => $params };
+{{*my $output = $engine->render(':update', $context);*}}   # ':update' == 'update'+postfix
+print $output;
+.--------------------
+
+
+
+
+.? Result:
+.==================== form/main.result
+$ perl main.pl
+<html>
+ <body>
+  <h1>{{*Update user*}}</h1>
+  <div class="main-content">
+<form action="{{*update.cgi*}}" method="post">
+  <p>
+    <label>Name:</label>
+    <input type="text" name="name" value="{{*Foo*}}" />
+  </p>
+  <p>
+    <label>Gender:</label>
+    <input type="radio" name="gender" value="M" {{* checked="checked"*}} />Man
+    <input type="radio" name="gender" value="W"  />Woman
+  </p>
+  <input type="submit" value="{{*Update*}}" />
+</form>
+  </div>
+ </body>
+</html>
+.====================
+
+
+
+.$ Preprocessing			| preprocessing
+
+
+
+
+.? Library: 'Helper.pm'
+.-------------------- preprocessing/Helper.pm
+package Helper;
+use Exporter;
+@ISA = ('Exporter');
+@EXPORT = ('link_to');
+
+$languages = [
+    ['en', 'Engilish'],
+    ['fr', 'French'],
+    ['de', 'German'],
+    ['es', 'Spanish'],
+    ['ch', 'Chinese'],
+    ['ja', 'Japanese'],
+];
+
+sub link_to {
+    my ($label, $args) = @_;
+    my ($action, $id);
+    if (defined($args)) {
+        $action = $args->{action};
+	$id     = $args->{id};
+    }
+    my @buf = ('/app');
+    if ($action) { push(@buf, '/', $action); }
+    if ($id) { push(@buf, '/', $id); }
+    my $url = join('', @buf);
+    return "<a href=\"$url\">$label</a>";
+}
+
+1;
+.--------------------
+
+.? Template: 'select.plhtml'
+.-------------------- preprocessing/select.plhtml
+{{*<?PL use Helper; ?>*}}
+<form>
+  <label>Select your language:</label>
+  <select name="lang">
+{{*<?pl my $table = { $params->{lang} => ' selected="selected"' }; ?>*}}
+{{*<?PL for my $t (@$Helper::languages) { ?>*}}
+{{*<?PL    my ($val, $name) = ($t->[0], $t->[1]); ?>*}}
+    <option value="[*=$val=*]" [==$table->{[*=$val=*]}=]>[*=$name=*]</option>
+{{*<?PL } ?>*}}
+  </select>
+  <input type="submit" value="OK" />
+</form>
+<p>
+  {{*[*==*}}link_to('Back', {action=>'index'}){{*=*]*}} |
+  {{*[*==*}}link_to('Show '.{{*_P('$params->{name}')*}}, {action=>'show', id=>{{*_p('$params->{id}')*}}}){{*=*]*}}
+</p>
+.--------------------
+
+.? Preprocessed code:
+.==================== preprocessing/select_P.result
+$ pltenjin -a preprocess select.plhtml
+<form>
+  <label>Select your language:</label>
+  <select name="lang">
+<?pl my $table = { $params->{lang} => ' selected="selected"' }; ?>
+    <option value="en" [==$table->{en}=]>Engilish</option>
+    <option value="fr" [==$table->{fr}=]>French</option>
+    <option value="de" [==$table->{de}=]>German</option>
+    <option value="es" [==$table->{es}=]>Spanish</option>
+    <option value="ch" [==$table->{ch}=]>Chinese</option>
+    <option value="ja" [==$table->{ja}=]>Japanese</option>
+  </select>
+  <input type="submit" value="OK" />
+</form>
+<p>
+  <a href="/app/index">Back</a> |
+  <a href="/app/show/{{*[==$params->{id}=]*}}">Show {{*[=$params->{name}=]*}}</a>
+</p>
+.====================
+
+.? Main program: 'main.pl'
+.-------------------- preprocessing/main.pl
+use strict;
+
+## create engine
+use Tenjin;
+{{*my $engine = new Tenjin::Engine({postfix=>'.plhtml', preprocess=>1});*}}
+
+## render template with context data
+my $params = { id=>1234, name=>'Foo', lang=>'ch' };
+my $context = { params => $params };
+{{*my $output = $engine->render(':select', $context);*}}
+print $output;
+.--------------------
+
+
+
+
+.? Result:
+.==================== preprocessing/main.result
+$ perl main.pl
+<form>
+  <label>Select your language:</label>
+  <select name="lang">
+    <option value="en" >Engilish</option>
+    <option value="fr" >French</option>
+    <option value="de" >German</option>
+    <option value="es" >Spanish</option>
+    <option value="ch"  selected="selected">Chinese</option>
+    <option value="ja" >Japanese</option>
+  </select>
+  <input type="submit" value="OK" />
+</form>
+<p>
+  <a href="/app/index">Back</a> |
+  <a href="/app/show/1234">Show Foo</a>
+</p>
+.====================
