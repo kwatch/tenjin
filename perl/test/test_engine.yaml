@@ -772,7 +772,7 @@
           <!-- /HEADER -->
         
           <!-- CONTENT -->
-        <?pl push(@_buf, $content_part); ?>
+        <?pl $_buf .= $content_part; ?>
           <!-- /CONTENT -->
         
           <!-- FOOTER -->
@@ -1209,7 +1209,7 @@
         <?pl if (exists $_context->{title}) { ?>
             <h1>[=$title=]</h1>
         <?pl } ?>
-        <?pl push(@_buf, $_content); ?>
+        <?pl $_buf .= $_content; ?>
           </body>
         </html>
    "js": |
@@ -1239,7 +1239,7 @@
         <?pl ## use default layout template name ?>
         <?pl $_context->{_layout} = 1; ?>
         <div id="content">
-        <?pl push(@_buf, $_content); ?>
+        <?pl $_buf .= $_content; ?>
         </div>
    "js": |
         <?js // use default layout template name ?>
