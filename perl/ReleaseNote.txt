@@ -1,0 +1,132 @@
+.######################################################################
+
+.$ [ANN] plTenjin 0.0.2 - a fast and full-featured template engine
+
+I have released plTenjin 0.0.2.
+http://www.kuwata-lab.com/tenjin/
+
+plTenjin is a temlate engine for Perl.
+It is the fastest template engine in the Perl world.
+plTenjin is about five times faster than Template-Toolkit
+in spite of plTenjin is implemented in pure Perl.
+In addition, plTenjin is full-featured and easy-to-use.
+
+See user's guide and examples for dettails.
+
+Features:
+
+* Very fast and lightweight
+  - About five times faster than Template-Toolkit
+  - Only one file which contains about 1000 lines
+* Secure
+  - Expressions are escaped by default
+* Full-featured
+  - Auto caching of converted Python code.
+  - Nestable layout template
+  - Inlucde other templates
+  - Capture part of template
+  - Load YAML file as context data
+  - Preprocessing support
+
+
+Example: template.plhtml
+
+    <h1>[=$title=]</h1>
+    <ul>
+    <?pl for my $item (@$items) { ?>
+      <ul>[=$item=]
+          [==$item=]</ul>
+    <?pl } ?>
+    </ul>
+
+Example: main.pl
+
+    ## create Engine object
+    use strict;
+    use Tenjin;
+    $Tenjin::USE_STRICT = 1;  # optional
+    my $engine = new Tenjin::Engine();
+    
+    ## render template with context data
+    my $context = { title=>'plTenjin Example',
+                    items=>[ '<AAA>', 'B&B', '"CCC"' ] };
+    my $output = $engine->render('template.plhtml', $context);
+    print $output;
+
+Example: result
+
+    $ perl main.pl
+    <h1>plTenjin Example</h1>
+    <ul>
+      <ul>&lt;AAA&gt;
+          <AAA></ul>
+      <ul>B&amp;B
+          B&B</ul>
+      <ul>&quot;CCC&quot;
+          "CCC"</ul>
+    </ul>
+
+
+See 'doc/*.html' for details.
+
+
+Changes from 0.0.2:
+
+  * Add 'examples' directory.
+
+  * Changed to convert texts before expressions into spaces and
+    print them when command-line option '-S' specified.
+  
+    ex. hoge.plhtml
+      <?pl for $item (@$list) { ?>
+        <p>[=$item=]</p>
+      <?pl } ?>
+    
+    ex. result of '-S'
+      ## 0.0.1
+      $ pltenjin -S hoge.plhtml
+      my @_buf = (); for $item (@$list) {
+      escape($item); 
+      }
+      join('', @_buf);
+    
+      ## 0.0.2
+      $ pltenjin -S hoge.plhtml
+      my @_buf = (); for $item (@$list) {
+           escape($item); 
+      }
+      join('', @_buf);
+
+
+--
+regards,
+makoto kuwata
+
+
+.######################################################################
+
+.$ [ANN] plTenjin 0.0.1 - a fast and full-featured template engine
+
+I have released plTenjin 0.0.1.
+http://www.kuwata-lab.com/tenjin/
+
+plTenjin is a very fast and full-featured template engine based on embedded Perl.
+You can embed Perl statements and expressions into your text file.
+plTenjin converts it into Perl program and evaluate it.
+
+
+Features:
+
+* Very fast (about five times faster than Template-Toolkit)
+* Lightweight (only one file which contains about 1000 lines)
+* Not break HTML design because it uses XML Processing
+  Instructions (PI) as embedded notation for Python statements.
+* Secure because it supports escaping expression value by default.
+* Auto caching of converted Python code.
+* Nestable layout template
+* Inlucde other templates
+* Capture part of template
+* Load YAML file as context data
+* Preprocessing support
+
+See 'doc/*.html' for details.
