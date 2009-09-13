@@ -29,11 +29,11 @@ package Tenjin;
 #use strict;
 
 
-$Tenjin::USE_STRICT = 0;
+our $USE_STRICT = 0;
 
-$Tenjin::TEMPLATE_CLASS = 'Tenjin::Template';
+our $TEMPLATE_CLASS = 'Tenjin::Template';
 
-$Tenjin::CONTEXT_CLASS = 'Tenjin::Context';
+our $CONTEXT_CLASS = 'Tenjin::Context';
 
 
 
@@ -282,13 +282,10 @@ sub escape {
 ## common context object class which supports HTML helpers
 ##
 package Tenjin::Context;
+our @ISA = ('Tenjin::BaseContext');
 
-
-#@ISA = ('Tenjin::BaseContext');
-@Tenjin::Context::ISA = ('Tenjin::BaseContext');
-
-$Tenjin::Context::defun = $Tenjin::BaseContext::defun;
-eval $Tenjin::Context::defun;
+our $defun = $Tenjin::BaseContext::defun;
+eval $defun;
 
 *_p = *Tenjin::Util::_p;
 
@@ -478,7 +475,7 @@ sub hook_stmt {
 }
 
 
-$Tenjin::Template::MACRO_HANDLER_TABLE = {
+our $MACRO_HANDLER_TABLE = {
     'include' => sub { my ($arg) = @_;
         " \$_buf .= \$_context->{_engine}->render($arg, \$_context, 0);";
     },
@@ -640,9 +637,7 @@ sub compile {
 ## preprocessor
 ##
 package Tenjin::Preprocessor;
-
-#@ISA = ('Tenjin::Template');
-@Tenjin::Preprocessor::ISA = ('Tenjin::Template');
+our @ISA = ('Tenjin::Template');
 
 
 my $STMT_PATTERN = Tenjin::Template::compile_stmt_pattern('PL');
