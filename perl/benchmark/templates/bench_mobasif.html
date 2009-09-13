@@ -1,0 +1,24 @@
+   <tbody>
+$ loop (list) { $
+    <tr class="$=b:class$">
+     <td style="text-align: center">$=b:n$</td>
+     <td>
+      <a href="/stocks/$=b:symbol$">$=b:symbol$</a>
+     </td>
+     <td>
+      <a href="$=b:url$">$=b:name$</a>
+     </td>
+     <td>
+      <strong>$=b:price$</strong>
+     </td>
+     <!-- $=b:minus$ -->
+     $ if (minus) { $
+     <td class="minus">$=b:change$</td>
+     <td class="minus">$=b:ratio$</td>
+     $ } else { $
+     <td>$=b:change$</td>
+     <td>$=b:ratio$</td>
+     $ } $
+    </tr>
+$ } $
+   </tbody>

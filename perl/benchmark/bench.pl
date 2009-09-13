@@ -345,6 +345,81 @@ sub bench_htmltmpl_edit_context {
 
 
 ##
+## MobaSiF::Template benchmark
+##
+package MobaSiFTemplateBenchmark;
+our @ISA = ('BenchmarkObject');
+push @BenchmarkObject::subclasses, 'MobaSiFTemplateBenchmark';
+our $template_filename = "bench_mobasif.html";
+our $compiled_filename = "bench_mobasif.bin";
+
+sub before_all {
+    my ($this) = @_;
+    $this->build_template($template_filename);
+    $this->load_package("MobaSiF::Template")  and return -1;
+    $this->load_package("MobaSiF::Template::Compiler")  and return -1;
+    MobaSiF::Template::Compiler::compile($template_filename, $compiled_filename);
+}
+
+sub bench_mobasif {
+    my ($this, $n, $context) = @_;
+    my $output;
+    #
+    my $i = 0;
+    my @list = map {
+        my %item = %$_;
+        $item{n} = ++$i;
+        $item{class} = $i % 2 == 0 ? 'even' : 'odd';
+        $item{minus} = $item{change} < 0.0;
+        \%item;
+    } @{$context->{list}};
+    #
+    while ($n--) {
+        $output = MobaSiF::Template::insert($compiled_filename, {list=>\@list});
+    }
+    return $output;
+}
+
+sub bench_mobasif_copy_conext {
+    my ($this, $n, $context) = @_;
+    my $output;
+    while ($n--) {
+        #
+        my $i = 0;
+        my @list = map {
+            my %item = %$_;
+            $item{n} = ++$i;
+            $item{class} = $i % 2 == 0 ? 'even' : 'odd';
+            $item{minus} = $item{change} < 0.0;
+            \%item;
+        } @{$context->{list}};
+        #
+        $output = MobaSiF::Template::insert($compiled_filename, {list=>\@list});
+    }
+    return $output;
+}
+
+sub bench_mobasif_edit_context {
+    my ($this, $n, $context) = @_;
+    my $output;
+    my $list = $context->{list};
+    while ($n--) {
+        #
+        my $i = 0;
+        for my $item (@$list) {
+            delete $item->{name2};
+            $item->{n} = ++$i;
+            $item->{class} = $i % 2 == 0 ? 'even' : 'odd';
+            $item->{minus} = $item->{change} < 0.0;
+        }
+        #
+        $output = MobaSiF::Template::insert($compiled_filename, {list=>$list});
+    }
+    return $output;
+}
+
+
+##
 ## Perl benchmark
 ##
 package PerlBenchmark;
