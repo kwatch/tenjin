@@ -23,6 +23,32 @@ Tenjin is now implemented in the following proguramming languages.
 * Perl
 * JavaScript
 
+Tenjin is the fastest template system for each programming language.
+
+
+Repository and Branches
+-----------------------
+
+Tenjin is managed with Git and there are several branches for each language.
+Therefore you should check out proper branch what you want.
+
+For example, if you are Python programmer, you should check out 'python' branch
+according to the following steps:
+
+  $ git clone git://github.com/kwatch/tenjin.git
+  $ cd tenjin/
+  $ git checkout -b python origin/python
+  $ git branch
+    master
+  * python
+  $ cd python/
+
+I recommend you to show branch name in your command-line propmpt at any time.
+Following pages will improve your Git life.
+
+* http://henrik.nyh.se/2008/12/git-dirty-prompt
+* http://www.simplisticcomplexity.com/2008/03/13/show-your-git-branch-name-in-your-prompt/
+
 
 License
 -------
