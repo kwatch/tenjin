@@ -480,22 +480,22 @@ sub hook_stmt {
 
 $Tenjin::Template::MACRO_HANDLER_TABLE = {
     'include' => sub { my ($arg) = @_;
-        "push(\@_buf, \$_context->{_engine}->render($arg, \$_context, 0));";
+        " \$_buf .= \$_context->{_engine}->render($arg, \$_context, 0);";
     },
     'start_capture' => sub { my ($arg) = @_;
-        "my \@_buf_bkup=\@_buf; \@_buf=(); my \$_capture_varname=$arg;";
+        " my \$_buf_bkup=\$_buf; \$_buf=''; my \$_capture_varname=$arg;";
     },
     'stop_capture' => sub { my ($arg) = @_;
-        "\$_context->{\$_capture_varname}=join('',\@_buf); \@_buf=\@_buf_bkup;";
+        " \$_context->{\$_capture_varname}=\$_buf; \$_buf=\$_buf_bkup;";
     },
     'start_placeholder' => sub { my ($arg) = @_;
-        "if (\$_context->{$arg}) { push(\@_buf,\$_context->{$arg}); } else {";
+        " if (\$_context->{$arg}) { \$_buf .= \$_context->{$arg}; } else {";
     },
     'stop_placeholder' => sub { my ($arg) = @_;
-        "}";
+        " }";
     },
     'echo' => sub { my ($arg) = @_;
-        "push(\@_buf, $arg);";
+        " \$_buf .= $arg;";
     },
 };
 
