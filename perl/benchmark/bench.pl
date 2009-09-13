@@ -420,6 +420,58 @@ sub bench_mobasif_edit_context {
 
 
 ##
+## Text::MicroTemplate benchmark
+##
+package TextMicroTemplateBenchmark;
+our @ISA = ('BenchmarkObject');
+push @BenchmarkObject::subclasses, 'TextMicroTemplateBenchmark';
+our $template_filename = "bench_microtmpl.mt";
+
+sub before_all {
+    my ($class) = @_;
+    $class->build_template($template_filename);
+    my $s = main::read_file($template_filename);
+    $s =~ s/<\?(xml .*?)\?>/<<?= '' ?>?$1?<?= '' ?>>/;
+    main::write_file($template_filename, $s);
+    $class->load_package("Text::MicroTemplate qw(encoded_string)")  and return -1;
+    $class->load_package("Text::MicroTemplate::File")  and return -1;
+    use Text::MicroTemplate qw(encoded_string);
+    use Text::MicroTemplate::File;
+}
+
+sub bench_microtmpl {
+    my ($this, $n, $context) = @_;
+    my $output;
+    while ($n--) {
+        my $mt = Text::MicroTemplate::File->new(use_cache => 1);
+        $output = $mt->render_file($template_filename, $context);
+    }
+    return $output;
+}
+
+sub bench_microtmpl_reuse {
+    my ($this, $n, $context) = @_;
+    my $output;
+    my $mt = Text::MicroTemplate::File->new(use_cache => 1);
+    while ($n--) {
+        $output = $mt->render_file($template_filename, $context);
+    }
+    return $output;
+}
+
+sub _bench_microtmpl_nocache {
+    my ($this, $n, $context) = @_;
+    my $output;
+    while ($n--) {
+        my $mt = Text::MicroTemplate::File->new(use_cache => 0);
+        $output = $mt->render_file($template_filename, $context);
+    }
+    return $output;
+}
+
+
+
+##
 ## Perl benchmark
 ##
 package PerlBenchmark;
