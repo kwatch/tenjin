@@ -401,10 +401,9 @@ sub convert {
     my $this = shift;
     my ($input, $filename) = @_;
     $this->{filename} = $filename;
-    my @buf = ('my @_buf = (); ', );
+    my @buf = ('my $_buf = ""; ', );
     $this->parse_stmt(\@buf, $input);
-    push(@buf, "join('', \@_buf);\n");
-    #push(@buf, "\n\\\@_buf;\n");
+    push(@buf, " \$_buf;\n");
     return $this->{script} = join('', @buf);
 }
 
@@ -557,14 +556,14 @@ sub parse_expr {
 sub start_text_part {
     my ($this) = shift;
     my ($bufref) = @_;
-    push(@$bufref, "push(\@_buf, ");
+    push(@$bufref, ' $_buf .= ');
 }
 
 
 sub stop_text_part {
     my ($this) = shift;
     my ($bufref) = @_;
-    push(@$bufref, "); ");
+    push(@$bufref, "; ");
 }
 
 
@@ -574,8 +573,13 @@ sub add_text {
     return unless $text;
     $text =~ s/[`\\]/\\$&/g;
     #push(@$bufref, "push(\@_buf, q`", $text, "`); ");
-    push(@$bufref, "q`$text`, ");
+    #push(@$bufref, "q`$text`, ");
     #push(@$bufref, "q`", $text, "`, ");
+    if ($bufref->[-1] eq ' $_buf .= ') {
+        push(@$bufref, "q`$text`");
+    } else {
+        push(@$bufref, " . q`$text`");
+    }
 }
 
 
@@ -589,17 +593,9 @@ sub add_stmt {
 sub add_expr {
     my $this = shift;
     my ($bufref, $expr, $flag_escape) = @_;
-    if ($flag_escape) {
-        my $funcname = $this->{escapefunc};
-        #push(@$bufref, "push(\@_buf, $funcname($expr)); ");
-        push(@$bufref, "$funcname($expr), ");
-        #push(@$bufref, $funcname, "(", $expr, "), ");
-    }
-    else {
-        #push(@$bufref, "push(\@_buf, $expr); ");
-        push(@$bufref, "$expr, ");
-        #push(@$bufref, $expr, ", ");
-    }
+    my $dot = $bufref->[-1] eq ' $_buf .= ' ? "" : " . ";
+    $flag_escape ? push(@$bufref, "$dot$this->{escapefunc}($expr)")
+                 : push(@$bufref, "$dot($expr)");
 }
 
 
