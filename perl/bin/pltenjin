@@ -288,7 +288,7 @@ Usage: $command [..options..] [file1 [file2...]]
   -N                  :  add line number
   -C                  :  compact: remove empty lines
   -U                  :  uniq: compress empty lines into a line
-  -b                  :  remove "my \@_buf=();" and "\@_buf.join('')"
+  -b                  :  remove 'my \$_buf="";' and ' \$_buf;'
   -q                  :  quet mode (for '-a syntax')
   -w                  :  use strict package
   -c string           :  context data string (yaml or perl)
@@ -377,10 +377,10 @@ sub manipulate_output {
     my $flag_linenum  = $optionsref->{'N'};    # add line numbers
     my $flag_compact  = $optionsref->{'C'};    # remove empty lines
     my $flag_uniq     = $optionsref->{'U'};    # compress empty lines to a line
-    my $flag_bodyonly = $optionsref->{'b'};    # remove '@_buf=();' and 'join("",@_buf)'
+    my $flag_bodyonly = $optionsref->{'b'};    # remove '$_buf="";' and ' $_buf;'
     if ($flag_bodyonly) {
-        $output =~ s/\Amy \@_buf = \(\); //;
-        $output =~ s/(\r?\n)?join\('', \@_buf\);\s*?(\r?\n)?\Z/$2/;
+        $output =~ s/\Amy \$_buf = ""; //;
+        $output =~ s/(\r?\n)? ? \$_buf;\s*?(\r?\n)?\Z/$2/;
     }
     if ($flag_linenum) {
         my $n = 0;
