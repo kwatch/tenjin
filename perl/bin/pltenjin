@@ -414,8 +414,8 @@ sub check_syntax {
     close(OUT);
     close(ERR);
     unlink($tmpfilename);
-    $out =~ s/$tmpfilename/$filename/ge;
-    $err =~ s/$tmpfilename/$filename/ge;
+    $out =~ s/\Q$tmpfilename\E/$filename/ge;
+    $err =~ s/\Q$tmpfilename\E/$filename/ge;
     return ($out, $err);
 }
 
