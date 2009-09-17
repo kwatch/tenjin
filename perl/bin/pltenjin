@@ -21,13 +21,13 @@ sub new {
 sub start_text_part {
     my ($this) = shift;
     my ($bufref) = @_;
-    #push(@$bufref, "push(\@_buf, ");
+    #$bufref->[0] .= "push(\@_buf, ";
 }
 
 sub stop_text_part {
     my ($this) = shift;
     my ($bufref) = @_;
-    #push(@$bufref, "); ");
+    #$bufref->[0] .= "); ";
 }
 
 sub add_text {
@@ -37,12 +37,12 @@ sub add_text {
     #push(@$bufref, "q`$text`, ");
     $_ = $text;
     s/[^\n]//g;
-    push(@$bufref, $_) if $_;
+    $bufref->[0] .= $_ if $_;
     $_ = $text;
     $_ = $1 if (m/\n(.*?)\z/);
     if ($_) {
         s/[^\t]/ /g;
-        push(@$bufref, $_);
+        $bufref->[0] .= $_;
     }
 }
 
@@ -58,12 +58,12 @@ sub add_expr {
     return if $this->{'noexpr'};
     if ($flag_escape) {
         my $funcname = $this->{'escapefunc'};
-        #push(@$bufref, " push(\@_buf, $funcname($expr)); ");
-        push(@$bufref, "$funcname($expr); ");
+        #$bufref->[0] .= " \$_buf .= $funcname($expr); ");
+        $bufref->[0] .= "$funcname($expr); ";
     }
     else {
-        #push(@$bufref, " push(\@_buf, $expr); ");
-        push(@$bufref, "$expr; ");
+        #$bufref->[0] .= " \$_buf .= $expr; ");
+        $bufref->[0] .= "$expr; ";
     }
 }
 
