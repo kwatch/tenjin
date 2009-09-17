@@ -45,17 +45,14 @@ package Tenjin::Util;
 
 sub read_file {
     my ($filename, $lock_required) = @_;
-    open(IN, $filename) or die("$filename: $!");
-    binmode(IN);
+    open(my $fh, $filename) or die("$filename: $!");
+    binmode($fh);
     my $content = '';
     my $size = 8192;
-    my @buf = ();
-    flock(IN, 1) if ($lock_required);
-    while (read(IN, my $data, $size)) {
-        push(@buf, $data);
-    }
-    close(IN);
-    return $#buf == 0 ? $buf[0] : join('', @buf);
+    flock($fh, 1) if ($lock_required);
+    read($fh, my $data, -s $filename);
+    close($fh);
+    return $data;
 }
 
 
