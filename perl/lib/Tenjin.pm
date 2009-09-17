@@ -69,19 +69,20 @@ sub write_file {
 sub expand_tabs {
     my ($str, $tabwidth) = @_;
     $tabwidth = 8 unless defined($tabwidth);
-    my @buf = ();
+    my $s = '';
     my $pos = 0;
     while ($str =~ /.*?\t/sg) {   ## /(.*?)\t/ may be slow
         my $end = $+[0];
         my $text = substr($str, $pos, $end - 1 - $pos);
         my $n = rindex($text, "\n");
         my $col = $n >= 0 ? length($text) - $n - 1 : length($text);
-        push(@buf, $text, ' ' x ($tabwidth - $col % $tabwidth));
+        $s .= $text;
+        $s .= ' ' x ($tabwidth - $col % $tabwidth);
         $pos = $end;
     }
     my $rest = substr($str, $pos);
-    push(@buf, $rest) if $rest;
-    return join('', @buf);
+    $s .= $rest if $rest;
+    return $s;
 }
 
 
@@ -237,11 +238,11 @@ sub new {
 ## ex. {'x'=>10, 'y'=>20} ==> "my $x = $_context->{'x'}; my $y = $_context->{'y'}; "
 sub _build_decl {
     my ($context) = @_;
-    my @buf = ();
+    my $s = '';
     while (my ($k, ) = each %$context) {
-        push(@buf, "my \$$k = \$_context->{'$k'}; ") if $k ne '_context';
+        $s .= "my \$$k = \$_context->{'$k'}; " if $k ne '_context';
     }
-    return join('', @buf);
+    return $s;
 }
 
 
@@ -421,8 +422,7 @@ sub convert {
     $this->{filename} = $filename;
     my @buf = ('my $_buf = ""; ', );
     $this->parse_stmt(\@buf, $input);
-    push(@buf, " \$_buf;\n");
-    return $this->{script} = join('', @buf);
+    return $this->{script} = $buf[0] . " \$_buf;\n";
 }
 
 
@@ -560,7 +560,7 @@ sub parse_expr {
         if ($delete_newline) {
             my $end = $+[0];
             if (substr($input, $end+1, 1) == "\n") {
-                push(@$bufref, "\n");
+                $bufref->[0] .= "\n";
                 $pos += 1;
             }
         }
@@ -574,14 +574,14 @@ sub parse_expr {
 sub start_text_part {
     my ($this) = shift;
     my ($bufref) = @_;
-    push(@$bufref, ' $_buf .= ');
+    $bufref->[0] .= ' $_buf .= ';
 }
 
 
 sub stop_text_part {
     my ($this) = shift;
     my ($bufref) = @_;
-    push(@$bufref, "; ");
+    $bufref->[0] .= "; ";
 }
 
 
@@ -590,13 +590,10 @@ sub add_text {
     my ($bufref, $text) = @_;
     return unless $text;
     $text =~ s/[`\\]/\\$&/g;
-    #push(@$bufref, "push(\@_buf, q`", $text, "`); ");
-    #push(@$bufref, "q`$text`, ");
-    #push(@$bufref, "q`", $text, "`, ");
-    if ($bufref->[-1] eq ' $_buf .= ') {
-        push(@$bufref, "q`$text`");
+    if ($bufref->[0] =~ / \$_buf \.= \Z/) {
+        $bufref->[0] .= "q`$text`";
     } else {
-        push(@$bufref, " . q`$text`");
+        $bufref->[0] .= " . q`$text`";
     }
 }
 
@@ -604,16 +601,16 @@ sub add_text {
 sub add_stmt {
     my $this = shift;
     my ($bufref, $stmt) = @_;
-    push(@$bufref, $stmt);
+    $bufref->[0] .= $stmt;
 }
 
 
 sub add_expr {
     my $this = shift;
     my ($bufref, $expr, $flag_escape) = @_;
-    my $dot = $bufref->[-1] eq ' $_buf .= ' ? "" : " . ";
-    $flag_escape ? push(@$bufref, "$dot$this->{escapefunc}($expr)")
-                 : push(@$bufref, "$dot($expr)");
+    my $dot = $bufref->[0] =~ / \$_buf \.= \Z/ ? "" : " . ";
+    $bufref->[0] .= $flag_escape ? "$dot$this->{escapefunc}($expr)"
+                                 : "$dot($expr)";
 }
 
 
@@ -627,15 +624,15 @@ sub defun {   ## (experimental)
         s/[^\w]/_/g if ($_);
         $funcname = "render_" . $_;
     }
-    my @buf = ();
-    push(@buf, "sub $funcname {");
-    push(@buf, " my (\$_context) = \@_; ");
+    my $str = '';
+    $str .= "sub $funcname {";
+    $str .= " my (\$_context) = \@_; ";
     for my $arg (@args) {
-        push(@buf, "my \$$arg = \$_context->{'$arg'}; ");
+        $str .= "my \$$arg = \$_context->{'$arg'}; ";
     }
-    push(@buf, $this->{script});
-    push(@buf, "}\n");
-    return join('', @buf);
+    $str = $this->{script};
+    $str = "}\n";
+    return $str;
 }
 
 
