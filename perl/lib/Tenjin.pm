@@ -195,7 +195,7 @@ sub tagattr {   ## [experimental]
     my ($name, $expr, $value) = @_;
     return '' unless $expr;
     $value = $expr unless defined($value);
-    return " $name=\"$value\"";
+    return " $name=\"".escape_xml($value)."\"";
 }
 
 
