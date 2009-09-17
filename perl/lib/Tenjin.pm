@@ -199,6 +199,26 @@ sub tagattr {   ## [experimental]
 }
 
 
+sub tagattrs {   ## [experimental]
+    my (%attrs) = @_;
+    my $s = "";
+    while (my ($k, $v) = each %attrs) {
+        $s .= " $k=\"".escape_xml($v)."\"" if defined($v);
+    }
+    return $s;
+}
+
+
+sub new_cycle {   ## [experimental]
+    my @items = @_;
+    my $len = @items;
+    my $i = 0;
+    return sub {
+        return $items[$i++ % $len];
+    };
+}
+
+
 
 ##
 ## base colass of context object
@@ -305,6 +325,10 @@ eval $defun;
 *text2html  = *Tenjin::Helper::Html::text2html;
 
 *tagattr    = *Tenjin::Helper::Html::tagattr;
+
+*new_cycle  = *Tenjin::Helper::Html::new_cycle;
+
+*tagattrs   = *Tenjin::Helper::Html::tagattrs;
 
 
 
