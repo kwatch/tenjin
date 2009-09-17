@@ -58,11 +58,11 @@ sub read_file {
 
 sub write_file {
     my ($filename, $content, $lock_required) = @_;
-    open(OUT, ">$filename") or die("$filename: $!");
-    binmode(OUT);
-    flock(OUT, 2) if $lock_required;
-    print OUT $content;
-    close(OUT);
+    open(my $fh, ">$filename") or die("$filename: $!");
+    binmode($fh);
+    flock($fh, 2) if $lock_required;
+    print $fh $content;
+    close($fh);
 }
 
 
