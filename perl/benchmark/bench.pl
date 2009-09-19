@@ -153,23 +153,10 @@ sub _bench_tenjin_template_compile {
     return $output;
 }
 
-## tenjin
+## tenjin (render)
 sub bench_tenjin {
     my ($this, $n, $context) = @_;
     my $output;
-    #unlink "$template_filename.cache" if -f "$template_filename.cache";
-    while ($n--) {
-        my $engine = Tenjin::Engine->new();
-        $output = $engine->render($template_filename, $context);
-    }
-    return $output;
-}
-
-## tenjin (reuse)
-sub bench_tenjin_reuse {
-    my ($this, $n, $context) = @_;
-    my $output;
-    #unlink "$template_filename.cache" if -f "$template_filename.cache";
     my $engine = new Tenjin::Engine();
     while ($n--) {
         $output = $engine->render($template_filename, $context);
@@ -177,11 +164,21 @@ sub bench_tenjin_reuse {
     return $output;
 }
 
-## tenjin (nocache)
+## tenjin (create+render)
+sub bench_tenjin_create {
+    my ($this, $n, $context) = @_;
+    my $output;
+    while ($n--) {
+        my $engine = Tenjin::Engine->new();
+        $output = $engine->render($template_filename, $context);
+    }
+    return $output;
+}
+
+## tenjin (create without cache)
 sub bench_tenjin_nocache {
     my ($this, $n, $context) = @_;
     my $output;
-    #unlink "$template_filename.cache" if -f "$template_filename.cache";
     while ($n--) {
         my $engine = Tenjin::Engine->new({cache=>0});
         $output = $engine->render($template_filename, $context);
@@ -246,22 +243,24 @@ sub before_all {
     $this->load_package('Template')  and return -1;
 }
 
+## Template-Toolkit (render)
 sub bench_tt {
     my ($this, $n, $context) = @_;
     my $output;
+    my $template = Template->new();
     while ($n--) {
-        my $template = Template->new();
         $output = undef;  # required
         $template->process($template_filename, $context, \$output);
     }
     return $output;
 }
 
-sub bench_tt_reuse {
+## Template-Toolkit (create+render)
+sub bench_tt_create {
     my ($this, $n, $context) = @_;
     my $output;
-    my $template = Template->new();
     while ($n--) {
+        my $template = Template->new();
         $output = undef;  # required
         $template->process($template_filename, $context, \$output);
     }
@@ -298,19 +297,8 @@ sub _convert_context {
     return { list=>\@list };
 }
 
+## HTML::Template (render)
 sub bench_htmltmpl {
-    my ($this, $n, $context) = @_;
-    $context = $this->_convert_context($context);
-    my $output;
-    while ($n--) {
-        my $template = new HTML::Template(filename=>$template_filename);
-        $template->param($context);
-        $output = $template->output;
-    }
-    return $output;
-}
-
-sub bench_htmltmpl_reuse {
     my ($this, $n, $context) = @_;
     $context = $this->_convert_context($context);
     my $output;
@@ -322,6 +310,20 @@ sub bench_htmltmpl_reuse {
     return $output;
 }
 
+## HTML::Template (create+render)
+sub bench_htmltmpl_create {
+    my ($this, $n, $context) = @_;
+    $context = $this->_convert_context($context);
+    my $output;
+    while ($n--) {
+        my $template = new HTML::Template(filename=>$template_filename);
+        $template->param($context);
+        $output = $template->output;
+    }
+    return $output;
+}
+
+## HTML::Template (render with editing context data each time)
 sub bench_htmltmpl_edit_context {
     my ($this, $n, $context) = @_;
     $context = $this->_convert_context($context);
@@ -361,6 +363,7 @@ sub before_all {
     MobaSiF::Template::Compiler::compile($template_filename, $compiled_filename);
 }
 
+## MobaSiF::Template (render)
 sub bench_mobasif {
     my ($this, $n, $context) = @_;
     my $output;
@@ -380,7 +383,30 @@ sub bench_mobasif {
     return $output;
 }
 
-sub bench_mobasif_copy_conext {
+## MobaSiF::Template (render with editing context each time)
+sub bench_mobasif_edit_context {
+    my ($this, $n, $context) = @_;
+    my $output;
+    my @list = map { my %item = %$_; \%item } @{$context->{list}};
+    while ($n--) {
+        #
+        my $i = 0;
+        for my $item (@list) {
+            delete $item->{name2};
+            $item->{n} = ++$i;
+            $item->{class} = $i % 2 == 0 ? 'even' : 'odd';
+            $item->{minus} = $item->{change} < 0.0;
+        }
+        #
+        $output = MobaSiF::Template::insert($compiled_filename, {list=>\@list});
+    }
+    #print Dumper(\@list);            # changed
+    #print Dumper($context->{list});  # not changed
+    return $output;
+}
+
+## MobaSiF::Template (render with copying context each time)
+sub bench_mobasif_copy_context {
     my ($this, $n, $context) = @_;
     my $output;
     while ($n--) {
@@ -395,25 +421,6 @@ sub bench_mobasif_copy_conext {
         } @{$context->{list}};
         #
         $output = MobaSiF::Template::insert($compiled_filename, {list=>\@list});
-    }
-    return $output;
-}
-
-sub bench_mobasif_edit_context {
-    my ($this, $n, $context) = @_;
-    my $output;
-    my $list = $context->{list};
-    while ($n--) {
-        #
-        my $i = 0;
-        for my $item (@$list) {
-            delete $item->{name2};
-            $item->{n} = ++$i;
-            $item->{class} = $i % 2 == 0 ? 'even' : 'odd';
-            $item->{minus} = $item->{change} < 0.0;
-        }
-        #
-        $output = MobaSiF::Template::insert($compiled_filename, {list=>$list});
     }
     return $output;
 }
@@ -439,21 +446,23 @@ sub before_all {
     use Text::MicroTemplate::File;
 }
 
+## Text::MicroTemplate (render)
 sub bench_microtmpl {
     my ($this, $n, $context) = @_;
     my $output;
+    my $mt = Text::MicroTemplate::File->new(use_cache => 1);
     while ($n--) {
-        my $mt = Text::MicroTemplate::File->new(use_cache => 1);
         $output = $mt->render_file($template_filename, $context);
     }
     return $output;
 }
 
-sub bench_microtmpl_reuse {
+## Text::MicroTemplate (create+render)
+sub bench_microtmpl_create {
     my ($this, $n, $context) = @_;
     my $output;
-    my $mt = Text::MicroTemplate::File->new(use_cache => 1);
     while ($n--) {
+        my $mt = Text::MicroTemplate::File->new(use_cache => 1);
         $output = $mt->render_file($template_filename, $context);
     }
     return $output;
