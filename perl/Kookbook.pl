@@ -6,7 +6,7 @@ my $project = prop('project', 'tenjin');
 my $release = prop('release', '0.0.2');
 
 my $copyright  = 'copyright(c) 2007-2008 kuwata-lab.com all rights reserved.';
-my @textfiles  = qw(MIT-LICENSE README CHANGES.txt Kookbook.pl);
+my @textfiles  = qw(MIT-LICENSE README Changes Kookbook.pl);
 my @docfiles   = qw(doc/users-guide.html doc/faq.html doc/examples.html doc/docstyle.css);
 my @binfiles   = qw(bin/pltenjin);
 my @libfiles   = qw(lib/Tenjin.pm);
