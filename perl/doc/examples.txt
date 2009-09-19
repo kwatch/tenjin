@@ -1,9 +1,9 @@
 .=title:	plTenjin Examples
-.?lastupdate:	$Date: 2007-10-23 15:29:14 +0900 (Tue, 23 Oct 2007) $
+.?lastupdate:	$Date$
 .?release:	$Release$
 .?stylesheet:	docstyle.css
 
-Release: $Release$
+.#Release: $Release$
 
 
 Table of Contents:
@@ -38,22 +38,22 @@ Table of Contents:
 .? Convert into Python script:
 .==================== table/table_s.result
 $ pltenjin -a convert table.plhtml
-my @_buf = (); push(@_buf, q`<html>
+my $_buf = "";  $_buf .= q`<html>
   <body>
-    <h1>`, escape($title), q`</h1>
+    <h1>` . escape($title) . q`</h1>
     <table>
-`, ); my $i = 0;
+`; my $i = 0;
 for my $item (@$items) {
     my $color = ++$i % 2 == 0 ? '#FFCCCC' : '#CCCCFF';
-push(@_buf, q`      <tr bgcolor="`, $color, q`">
-        <td>`, $i, q`</td>
-        <td>`, escape($item), q`</td>
+ $_buf .= q`      <tr bgcolor="` . ($color) . q`">
+        <td>` . ($i) . q`</td>
+        <td>` . escape($item) . q`</td>
       </tr>
-`, ); }
-push(@_buf, q`    </table>
+`; }
+ $_buf .= q`    </table>
   </body>
 </html>
-`, ); join('', @_buf);
+`;  $_buf;
 .====================
 
 .? Main program: 'table.pl'

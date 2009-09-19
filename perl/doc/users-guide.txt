@@ -1,0 +1,1922 @@
+.=title:	plTenjin User's Guide
+.?lastupdate:	$Date$
+.?release:	$Release$
+.?stylesheet:	docstyle.css
+
+.#Release: $Release$
+
+
+Table of Contents:
+
+.<<< users-guide.toc
+
+
+
+.$ Introduction		| intro
+
+
+
+.$$ Overview		| overview
+
+
+plTenjin is a very fast and lightweight template engine based on embedded Perl.
+You can embed Perl statements and expressions into your text file.
+plTenjin converts it into Perl script and evaluate it.
+
+
+The following is an example of plTenjin.
+
+.? File 'ex.plhtml':
+.-------------------- ex.plhtml
+Hello {{*[== $name =]*}}!
+<ul>
+{{*<?pl for my $item (@$items) { ?>*}}
+ <li>{{*[= $item =]*}}</li>
+{{*<?pl } ?>*}}
+</ul>
+.--------------------
+
+Here is the notation:
+
+.[ {{,<?pl ... ?>,}} ]	Perl statements.
+.[ {{,[== ... =],}} ]	Perl expression.
+.[ {{,[= ... =],}} ]	Perl expression (HTML escaped)
+
+.? Result of covertion into Perl script:
+.==================== ex_source.result
+$ pltenjin -s ex.plhtml
+my $_buf = "";  $_buf .= q`Hello ` . {{*( $name )*}} . q`!
+<ul>
+`; {{*for my $item (@$items) {*}}
+ $_buf .= q` <li>` . {{*escape( $item )*}} . q`</li>
+`; {{*}*}}
+ $_buf .= q`</ul>
+`;  $_buf;
+.#my @_buf = (); push(@_buf, q`Hello `,  {{*$name*}} , q`!
+.#<ul>
+.#`, ); {{*for my $item (@$items) {*}}
+.#push(@_buf, q` <li>`, {{*escape( $item )*}}, q`</li>
+.#`, ); {{*}*}}
+.#push(@_buf, q`</ul>
+.#`, ); join('', @_buf);
+.====================
+
+
+.? Output of execution with context data:
+.==================== ex.result
+$ pltenjin -w -c "name=>'World', items=>['<AAA>','B&B','\"CCC\"']" ex.plhtml
+Hello World!
+<ul>
+ <li>&lt;AAA&gt;</li>
+ <li>B&amp;B</li>
+ <li>&quot;CCC&quot;</li>
+</ul>
+.====================
+
+
+.? Example of Perl script
+.-------------------- ex.script
+use Tenjin;
+$Tenjin::USE_STRICT = 1;  # (optional but recommended)
+my $engine = new Tenjin::Engine();
+my $context = { name=>'World', items=>['<AAA>', 'B&B', '"CCC"'] };
+my $output = $engine->render('ex.plhtml', $context);
+print $output;
+.--------------------
+
+
+
+.#+++
+.==================== ex_script.result
+$ perl ex.script
+Hello World!
+<ul>
+ <li>&lt;AAA&gt;</li>
+ <li>B&amp;B</li>
+ <li>&quot;CCC&quot;</li>
+</ul>
+.====================
+.#---
+
+
+
+
+.$$ Features		| features
+
+plTenjin has the following features:
+
+.* plTenjin runs very fast. It works about three times as fast as Template-Toolkit.
+.* plTenjin doesn't break HTML design because it uses XML Processing
+  Instructions (PI) as embedded notation for Perl statements.
+.* plTenjin is secure because it supports escaping expression value by default.
+.* plTenjin is small and lightweight. It is very easy to include plTenjin
+  into your application.
+.* plTenjin supports auto caching of converted Perl code.
+.* plTenjin supports partial template and layout template.
+  These are very useful especially for web application.
+.* plTenjin supports partial capturing of template.
+.* plTenjin can load YAML file as context data. Using plTenjin, it is able to
+  separate template file and data file.
+
+
+
+
+
+.$$ Comparison with other solutions	| comparison
+
+
+plTenjin has advantages compared with other solutions (including other language solutions):
+
+.* {{*Easy to design*}} --
+  JSP, ePerl, or eRuby breaks HTML design because they use
+  '{{,<% ... %>,}}' as embedded notation which is not valid in HTML.
+  plTenjin doesn't break HTML desgin because it uses Processing
+  Instructions (PI) as embedded notation which is valid in HTML.
+.* {{*Easy to write*}} --
+  In PHP, it is a little bother to write embedded expression
+  because the notation '{{,<?php echo $value; ?>,}}' is a little long,
+  and very bother to embed escaped expression because
+  '{{,<?php echo htmlspecialchars($value); ?>,}}' is very long.
+  In plTenjin, these are very easy to write because embedded expression
+  notations ('{{,#{value},}}' and '{{,${value},}}') are very short.
+.* {{*Easy to learn*}} --
+  Some template systems
+  are hard to learn because they are large, highly functinal, and
+  based on non-Perl syntax.
+  plTenjin is very easy to learn if you already know Perl language because
+  it is very small and  you can embed any Perl code into HTML template.
+
+
+
+
+
+.$$ Benchmark		| benchmark
+
+Benchmark script is contained in plTenjin archive.
+The following is an example of benchmark.
+
+
+
+.* plTenjin (0.0.3) (pure Perl)
+.* {{<Template-Tookit|http://template-toolkit.org/>}} (2.22) (XS)
+.* {{<HTML::Template|http://search.cpan.org/~samtregar/HTML-Template-2.9/Template.pm>}} (2.9) (pure Perl)
+.* {{<MobaSiF::Template|http://search.cpan.org/~bobpp/MobaSiF-Template-0.02/Template.pm>}} (0.02) (XS)
+.* {{<Text::MicroTemplate|http://search.cpan.org/~typester/Text-MicroTemplate-0.07/lib/Text/MicroTemplate.pm>}} (0.07, customized not to escape HTML) (pure Perl)
+
+.? MacOS X 10.6 SnowLeopard, Intel Core2Duo 2.0GHz, Memory 2GB
+.====================
+$ cd pltenjin-X.X.X/benchmark
+$ perl -v | grep built
+This is perl, v5.8.9 built for darwin-2level
+$ perl -I ../lib bench.pl -n 10000 
+*** n = 10000
+                              user         sys       total        real
+tenjin                      0.8600      0.0400      0.9000      0.9082
+tenjin_create               4.2000      0.4000      4.6000      4.5971
+tenjin_nocache             10.1400      0.3100     10.4500     10.4700
+tt                         20.5800      0.0400     20.6200     20.6373
+tt_create                  82.8500      0.7100     83.5600     83.9623
+htmltmpl                   20.1300      0.0400     20.1700     20.2546
+htmltmpl_create            32.8000      0.4300     33.2300     33.4321
+htmltmpl_edit_context      20.4200      0.0400     20.4600     20.6019
+mobasif                     0.8500      0.2500      1.1000      1.1094
+mobasif_edit_context        1.1100      0.2700      1.3800      1.3694
+mobasif_copy_context        2.8800      0.2700      3.1500      3.1878
+microtmpl                   1.4200      0.0500      1.4700      1.4636
+microtmpl_create           37.5500      2.0500     39.6000     48.0288
+.#*** n = 10000
+.#                          user         sys       total        real
+.#tenjin                  9.8500      0.5700     10.4200     11.0000
+.#tenjin-nocache         16.2500      0.4300     16.6800     17.0000
+.#tenjin-reuse            5.7100      0.0100      5.7200      6.0000
+.#tt                    102.6100      0.9700    103.5800    104.0000
+.#tt-reuse               26.2500      0.0500     26.3000     26.0000
+.#htmltmpl               46.2300      0.4700     46.7000     47.0000
+.#htmltmpl-reuse         30.1700      0.0400     30.2100     31.0000
+.#.#                         user         sys       total        real
+.#.#tenjin                9.68000     0.55000    10.23000    10.00000
+.#.#tenjin-nocache       15.35000     0.38000    15.73000    16.00000
+.#.#tenjin-reuse          5.50000     0.01000     5.51000     5.00000
+.#.#tt                  102.26000     0.83000   103.09000   104.00000
+.#.#tt-reuse             26.38000     0.02000    26.40000    26.00000
+.====================
+
+This shows that plTenjin runs about 20 times faster than Template-Toolkit or HTML::Template.
+
+
+
+.$ Installation			| installation
+
+
+.1) Install via CPAN
+.2) (Optional) Install YAML::Syck package via CPAN
+
+Or
+
+.1) Just copy 'lib/Tenjin.pm' and 'bin/pltenjin' into your proper directory.
+.2) (Optional) Install YAML::Syck package.
+
+
+
+
+
+.$ Designer's Guide		| desguide
+
+This section shows how to use plTenjin for designer.
+
+If you want to know how to use plTenjin in your program, see {{<Developer's Guide|#devguide>}} section.
+
+
+
+.$$ Notation			| des-notation
+
+The following is the notation of plTenjin.
+
+.* '{{,<?pl ... ?>,}}' : Perl statement
+.* '{{,[== ... =],}}' : Perl expression
+.* '{{,[= ... =],}}' : Perl expression with HTML escape
+
+
+.? File 'example1.plhtml':
+.-------------------- example1.plhtml
+<table>
+  <tbody>
+{{*<?pl my $i = 0; ?>*}}
+{{*<?pl for my $item (('<foo>', 'bar&bar', '"baz"')) { ?>*}}
+{{*<?pl     $i++; ?>*}}
+    <tr>
+      <td>{{*[== $item =]*}}</td>
+      <td>{{*[= $item =]*}}</td>
+    </tr>
+{{*<?pl } ?>*}}
+  <tbody>
+</table>
+.--------------------
+
+
+
+The following is the result of executing 'example1.plhtml'.
+
+.? Result:
+.==================== example1.result
+$ pltenjin example1.plhtml
+<table>
+  <tbody>
+    <tr>
+      <td>{{*<foo>*}}</td>
+      <td>{{*&lt;foo&gt;*}}</td>
+    </tr>
+    <tr>
+      <td>{{*bar&bar*}}</td>
+      <td>{{*bar&amp;bar*}}</td>
+    </tr>
+    <tr>
+      <td>{{*"baz"*}}</td>
+      <td>{{*&quot;baz&quot;*}}</td>
+    </tr>
+  <tbody>
+</table>
+.#<html>
+.# <body>
+.#  <ul>
+.#   <li>{{*<foo>*}}
+.#       {{*&lt;foo&gt;*}}</li>
+.#   <li>{{*bar&bar*}}
+.#       {{*bar&amp;bar*}}</li>
+.#   <li>{{*"baz"*}}
+.#       {{*&quot;baz&quot;*}}</li>
+.#  </ul>
+.# </body>
+.#</html>
+.====================
+
+
+
+
+
+
+
+
+
+
+.$$ Convert into Perl Code	| des-convert
+
+Command-line option '-s' converts embedded files into Perl code.
+
+.? Result:
+.==================== example1_source.result
+$ pltenjin {{*-s*}} example1.plhtml
+my $_buf = "";  $_buf .= q`<table>
+  <tbody>
+`; {{*my $i = 0;*}}
+{{*for my $item (('<foo>', 'bar&bar', '"baz"')) {*}}
+    {{*$i++;*}}
+ $_buf .= q`    <tr>
+      <td>` . {{*( $item )*}} . q`</td>
+      <td>` . {{*escape( $item )*}} . q`</td>
+    </tr>
+`; {{*}*}}
+ $_buf .= q`  <tbody>
+</table>
+`;  $_buf;
+.#my @_buf = (); push(@_buf, q`<table>
+.#  <tbody>
+.#`, ); {{*my $i = 0;*}}
+.#{{*for my $item (('<foo>', 'bar&bar', '"baz"')) {*}}
+.#    {{*$i++;*}}
+.#push(@_buf, q`    <tr>
+.#      <td>`,  {{*$item*}} , q`</td>
+.#      <td>`, {{*escape( $item )*}}, q`</td>
+.#    </tr>
+.#`, ); {{*}*}}
+.#push(@_buf, q`  <tbody>
+.#</table>
+.#`, ); join('', @_buf);
+.====================
+
+
+
+
+.* Variable {{,@_buf,}} is a list.
+.* Function {{,escape(),}} (= {{,Tenjin::Context::escape(),}}) escapes {{,'& < > "',}} into {{,'&amp; &lt; &gt; &quot;',}}.
+  Command-line option {{,--escapefunc={{/func/}},}} makes pltenjin to use {{,{{/func/}}(),}} instead of {{,escape(),}}.
+.* End-of-line character ("\n" or "\r\n") is automatically detected by plTenjin.
+
+
+'{{,@_buf = ();,}}' is called as preamble and '{{,join('', @_buf);,}}' is called as postamble.
+Command-line option '{{,-b,}}' removes preamble and postamble.
+
+
+.? File 'example2.plhtml'
+.-------------------- example2.plhtml
+<?pl for my $i ((1, 2, 3)) { ?>
+<p>[== $i =]</p>
+<?pl } ?>
+.--------------------
+
+.? Result:
+.==================== example2_sb.result2
+.#.#$ cat example2.plhtml
+.#.#<?pl for my $i ((1, 2, 3)) { ?>
+.#.#<p>[== $i =]</p>
+.#.#<?pl } ?>
+.#$ pltenjin -s example2.plhtml
+.#{{*my @_buf = ();*}} for my $i ((1, 2, 3)) {
+.#push(@_buf, q`<p>`,  $i , q`</p>
+.#`, ); }
+.#{{*join('', @_buf);*}}
+.#$ pltenjin -s{{*b*}} example2.plhtml
+.#for my $i ((1, 2, 3)) {
+.#push(@_buf, q`<p>`,  $i , q`</p>
+.#`, ); }
+$ pltenjin -s example2.plhtml
+{{*my $_buf = "";*}} for my $i ((1, 2, 3)) {
+ $_buf .= q`<p>` . ( $i ) . q`</p>
+`; }
+ {{*$_buf;*}}
+$ pltenjin -s{{*b*}} example2.plhtml
+for my $i ((1, 2, 3)) {
+ $_buf .= q`<p>` . ( $i ) . q`</p>
+`; }
+.====================
+
+
+
+Command-line option '-S' also show converted Perl code but it doesn't print text part.
+This is useful to check Perl code for debugging.
+
+
+.? Result:
+.==================== example1_S.result
+$ pltenjin {{*-S*}} example1.plhtml
+.#my @_buf = (); 
+my $_buf = ""; 
+
+my $i = 0;
+for my $item (('<foo>', 'bar&bar', '"baz"')) {
+    $i++;
+
+           $item ; 
+          escape( $item ); 
+
+}
+
+
+.#join('', @_buf);
+ $_buf;
+.====================
+
+
+In addition, the following command-line options are available.
+
+.[ -N ]	     Add line number.
+.[ -X ]	     Delete expressions.
+.[ -C ]	     Remove empty lines (compact-mode).
+.[ -U ]	     Compress empty lines to a line (uniq-mode).
+
+
+.? Result:
+.==================== example1_SXNC.result
+$ pltenjin {{*-SUNX*}} example1.plhtml
+.#    1:  my @_buf = (); 
+.#
+.#    3:  my $i = 0;
+.#    4:  for my $item (('<foo>', 'bar&bar', '"baz"')) {
+.#    5:      $i++;
+.#
+.#   10:  }
+.#
+.#   13:  join('', @_buf);
+    1:  my $_buf = ""; 
+
+    3:  my $i = 0;
+    4:  for my $item (('<foo>', 'bar&bar', '"baz"')) {
+    5:      $i++;
+
+   10:  }
+
+   13:   $_buf;
+.====================
+
+
+
+
+
+.$$ Syntax Checking			| des-syntaxchk
+
+Command-line option '{{,-z,}}' checks syntax error in embedded Perl code
+and command-line option '{{,-w,}}' enables 'use strict;'.
+It is recommended to use '-w' when you specify '-z'.
+
+.? File example3.plhtml:
+.-------------------- example3.plhtml
+<ul>
+<?pl for my $item (@$items) { ?>
+  <li>[= $item =]</li>
+<?pl {{*#}*}} ?>
+</ul>
+.--------------------
+
+
+.? Result:
+.==================== example3_syntaxcheck.result
+$ pltenjin {{*-z*}} example3.plhtml
+*** example3.plhtml - NG
+Missing right curly or square bracket at example3.plhtml line 6, at end of line
+  (Might be a runaway multi-line `` string starting on line 5)
+syntax error at example3.plhtml line 6, at EOF
+example3.plhtml had compilation errors.
+.====================
+
+
+Command-line option '-wz' is more convenient than '{{,pltenjin -s file | perl -wc,}}'
+because the former can take several filenames.
+
+Command-line option '-q' (quiet-mode) prints nothing if it has no errors.
+
+
+
+.$$ HTML Helper Functions			| des-htmlhelpers
+
+plTenjin provides small but useful HTML helper functions.
+See {{<this section|#dev-htmlhelpers>}} for details.
+
+.? example of HTML helper functions:
+.-------------------- htmlhelpers.plhtml
+<?pl #@ARGS params, items ?>
+<table>
+<?pl my $cycle = {{*new_cycle('odd', 'even')*}}; ?>
+<?pl my $curr_id = $params->{item_id}; ?>
+<?pl for my $item (@$items) { ?>
+  <tr class="[=={{*$cycle->()*}}=]" [=={{*tagattrs(style=>($item->{readonly} && 'color:gray'))*}}=]>
+    <td><input type="checkbox" name="items" value="[==$item->{id}=]" [=={{*checked($curr_id==$item->{id})*}}=] /></td>
+    <td>[=$item->{name}=]</td>
+  </tr>
+<?pl } ?>
+</table>
+.--------------------
+
+.? output example:
+.-------------------- htmlhelpers.output
+<table>
+  <tr class="{{*odd*}}" >
+    <td><input type="checkbox" name="items" value="1"  /></td>
+    <td>Foo</td>
+  </tr>
+  <tr class="{{*even*}}"  {{*style="color:gray"*}}>
+    <td><input type="checkbox" name="items" value="2"  {{*checked="checked"*}} /></td>
+    <td>Bar</td>
+  </tr>
+</table>
+.--------------------
+
+.#++++++++++
+.-------------------- htmlhelpers.pl
+use strict;
+use Tenjin;
+my $params = { item_id => 2 };
+my $items = [
+    { id=>1, name=>"Foo" },
+    { id=>2, name=>"Bar", readonly=>'true' },
+];
+my $engine = Tenjin::Engine->new();
+print $engine->render('htmlhelpers.plhtml', {params=>$params, items=>$items});
+.--------------------
+
+.==================== htmlhelpers.result
+$ perl htmlhelpers.pl
+<table>
+  <tr class="{{*odd*}}" >
+    <td><input type="checkbox" name="items" value="1"  /></td>
+    <td>Foo</td>
+  </tr>
+  <tr class="{{*even*}}"  {{*style="color:gray"*}}>
+    <td><input type="checkbox" name="items" value="2"  {{*checked="checked"*}} /></td>
+    <td>Bar</td>
+  </tr>
+</table>
+.====================
+
+.#----------
+
+
+
+.$$ Context Data File			| des-contextdata
+
+
+plTenjin allows you to specify context data by YAML file or Perl script.
+
+
+.? File 'example4.plhtml':
+.-------------------- example4.plhtml
+<p>
+  [= $text =]
+  [== $num =]
+  [== $flag =]
+</p>
+
+<?pl for my $item (@$items) { ?>
+<p>[= $item =]</p>
+<?pl } ?>
+
+<?pl while (my ($key, $value) = each %$hash) { ?>
+<p>[= $key =] = [= $value =]</p>
+<?pl } ?>
+.--------------------
+
+
+
+.? File 'datafile.yaml':
+.-------------------- datafile.yaml
+text:   foo
+num:    3.14
+flag:   yes
+items:
+  - foo
+  - bar
+  - baz
+hash:
+  x: 1
+  y: 2
+.--------------------
+
+
+.? Result:
+.==================== example4_yaml.result
+$ pltenjin {{*-f datafile.yaml*}} example4.plhtml
+<p>
+  foo
+  3.14
+  yes
+</p>
+
+<p>foo</p>
+<p>bar</p>
+<p>baz</p>
+
+<p>y = 2</p>
+<p>x = 1</p>
+.====================
+
+
+
+
+.? File 'datafile.pl':
+.-------------------- datafile.pl
+{
+  text  => "foo",
+  num   => 3.14,
+  flag  => 1,
+  items => ['foo', 'bar', 'baz'],
+  hash  => { x=>1, y=>2, },
+}
+.--------------------
+
+
+.? Result:
+.==================== example4_datafile_pl.result
+$ pltenjin {{*-f datafile.pl*}} example4.plhtml
+<p>
+  foo
+  3.14
+  1
+</p>
+
+<p>foo</p>
+<p>bar</p>
+<p>baz</p>
+
+<p>y = 2</p>
+<p>x = 1</p>
+.====================
+
+
+You must install YAML::Syck package if you want to use YAML-format context data file.
+
+
+
+
+.$$ Command-line Context Data		| des-cmlinecontext
+
+Command-line option '{{,-c,}}' specifies context data in YAML format or Perl code.
+
+.? File 'example5.plhtml':
+.-------------------- example5.plhtml
+text:  [=$text=]
+items:
+<?pl for my $item (@$items) { ?>
+  - [=$item=]
+<?pl } ?>
+hash:
+<?pl while (my ($key, $val) = each %$hash) { ?>
+  [=$key=]: [=$val=]
+<?pl } ?>
+.--------------------
+
+
+
+.? Result of context data in perl code:
+.==================== example5_datastr_pl.result
+$ pltenjin {{*-c 'text=>"foo", items=>["a","b","c"], hash=>{x=>1,y=>2}'*}} example5.plhtml
+text:  foo
+items:
+  - a
+  - b
+  - c
+hash:
+  y: 2
+  x: 1
+.====================
+
+
+
+.? Result of context data in yaml format:
+.==================== example5_datastr_yaml.result
+$ pltenjin {{*-c '{text: foo, items: [a, b, c], hash: {x: 1, y: 2} }'*}} example5.plhtml
+text:  foo
+items:
+  - a
+  - b
+  - c
+hash:
+  y: 2
+  x: 1
+.====================
+
+
+
+You must install YAML::Syck package at first if you want to specify context data in YAML format.
+
+
+
+
+.$$ Nested Template			| des-nested-template
+
+
+Template can include other templates.
+Included templates can also include other templates.
+
+The following function is available to include other templates.
+
+.[ include(str template_name) ]
+    Include other template.
+
+
+.? File 'example6.plhtml':
+.-------------------- example6.plhtml
+<html>
+  <body>
+
+    <div id="sidemenu">
+{{*<?pl include('sidemenu.plhtml'); ?>*}}
+    </div>
+
+    <div id="main-content">
+<?pl for my $item (@$items) { ?>
+      <p>[=$item=]</p>
+<?pl } ?>
+    </div>
+
+    <div id="footer">
+{{*<?pl include('footer.plhtml'); ?>*}}
+    </div>
+
+  </body>
+</table>
+.--------------------
+
+.? File 'sidemenu.plhtml':
+.-------------------- sidemenu.plhtml
+<ul>
+<?pl for my $item (@$menu) { ?>
+  <li><a href="[=$item->{url}=]">[=$item->{name}=]</a></li>
+<?pl } ?>
+</ul>
+.--------------------
+
+.? File 'footer.plhtml':
+.-------------------- footer.plhtml
+<hr />
+<address>
+  <a href="mailto:[=$webmaster_email=]">[=$webmaster_email=]</a>
+</address>
+.--------------------
+
+
+.? File 'contextdata.pl':
+.-------------------- contextdata.pl
+{
+    items => [ '<FOO>', '&BAR', '"BAZ"' ],
+    webmaster_email => 'webmaster@example.com',
+    menu  => [
+        { name => 'Top',      url => '/' },
+        { name => 'Products', url => '/prod' },
+        { name => 'Support',  url => '/support' },
+    ],
+}
+.--------------------
+
+
+
+.? Result:
+.==================== example6_nested.result
+$ pltenjin -f contextdata.pl example6.plhtml
+<html>
+  <body>
+
+    <div id="sidemenu">
+{{*<ul>*}}
+  {{*<li><a href="/">Top</a></li>*}}
+  {{*<li><a href="/prod">Products</a></li>*}}
+  {{*<li><a href="/support">Support</a></li>*}}
+{{*</ul>*}}
+    </div>
+
+    <div id="main-content">
+      <p>&lt;FOO&gt;</p>
+      <p>&amp;BAR</p>
+      <p>&quot;BAZ&quot;</p>
+    </div>
+
+    <div id="footer">
+{{*<hr />*}}
+{{*<address>*}}
+{{*  <a href="mailto:webmaster@example.com">webmaster@example.com</a>*}}
+{{*</address>*}}
+    </div>
+
+  </body>
+</table>
+.====================
+
+
+'{{,include(),}}' can take template filename
+(ex. 'user_main.plhtml') or template short name (ex. ':main').
+Template short name represents a template in short notation. It starts with colon (':').
+
+
+
+To make template short name available, command-line option '{{,--prefix,}}' and
+'{{,--postfix,}}' are required.
+For example, '{{,include("user_main.plhtml"),}}' can be described as '{{,include(":main"),}}'
+when '{{,--prefix="user_",}}' and '{{,--postfix=".plhtml",}}' are specified in command-line.
+
+
+
+
+.$$ Layout Template			| des-layout
+
+
+Command-line option '{{,--layout=templatename,}}' specifies layout template name.
+
+For example, 'exmample6.plhtml' template in the previous section can be divided
+into layout file 'layout6.plhtml' and content file 'content6.plhtml'.
+Variable '{{,$_content,}}' in layout template represents the result of content file.
+
+
+
+
+.? File 'layout6.plhtml':
+.-------------------- layout6.plhtml
+<html>
+  <body>
+
+    <div id="sidemenu">
+<?pl include('sidemenu.plhtml'); ?>
+    </div>
+
+    <div id="main-content">
+{{*[== $_content ==]*}}
+    </div>
+
+    <div id="footer">
+<?pl include('footer.plhtml'); ?>
+    </div>
+
+  </body>
+</table>
+.--------------------
+
+.? File 'content6.plhtml':
+.-------------------- content6.plhtml
+<?pl for my $item (@$items) { ?>
+  <p>[=$item=]</p>
+<?pl } ?>
+.--------------------
+
+
+
+
+.? Result:
+.==================== example6_layout.result
+$ pltenjin -f contextdata.pl {{*--layout=layout6.plhtml*}} content6.plhtml
+<html>
+  <body>
+
+    <div id="sidemenu">
+<ul>
+  <li><a href="/">Top</a></li>
+  <li><a href="/prod">Products</a></li>
+  <li><a href="/support">Support</a></li>
+</ul>
+    </div>
+
+    <div id="main-content">
+{{*  <p>&lt;FOO&gt;</p>*}}
+{{*  <p>&amp;BAR</p>*}}
+{{*  <p>&quot;BAZ&quot;</p>*}}
+    </div>
+
+    <div id="footer">
+<hr />
+<address>
+  <a href="mailto:webmaster@example.com">webmaster@example.com</a>
+</address>
+    </div>
+
+  </body>
+</table>
+.====================
+
+
+.#Target temlate and layout template shares the same context object.
+.#If you set some variables in target template, they are available in layout template.
+Target template and layout template don't share local variables.
+It means that local variables set in a template are not available in layout template.
+
+
+If you want variables set in a temlate to be available in layout template,
+you should use '$_context' hash reference.
+
+.? File 'layout7.plhtml':
+.-------------------- layout7.plhtml
+...
+<h1>{{*[=$title=]*}}</h1>
+
+<div id="main-content">
+[==$_content==]
+<div>
+
+<a href="{{*[=$url=]*}}">Next page</a>
+...
+.--------------------
+
+.? File 'content7.plhtml':
+.-------------------- content7.plhtml
+{{*<?pl $_context->{'title'} = 'Document Title'; ?>*}}
+{{*<?pl $_context->{'url'}   = '/next/page'; ?>*}}
+<table>
+  ...content...
+</table>
+.--------------------
+
+
+
+.? Result:
+.==================== example7_layout2.result
+$ pltenjin --layout=layout7.plhtml content7.plhtml
+...
+<h1>{{*Document Title*}}</h1>
+
+<div id="main-content">
+<table>
+  ...content...
+</table>
+<div>
+
+<a href="{{*/next/page*}}">Next page</a>
+...
+.====================
+
+
+Using '$_context->{_layout}', it is able to specify layout template name in each template file.
+If you assigned 0 to '$_context->{_layout}', no layout template is used.
+
+
+
+.? File 'content8.plhtml':
+.-------------------- content8.plhtml
+{{*<?pl $_context->{'_layout'} = ':layout8_xhtml'; ?>*}}
+<h1>Hello World!</h1>
+.--------------------
+
+.? File 'layout8_html.plhtml':
+.-------------------- layout8_html.plhtml
+<html>
+  <body>
+[== $_content ==]
+  </body>
+</html>
+.--------------------
+
+.? File 'layout8_xhtml.plhtml':
+.-------------------- layout8_xhtml.plhtml
+<?xml version="1.0" encoding="UTF-8"?>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+  <body>
+[== $_content ==]
+  </body>
+</html>
+.--------------------
+
+.? Result: ':layout8_html' is specified in command-line option but ':layout8_xhtml' is used
+.==================== example8_layout3.result
+$ pltenjin --postfix='.plhtml' {{*--layout=':layout8_html'*}} content8.plhtml
+<?xml version="1.0" encoding="UTF-8"?>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+  <body>
+<h1>Hello World!</h1>
+  </body>
+</html>
+.====================
+
+
+
+.$$ Capturing				| des-capturing
+
+It is able to capture any part of template.
+
+.? File 'example9.plhtml':
+.-------------------- example9.plhtml
+<?pl $_context->{'title'} = 'Capture Test'; ?>
+<html>
+  <body>
+
+{{*<?pl start_capture('content_part'); ?>*}}
+    <ul>
+<?pl for my $i ((0, 1, 2)) { ?>
+      <li>i = [==$i=]</li>
+<?pl } ?>
+    </ul>
+{{*<?pl stop_capture(); ?>*}}
+
+{{*<?pl start_capture('footer_part'); ?>*}}
+    <div class="footer">copyright&copy; 2007 kuwata-lab.com</div>
+{{*<?pl stop_capture() ?>*}}
+
+  </body>
+</html>
+.--------------------
+
+Captured strings are accessable as local variables.
+For example, you can get captured string as a variable '{{,content_part,}}' in the above example.
+
+A template can contain several capturing.
+It is not able to nest capturing.
+
+In layout file, it is able to use strings captured in templates.
+
+.? File 'layout9.plhtml':
+.-------------------- layout9.plhtml
+<html lang="en">
+  <head>
+    <title>[=$title=]</title>
+  </head>
+  <body>
+
+    <!-- HEADER -->
+{{*<?pl start_placeholder('header_part'); ?>*}}
+    <h1>[=$title=]</h1>
+{{*<?pl stop_placeholder(); ?>*}}
+    <!-- /HEADER -->
+
+    <!-- CONTENT -->
+{{*[== $content_part ==]*}}
+    <!-- /CONTENT -->
+
+    <!-- FOOTER -->
+{{*<?pl start_placeholder('footer_part'); ?>*}}
+    <hr />
+    <address>webmaster@localhost</address>
+{{*<?pl stop_placeholder(); ?>*}}
+    <!-- /FOOTER -->
+
+  </body>
+</html>
+.--------------------
+
+
+.#'{{,stop_capture(1);,}}' is equivarent to '{{,$_context->{"{{/varname/}}"} = stop_capture();,}}'.
+'{{,start_placeholder("name") ... stop_placeholder(),}}' is quivarent to the following.
+.--------------------
+{{*<?pl if ($_context->{"name"}) { ?>*}}
+[== $_context->{"name"} ==]
+{{*<?pl } else { ?>*}}
+    ...
+{{*<?pl } ?>*}}
+.--------------------
+
+The following result shows that content part and footer part are overrided by capturing in content template but header part is not.
+
+.? Result:
+.==================== example9_capture.result
+$ pltenjin --layout=layout9.plhtml example9.plhtml
+<html lang="en">
+  <head>
+    <title>Capture Test</title>
+  </head>
+  <body>
+
+    <!-- HEADER -->
+    <h1>Capture Test</h1>
+    <!-- /HEADER -->
+
+    <!-- CONTENT -->
+    {{*<ul>*}}
+      {{*<li>i = 0</li>*}}
+      {{*<li>i = 1</li>*}}
+      {{*<li>i = 2</li>*}}
+    {{*</ul>*}}
+    <!-- /CONTENT -->
+
+    <!-- FOOTER -->
+    {{*<div class="footer">copyright&copy; 2007 kuwata-lab.com</div>*}}
+    <!-- /FOOTER -->
+
+  </body>
+</html>
+.====================
+
+
+
+
+.$$ Template Arguments			| des-args
+
+It is able to specify template arguments in template files.
+Template arguments are variables which are passed by main program via context object.
+In the following example, '{{,title,}}' and '{{,name,}}' are template arguments.
+
+
+.? File 'example10.plhtml':
+.-------------------- example10.plhtml
+<?xml version="1.0"?>
+{{*<?pl #@ARGS title, name ?>*}}
+<h1>[=$title=]</h1>
+<p>Hello [=$name=]!</p>
+.--------------------
+
+Template arguments line is converted into assignment statements of local variables.
+
+.==================== example10_template_args.result
+$ pltenjin -s example10.plhtml
+.#my @_buf = (); push(@_buf, q`<?xml version="1.0"?>
+.#`, ); my $title = $_context->{title}; my $name = $_context->{name}; 
+.#push(@_buf, q`<h1>`, escape($title), q`</h1>
+.#<p>Hello `, escape($name), q`!</p>
+.#`, ); join('', @_buf);
+my $_buf = "";  $_buf .= q`<?xml version="1.0"?>
+`; my $title = $_context->{title}; my $name = $_context->{name}; 
+ $_buf .= q`<h1>` . escape($title) . q`</h1>
+<p>Hello ` . escape($name) . q`!</p>
+`;  $_buf;
+.====================
+
+
+If template arguments are specified, other variables passed by context object are not set.
+
+.? File 'example11.plhtml':
+.-------------------- example11.plhtml
+{{*<?pl #@ARGS x ?>*}}
+<p>
+x = [=$x=]
+y = [=$y=]   # error
+</p>
+.--------------------
+
+.? Result:
+.==================== example11_template_args.result
+$ pltenjin {{*-wc 'x=>10,y=>20'*}} example11.plhtml
+*** Error: example11.plhtml
+Global symbol "$y" requires explicit package name at (eval 4) line 4.
+.====================
+
+Special variable '{{,$_context,}}' which represents context object is always available whether template arguments are specified or not.
+
+
+
+.$$ Preprocessing			| des-preprocess
+
+plTenjin supports preprocessing of template.
+Preprocessing executes some logics when templates are loaded and that logics are not executed when rendering.
+Preprocessing makes your application much faster.
+
+Notation of preprocessing is the following.
+.* {{,<?PL ... ?>,}} represents preprocessing statement.
+.* {{,[*=...=*],}} represents preprocessing expression (with HTML escape).
+.* {{,[*==...=*],}} represents preprocessing expression (without HTML escape).
+
+For example, assume the following template.
+
+.? File 'example12.plhtml':
+.-------------------- example12.plhtml
+{{*<?PL %states = ( "CA" => "California", ?>*}}
+{{*<?PL             "NY" => "New York", ?>*}}
+{{*<?PL             "FL" => "Florida",  ?>*}}
+{{*<?PL             "TX" => "Texas",  ?>*}}
+{{*<?PL             "HI" => "Hawaii", ); ?>*}}
+<?pl %chk = ( $params->{state} => ' selected="selected"' ); ?>
+<select name="state">
+  <option value="">-</option>
+{{*<?PL for my $code (sort(keys(%states))) { ?>*}}
+  <option value="{{*[*==$code=*]*}}"[=$chk->{{{*[*==$code=*]*}}}=]>{{*[*==$states{$code}=*]*}}</option>
+{{*<?PL } ?>*}}
+</select>
+.--------------------
+
+If preprocessing is activated, the above will be converted into the following when template is loaded.
+(Command-line option {{,-P,}} shows the result of preprocessing.)
+
+.? Result of preprocessing:
+.==================== example12_preprocessed.result
+$ pltenjin {{*-P*}} example12.plhtml
+<?pl %chk = ( $params->{state} => ' selected="selected"' ); ?>
+<select name="state">
+  <option value="">-</option>
+  <option value="CA"[=$chk->{CA}=]>California</option>
+  <option value="FL"[=$chk->{FL}=]>Florida</option>
+  <option value="HI"[=$chk->{HI}=]>Hawaii</option>
+  <option value="NY"[=$chk->{NY}=]>New York</option>
+  <option value="TX"[=$chk->{TX}=]>Texas</option>
+</select>
+.====================
+
+This means that for-loop is executed only once when template is loaded and is not executed when rendering.
+In the result, rendering speed becomes to be much faster.
+
+And the Perl code is here. This shows that there is no for-loop.
+
+.? Translated script code:
+.==================== example12_preprocessed_source.result
+$ pltenjin {{*--preprocess*}} -sb example12.plhtml
+.#%%chk = ( $params->{state} => ' selected="selected"' );
+.#push(@_buf, q`<select name="state">
+.#  <option value="">-</option>
+.#  <option value="CA"`, escape($chk->{CA}), q`>California</option>
+.#  <option value="FL"`, escape($chk->{FL}), q`>Florida</option>
+.#  <option value="HI"`, escape($chk->{HI}), q`>Hawaii</option>
+.#  <option value="NY"`, escape($chk->{NY}), q`>New York</option>
+.#  <option value="TX"`, escape($chk->{TX}), q`>Texas</option>
+.#</select>
+.#`, ); 
+%chk = ( $params->{state} => ' selected="selected"' );
+ $_buf .= q`<select name="state">
+  <option value="">-</option>
+  <option value="CA"` . escape($chk->{CA}) . q`>California</option>
+  <option value="FL"` . escape($chk->{FL}) . q`>Florida</option>
+  <option value="HI"` . escape($chk->{HI}) . q`>Hawaii</option>
+  <option value="NY"` . escape($chk->{NY}) . q`>New York</option>
+  <option value="TX"` . escape($chk->{TX}) . q`>Texas</option>
+</select>
+`;
+.====================
+
+If you have errors on preprocessing, you should check source script by {{,-Ps,}} option{{(Command-line option '-Ps' is available but '-PS' is not availabe. This is a current restriction of pltenjin. )}}.
+
+
+
+
+The following is an another example.
+Assume that {{,link_to(),}} is a helper method which takes label and url and generate
+{{,<a></a>,}} tag.
+In this case, label and url can be parameterized by {{,_p("..."),}} and {{,_P("..."),}}.
+The former is converted into {{,[== ... =],}} and the latter converted into {{,[= ... =],}}
+by preprocessor.
+
+.? File 'example13.plhtml':
+.-------------------- example13.plhtml
+<?PL ## ex. link_to('Show', '/show/1')  => <a href="/show/1">Show</a> ?>
+<?PL sub link_to { ?>
+<?PL   my($label, $url) = @_; ?>
+<?PL   return sprintf('<a href="%s">%s</a>', Tenjin::Helper::Html::encode_url($url), $label); ?>
+<?PL } ?>
+[*==link_to('"Show '._P('$item->{name}').'"', '/items/show/'._p('$item->{id}'))=*]
+.--------------------
+
+.? Preprocessed template:
+.==================== example13_preprocessed.result
+$ pltenjin {{*-P*}} example13.plhtml
+<a href="/items/show/{{*[==$item->{id}=]*}}">"Show {{*[=$item->{name}=]*}}"</a>
+.====================
+
+.? Translated script code:
+.==================== example13_preprocessed_source.result
+$ pltenjin {{*--preprocess*}} -sb example13.plhtml
+.#push(@_buf, q`<a href="/items/show/`, $item->{"id"}, q`">"Show `, escape($item->{"name"}), q`"</a>
+.#`, ); 
+ $_buf .= q`<a href="/items/show/` . ($item->{id}) . q`">"Show ` . escape($item->{name}) . q`"</a>
+`;
+.====================
+
+There are many web-application framework and they provides helper functions.
+These helper functions are divided into two groups.
+.* {{,link_to(),}} or {{,_(),}} (function for M17N) return the same result
+   when the same arguments are passed.
+   These functions can be expanded by preprocessor.
+.* Some functions return the different result even if the same arguments are passed.
+   These functions can't be expaned by preprocessor.
+
+Preprocessor has the power to make your application much faster,
+but it may make the debugging difficult.
+You should use it carefully.
+
+
+
+
+
+
+.$$ Other Options			| des-otheropts
+
+
+
+.* Command-line option '-w' uses strict package. This is useful for development.
+.* Command-line option '{{,--escapefunc=func1,}}' changes {{,escape(),}} function name to {{,func1,}}.
+   For example, '{{,--escapefunc=HTML::Entities::encode_entities,}}' changes escape function from {{,esca;e(),}} to {{,HTML::Entities::encode_entities(),}}.
+.* Command-line option '{{,--path=dir1,dir2,...,}}' sepcifies template directory path.
+
+
+
+
+.$ Developer's Guide		| devguide
+
+
+This section shows how to use plTenjin in your Perl script.
+
+If you want to know the notation or features of plTenjin, see {{<Designer's Guide|#desguide>}} section.
+
+
+
+.$$ An Example			| dev-example
+
+The following is an example to use plTenjin in Perl.
+
+
+.? Example:
+.--------------------
+use Tenjin;
+$Tenjin::USE_STRICT = 1;    # (optional but recommended)
+my $engine = new Tenjin::Engine();
+my $context = { title=>'plTenjin Example', items=>['AAA', 'BBB', 'CCC'] };
+my $filename = 'file.plhtml';
+my $output = $engine->render($filename, $context);
+print $output;
+.--------------------
+
+If you want to define helper functions for template, see {{<Add Your Helper Functions|#dev-helpers>}} section.
+
+
+
+.#.$$ Classes and Functions in plTenjin	| dev-classes
+.#
+.#
+.#plTenjin has the follwoing classes.
+.#
+.#.[ Tenjin::Template ]
+.#    This class represents a template file.
+.#    Main responsibilities of this class are:
+.#    .- Convert template file into perl script
+.#    .- Render converted perl script with context data
+.#
+.#.[ Tenjin::Engine ]
+.#    This class provides many features such as:
+.#    .- Search template files
+.#    .- Nestable layout template
+.#    .- Partial template
+.#    .- File caching
+.#    .- Preprocessing
+.#    .- and so on
+.#
+.#% if context_class && !context_class.empty?
+.#.[ Tenjin::Context ]
+.#    This class represents context data.
+.#% end 
+.#
+.#
+.#% if PYTHON
+.#%   mod = 'tenjin.helpers.'
+.#% elsif RUBY
+.#%   mod = ''
+.#% elsif PERL
+.#%   mod = 'Tenjin::Context'
+.#% elsif JS
+.#%   mod = 'Tenjin.Util'
+.#% elsif PHP
+.#%   mod = 'XXXX'
+.#% else assert false 
+.#% end 
+.#
+.#
+.#% if PYTHON
+.#plTenjin has the following utility functions.
+.#These are defined at tenjin.helpers module.
+.#% elsif RUBY
+.#plTenjin has the following utility functions.
+.#These are defined at Tenjin::HtmlHelper module and Tenjin::Context class includes it.
+.#% elsif PERL
+.#plTenjin has the following utility functions.
+.#% elsif JS
+.#.#plTenjin has the following utility functions.
+.#% elsif PHP
+.#.#plTenjin has the following utility functions.
+.#% else assert false 
+.#% end 
+.#
+.#% if PYTHON
+.#.[ to_str(value) ]
+.#    Convert value into string.
+.#    Return empty string if value is None else return value of {{,str(value),}}.
+.#% end 
+.#
+.#.[ escape(str) ]
+.#    Escape '{{,& < > ",}}' in string into '{{,&amp; &lt; &gt; &quot;,}}'.
+.#
+.#% if PYTHON
+.#.[ generate_tostrfunc(str) ]
+.#    Generate 'to_str' function which encodes unicode to str.
+.#    This is used when handling non-ascii characters in template file.
+.#    See {{<Template Encoding|#dev-encoding>}} section for details.
+.#% end
+.#
+
+
+.$$ Class Tenjin::Template		| dev-templateclass
+
+
+Tenjin::Template class represents a template file.
+An object of Tenjin::Template corresponds to a template file.
+Main responsibilities of this class are:
+
+.- Convert template file into perl script
+.- Render converted perl script with context data
+
+This class has the following methods and attributes.
+
+
+.[ Tenjin::Template::new(filename=nil, :escapefunc=>'escape') ]
+    Create template object. If filename is given, read and convert it to Perl code.
+
+.[ Tenjin::Template::convert(input, filename=None) ]
+    Convert input text into Perl code and return it.
+
+.[ Tenjin::Template::convert_file(filename) ]
+    Convert file into Perl code and return it.
+    This is equivarent to {{,Tenjin::Template#convert(Tenjin::Util::read_file(filename), filename),}}
+
+.[ Tenjin::Template::render(context=undef) ]
+    Compile Perl code, evaluate it with context data, and return the result of evaluation.
+    .#If {{,_buf,}} is undef then new String is created as {{,_buf,}} and returned.
+    .#If {{,_buf,}} is not undef then the result of evaluation is appended
+    .#into {{,_buf,}} and returns undef.
+
+.[ Tenjin::Template->{'script'} ]
+    Converted Perl code
+
+
+
+The followings are examples to use Tenjin::Template in Perl script.
+
+
+
+.? File 'example14.plhtml':
+.-------------------- example14.plhtml
+<h1>[=$title=]</h1>
+<ul>
+<?pl for my $item (@$items) { ?>
+ <li>[=$item=]</li>
+<?pl } ?>
+</ul>
+.--------------------
+
+.? File 'example14.pl':
+.-------------------- example14.pl
+## template file
+my $filename = 'example14.plhtml';
+
+## convert into perl code
+use Tenjin;
+my $template = {{*new Tenjin::Template($filename)*}};
+## or
+# my $template = new Tenjin::Template();
+# my $script = {{*$template->convert_file{$filename}*}};
+## or
+# my $template = new Tenjin::Template();
+# my $input = Tenjin::Util::read_file($filename);
+# my $script = {{*$template->convert($input, $filename)*}};  # filename is optional
+
+## show converted perl code
+print "---- perl code ----\n";
+print {{*$template->{'script'}*}};
+
+## evaluate perl code
+my $context = { title=>'plTenjin Example', items=>['<AAA>','B&B','"CCC"'], };
+my $output = {{*$template->render($context)*}};
+print "---- output ----\n";
+print $output;
+## or
+#my $context = { title=>'plTenjin Example', items=>['<AAA>','B&B','"CCC"'], };
+#$context = {{*new Tenjin::Context($context)*}};
+#my $output = {{*$template->render($context)*}};
+## or
+#my $context = new Tenjin::Context();
+#$context->{'title'} = 'plTenjin Example';
+#$context->{'items'} = ['<AAA>','B&B','"CCC"'];
+#my $output = $template->render(context);
+.--------------------
+
+.? Result:
+.==================== example14_tmplclass.result
+$ perl example14.pl
+.#---- perl code ----
+.#my @_buf = (); push(@_buf, q`<h1>`, escape($title), q`</h1>
+.#<ul>
+.#`, ); for my $item (@$items) {
+.#push(@_buf, q` <li>`, escape($item), q`</li>
+.#`, ); }
+.#push(@_buf, q`</ul>
+.#`, ); join('', @_buf);
+.#---- output ----
+.#<h1>plTenjin Example</h1>
+.#<ul>
+.# <li>&lt;AAA&gt;</li>
+.# <li>B&amp;B</li>
+.# <li>&quot;CCC&quot;</li>
+.#</ul>
+---- perl code ----
+my $_buf = "";  $_buf .= q`<h1>` . escape($title) . q`</h1>
+<ul>
+`; for my $item (@$items) {
+ $_buf .= q` <li>` . escape($item) . q`</li>
+`; }
+ $_buf .= q`</ul>
+`;  $_buf;
+---- output ----
+<h1>plTenjin Example</h1>
+<ul>
+ <li>&lt;AAA&gt;</li>
+ <li>B&amp;B</li>
+ <li>&quot;CCC&quot;</li>
+</ul>
+.====================
+
+
+
+
+Constructor of Tenjin::Template can take the follwoing options.
+
+
+.* '{{,escapefunc,}}' (string) specifies function name to escape string.
+  Default is '{{,escape,}}' (= {{,Tenjin::Context::escape,}}).
+
+
+Constructor of Tenjin::Engine can also take the same options as above.
+These options given to constructor of Tenjin::Engine are passed to constructor of Tenjin::Template internally.
+
+
+
+.? File 'example15.pl':
+.-------------------- example15.pl
+use Tenjin;
+use strict;
+my $filename = 'example14.plhtml';
+my $template = new Tenjin::Template($filename, {{*{escapefunc=>'HTML::Entities::encode_entities'}*}});
+print $template->{script}, "\n";
+
+use HTML::Entities;
+my $title = 'plTenjin Example';
+my $items = ['<foo>', '&bar', '"baz"'];
+my $output = $template->render({title=>$title, items=>$items});
+print $output;
+.--------------------
+
+
+
+
+.? Result:
+.==================== example15_escapefunc.result
+$ perl example15.pl
+.#my @_buf = (); push(@_buf, q`<h1>`, HTML::Entities::encode_entities($title), q`</h1>
+.#<ul>
+.#`, ); for my $item (@$items) {
+.#push(@_buf, q` <li>`, HTML::Entities::encode_entities($item), q`</li>
+.#`, ); }
+.#push(@_buf, q`</ul>
+.#`, ); join('', @_buf);
+.#
+.#<h1>plTenjin Example</h1>
+.#<ul>
+.# <li>&lt;foo&gt;</li>
+.# <li>&amp;bar</li>
+.# <li>&quot;baz&quot;</li>
+.#</ul>
+my $_buf = "";  $_buf .= q`<h1>` . HTML::Entities::encode_entities($title) . q`</h1>
+<ul>
+`; for my $item (@$items) {
+ $_buf .= q` <li>` . HTML::Entities::encode_entities($item) . q`</li>
+`; }
+ $_buf .= q`</ul>
+`;  $_buf;
+
+<h1>plTenjin Example</h1>
+<ul>
+ <li>&lt;foo&gt;</li>
+ <li>&amp;bar</li>
+ <li>&quot;baz&quot;</li>
+</ul>
+.====================
+
+
+
+
+.$$ Class Tenjin::Engine		| dev-engineclass
+
+
+Tenjin::Engine class contains some template objects.
+It can handle nested template and layout template.
+This class provides many features such as:
+.- Search template files
+.- Nestable layout template
+.- Partial template
+.- {{=File caching=}} (caching feature is separated to tenjin.CacheStorage class.)
+.- Preprocessing
+.- and so on
+
+
+This class has the following methods.
+
+
+
+.[ Tenjin::Engine::new({prefix=>'', postfix=>'', layout=>undef, path=undef, cache=>1, preprocess=>0, templateclass=>'Tenjin::Template'}) ]
+    Create Engine object.
+    {{,path,}} represents template search path and it should be an Array of directory name.
+    Other arguments are passed to Tenjin::Template::new() internally.
+
+.[ Tenjin::Engine#render(template_name, context=undef, layout=1) ]
+    Convert template into Perl code, evaluate it with context data, and return the result of it.
+    If {{,layout,}} is 1 then layout template name specified by constructor option is
+    used as layout template, else if 0 then layout template is not used,
+    else if string then it is regarded as layout template name.
+
+Argument {{,template_name,}} in render() methods is filename or short name of template.
+Template short name is a string starting with colon (':').
+For example, '{{,render(":list", $context),}}' is equivarent to '{{,render("user_list.plhtml", $context),}}' if prefix option is '{{,user_,}}' and postfix option is '{{,.plhtml,}}'.
+
+
+
+
+
+
+
+
+.$$ Variables and Functions	| dev-vars-and-funcs
+
+
+In template file, the following variables and functions are available.
+
+.[ $_content ]
+    This variable represents the result of evaluation of other template.
+    This is available only in layout template file.
+
+.[ $_context ]
+    This variable represents context data dictionary and same as the 2nd argument of tenjin.Engine.render().
+    You can tweak this dict. For example if you set {{,_context['title']="Example",}} in your template file, {{,title,}} variable will be available in layout template file.
+
+.[ include($template_name) ]
+    Include other template file.
+
+
+.[ start_capture(name) ]
+    Start capturing. Result will be stored into {{,$_context->{{{/name/}}},}}.
+
+.[ stop_capture() ]
+    Stop capturing.
+
+.[ start_placeholder(varname), stop_placeholder() ]
+    Placeholder is a region from start_placeholder() to stop_placeholder().
+    If captured string as {{/varname/}} exists then use it as content,
+    else use content in placeholder as is.
+    For example,
+    .====================
+    <?pl start_placeholder('foo'); ?>
+      ...
+    <?pl stop_placeholder(); ?>
+    .====================
+    is equivarent to:
+    .====================
+    <?pl if (defined($_context->{'foo'})) { ?>
+    <?pl     push(@_buf, $_contet->{'foo'}); ?>
+    <?pl } else { ?>
+      ...
+    <?pl } ?>
+    .====================
+
+(Notice that include(), start_capture(), stop_capture(), start_placeholder(), and stop_placeholder() are built-in macros of plTenjin and they are not subroutine of Perl.)
+
+
+The followings are example of Tenjin::Engine class.
+
+
+
+.? File 'user_form.plhtml':
+.-------------------- user_form.plhtml
+<?pl #@ARGS params ?>
+<p>
+  Name:  <input type="text" name="name"  value="[=$params->{name}=]" /><br />
+  Email: <input type="text" name="email" value="[=$params->{email}=]" /><br />
+  Gender:
+<?pl my $gender = $params->{gender}; ?>
+<?pl my %chk = (1==1 => ' checked="checked"', 1==0 => ''); ?>
+  <input type="radio" name="gender" value="m" [==$chk{$gender eq 'm'}=] />Male
+  <input type="radio" name="gender" value="f" [==$chk{$gender eq 'f'}=] />Female
+</p>
+.--------------------
+
+.? File 'user_create.plhtml':
+.-------------------- user_create.plhtml
+<?pl #@ARGS ?>
+<form action="user_app.cgi" method="post">
+  <input type="hidden" name="action" value="create" />
+{{*<?pl include(':form'); ?>*}}
+  <input type="submit" value="Create" />
+</form>
+.--------------------
+
+.? File 'user_edit.plhtml':
+.-------------------- user_edit.plhtml
+<?pl #@ARGS params ?>
+<form action="user_app.cgi" method="post">
+  <input type="hidden" name="action" value="edit" />
+  <input type="hidden" name="id" value="[= $params->{id} =]" />
+{{*<?pl include(':form'); ?>*}}
+  <input type="submit" value="Edit" />
+</form>
+.--------------------
+
+.? File 'user_layout.plhtml':
+.-------------------- user_layout.plhtml
+<?pl #@ARGS _content, title ?>
+<html>
+  <body>
+
+    <h1>[=$title=]</h1>
+
+    <div id="main-content">
+{{*[==$_content==]*}}
+    </div>
+
+    <div id="footer">
+{{*<?pl include('footer.html'); ?>*}}
+    </div>
+
+  </body>
+</html>
+.--------------------
+
+.? File 'footer.html':
+.-------------------- footer.html
+<?pl #@ARGS ?>
+<hr />
+<address>
+  <a href="mailto:webmaster@example.com">webmaster@example.com</a>
+</address>
+.--------------------
+
+.? File 'user_app.cgi':
+.-------------------- user_app.cgi
+#!/usr/bin/env perl
+
+use CGI;
+use strict;
+{{*use Tenjin*}};
+
+## set action ('create' or 'edit')
+my ($action, $cgi);
+if ($ENV{'REQUEST_METHOD'}) {
+    $cgi = new CGI();
+    $action = $cgi->param('action');
+}
+elsif ($ARGV[0]) {
+    $action = $ARGV[0];
+}
+$action = 'create' unless $action eq 'create' || $action eq 'edit';
+
+## set context data
+my ($title, $params);
+if ($action eq 'create') {
+    $title = 'Create User';
+    $params = { };
+}
+else {
+    $title = 'Edit User';
+    $params = {
+        name=>'Margalette',
+        email=>'meg@example.com',
+        gender=>'f',
+	id=>123,
+    };
+}
+{{*my $context = { title=>$title, params=>$params, }*}};
+{{*# or $context = new Tenjin::Context({title=>$title, $params=>params})*}}
+
+## create engine object
+my $layout = ':layout';   # or 'user_layout.plhtml'
+my $engine = {{*new Tenjin::Engine({prefix=>'user_', postfix=>'.plhtml', layout=>$layout})*}};
+
+## evaluate template
+my $template_name = ":$action";  # :create or :edit
+my $output = {{*$engine->render($template_name, $context)*}};
+print $cgi->header() if $cgi;
+print $output;
+.--------------------
+
+
+
+.? Result:
+.==================== user_app.result
+$ perl user_app.cgi create
+<html>
+  <body>
+
+    <h1>Create User</h1>
+
+    <div id="main-content">
+{{*<form action="user_app.cgi" method="post">*}}
+{{*  <input type="hidden" name="action" value="create" />*}}
+{{*<p>*}}
+{{*  Name:  <input type="text" name="name"  value="" /><br />*}}
+{{*  Email: <input type="text" name="email" value="" /><br />*}}
+{{*  Gender:*}}
+{{*  <input type="radio" name="gender" value="m"  />Male*}}
+{{*  <input type="radio" name="gender" value="f"  />Female*}}
+{{*</p>*}}
+{{*  <input type="submit" value="Create" />*}}
+{{*</form>*}}
+    </div>
+
+    <div id="footer">
+{{*<hr />*}}
+{{*<address>*}}
+{{*  <a href="mailto:webmaster@example.com">webmaster@example.com</a>*}}
+{{*</address>*}}
+    </div>
+
+  </body>
+</html>
+.====================
+
+
+
+
+
+
+
+
+
+
+
+
+.$$ Add Your Helper Functions	| dev-helpers
+
+There are several ways to use helper functions.
+
+
+
+
+(A) Add package prefix for each helper functions.
+
+.? File 'example16a.plhtml':
+.-------------------- example16a.plhtml
+<?pl #@ARGS label, url ?>
+<ul>
+  <li>[=={{*::link_to($label, $url)*}}=]</li>
+</ul>
+.--------------------
+
+.? File 'example16a.pl':
+.-------------------- example16a.pl
+use Tenjin;
+
+sub link_to {
+    my ($label, $url) = @_;
+    $label = Tenjin::Helper::Html::escape_xml($label);
+    $url = Tenjin::Helper::Html::escape_xml($url);
+    return "<a href=\"$url\">$label</a>";
+}
+
+my $engine = new Tenjin::Engine();
+my $context = { 'label'=>'Top', 'url'=>'/' };
+my $output = $engine->render('example16a.plhtml', $context);
+print $output;
+.--------------------
+
+.? Result:
+.==================== example16a.result
+$ perl example16a.pl
+<ul>
+  <li><a href="/">Top</a></li>
+</ul>
+.====================
+
+
+(B) Define submodule of Tenjin::Context and define helper functions in it.
+
+.? File 'example16b.plhtml':
+.-------------------- example16b.plhtml
+<?pl #@ARGS label, url ?>
+<ul>
+  <li>[=={{*link_to($label, $url)*}}=]</li>
+</ul>
+.--------------------
+
+.? File 'example16b.pl':
+.-------------------- example16b.pl
+use Tenjin;
+
+{{*package MyContext;*}}
+@ISA = ('Tenjin::Context');
+eval $Tenjin::Context::defun;  # define 'evaluate()' and 'to_func()'
+*escape = *Tenjin::Helper::Html::escape_xml;
+
+sub link_to {
+    my ($label, $url) = @_;
+    $label = escape($label);
+    $url = escape($url);
+    return "<a href=\"$url\">$label</a>";
+}
+
+package main;
+{{*$Tenjin::CONTEXT_CLASS = 'MyContext';*}}  # use MyContext instead of Tenjin::Context
+
+my $engine = new Tenjin::Engine();
+my $context = { 'label'=>'Top', 'url'=>'/' };
+my $output = $engine->render('example16b.plhtml', $context);
+print $output;
+.--------------------
+
+.? Result:
+.==================== example16b.result
+$ perl example16b.pl
+<ul>
+  <li><a href="/">Top</a></li>
+</ul>
+.====================
+
+
+
+
+
+
+.$$ Other Topics		| dev-othertopics
+
+.* If you set '$Tenjin::USE_STRICT' to 1, Tenjin::Template::render() uses strict package.
+   This is useful for development.
+
+.* Tenjin::Template detects newline character ("\n" or "\r\n") automatically.
+   If input file contains "\r\n", plTenjin generates output which contains "\r\n".
+
+.* Tenjin::Template::render() can be called many times.
+   If you create a Tenjin::Template object, you can call render() method many times.
+
+.* Tenjin::Template::convert() also can be called many times.
+  If you create a Tenjin::Template object, you can call convert() (and also render()) method many times.
+
+.# * Tenjin::Template object is not thread-safe. It is not able to share Template objects with several threads.
+

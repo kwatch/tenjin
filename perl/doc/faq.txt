@@ -3,7 +3,7 @@
 .?release:	$Release$
 .?stylesheet:	docstyle.css
 
-Release:	$Release$
+.#Release:	$Release$
 
 Table of contents:
 .<<< faq.toc
@@ -11,8 +11,13 @@ Table of contents:
 
 
 
+.######################################################################
+
+
 .$ Basic	| faq-basic
 
+
+.######################################################################
 
 
 .$$ I got an SyntaxError exception.	| faq-syntax-error
@@ -62,67 +67,128 @@ ex1.plhtml had compilation errors.
 
 
 
+.######################################################################
+
+
+.######################################################################
+
+
+.$$ Does plTenjin support M17N?	| faq-m17n
+
+No. plTenjin doesn't provide M17 feature.
+
+plTenjin doesn't provide M17N feature directly because requirements for M17N are
+different for each applications or frameworks.
+Some applications or frameworks adapt GetText library and others use their original M17N library.
+What plTenjin should do is not to provide M17N feature but to show an example to support M17N.
+
+But using preprocessing, you can make your M17N template files much faster.
+See {{<this section|#faq-m17n-cache>}} for details.
+
+
+.######################################################################
 
 
 
 
+.######################################################################
+
+
+.$ Template		| faq-template
+
+
+.######################################################################
+
+
+.$$ Is it able to specify default value when variable is not set?	| faq-default-value
 
 
 
-.$$ '[== $_content =]' includes extra newline at end. Can I delete it?	| faq-delete-newline
+Yes, by {{,$_context->{{{/varname/}}},}}.
+It is able to check whether value is set or not by inspecting special variable '{{,$_context,}}' which represents context values.
 
-
-
-Yes. You can use '<?pl echo($_content); ?>' or '{{,<?pl push(@_buf, $_context); ?>,}} or '{{,[== $_context ==],}}' instead of '{{,[== $_context =],}}'.
-
-
-.? File 'ex2-layout.plhtml':
-.-------------------- ex2-layout.plhtml
-<!-- -->
-{{*[== $_content =]*}}
-<!-- -->
-
-<!-- -->
-{{*[== $_content ==]*}}
-<!-- -->
-
-<!-- -->
-{{*<?pl push(@_buf, $_content); ?>*}}
-<!-- -->
-.--------------------
-
-.? File 'ex2-content.plhtml':
-.-------------------- ex2-content.plhtml
-foo
-bar
-baz
+.? File 'ex2.plhtml':
+.-------------------- ex2.plhtml
+<?pl {{*my $user = defined($_context->{'user'}) ? $_context->{'user'} : 'Guest'; *}} ?>
+Hello [={{*$user*}}=]!
 .--------------------
 
 .? Result:
-.==================== ex2_removenl.result
-$ pltenjin --layout=ex2-layout.plhtml ex2-content.plhtml
-<!-- -->
-foo
-bar
-baz
+.====================
+$ pltenjin -c 'user=>"Tenjin"' ex2.plhtml
+Hello Tenjin!
+$ pltenjin ex2.plhtml
+Hello Guest!
+.====================
 
-<!-- -->
+.#+++
+.? Result:
+.==================== ex2a_defaultval.result
+$ pltenjin -c 'user=>"Tenjin"' ex2.plhtml
+Hello Tenjin!
+.====================
 
-<!-- -->
-foo
-bar
-baz
-<!-- -->
+.==================== ex2b_defaultval.result
+$ pltenjin ex2.plhtml
+Hello Guest!
+.====================
+.#---
 
-<!-- -->
-foo
-bar
-baz
-<!-- -->
+
+
+.######################################################################
+
+
+.$$ Is it able to specify variables passed to template?	| faq-template-args
+
+Yes. You can specify template arguments by '{{,<?pl #@ARGS arg1, arg2, arg3 ?>,}}'.
+
+
+
+.? File 'ex3-layout.plhtml'
+.-------------------- ex3.plhtml
+<?xml version="1.0 ?>
+{{*<?pl #@ARGS x, y ?>*}}
+<p>
+  x = [=$x=]
+  y = [=$y=]
+  z = [=$z=]
+</p>
+.--------------------
+
+
+Template arguments line is converted into local variable assignment statements.
+
+.? Source code
+.==================== ex3_template_args.source
+$ pltenjin -s ex3.plhtml
+my $_buf = "";  $_buf .= q`<?xml version="1.0 ?>
+`; my $x = $_context->{x}; my $y = $_context->{y}; 
+ $_buf .= q`<p>
+  x = ` . escape($x) . q`
+  y = ` . escape($y) . q`
+  z = ` . escape($z) . q`
+</p>
+`;  $_buf;
 .====================
 
 
+Undeclared arguments are not available even when they are passed via context object.
 
+.? Result:
+.==================== ex3_template_args.result
+$ pltenjin -wc 'x=>10, y=>20' ex3.plhtml
+*** Error: ex3.plhtml
+Global symbol "$z" requires explicit package name at (eval 4) line 6.
+.====================
+
+
+.######################################################################
+
+
+
+
+.######################################################################
 
 
 
@@ -137,141 +203,53 @@ Yes. You can change them by setting 'escapefunc' option for Tenjin::Template::ne
 
 
 
-.? File 'ex3.pl':
-.-------------------- ex3.pl
+.? File 'ex4.pl':
+.-------------------- ex4.pl
 use Tenjin;
 use strict;
 my $engine = new Tenjin::Engine({{*{escapefunc=>'HTML::Entities::encode_entities'}*}});
-my $template = $engine->get_template('ex3.plhtml');
+my $template = $engine->get_template('ex4.plhtml');
 print $template->{script};
 .--------------------
 
-.? File 'ex3.plhtml':
-.-------------------- ex3.plhtml
+.? File 'ex4.plhtml':
+.-------------------- ex4.plhtml
 Hello [=$name=]!
 .--------------------
 
 .? Result:
-.-------------------- ex3_escapefunc1.result
-$ perl ex3.pl
-my @_buf = (); push(@_buf, q`Hello `, {{*HTML::Entities::encode_entities*}}($name), q`!
-`, ); join('', @_buf);
+.-------------------- ex4_escapefunc1.result
+$ perl ex4.pl
+my $_buf = "";  $_buf .= q`Hello ` . {{*HTML::Entities::encode_entities*}}($name) . q`!
+`;  $_buf;
 .--------------------
 
 Command-line option '--escapefunc={{/name/}}' is equivarent to the above.
 
 .? Result:
-.-------------------- ex3_escapefunc2.result
-$ pltenjin -s {{*--escapefunc=HTML::Entities::encode_entities*}} ex3.plhtml
-my @_buf = (); push(@_buf, q`Hello `, {{*HTML::Entities::encode_entities*}}($name), q`!
-`, ); join('', @_buf);
+.-------------------- ex4_escapefunc2.result
+$ pltenjin -s {{*--escapefunc=HTML::Entities::encode_entities*}} ex4.plhtml
+my $_buf = "";  $_buf .= q`Hello ` . {{*HTML::Entities::encode_entities*}}($name) . q`!
+`;  $_buf;
 .--------------------
 
 
 
 
-
-
-.$$ Can I change '@_buf' variable name?	| faq-change-bufname
-
-No. Variable name '@_buf' should not and will never be changed.
+.######################################################################
 
 
 
+.$$ Can I change '$_buf' variable name?	| faq-change-bufname
+
+No. Variable name '$_buf' should not and will never be changed.
 
 
 
-.$$ Is it able to specify default value if a variable is not set?	| faq-default-value
-
-Yes, by {{,$_context->{{{/varname/}}},}}.
-It is able to check whether value is set or not by inspecting special variable '{{,$_context,}}' which represents context values.
+.######################################################################
 
 
-.? File 'ex4.plhtml':
-.-------------------- ex4.plhtml
-<?pl {{*my $user = defined($_context->{'user'}) ? $_context->{'user'} : 'Guest'; *}} ?>
-Hello [={{*$user*}}=]!
-.--------------------
-
-.? Result:
-.====================
-$ pltenjin -c 'user=>"Tenjin"' ex4.plhtml
-Hello Tenjin!
-$ pltenjin ex4.plhtml
-Hello Guest!
-.====================
-
-.#+++
-.? Result:
-.==================== ex4a_defaultval.result
-$ pltenjin -c 'user=>"Tenjin"' ex4.plhtml
-Hello Tenjin!
-.====================
-
-.==================== ex4b_defaultval.result
-$ pltenjin ex4.plhtml
-Hello Guest!
-.====================
-.#---
-
-
-
-
-
-
-.$ Template		| faq-template
-
-
-.$$ Is it possible to specify variables passed to template?	| faq-template-args
-
-Yes. You can specify template arguments by '{{,<?pl #@ARGS arg1, arg2, arg3 ?>,}}'.
-
-
-
-.? File 'ex5-layout.plhtml'
-.-------------------- ex5.plhtml
-<?xml version="1.0 ?>
-{{*<?pl #@ARGS x, y ?>*}}
-<p>
-  x = [=$x=]
-  y = [=$y=]
-  z = [=$z=]
-</p>
-.--------------------
-
-
-Template arguments line is converted into local variable assignment statements.
-
-.? Source code
-.==================== ex5_template_args.source
-$ pltenjin -s ex5.plhtml
-my @_buf = (); push(@_buf, q`<?xml version="1.0 ?>
-`, ); my $x = $_context->{x}; my $y = $_context->{y}; 
-push(@_buf, q`<p>
-  x = `, escape($x), q`
-  y = `, escape($y), q`
-  z = `, escape($z), q`
-</p>
-`, ); join('', @_buf);
-.====================
-
-
-Undeclared arguments are not available even when they are passed via context object.
-
-.? Result:
-.==================== ex5_template_args.result
-$ pltenjin -wc 'x=>10, y=>20' ex5.plhtml
-*** Error: ex5.plhtml
-Global symbol "$z" requires explicit package name at (eval 4) line 6.
-.====================
-
-
-
-
-
-
-
-.$$ Is it able to change embedded expression pattern?	| faq-exprpat
+.$$ Can I change embedded expression pattern?	| faq-exprpat
 
 Yes, you can create subclass of Template class and override embedded expression pattern.
 
@@ -279,14 +257,14 @@ Yes, you can create subclass of Template class and override embedded expression 
 
 
 
-.? ex6-expr-pattern.plhtml:
-.-------------------- ex6-expr-pattern.plhtml
+.? ex5-expr-pattern.plhtml:
+.-------------------- ex5-expr-pattern.plhtml
 <p>HTML escaped: [|$value|]</p>
 <p>not escaped:  [:$value:]</p>
 .--------------------
 
-.? ex6-expr-pattern.pl:
-.-------------------- ex6-expr-pattern.pl
+.? ex5-expr-pattern.pl:
+.-------------------- ex5-expr-pattern.pl
 use strict;
 use Tenjin;
 
@@ -323,14 +301,14 @@ package main;
 if (__FILE__ == $0) {
     my $context = { value => 'AAA&BBB' };
     my $engine = new Tenjin::Engine({{{*templateclass=>'MyTemplate'*}}});
-    my $output = $engine->render('ex6-expr-pattern.plhtml', $context);
+    my $output = $engine->render('ex5-expr-pattern.plhtml', $context);
     print $output;
 }
 .--------------------
 
 .? Result:
-.==================== ex6_expr_pattern.result
-$ perl ex6-expr-pattern.pl
+.==================== ex5_expr_pattern.result
+$ perl ex5-expr-pattern.pl
 <p>HTML escaped: AAA&amp;BBB</p>
 <p>not escaped:  AAA&BBB</p>
 .====================
@@ -338,16 +316,95 @@ $ perl ex6-expr-pattern.pl
 
 
 
+.######################################################################
 
-.$$ Does plTenjin support M17N?	| faq-m17n
 
 
-No, but it is easy to support M17N.
+
+.######################################################################
+
+
+
+
+.######################################################################
+
+
+
+
+
+.######################################################################
+
+
+
+.$$ '[== $_content =]' includes extra newline at end. Can I delete it?	| faq-delete-newline
+
+
+
+Yes. You can use '<?pl echo($_content); ?>' or '{{,<?pl $_buf .= $_context; ?>,}} or '{{,[== $_context ==],}}' instead of '{{,[== $_context =],}}'.
+
+
+.? File 'ex6-layout.plhtml':
+.-------------------- ex6-layout.plhtml
+<!-- -->
+{{*[== $_content =]*}}
+<!-- -->
+
+<!-- -->
+{{*[== $_content ==]*}}
+<!-- -->
+
+<!-- -->
+{{*<?pl $_buf .= $_content; ?>*}}
+<!-- -->
+.--------------------
+
+.? File 'ex6-content.plhtml':
+.-------------------- ex6-content.plhtml
+foo
+bar
+baz
+.--------------------
+
+.? Result:
+.==================== ex6_removenl.result
+$ pltenjin --layout=ex6-layout.plhtml ex6-content.plhtml
+<!-- -->
+foo
+bar
+baz
+
+<!-- -->
+
+<!-- -->
+foo
+bar
+baz
+<!-- -->
+
+<!-- -->
+foo
+bar
+baz
+<!-- -->
+.====================
+
+
+
+
+.######################################################################
+
+
+.$$ Is it possible to create separated template caches for each language? | faq-m17n-cache
+
+Yes.
+
+
 The point is:
 .* Change cache filename according to language.
    For example, create cache file 'file.plhtml.en.cache', 'file.plhtml.fr.cache', 'file.plhtml.it.cache', and so on from template file 'file.plhtml'.
+   This can be done by overriding CacheStorage#_cachename().
 .* Create Engine object for each language.
-.* (optinal) Use preprocessing for performance reason.
+.* Use preprocessing to create different cache content for each language.
 
 The following is an example to generate M17N pages from a template file.
 
@@ -463,15 +520,13 @@ $ perl ex7-m18n.pl
 
 
 
-plTenjin doesn't provide M17N feature directly because requirements for M17N are
-different for each applications or frameworks.
-Some applications or frameworks adapt GetText library and others use its original M17N library.
-What plTenjin should do is not to provide M17N feature but to show an example to support M17N.
-
+.######################################################################
 
 
 .$ Layout Template	| faq-layout
 
+
+.######################################################################
 
 
 .$$ Can I change layout template name in a template file?	| faq-change-layout-template
@@ -487,6 +542,8 @@ its value is regarded as layout template name.
 
 See the next section for details.
 
+
+.######################################################################
 
 
 .$$ Can I nest layout templates for any depth?		| faq-nested-layout-template
@@ -551,6 +608,7 @@ baz
 .====================
 
 
+.######################################################################
 
 
 .$$ Can I disable default layout template for a certain template?	| faq-diable-layout
@@ -559,6 +617,7 @@ baz
 Yes. If you set 0 to $_context->{_layout}, default layout template will not be applied.
 
 
+.######################################################################
 
 
 .$$ Is Django-like "Template Inheritance" supported?	| faq-template-inheritance
@@ -644,7 +703,7 @@ is equivarent to the following.
 
 .--------------------
 <?pl {{*if (defined($_context->{'header-part'})) {*}} ?>
-<?pl     {{*push(@_buf, $_context->{'header_part'});*}} ?>
+<?pl     {{*$_buf .= $_context->{'header_part'};*}} ?>
 <?pl {{*} else {*}} ?>
    <img src="img/logo.png" alt="logo" ?>
 <?pl {{*}*}} ?>
@@ -686,44 +745,483 @@ $ pltenjin -c "items=>['AAA', 'BBB', 'CCC']" ex9-content.plhtml
 
 
 
+.######################################################################
 
 
 
+
+.######################################################################
+
+
+.$ Preprocessing	| faq-preprocessing
+
+
+.######################################################################
+
+
+.$$ What is preprocessing?	| faq-what-is-pp
+
+Preprocessing is a feature to evaluate a part of logics embedded in template files at when template is loaded.
+
+Tenjin has two stages for rendering:
+.: Convertion stage
+	Convert template into Perl script.
+	This stage is invoked only once for each template files.
+.: Evaluation stage
+	Evaluate converted script with given context data.
+	This stage is invoked every time when template is rendered.
+
+Normally, embedded logics in template files are evaluated at Evaluation stage.
+plTenjin can also evaluate a part of logics at convertion stage.
+It is called preprocessing.
+
+Preprocessed logics are evaluated only once because it is evaluated at convertion stage.
+It means that preprocessed logics are not evaluated at rendering template.
+
+.? Notation of embedded logics
+.+============================================================
+kind                         .,  non-preprocessing  .,  preprocessing
+.------------------------------------------------------------
+statements                   .,  <?pl ... ?>       .,  <?PL ... ?>
+expression (with escape)     .,  [==...=] .,  [*==...=*]
+expression (without escape)  .,  [=...=]  .,  [*=...=*]
+.+============================================================
+
+
+.######################################################################
+
+
+.$$ What is the merit of preprocessing?		| faq-pp-merit
+
+The merit of preprocessing is the speed of rendering templates.
+
+Preprocessed logics are evaluated only once because it is evaluated at convertion stage and not evaluated at rendering templates.
+It means that preprocessed logics are no-weight when rendering time.
+
+For example, assume an helper function 'link_to()' which generates <a></a> tag.
+If you embed it to your template file such as '[=link_to("Create", action="new")=]', this function will be evaluated whenever template is rendered.
+
+.? Without preprocessing
+.--------------------
+template file:
+  [== link_to("Create", "new") =]
+
+converted script:
+  $_buf .= {{*link_to("Create", 'new')*}};
+
+output:
+  <a href="/new">Create</a>
+.--------------------
+
+However, if you use preprocessing such as '[*=link_to("Create", action="new")=*]', this function will be evaluated only once when template is loaded.
+
+.? With preprocessing
+.--------------------
+template file:
+  {{*[*==*}} link_to("Create", "new") {{*=*]*}}
+
+converted script:
+  $_buf .= {{*q`<a href="/new">Create</a>`*}};
+
+output:
+  <a href="/new">Create</a>
+.--------------------
+
+In the result, rendering template will be much faster because function evaluation is eliminated when rendering.
+
+
+.######################################################################
+
+
+.$$ Is there any examples of preprocessing?    | faq-pp-examples
+
+
+.$$$ Loop expantion
+
+Using preprocessing, it is able to expand loop in advance.
+It makes rendering speed much faster.
+
+
+.? weekday1.plhtml:
+.-------------------- weekday1.plhtml
+{{*<?PL*}} my @WEEKDAYS = ('Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'); ?>
+<select name="weekday">
+  <option>-</option>
+{{*<?PL*}} my $i = 0; ?>
+{{*<?PL*}} for my $wday (@WEEKDAYS) { ?>
+{{*<?PL*}}     $i++; ?>
+  <option value="{{*[*==*}}$i{{*=*]*}}">{{*[*==*}}$wday{{*=*]*}}</option>
+{{*<?PL*}} } ?>
+</select>
+.--------------------
+
+.? weekday1.pl:
+.-------------------- weekday1.pl
+use strict;
+use Tenjin;
+my $engine = Tenjin::Engine->new({preprocess=>1});
+print "***** preprocessed *****\n";
+print $engine->get_template('weekday1.plhtml')->{script};
+print "***** output *****\n";
+print $engine->render('weekday1.plhtml');
+.--------------------
+
+.? result:
+.==================== weekday1.result
+$ perl weekday1.pl
+***** preprocessed *****
+my $_buf = "";  $_buf .= q`<select name="weekday">
+  <option>-</option>
+  <option value="1">Sun</option>
+  <option value="2">Mon</option>
+  <option value="3">Tue</option>
+  <option value="4">Wed</option>
+  <option value="5">Thu</option>
+  <option value="6">Fri</option>
+  <option value="7">Sat</option>
+</select>
+`;  $_buf;
+***** output *****
+<select name="weekday">
+  <option>-</option>
+  <option value="1">Sun</option>
+  <option value="2">Mon</option>
+  <option value="3">Tue</option>
+  <option value="4">Wed</option>
+  <option value="5">Thu</option>
+  <option value="6">Fri</option>
+  <option value="7">Sat</option>
+</select>
+.====================
+
+If you want to add selected attribute (' selected="selected"') dinamically, see the following.
+
+.? weekday2.plhtml:
+.-------------------- weekday2.plhtml
+<?PL my @weekdays = ('Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'); ?>
+<select name="weekday">
+{{*<?pl my %selected = ( $params->{weekday} => ' selected="selected"' ); ?>*}}
+  <option>-</option>
+<?PL my $i = 0; ?>
+<?PL for $wday (@weekdays) { ?>
+  <option value="[*==++$i=*]"{{*[==$selected{'[*==$i=*]'}=]*}}>[*=$wday=*]</option>
+<?PL } ?>
+</select>
+.--------------------
+
+.? weekday2.pl:
+.-------------------- weekday2.pl
+## render with preprocessing
+use strict;
+use Tenjin;
+my $engine = Tenjin::Engine->new({preprocess=>1});
+{{*my $context = { params => { weekday=>3, day=>19 } };*}}
+print "***** preprocessed *****\n";
+print $engine->get_template('weekday2.plhtml')->{script};
+print "***** output *****\n";
+print $engine->render('weekday2.plhtml'{{*, $context*}});
+.--------------------
+
+result:
+.==================== weekday2.result
+$ perl weekday2.pl
+***** preprocessed *****
+my $_buf = "";  $_buf .= q`<select name="weekday">
+`; my %selected = ( $params->{weekday} => ' selected="selected"' );
+ $_buf .= q`  <option>-</option>
+  <option value="1"` . ($selected{'1'}) . q`>Sun</option>
+  <option value="2"` . ($selected{'2'}) . q`>Mon</option>
+  <option value="3"` . ($selected{'3'}) . q`>Tue</option>
+  <option value="4"` . ($selected{'4'}) . q`>Wed</option>
+  <option value="5"` . ($selected{'5'}) . q`>Thu</option>
+  <option value="6"` . ($selected{'6'}) . q`>Fri</option>
+  <option value="7"` . ($selected{'7'}) . q`>Sat</option>
+</select>
+`;  $_buf;
+***** output *****
+<select name="weekday">
+  <option>-</option>
+  <option value="1">Sun</option>
+  <option value="2">Mon</option>
+  <option value="3"{{* selected="selected"*}}>Tue</option>
+  <option value="4">Wed</option>
+  <option value="5">Thu</option>
+  <option value="6">Fri</option>
+  <option value="7">Sat</option>
+</select>
+.====================
+
+It is possible to make helper function to generate <select> and <option> tags.
+
+.? weekday3.plhtml:
+.-------------------- weekday3.plhtml
+<form>
+{{*[*==pp_select_weekday_tag('$params->{weekday}', 'weekday')=*]*}}
+</form>
+.--------------------
+
+.? weekday3.pl:
+.-------------------- weekday3.pl
+use strict;
+
+## helper function
+my @WEEKDAYS = ('Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat');
+sub pp_select_weekday_tag {
+  my ($expr_str, $name) = @_;
+  $name = 'weekday' unless defined($name);
+  my $s = "";
+  $s .=   "<?pl my %_selected = ( ($expr_str) => ' selected=\"selected\"' ); ?>\n";
+  $s .=   "<select name=\"$name\">\n";
+  $s .=   "  <option>-</option>\n";
+  my $i = 0;
+  for my $wday (@WEEKDAYS) {
+    $i++;
+    $s .= "  <option value=\"$i\"[==\$_selected{$i}=]>$wday</option>\n";
+  }
+  $s .=   "</select>";
+  return $s;
+}
+
+##
+use Tenjin;
+*Tenjin::Context::pp_select_weekday_tag = *pp_select_weekday_tag;
+my $engine = Tenjin::Engine->new({preprocess=>1});
+{{*my $context = {*}}
+  {{*params => { weekday => 3, day => 19 },*}}
+{{*};*}}
+print "***** preprocessed *****\n";
+print $engine->get_template('weekday3.plhtml')->{script};
+print "***** output *****\n";
+print $engine->render('weekday3.plhtml'{{*, $context*}});
+.--------------------
+
+.? result:
+.==================== weekday3.result
+$ perl weekday3.pl
+***** preprocessed *****
+my $_buf = "";  $_buf .= q`<form>
+`; my %_selected = ( ($params->{weekday}) => ' selected="selected"' );
+ $_buf .= q`<select name="weekday">
+  <option>-</option>
+  <option value="1"` . ($_selected{1}) . q`>Sun</option>
+  <option value="2"` . ($_selected{2}) . q`>Mon</option>
+  <option value="3"` . ($_selected{3}) . q`>Tue</option>
+  <option value="4"` . ($_selected{4}) . q`>Wed</option>
+  <option value="5"` . ($_selected{5}) . q`>Thu</option>
+  <option value="6"` . ($_selected{6}) . q`>Fri</option>
+  <option value="7"` . ($_selected{7}) . q`>Sat</option>
+</select>
+</form>
+`;  $_buf;
+***** output *****
+<form>
+<select name="weekday">
+  <option>-</option>
+  <option value="1">Sun</option>
+  <option value="2">Mon</option>
+  <option value="3"{{* selected="selected"*}}>Tue</option>
+  <option value="4">Wed</option>
+  <option value="5">Thu</option>
+  <option value="6">Fri</option>
+  <option value="7">Sat</option>
+</select>
+</form>
+.====================
+
+
+.$$$ Helper methods execution in advance	| faq-pp-helpers
+
+Many web frameworks provides their own helper functions for view layer.
+Some of them can be executed in advance.
+Using preprocessing, it is able to execute these helper functions in advance, and view layer will be much faster in the result.
+
+
+.? helpers1.plhtml:
+.-------------------- helpers1.plhtml
+<p>
+[==link_to('Create', {action=>'new'})=]
+[*==link_to('Create', {action=>'new'})=*]
+</p>
+.--------------------
+
+.? helpers1.pl:
+.-------------------- helpers1.pl
+use strict;
+
+## define helper method
+sub link_to {
+  my ($label, $opts) = @_;
+  my $href = $opts->{href};
+  my $action = $opts->{action};
+  if (! $href && $action) {
+    $href = "/".$main::controller_name."/$action";
+  }
+  return "<a href=\"$href\">$label</a>";
+}
+##
+use Tenjin;
+our $controller_name = 'user';
+*Tenjin::Context::link_to = *link_to;
+my $engine = Tenjin::Engine->new({preprocess=>1});
+print "***** preprocessed *****\n";
+print $engine->get_template('helpers1.plhtml')->{script};
+print "***** output *****\n";
+print $engine->render('helpers1.plhtml');
+.--------------------
+
+.? result:
+.==================== helpers1.result
+$ perl helpers1.pl
+***** preprocessed *****
+my $_buf = "";  $_buf .= q`<p>
+` . (link_to('Create', {action=>'new'})) . q`
+<a href="/user/new">Create</a>
+</p>
+`;  $_buf;
+***** output *****
+<p>
+<a href="/user/new">Create</a>
+<a href="/user/new">Create</a>
+</p>
+.====================
+
+It is able to embed expression which should be evaluated at rendering stage.
+.* {{,_p("..."),}} is equivarent to {{,#{...},}}
+.* {{,_P("..."),}} is equivarent to {{,${...},}}
+
+.? helpers2.plhtml:
+.-------------------- helpers2.plhtml
+<p>
+[==link_to(escape($user->{name}), {action=>'show', id=>$user->{id}})=]
+[*==link_to({{*_P('escape($user->{name})'), {action=>'show', id=>{{*_p('$user->{id}')*}}})=*]
+</p>
+.--------------------
+
+.? helpers2.pl:
+.-------------------- helpers2.pl
+use strict;
+
+## define helper method
+sub link_to {
+  my ($label, $opts) = @_;
+  my $href = $opts->{href};
+  my $action = $opts->{action};
+  my $id = $opts->{id};
+  if (! $href && $action) {
+    $href = "/".$main::controller_name."/".$action;
+    $href = "$href/$id" if $id;
+  }
+  return "<a href=\"$href\">$label</a>";
+}
+
+##
+use Tenjin;
+*Tenjin::Context::link_to = *link_to;
+our $controller_name = 'user';
+my $context = {
+  user => { id => 123, name => 'Tom&Jerry' },
+};
+my $engine = Tenjin::Engine->new({preprocess => 1});
+print "***** preprocessed *****\n";
+print $engine->get_template('helpers2.plhtml'{{*, $context*}})->{script};
+print "***** output *****\n";
+print $engine->render('helpers2.plhtml'{{*, $context*}});
+.--------------------
+
+.? result:
+.==================== helpers2.result
+$ perl helpers2.pl
+***** preprocessed *****
+my $_buf = "";  $_buf .= q`<p>
+` . (link_to(escape($user->{name}), {action=>'show', id=>$user->{id}})) . q`
+<a href="/user/show/` . {{*($user->{id})*}} . q`">` . {{*(escape($user->{name}))*}} . q`</a>
+</p>
+`;  $_buf;
+***** output *****
+<p>
+<a href="/user/show/123">Tom&amp;Jerry</a>
+<a href="/user/show/123">Tom&amp;Jerry</a>
+</p>
+.====================
+
+
+.$$$ M17N (Multilingualization)		| faq-pp-m18n
+
+Preprocessing is also effective for M17N (Multilingualization), because the runtime cost of M17N can be almost zero by preprocessing.
+
+See {{<this section|#faq-m17n-cache>}} for M17N example using preprocessing.
+
+
+
+.######################################################################
 
 
 .$ Performance		| faq-performance
 
 
+.######################################################################
 
-.$$ How fast is plTenjin compared with other solutions?
+
+.$$ How fast is plTenjin compared with other solutions?	| faq-how-fast
 
 
 plTenjin contains benchmark script.
 This shows that plTenjin works much faster than other solutions.
 
 
-.? MacOS X 10.4 Tiger, Intel CoreDuo 1.83GHz, Memory 2GB
+.* plTenjin (0.0.3) (pure Perl)
+.* {{<Template-Tookit|http://template-toolkit.org/>}} (2.22) (XS)
+.* {{<HTML::Template|http://search.cpan.org/~samtregar/HTML-Template-2.9/Template.pm>}} (2.9) (pure Perl)
+.* {{<MobaSiF::Template|http://search.cpan.org/~bobpp/MobaSiF-Template-0.02/Template.pm>}} (0.02) (XS)
+.* {{<Text::MicroTemplate|http://search.cpan.org/~typester/Text-MicroTemplate-0.07/lib/Text/MicroTemplate.pm>}} (0.07, customized not to escape HTML) (pure Perl)
+
+.? MacOS X 10.6 SnowLeopard, Intel Core2Duo 2.0GHz, Memory 2GB
 .====================
 $ cd pltenjin-X.X.X/benchmark
 $ perl -v | grep built
-This is perl, v5.8.8 built for darwin-2level
+This is perl, v5.8.9 built for darwin-2level
 $ perl -I ../lib bench.pl -n 10000 
 *** n = 10000
-                         user         sys       total        real
-tenjin                  9.8500      0.5700     10.4200     11.0000
-tenjin-nocache         16.2500      0.4300     16.6800     17.0000
-tenjin-reuse            5.7100      0.0100      5.7200      6.0000
-tt                    102.6100      0.9700    103.5800    104.0000
-tt-reuse               26.2500      0.0500     26.3000     26.0000
-htmltmpl               46.2300      0.4700     46.7000     47.0000
-htmltmpl-reuse         30.1700      0.0400     30.2100     31.0000
+                              user         sys       total        real
+tenjin                      0.8600      0.0400      0.9000      0.9082
+tenjin_create               4.2000      0.4000      4.6000      4.5971
+tenjin_nocache             10.1400      0.3100     10.4500     10.4700
+tt                         20.5800      0.0400     20.6200     20.6373
+tt_create                  82.8500      0.7100     83.5600     83.9623
+htmltmpl                   20.1300      0.0400     20.1700     20.2546
+htmltmpl_create            32.8000      0.4300     33.2300     33.4321
+htmltmpl_edit_context      20.4200      0.0400     20.4600     20.6019
+mobasif                     0.8500      0.2500      1.1000      1.1094
+mobasif_edit_context        1.1100      0.2700      1.3800      1.3694
+mobasif_copy_context        2.8800      0.2700      3.1500      3.1878
+microtmpl                   1.4200      0.0500      1.4700      1.4636
+microtmpl_create           37.5500      2.0500     39.6000     48.0288
 .====================
 
+.#.? MacOS X 10.4 Tiger, Intel CoreDuo 1.83GHz, Memory 2GB
+.#.====================
+.#$ cd pltenjin-X.X.X/benchmark
+.#$ perl -v | grep built
+.#This is perl, v5.8.8 built for darwin-2level
+.#$ perl -I ../lib bench.pl -n 10000 
+.#*** n = 10000
+.#                         user         sys       total        real
+.#tenjin                  9.8500      0.5700     10.4200     11.0000
+.#tenjin-nocache         16.2500      0.4300     16.6800     17.0000
+.#tenjin-reuse            5.7100      0.0100      5.7200      6.0000
+.#tt                    102.6100      0.9700    103.5800    104.0000
+.#tt-reuse               26.2500      0.0500     26.3000     26.0000
+.#htmltmpl               46.2300      0.4700     46.7000     47.0000
+.#htmltmpl-reuse         30.1700      0.0400     30.2100     31.0000
+.#.====================
 
 
 In addition, module size of plTenjin is small, and it is very light-weight to import it.
 This is important for CGI program.
 Other solutions may be very heavy to import the module and suitable only for apache module or FastCGI.
+
+
+.######################################################################
 
 
 .$$ Why plTenjin is so fast?	     	    	| faq-why-so-fast
@@ -738,10 +1236,13 @@ This is not good idea for script language because:
 .* Learning cost is high.
 
 In addition, plTenjin is faster than Jakarta Velocity which is a very popular template engine in Java.
-(It means that dynamic Java is slower than script languages.)
+(It means that {{*dynamic Java is slower than script languages*}}!)
 
 Template engine should use their host language directly unless there are some kind of reasons.
 
+
+
+.######################################################################
 
 
 .$$ Is there any way to get more speed?		| faq-performance-tuning
@@ -777,17 +1278,17 @@ print $defun;
 .? Result:
 .==================== ex10_defun.result
 $ perl ex10.pl
-sub render_ex10 { my ($_context) = @_; my $title = $_context->{'title'}; my $items = $_context->{'items'}; my @_buf = (); push(@_buf, q`<html>
+sub render_ex10 { my ($_context) = @_; my $title = $_context->{'title'}; my $items = $_context->{'items'}; my $_buf = "";  $_buf .= q`<html>
  <body>
-  <h1>`, escape($title), q`</h1>
+  <h1>` . escape($title) . q`</h1>
   <ul>
-`, );   for my $item (@$items) {
-push(@_buf, q`   <li>`, escape($item), q`</li>
+`;   for my $item (@$items) {
+ $_buf .= q`   <li>` . escape($item) . q`</li>
   </ul>
-`, );   }
-push(@_buf, q` </body>
+`;   }
+ $_buf .= q` </body>
 </html>
-`, ); join('', @_buf);
+`;  $_buf;
 }
 .====================
 
