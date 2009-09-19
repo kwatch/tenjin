@@ -257,8 +257,9 @@ sub evaluate {
 
 
 sub to_func {    # returns closure
-    my ($_klass, $_script) = @_;
-    my $_s = "sub { my (\$_context) = \@_; $_script }";
+    my ($_klass, $_script, $_filename) = @_;
+    my $_s = $_filename ? "# line 1 \"$_filename\"\n" : '';  # line directive
+    my $_s = "${_s}sub { my (\$_context) = \@_; $_script }";
     return eval($_s) unless $Tenjin::USE_STRICT;
     use strict;
     return eval($_s);
@@ -626,7 +627,7 @@ sub compile {
     if ($this->{args}) {
         #my $f = $Tenjin::CONTEXT_CLASS . '::to_func';
         #my $func = $f->($this->{script});
-        my $func = $Tenjin::CONTEXT_CLASS->to_func($this->{script});
+        my $func = $Tenjin::CONTEXT_CLASS->to_func($this->{script}, $this->{filename});
         $@ and die("*** Error: " . $this->{filename} . "\n", $@);
         return $this->{func} = $func;
     }
