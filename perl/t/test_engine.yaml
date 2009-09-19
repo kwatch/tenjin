@@ -1404,7 +1404,7 @@
    "ruby": "undefined local variable or method `b' for #<Tenjin::Context>"
    "perl": |
 	*** Error: content.plhtml
-	Global symbol "$y" requires explicit package name at (eval 999) line 3.
+	Global symbol "$y" requires explicit package name at content.plhtml line 3.
    "js": |
   context: { a: 10, b: 20 }
   expected*:
