@@ -248,36 +248,20 @@ sub _build_decl {
 
 $Tenjin::BaseContext::defun = <<'END';
 sub evaluate {
-    my $this = shift;
-    my ($_script) = @_;
-    my $_context = $this;
-    #$_script = Tenjin::BaseContext::_build_decl($_context) . $_script if ($_context);
+    my ($_this, $_script) = @_;
+    my $_context = $_this;
     return eval $_script unless $Tenjin::USE_STRICT;
     use strict;
     return eval $_script;
 }
 
 
-sub to_func {
-    #my ($_script, $_filename) = @_;
-    #$script =~ s/join\('', \@_buf\);\s*\Z/return $&/;
-    #if ($Tenjin::USE_STRICT) {   ## NOT WORK
-    #    use strict;
-    #}
-    #my $_func = eval("sub { my (\$_context) = \@_; $_script }");
-    my $_klass = shift;
-    my ($_script) = @_;
+sub to_func {    # returns closure
+    my ($_klass, $_script) = @_;
     my $_s = "sub { my (\$_context) = \@_; $_script }";
-    my $_func;
-    if ($Tenjin::USE_STRICT) {
-        use strict;
-        $_func = eval($_s);
-    }
-    else {
-        $_func = eval($_s);
-    }
-    #$@ and die("*** Compile Error: " . $_filename . "\n", $@);
-    return $_func;
+    return eval($_s) unless $Tenjin::USE_STRICT;
+    use strict;
+    return eval($_s);
 }
 END
 
