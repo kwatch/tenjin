@@ -10,7 +10,7 @@ my @textfiles  = qw(MIT-LICENSE README.txt CHANGES.txt Kookbook.pl);
 my @docfiles   = qw(doc/users-guide.html doc/faq.html doc/examples.html doc/docstyle.css);
 my @binfiles   = qw(bin/pltenjin);
 my @libfiles   = qw(lib/Tenjin.pm);
-my @testfiles  = qw(test/test_*.pl test/test_*.yaml test/TestHelper.pm test/data/**/*);
+my @testfiles  = qw(t/*.t t/test_*.yaml t/TestHelper.pm t/data/**/*);
 my @benchfiles = qw(benchmark/Makefile benchmark/bench.pl benchmark/bench_context.pl benchmark/templates/*);
 
 recipe "package", [ "dist/$project-$release.tar.gz" ];
@@ -18,10 +18,11 @@ recipe "package", [ "dist/$project-$release.tar.gz" ];
 recipe "test", {
     desc   => "do test",
     method => sub {
-        cd "test", sub {
-            sys "prove test_template.pl test_engine.pl test_helper_html.pl";
-            sys "perl test_docs.pl users_guide";
-            sys "perl test_docs.pl examples";
+        cd "t", sub {
+            #sys "prove test_template.pl test_engine.pl test_helper_html.pl";
+            sys "prove template.t engine.t helper_html.t";
+            sys "perl docs.t users_guide";
+            sys "perl docs.t examples";
         };
     }
 };
@@ -92,7 +93,7 @@ recipe "dist/$project-$release.tar.gz", [ "examples" ], {
         store @textfiles, @docfiles, @binfiles, @libfiles, @benchfiles, $dir;
         store @testfiles, $dir;
         store "examples/**/*", $dir;
-        rm_f "$dir/test/data/**/*.cache";
+        rm_f "$dir/t/data/**/*.cache";
         ## edit files
         edit "$dir/**/*", sub {
             s/\$Release\$/$release/eg;

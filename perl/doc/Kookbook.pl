@@ -7,6 +7,8 @@ my @htmlfiles = qw(users-guide.html faq.html examples.html);
 #my $common_docdir = '../../../rbtenjin/trunk/doc';
 my $common_docdir = $ENV{HOME} . '/src/tenjin/common/doc';
 my $lang    = 'perl';
+#my $testdir = '../test';
+my $testdir = '../t';
 
 
 #$kook_materials = [
@@ -40,11 +42,10 @@ recipe "*.txt", {
         my $name = $c->{product};
         $name =~ s/\.txt$//;
         $name =~ s/-/_/g;
-        my $testdir = '../test';
         -d $testdir  or die "testdir not found.";
         my $datadir = "$testdir/$dir/$name";
         rm_rf "$datadir/*" if -d $datadir;
-        mkdir $datadir unless -d $datadir;
+        mkdir_p $datadir unless -d $datadir;
         sys "retrieve -Fd $datadir $c->{product}";
         #ln_s "$testdir}/$dir", "." unless -e $dir;
         for my $filename (glob "$datadir/*.result2") {
@@ -73,11 +74,10 @@ recipe "*.txt", {
 
 recipe 'test', {
     #ingreds => [ 'test_users_guide', 'test_faq', 'test_examples' ],
-    ingreds => [ 'users-guide.txt', 'faq.txt', 'examples.txt', '../test/test_docs.pl' ],
+    ingreds => [ 'users-guide.txt', 'faq.txt', 'examples.txt', "$testdir/docs.t" ],
     method => sub {
-        my $testdir = '../test';
         cd $testdir, sub {
-            sys "perl test_docs.pl";
+            sys "perl docs.t";
         };
     }
 };
@@ -86,23 +86,23 @@ my $test_method = sub {
     my ($c) = @_;
     my $name = $c->{product};
     $name =~ s/test_//;
-    cd "../test", sub {
-        sys "perl test_docs.pl $name";
+    cd $testdir, sub {
+        sys "perl docs.t $name";
     };
 };
 
 recipe 'test_users_guide', {
-    ingreds => [ 'users-guide.txt', '../test/test_docs.pl' ],
+    ingreds => [ 'users-guide.txt', "$testdir/docs.t" ],
     method  => $test_method,
 };
 
 recipe 'test_faq', {
-    ingreds => [ 'faq.txt', '../test/test_docs.pl' ],
+    ingreds => [ 'faq.txt', "$testdir/docs.t" ],
     method  => $test_method,
 };
 
 recipe 'test_examples', {
-    ingreds => [ 'examples.txt', '../test/test_docs.pl' ],
+    ingreds => [ 'examples.txt', "$testdir/docs.t" ],
     method  => $test_method,
 };
 
