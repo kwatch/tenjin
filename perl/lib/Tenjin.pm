@@ -28,6 +28,10 @@
 package Tenjin;
 #use strict;
 
+sub import {
+    my ($klass, %opts) = @_;
+    $USE_STRICT = $opts{strict} if defined($opts{strict});
+}
 
 our $USE_STRICT = 0;
 
