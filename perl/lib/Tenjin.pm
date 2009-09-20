@@ -28,16 +28,14 @@
 package Tenjin;
 #use strict;
 
+our $USE_STRICT     = undef;
+our $TEMPLATE_CLASS = 'Tenjin::Template';
+our $CONTEXT_CLASS  = 'Tenjin::Context';
+
 sub import {
     my ($klass, %opts) = @_;
-    $USE_STRICT = $opts{strict} if defined($opts{strict});
+    $USE_STRICT = $opts{strict} if defined $opts{strict};
 }
-
-our $USE_STRICT = 0;
-
-our $TEMPLATE_CLASS = 'Tenjin::Template';
-
-our $CONTEXT_CLASS = 'Tenjin::Context';
 
 
 
@@ -49,11 +47,10 @@ package Tenjin::Util;
 
 sub read_file {
     my ($filename, $lock_required) = @_;
-    open(my $fh, $filename) or die("$filename: $!");
+    open(my $fh, $filename)  or die "$filename: $!";
     binmode($fh);
     my $content = '';
-    my $size = 8192;
-    flock($fh, 1) if ($lock_required);
+    flock($fh, 1) if $lock_required;
     read($fh, my $data, -s $filename);
     close($fh);
     return $data;
@@ -62,7 +59,7 @@ sub read_file {
 
 sub write_file {
     my ($filename, $content, $lock_required) = @_;
-    open(my $fh, ">$filename") or die("$filename: $!");
+    open(my $fh, ">$filename")  or die "$filename: $!";
     binmode($fh);
     flock($fh, 2) if $lock_required;
     print $fh $content;
@@ -72,7 +69,7 @@ sub write_file {
 
 sub expand_tabs {
     my ($str, $tabwidth) = @_;
-    $tabwidth = 8 unless defined($tabwidth);
+    $tabwidth = 8 unless defined $tabwidth;
     my $s = '';
     my $pos = 0;
     while ($str =~ /.*?\t/sg) {   ## /(.*?)\t/ may be slow
@@ -130,7 +127,7 @@ our %_escape_table = ( '&'=>'&amp;', '<'=>'&lt;', '>'=>'&gt;', '"'=>'&quot;', "'
 sub escape_xml {
     my ($s) = @_;
     #return HTML::Entities::encode_entities($s);
-    $s =~ s/[&<>"]/$_escape_table{$&}/ge if ($s);
+    $s =~ s/[&<>"]/$_escape_table{$&}/ge if $s;
     return $s;
 }
 
@@ -141,7 +138,7 @@ our %_unescape_table = ('lt'=>'<', 'gt'=>'>', 'amp'=>'&', 'quot'=>'"', '#039'=>"
 sub unescape_xml {
     my ($s) = @_;
     $s =~ tr/+/ /;
-    $s =~ s/&(lt|gt|amp|quot|#039);/$_unescape_table{$1}/ge if ($s);
+    $s =~ s/&(lt|gt|amp|quot|#039);/$_unescape_table{$1}/ge if $s;
     return $s;
 }
 
@@ -199,7 +196,7 @@ sub text2html {
 sub tagattr {   ## [experimental]
     my ($name, $expr, $value) = @_;
     return '' unless $expr;
-    $value = $expr unless defined($value);
+    $value = $expr unless defined $value;
     return " $name=\"".escape_xml($value)."\"";
 }
 
@@ -208,19 +205,23 @@ sub tagattrs {   ## [experimental]
     my (%attrs) = @_;
     my $s = "";
     while (my ($k, $v) = each %attrs) {
-        $s .= " $k=\"".escape_xml($v)."\"" if defined($v);
+        $s .= " $k=\"".escape_xml($v)."\"" if defined $v;
     }
     return $s;
 }
 
 
+## ex.
+##   my $cycle = new_cycle('red', 'blue');
+##   print $cycle->();  #=> 'red'
+##   print $cycle->();  #=> 'blue'
+##   print $cycle->();  #=> 'red'
+##   print $cycle->();  #=> 'blue'
 sub new_cycle {   ## [experimental]
     my @items = @_;
     my $len = @items;
     my $i = 0;
-    return sub {
-        return $items[$i++ % $len];
-    };
+    return sub { $items[$i++ % $len] };
 }
 
 
@@ -232,19 +233,18 @@ package Tenjin::BaseContext;
 
 
 sub new {
-    my $class = shift;
-    my ($this) = @_;
-    $this = { } unless defined($this);
-    return bless($this, $class);
+    my ($class, $this) = @_;
+    $this = { } unless defined $this;
+    return bless $this, $class;
 }
 
 
-## ex. {'x'=>10, 'y'=>20} ==> "my $x = $_context->{'x'}; my $y = $_context->{'y'}; "
+## ex. {x=>10, y=>20} ==> "my $x = $_context->{'x'}; my $y = $_context->{'y'}; "
 sub _build_decl {
     my ($context) = @_;
     my $s = '';
     while (my ($k, ) = each %$context) {
-        $s .= "my \$$k = \$_context->{'$k'}; " if $k ne '_context';
+        $s .= "my \$$k = \$_context->{'$k'}; " unless $k eq '_context';
     }
     return $s;
 }
@@ -255,9 +255,9 @@ sub evaluate {
     my ($_this, $_script, $_filename) = @_;
     my $_context = $_this;
     $_script = "# line 1 \"$_filename\"\n".$_script if $_filename;  # line directive
-    return eval $_script unless $Tenjin::USE_STRICT;
+    return eval($_script) unless $Tenjin::USE_STRICT;
     use strict;
-    return eval $_script;
+    return eval($_script);
 }
 
 
@@ -276,12 +276,11 @@ eval $Tenjin::BaseContext::defun;
 
 sub escape {
     my ($arg) = @_;
-    return $arg;
+    return $arg;        # do nothing
 }
 
 
 *_p = *Tenjin::Util::_p;
-
 *_P = *Tenjin::Util::_P;
 
 
@@ -296,29 +295,17 @@ our $defun = $Tenjin::BaseContext::defun;
 eval $defun;
 
 *_p = *Tenjin::Util::_p;
-
 *_P = *Tenjin::Util::_P;
-
 *escape     = *Tenjin::Helper::Html::escape_xml;
-
 *escape_xml = *Tenjin::Helper::Html::escape_xml;
-
 *encode_url = *Tenjin::Helper::Html::encode_url;
-
 *checked    = *Tenjin::Helper::Html::checked;
-
 *selected   = *Tenjin::Helper::Html::selected;
-
 *disabled   = *Tenjin::Helper::Html::disabled;
-
 *nl2br      = *Tenjin::Helper::Html::nl2br;
-
 *text2html  = *Tenjin::Helper::Html::text2html;
-
 *tagattr    = *Tenjin::Helper::Html::tagattr;
-
 *new_cycle  = *Tenjin::Helper::Html::new_cycle;
-
 *tagattrs   = *Tenjin::Helper::Html::tagattrs;
 
 
@@ -328,8 +315,7 @@ eval $defun;
 ##
 ## ex.
 ##   ## convert file into perl script
-##   use Tenjin;
-##   $Tenjin::USE_STRICT = 1;  ## optional
+##   use Tenjin strict=>1;   ## 'strict=.1' is optional
 ##   my $template = new Tenjin::Template('example.plhtml');
 ##   print $template->{script};
 ##   ## or
@@ -338,15 +324,14 @@ eval $defun;
 ##   print $template->convert($input, 'example.plhtml');   # filename is optional
 ##   ## evaluate converted perl script with context data
 ##   my $context = { 'title'=>'Example', 'items'=>['A','B','C'], };
-##   #$template->compile();  ## optional
+##   $template->compile();  ## optional
 ##   print $template->render($context);
 ##
 package Tenjin::Template;
 
 
 sub new {
-    my $class = shift;
-    my ($filename, $opts) = @_;
+    my ($class, $filename, $opts) = @_;
     my $escapefunc = defined($opts) && exists($opts->{escapefunc}) ? $opts->{escapefunc} : 'escape';
     my $this = {
         'filename'   => $filename,
@@ -357,16 +342,13 @@ sub new {
     };
     #return bless($this, $class);
     $this = bless($this, $class);
-    if ($filename) {
-        $this->convert_file($filename);
-    };
+    $this->convert_file($filename) if $filename;
     return $this;
 }
 
 
 sub _render {
-    my $this = shift;
-    my ($context) = (@_);
+    my ($this, $context) = @_;
     $context = {} unless $context;
     if ($this->{func}) {
         return $this->{func}->($context);
@@ -377,7 +359,7 @@ sub _render {
             $context = $klass->new($context);
         }
         my $script = $this->{script};
-        $script = Tenjin::BaseContext::_build_decl($context) . $script unless ($this->{args});
+        $script = Tenjin::BaseContext::_build_decl($context) . $script unless $this->{args};
         return $context->evaluate($script, $this->{filename});
     }
 }
@@ -396,8 +378,7 @@ sub render {
 
 
 sub convert_file {
-    my $this = shift;
-    my ($filename) = @_;
+    my ($this, $filename) = @_;
     my $input = Tenjin::Util::read_file($filename, 1);
     my $script = $this->convert($input);
     $this->{filename} = $filename;
@@ -407,8 +388,7 @@ sub convert_file {
 
 
 sub convert {
-    my $this = shift;
-    my ($input, $filename) = @_;
+    my ($this, $input, $filename) = @_;
     $this->{filename} = $filename;
     my @buf = ('my $_buf = ""; ', );
     $this->parse_stmt(\@buf, $input);
@@ -432,8 +412,7 @@ sub stmt_pattern {
 }
 
 sub parse_stmt {
-    my $this = shift;
-    my ($bufref, $input) = @_;
+    my ($this, $bufref, $input) = @_;
     my $pos = 0;
     my $pat = $this->stmt_pattern();
     while ($input =~ /$pat/g) {
@@ -441,9 +420,7 @@ sub parse_stmt {
         my $start = $-[0];
         my $text = substr($input, $pos, $start - $pos);
         $pos = $start + length($pi);
-        if ($text) {
-            $this->parse_expr($bufref, $text);
-        }
+        $this->parse_expr($bufref, $text) if $text;
         $mspace = '' if $mspace eq ' ';
         $stmt = $this->hook_stmt($stmt);
         $this->add_stmt($bufref, $lspace . $mspace . $stmt . $rspace);
@@ -454,15 +431,12 @@ sub parse_stmt {
 
 
 sub hook_stmt {
-    my $this = shift;
-    my ($stmt) = @_;
+    my ($this, $stmt) = @_;
     ## macro expantion
     if ($stmt =~ /\A(\s*)(\w+)\((.*?)\);?(\s*)\Z/) {
         my ($lspace, $funcname, $arg, $rspace) = ($1, $2, $3, $4);
         my $s = $this->expand_macro($funcname, $arg);
-        if (defined($s)) {
-            return $lspace . $s . $rspace;
-        }
+        return $lspace . $s . $rspace if defined $s;
     }
     ## template arguments
     if (! $this->{args}) {
@@ -473,7 +447,7 @@ sub hook_stmt {
             for my $arg (split(',', $argstr)) {
                 $arg =~ s/(^\s+|\s+$)//g;
                 next unless $arg;
-                $arg =~ m/\A[a-zA-Z_]\w*\Z/ or die("'$arg': invalid template argument.");
+                $arg =~ m/\A[a-zA-Z_]\w*\Z/  or die "'$arg': invalid template argument.";
                 push(@args, $arg);
                 push(@declares, "my \$$arg = \$_context->{$arg}; ");
             }
@@ -509,8 +483,7 @@ our $MACRO_HANDLER_TABLE = {
 
 
 sub expand_macro {
-    my $this = shift;
-    my ($funcname, $arg) = @_;
+    my ($this, $funcname, $arg) = @_;
     my $handler = $Tenjin::Template::MACRO_HANDLER_TABLE->{$funcname};
     return $handler ? $handler->($arg) : undef;
 }
@@ -527,16 +500,14 @@ sub expr_pattern {
 
 ## ex. get_expr_and_escapeflag('=', '$item->{name}', '')  => 1, '$item->{name}', 0
 sub get_expr_and_escapeflag {
-    my $this = shift;
-    my ($m1, $m2, $m3) = @_;
+    my ($this, $m1, $m2, $m3) = @_;
     my ($not_escape, $expr, $delete_newline) = ($m1, $m2, $m3);
     return $expr, $not_escape eq '', $delete_newline eq '=',
 }
 
 
 sub parse_expr {
-    my $this = shift;
-    my ($bufref, $input) = @_;
+    my ($this, $bufref, $input) = @_;
     my $pos = 0;
     $this->start_text_part($bufref);
     my $pat = $this->expr_pattern();
@@ -545,7 +516,7 @@ sub parse_expr {
         my $text = substr($input, $pos, $start - $pos);
         my ($expr, $flag_escape, $delete_newline) = $this->get_expr_and_escapeflag($1, $2, $3);
         $pos = $start + length($&);
-        $this->add_text($bufref, $text) if ($text);
+        $this->add_text($bufref, $text) if $text;
         $this->add_expr($bufref, $expr, $flag_escape) if $expr;
         if ($delete_newline) {
             my $end = $+[0];
@@ -562,42 +533,34 @@ sub parse_expr {
 
 
 sub start_text_part {
-    my ($this) = shift;
-    my ($bufref) = @_;
+    my ($this, $bufref) = @_;
     $bufref->[0] .= ' $_buf .= ';
 }
 
 
 sub stop_text_part {
-    my ($this) = shift;
-    my ($bufref) = @_;
+    my ($this, $bufref) = @_;
     $bufref->[0] .= "; ";
 }
 
 
 sub add_text {
-    my $this = shift;
-    my ($bufref, $text) = @_;
+    my ($this, $bufref, $text) = @_;
     return unless $text;
     $text =~ s/[`\\]/\\$&/g;
-    if ($bufref->[0] =~ / \$_buf \.= \Z/) {
-        $bufref->[0] .= "q`$text`";
-    } else {
-        $bufref->[0] .= " . q`$text`";
-    }
+    my $is_start = $bufref->[0] =~ / \$_buf \.= \Z/;
+    $bufref->[0] .= $is_start ? "q`$text`" : " . q`$text`";
 }
 
 
 sub add_stmt {
-    my $this = shift;
-    my ($bufref, $stmt) = @_;
+    my ($this, $bufref, $stmt) = @_;
     $bufref->[0] .= $stmt;
 }
 
 
 sub add_expr {
-    my $this = shift;
-    my ($bufref, $expr, $flag_escape) = @_;
+    my ($this, $bufref, $expr, $flag_escape) = @_;
     my $dot = $bufref->[0] =~ / \$_buf \.= \Z/ ? "" : " . ";
     $bufref->[0] .= $flag_escape ? "$dot$this->{escapefunc}($expr)"
                                  : "$dot($expr)";
@@ -605,9 +568,7 @@ sub add_expr {
 
 
 sub defun {   ## (experimental)
-    my $this = shift;
-    my $funcname = shift;
-    my @args = @_;
+    my ($this, $funcname, @args) = @_;
     if (! $funcname) {
         $_ = $this->{filename};
         s/\.\w+$//  if ($_);
@@ -628,12 +589,12 @@ sub defun {   ## (experimental)
 
 ## compile $this->{script} into closure.
 sub compile {
-    my $this = shift;
+    my ($this) = @_;
     if ($this->{args}) {
         #my $f = $Tenjin::CONTEXT_CLASS . '::to_func';
         #my $func = $f->($this->{script});
         my $func = $Tenjin::CONTEXT_CLASS->to_func($this->{script}, $this->{filename});
-        $@ and die("*** Error: " . $this->{filename} . "\n", $@);
+        ! $@  or die "*** Error: " . $this->{filename} . "\n", $@;
         return $this->{func} = $func;
     }
     return;
@@ -651,7 +612,7 @@ our @ISA = ('Tenjin::Template');
 my $STMT_PATTERN = Tenjin::Template::compile_stmt_pattern('PL');
 
 sub stmt_pattern {
-    my $this = shift;
+    my ($this) = @_;
     return $STMT_PATTERN;
 }
 
@@ -659,14 +620,13 @@ sub stmt_pattern {
 my $EXPR_PATTERN = qr/\[\*=(=?)(.*?)(=?)=\*\]/s;
 
 sub expr_pattern {
-    my $this = shift;
+    my ($this) = @_;
     return $EXPR_PATTERN;
 }
 
 
 sub add_expr {
-    my $this = shift;
-    my ($bufref, $expr, $flag_escape) = @_;
+    my ($this, $bufref, $expr, $flag_escape) = @_;
     $expr = "Tenjin::Util::_decode_params($expr)";
     $this->SUPER::add_expr($bufref, $expr, $flag_escape);
 }
@@ -677,17 +637,16 @@ sub add_expr {
 ## engine class which handles several template objects.
 ##
 ## ex.
-##   use Tenjin;
-##   $Tenjin::USE_STRICT = 1;  ## optional
-##   my $engine = new Tenjin::Engine({'layout'=>'layout.plhtml'});
-##   my $context = { 'title'=>'Example', 'items'=>['A','B','C'], };
+##   use Tenjin strict=>1;    ## 'strict=>1' is optional
+##   my $engine = new Tenjin::Engine({layout=>'layout.plhtml'});
+##   my $context = { title=>'Example', items=>['A','B','C'], };
 ##   print $engine->render('example.plhtml', $context);
 ##
 package Tenjin::Engine;
 
+
 sub new {
-    my $class = shift;
-    my ($options) = @_;
+    my ($class, $options) = @_;
     my $this = {};
     for my $key (qw[prefix postfix layout path cache preprocess templateclass]) {
         $this->{$key} = delete($options->{$key});
@@ -703,8 +662,7 @@ sub new {
 
 
 sub to_filename {
-    my $this = shift;
-    my ($template_name) = @_;
+    my ($this, $template_name) = @_;
     if (substr($template_name, 0, 1) eq ':') {
         return $this->{prefix} . substr($template_name, 1) . $this->{postfix};
     }
@@ -713,18 +671,17 @@ sub to_filename {
 
 
 sub find_template_file {
-    my $this = shift;
-    my ($filename) = @_;
+    my ($this, $filename) = @_;
     my $path = $this->{path};
     if ($path) {
         my $sep = $^O eq 'MSWin32' ? '\\\\' : '/';
         for my $dirname (@$path) {
             my $filepath = $dirname . $sep . $filename;
-            return $filepath if (-f $filepath);
+            return $filepath if -f $filepath;
         }
     }
     else {
-        return $filename if (-f $filename);
+        return $filename if -f $filename;
     }
     my $s = $path ? ("['" . join("','", @$path) . "']") : '[]';
     die "$filename: not found. (path=$s)";
@@ -732,15 +689,13 @@ sub find_template_file {
 
 
 sub register_template {
-    my $this = shift;
-    my ($template_name, $template) = @_;
+    my ($this, $template_name, $template) = @_;
     $this->{templates}->{$template_name} = $template;
 }
 
 
 sub get_template {
-    my $this = shift;
-    my ($template_name, $_context) = @_;
+    my ($this, $template_name, $_context) = @_;
     my $template = $this->{templates}->{$template_name};
     my $t = $template;
     if (! $t || $t->{timestamp} && $t->{filename} && $t->{timestamp} < _mtime($t->{filename})) {
@@ -754,13 +709,12 @@ sub get_template {
 
 
 sub read_template_file {
-    my $this = shift;
-    my ($template, $filename, $_context) = @_;
+    my ($this, $template, $filename, $_context) = @_;
     my $input;
     if ($this->{preprocess}) {
         if (! defined($_context) || ! $_context->{_engine}) {
             $_context = {};
-            $this->hook_context($context);
+            $this->hook_context($_context);
         }
         $input = (new Tenjin::Preprocessor($filename))->render($_context);
     } else {
@@ -771,8 +725,7 @@ sub read_template_file {
 
 
 sub store_cachefile {
-    my $this = shift;
-    my ($cachename, $template) = @_;
+    my ($this, $cachename, $template) = @_;
     my $cache = $template->{script};
     if (defined($template->{args})) {
         my $args = $template->{args};
@@ -783,8 +736,7 @@ sub store_cachefile {
 
 
 sub load_cachefile {
-    my $this = shift;
-    my ($cachename, $template) = @_;
+    my ($this, $cachename, $template) = @_;
     my $cache = Tenjin::Util::read_file($cachename, 1);
     if ($cache =~ s/\A\#\@ARGS (.*)\r?\n//) {
         my $argstr = $1;
@@ -797,14 +749,13 @@ sub load_cachefile {
 
 
 sub cachename {
-    my $this = shift;
-    my ($filename) = @_;
+    my ($this, $filename) = @_;
     return $filename . '.cache';
 }
 
+
 sub create_template {
-    my $this = shift;
-    my ($filename, $_context) = @_;
+    my ($this, $filename, $_context) = @_;
     my $cachename = $this->cachename($filename);
     my $klass = $this->{templateclass} || $Tenjin::TEMPLATE_CLASS; # Tenjin::Template;
     my $template = $klass->new(undef, $this->{init_opts_for_template});
@@ -840,21 +791,21 @@ sub _mtime {
 sub _render {
     my $this = shift;
     my ($template_name, $context, $layout) = @_;
-    $context = {} unless defined($context);
-    $layout = 1 unless defined($layout);
+    $context = {} unless defined $context;
+    $layout = 1 unless defined $layout;
     $this->hook_context($context);
     my $output;
     while (1) {
         my $template = $this->get_template($template_name, $context); # pass $context only for preprocessing
         $output = $template->_render($context);
-        return $template->{filename} if ($@); # return template filename when error happened
-        $layout = $context->{_layout} if exists($context->{_layout});
+        return $template->{filename} if $@; # return template filename when error happened
+        $layout = $context->{_layout} if exists $context->{_layout};
         $layout = $this->{layout} if $layout == 1;
         last unless $layout;
         $template_name = $layout;
         $layout = undef;
         $context->{_content} = $output;
-        delete($context->{_layout});
+        delete $context->{_layout};
     }
     return $output;
 }
@@ -873,8 +824,7 @@ sub render {
 
 
 sub hook_context {
-    my $this = shift;
-    my ($context) = @_;
+    my ($this, $context) = @_;
     $context->{_engine} = $this;
 }
 
