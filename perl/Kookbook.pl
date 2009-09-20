@@ -3,52 +3,76 @@ use File::Basename;
 use Kook::Utils qw(write_file);
 
 my $project = prop('project', 'tenjin');
+my $package = prop('package', 'Tenjin');
 my $release = prop('release', '0.0.2');
 
 my $copyright  = 'copyright(c) 2007-2009 kuwata-lab.com all rights reserved.';
+my $license    = 'MIT License';
 my @textfiles  = qw(MIT-LICENSE README Changes Kookbook.pl);
 my @docfiles   = qw(doc/users-guide.html doc/faq.html doc/examples.html doc/docstyle.css);
 my @binfiles   = qw(bin/pltenjin);
 my @libfiles   = qw(lib/Tenjin.pm);
-my @testfiles  = qw(t/*.t t/test_*.yaml t/TestHelper.pm t/data/**/*);
+my @testfiles  = qw(t/*.t t/test_*.yaml t/Specofit.pm t/data/**/*);
 my @benchfiles = qw(benchmark/Makefile benchmark/bench.pl benchmark/bench_context.pl benchmark/templates/*);
+my @makefiles  = qw(MANIFEST.SKIP Makefile.PL);
 
 $kook_default = 'test';
-
-recipe "package", [ "dist/$project-$release.tar.gz" ];
 
 recipe "test", {
     desc   => "do test",
     method => sub {
         cd "t", sub {
-            #sys "prove test_template.pl test_engine.pl test_helper_html.pl";
             sys "prove *.t";
         };
     }
 };
 
-recipe "profile", {
-    desc   => "profiling with Devel::Profile",
-    spices => [ "-v: view result (invoke 'less' command)" ],
-    method => sub {
-        my ($c, $opts, $rest) = @_;
-        my $filename = $rest->[0] || "try.pl";
-        rm "prof.out" if -f "prof.out";
-        sys "perl -d:Profile $filename";
-        sys "less prof.out" if $opts->{v};
-    }
-};
+recipe "package", [ "$package-$release.tar.gz" ];
 
-recipe "nytprof", {
-    desc   => "profiling with Devel::NYTProf",
-    spices => [ "-v: view result (open 'nytprof/index.html')" ],
+recipe "$package-$release.tar.gz", [ "examples" ], {
     method => sub {
-        my ($c, $opts, $rest) = @_;
-        my $filename = $rest->[0] || "try.pl";
-        rm_rf "nytprof*";
-        sys "perl -d:NYTProf $filename";
-        sys "nytprofhtml";
-        sys "open nytprof/index.html" if $opts->{v};
+        my ($c) = @_;
+        ## base name
+        $c->{product} =~ /^(.*)\.tar\.gz$/;
+        my $base = $1  or die;
+        ## create temporary dir
+        #my $dir = "dist/tmp";
+        my $dir = "dist/$base";
+        rm_rf "dist";
+        mkdir_p $dir;
+        ## copy files
+        store @textfiles, @docfiles, @binfiles, @libfiles, @benchfiles, $dir;
+        store @makefiles, $dir;
+        store @testfiles, $dir;
+        store "examples/**/*", $dir;
+        rm_f "$dir/t/data/**/*.cache";
+        rm_f "$dir/benchmark/templates/*.mt2";
+        ## edit files
+        edit "$dir/**/*", sub {
+            s/\$Release\$/$release/g;
+            s/\$Release:.*?\$/\$Release: $release \$/g;
+            s/\$Copyright\$/$copyright/g;
+            s/\$License\$/$license/g;
+            $_;
+        };
+        ## chmod
+        chmod 0755, "$dir/bin/*";
+        ## create tar.gz file
+        #cd "dist", sub { sys "tar czf $base.tar.gz $base" };
+        ## create cpan package
+        cd $dir, sub {
+            sys "perl Makefile.PL";
+            sys "make";
+            sys "make manifest";
+            sys "make dist";
+        };
+        mv "$dir/$base.tar.gz", ".";
+        ## remove temporary dir
+        rm_rf $dir;
+        ## expand tar.gz
+        cd "dist", sub {
+            sys "tar xzf ../$base.tar.gz";
+        };
     }
 };
 
@@ -96,31 +120,28 @@ recipe "examples", {
 };
 
 
-recipe "dist/$project-$release.tar.gz", [ "examples" ], {
+recipe "profile", {
+    desc   => "profiling with Devel::Profile",
+    spices => [ "-v: view result (invoke 'less' command)" ],
     method => sub {
-        -d "dist" ? rm_rf "dist/*" : mkdir "dist";
-        my ($c) = @_;
-        ## create directory
-        $c->{product} =~ /^dist\/(.*)\.tar\.gz$/;
-        my $base = $1  or die;
-        my $dir = "dist/$base";
-        -d $dir ? rm_rf "$dir/*" : mkdir $dir;
-        ## copy files
-        store @textfiles, @docfiles, @binfiles, @libfiles, @benchfiles, $dir;
-        store @testfiles, $dir;
-        store "examples/**/*", $dir;
-        rm_f "$dir/t/data/**/*.cache";
-        ## edit files
-        edit "$dir/**/*", sub {
-            s/\$Release\$/$release/eg;
-            #s/\$Release: .*? \$/\$Release: $release \$/eg;
-            #s/\$Copyright\$/$copyright/eg;
-            $_;
-        };
-        ## chmod
-        chmod 0755, "$dir/bin/*";
-        ## create tar.gz file
-        cd "dist", sub { sys "tar czf $base.tar.gz $base"; };
+        my ($c, $opts, $rest) = @_;
+        my $filename = $rest->[0] || "try.pl";
+        rm "prof.out" if -f "prof.out";
+        sys "perl -d:Profile $filename";
+        sys "less prof.out" if $opts->{v};
+    }
+};
+
+recipe "nytprof", {
+    desc   => "profiling with Devel::NYTProf",
+    spices => [ "-v: view result (open 'nytprof/index.html')" ],
+    method => sub {
+        my ($c, $opts, $rest) = @_;
+        my $filename = $rest->[0] || "try.pl";
+        rm_rf "nytprof*";
+        sys "perl -d:NYTProf $filename";
+        sys "nytprofhtml";
+        sys "open nytprof/index.html" if $opts->{v};
     }
 };
 
