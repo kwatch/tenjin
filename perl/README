@@ -9,9 +9,84 @@ $Copyright$
 About
 -----
 
-plTenjin is a very fast and full-featured template engine based on embedded Perl.
-You can embed Perl statements and expressions into your text file.
-plTenjin converts it into Perl program and evaluate it.
+plTenjin is a very fast and full-featured template engine for Perl.
+You can embed Perl statements and expressions into your template file.
+plTenjin converts it into Perl evaluate and evaluate it with context data.
+
+
+Install
+-------
+
+Just copy 'lib/Tenjin.pm' and 'bin/pltenjin' into your proper directory.
+Or, if you can be super user, type the following:
+
+   $ tar xzf Tenjin-$Release$.tar.gz
+   $ cd Tenjin-$Release$/
+   $ perl Makefile.PL
+   $ make
+   $ sudo make install
+
+After that, install YAML::Syck package (this is opitonal).
+
+
+Example
+-------
+
+example.plhtml:
+
+    <?pl #@ARGS $title, $items ?>
+    <html>
+      <body>
+        <h1>[= $title =]</h1>
+        <table>
+        <?pl my $i = 0; ?>
+        <?pl for my $item (@$items) { ?>
+        <?pl   my $color = ++$i % 2 ? '#FFF' : '#FCF'; ?>
+        <tr bgcolor="[= $color =]">
+          <td>[== $i =]</td>
+          <td>[= $item =]</td>
+        </tr>
+        <?pl } ?>
+      </body>
+    </html>
+
+main.pl:
+
+    use strict;
+    use Tenjin;
+    my $engine = Tenjin::Engine->new();
+    my $context = {
+        title => "Tenjin Example",
+        items => ['<AAA>', 'B&B', '"CCC"'],
+    };
+    my $html = $engine->render("example.plhtml", $context);
+    print $html;
+
+output:
+
+    $ perl main.pl
+    <html>
+      <body>
+        <h1>Tenjin Example</h1>
+        <table>
+        <tr bgcolor="#FFF">
+          <td>1</td>
+          <td>&lt;AAA&gt;</td>
+        </tr>
+        <tr bgcolor="#FCF">
+          <td>2</td>
+          <td>B&amp;B</td>
+        </tr>
+        <tr bgcolor="#FFF">
+          <td>3</td>
+          <td>&quot;CCC&quot;</td>
+        </tr>
+      </body>
+    </html>
+
+If you want to see compiled Perl code, just type 'pltenjin -s example.phtml'.
+
+And there are some exaples in 'examples/' directory.
 
 
 Features
@@ -32,21 +107,20 @@ Features
 See 'doc/*.html' for details.
 
 
-Install
--------
-
-1. Just copy 'lib/Tenjin.pm' and 'bin/pltenjin' into your proper directory.
-2. (optional) Install YAML::Syck package.
-
-
 Attention
 ---------
 
-plTenjin is beta released. It means that API or specification may change
-in the future.
+plTenjin is under beta release.
+It's spec is subject to change without prior notice.
 
 
 License
 -------
 
-MIT License.
+MIT License
+
+
+Author
+------
+
+makoto kuwata <kwa.at.kuwata-lab.com>
