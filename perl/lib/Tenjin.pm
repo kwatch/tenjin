@@ -347,6 +347,12 @@ sub new {
 }
 
 
+sub _read_file {
+    my $this = shift;
+    return Tenjin::Util::read_file(@_);
+}
+
+
 sub _render {
     my ($this, $context) = @_;
     $context = {} unless $context;
@@ -379,7 +385,7 @@ sub render {
 
 sub convert_file {
     my ($this, $filename) = @_;
-    my $input = Tenjin::Util::read_file($filename, 1);
+    my $input = $this->_read_file($filename, 1);
     my $script = $this->convert($input);
     $this->{filename} = $filename;
     #$this->{input}    = $input;
@@ -661,6 +667,18 @@ sub new {
 }
 
 
+sub _read_file {
+    my $this = shift;
+    return Tenjin::Util::read_file(@_);
+}
+
+
+sub _write_file {
+    my $this = shift;
+    return Tenjin::Util::write_file(@_);
+}
+
+
 sub to_filename {
     my ($this, $template_name) = @_;
     if (substr($template_name, 0, 1) eq ':') {
@@ -718,7 +736,7 @@ sub read_template_file {
         }
         $input = (new Tenjin::Preprocessor($filename))->render($_context);
     } else {
-        $input = Tenjin::Util::read_file($filename, 1);
+        $input = $this->_read_file($filename, 1);
     }
     return $input;
 }
@@ -731,13 +749,13 @@ sub store_cachefile {
         my $args = $template->{args};
         $cache = "\#\@ARGS " . join(',', @$args) . "\n" . $cache;
     }
-    Tenjin::Util::write_file($cachename, $cache, 1);
+    $this->_write_file($cachename, $cache, 1);
 }
 
 
 sub load_cachefile {
     my ($this, $cachename, $template) = @_;
-    my $cache = Tenjin::Util::read_file($cachename, 1);
+    my $cache = $this->_read_file($cachename, 1);
     if ($cache =~ s/\A\#\@ARGS (.*)\r?\n//) {
         my $argstr = $1;
         $argstr =~ s/\A\s+|\s+\Z//g;
