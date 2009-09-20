@@ -1,10 +1,17 @@
 #!/usr/bin/env perl
 
-#use strict;
-use Data::Dumper;
-#use File::Slurp;
+###
+### pltenjin - very fast and full-featured template engine for Perl
+###
+### $Release: $
+### $Copyright$
+### $License$
+###
+
 
 package Tenjin::NoTextTemplate;
+#use strict;
+use Data::Dumper;
 
 @ISA = ('Tenjin::Template');
 
@@ -12,34 +19,31 @@ sub new {
     my $class = shift;
     my $this  = $class->SUPER::new(@_);
     my ($filename, $opts) = @_;
-    if (defined($opts) && exists($opts->{noexpr})) {
-        $this->{noexpr} = $opts->{noexpr};
-    }
+    $this->{noexpr} = $opts->{noexpr} if defined($opts) && exists($opts->{noexpr});
     return $this;
 }
 
 sub start_text_part {
-    my ($this) = shift;
-    my ($bufref) = @_;
-    #$bufref->[0] .= "push(\@_buf, ";
+    my ($this, $bufref) = @_;
+    #$bufref->[0] .= "$_buf .= ";
 }
 
 sub stop_text_part {
-    my ($this) = shift;
-    my ($bufref) = @_;
-    #$bufref->[0] .= "); ";
+    my ($this, $bufref) = @_;
+    #$bufref->[0] .= "; ";
 }
 
 sub add_text {
-    my $this = shift;
-    my ($bufref, $text) = @_;
+    my ($this, $bufref, $text) = @_;
+    return unless $text;
     #$text =~ s/[`\\]/\\$&/g;
-    #push(@$bufref, "q`$text`, ");
+    #my $is_start = $bufref->[0] =~ / \$_buf \.= \Z/;
+    #$bufref->[0] .= $is_start ? "q`$text`" : " . q`$text`";
     $_ = $text;
     s/[^\n]//g;
     $bufref->[0] .= $_ if $_;
     $_ = $text;
-    $_ = $1 if (m/\n(.*?)\z/);
+    $_ = $1 if /\n(.*?)\z/;
     if ($_) {
         s/[^\t]/ /g;
         $bufref->[0] .= $_;
@@ -47,17 +51,15 @@ sub add_text {
 }
 
 #sub add_stmt {
-#    my $this = shift;
-#    my ($bufref, $stmt) = @_;
+#    my ($this, $bufref, $stmt) = @_;
 #    push(@$bufref, $stmt);
 #}
 
 sub add_expr {
-    my $this = shift;
-    my ($bufref, $expr, $flag_escape) = @_;
-    return if $this->{'noexpr'};
+    my ($this, $bufref, $expr, $flag_escape) = @_;
+    return if $this->{noexpr};
     if ($flag_escape) {
-        my $funcname = $this->{'escapefunc'};
+        my $funcname = $this->{escapefunc};
         #$bufref->[0] .= " \$_buf .= $funcname($expr); ");
         $bufref->[0] .= "$funcname($expr); ";
     }
@@ -79,7 +81,6 @@ use Tenjin;
 #require File::Temp;
 #require IPC::Open3;
 
-
 sub execute {
     ## parse @ARGV
     my ($argvref, $script) = @_;
@@ -100,8 +101,7 @@ sub execute {
 
     ## version
     if ($options{'v'} || $properties{version}) {
-        my $version = ('$Release: 0.0.0 $' =~ /[.\d]+/) && $&;
-        print $version, "\n";
+        print $Tenjin::VERSION, "\n";
         exit(0);
     }
 
@@ -109,9 +109,7 @@ sub execute {
     my $action = $options{'a'};
     my @actions = qw(render convert retrieve statements syntax preprocess);
     if ($action) {
-        unless (grep { $_ eq $action } @actions) {
-            die("-a $action: unknown action.");
-        }
+        grep { $_ eq $action } @actions  or die "-a $action: unknown action.";
     }
     else {
         $action =  $options{'s'} && 'convert'
@@ -170,7 +168,7 @@ sub execute {
     }
 
     ## create template engine
-    my $engine = new Tenjin::Engine(\%properties);
+    my $engine = Tenjin::Engine->new(\%properties);
 
     ## read stdin when no flenames
     my $input;
@@ -178,7 +176,7 @@ sub execute {
         @filenames = (undef);
         my (@list, $data);
         push(@list, $data) while (read(STDIN, $data, 4096));
-        my $template = new Tenjin::Template(undef, \%properties);
+        my $template = Tenjin::Template->new(undef, \%properties);
         $input = join('', @list);
         $template->convert($input);
         $engine->register_template(undef, $template);
@@ -213,7 +211,7 @@ sub execute {
         }
         elsif ($action eq 'render' || $action eq 'preprocess') {
             my $output = $engine->render($template_name, $context);
-            $@ and die("*** ERROR: $output\n$@");
+            ! $@  or die "*** ERROR: $output\n$@";
             print $output;
         }
         else {
@@ -249,7 +247,7 @@ sub parse_argv {
                 }
                 elsif ($opt =~ s/^([fcna])//) {
                     $optch = $1;
-                    $optval = $opt || shift @argv or die "-$optch: argument required.\n";
+                    $optval = $opt || shift @argv  or die "-$optch: argument required.\n";
                     $opt = '';
                 }
                 else {
@@ -267,7 +265,7 @@ sub parse_argv {
 sub help_message {
     my ($command) = @_;
     my $s = <<END;
-$command - fast and full-featured template engine
+$command - very fast and full-featured template engine for Perl
 Usage: $command [..options..] [file1 [file2...]]
   -h, --help          :  help
   -v, --version       :  version
@@ -336,18 +334,16 @@ sub load_context_file {
         eval 'require YAML::Syck; import YAML::Syck';
         #$@ and eval 'require YAML; import YAML;';
         $@ and die($@);
-        #my $s = read_file($datafile);
         my $s = Tenjin::Util::read_file($datafile);
         $s = Tenjin::Util::expand_tabs($s) if $flag_expand_tabs;
         ($context) = Load($s);
-        ref($context) == 'HASH' or die("$datafile: not a mapping.");
+        ref($context) eq 'HASH'  or die "$datafile: not a mapping.";
     }
     else {
-        #my $script = read_file($datafile);
         my $script = Tenjin::Util::read_file($datafile);
         $context = eval($script);
         $@ and die("*** ERROR: $datafile: eval error\n$@");
-        ref($context) == 'HASH' or die("$datafile: not a HASH reference.");
+        ref($context) eq 'HASH'  or die "$datafile: not a HASH reference.";
     }
     return $context;
 }
@@ -359,14 +355,14 @@ sub load_context_str {
     if ($context_str =~ /^\{/) {  # YAML style (ex. "{x: 10, y: [a, b, c]}")
         eval 'require YAML::Syck; import YAML::Syck;';
         #$@ and eval 'require YAML; import YAML;';
-        $@ and die($@);
+        ! $@  or die $@;
         ($val) = Load($context_str . "\n");
-        ref($val) == 'HASH' or die("-e: mapping required.");
+        ref($val) eq 'HASH'  or die "-e: mapping required.";
     }
     else {                        # Perl style (ex. "x=>10, y=>['a','b','c']")
         eval "\$val = { $context_str };";
         $@ and die("*** ERROR: -e:\n$@");
-        ref($val) == 'HASH' or die("-c: hash reference required.");
+        ref($val) eq 'HASH'  or die "-c: hash reference required.";
     }
     return $val;
 }
