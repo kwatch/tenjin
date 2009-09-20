@@ -140,6 +140,17 @@ sub _bench_tenjin_template_reuse {
     return $output;
 }
 
+sub _bench_tenjin_template_convert {
+    my ($this, $n, $context) = @_;
+    my $output;
+    my $template = Tenjin::Template->new();
+    my $input = main::read_file($template_filename);
+    while ($n--) {
+        $output = $template->convert($input);
+    }
+    return $output;
+}
+
 ## tenjin::template (compile)
 sub _bench_tenjin_template_compile {
     my ($this, $n, $context) = @_;
@@ -274,7 +285,6 @@ sub bench_tt_create {
 package HtmlTemplateBenchmark;
 our @ISA = ('BenchmarkObject');
 push @BenchmarkObject::subclasses, 'HtmlTemplateBenchmark';
-use File::Basename;
 our $template_filename = "bench_htmltmpl.tmpl";
 
 sub before_all {
@@ -559,12 +569,15 @@ use strict;
 use Data::Dumper;
 use Getopt::Std;
 use Time::HiRes;
+use File::Basename;
+
 
 sub new {
     my $class = shift;
     my $this = {
         ntimes      => 1000,
         flag_print  => undef,
+        flag_all    => undef,
         flag_strict => undef,
         mode        => 'class',   # or 'hash'
     };
@@ -574,11 +587,12 @@ sub new {
 sub parse_command_options {
     my ($this) = @_;
     my %opts;
-    getopts('hvpwn:m:x:A', \%opts) or die $@;
-    $this->{ntimes}     = 0 + $opts{n}  if $opts{n};
-    $this->{flag_print} = 1             if $opts{p};
-    $this->{use_strict} = 1             if $opts{w};
-    $this->{mode}       = $opts{m}      if $opts{m};
+    getopts('hvpwn:m:x:A', \%opts)  or die $@;
+    $this->{ntimes}      = 0 + $opts{n}  if $opts{n};
+    $this->{flag_print}  = 1             if $opts{p};
+    $this->{flag_all}    = 1             if $opts{A};
+    $this->{flag_strict} = 1             if $opts{w};
+    $this->{mode}        = $opts{m}      if $opts{m};
     ! $opts{m} || $opts{m} =~ /^(class|hash)$/  or
         die "-m $opts{m}: 'class' or 'hash' expected.\n";
     return \%opts;
@@ -588,11 +602,12 @@ sub help_message {
     my $script = basename(__FILE__);
     my $msg = <<END;
 Usage: perl $script [..options..] [testname ...]
-  -h:                help
-  -n N:              repeat loop N times
-  -w:                set Tenjin::USE_STRICT = 1
-  -p:                print output
-  -m [hash|class]:   mode
+  -h              :  help
+  -n N            :  repeat loop N times
+  -p              :  print output
+  -m [hash|class] :  mode
+  -w              :  set Tenjin::USE_STRICT = 1
+  -A              :  invoke all benchmarks (= public + private)
 END
     return $msg;
 }
@@ -612,12 +627,12 @@ sub get_bench_classes {
 }
 
 sub get_bench_names {
-    my ($this, $opt_all) = @_;
+    my ($this, $flag_all) = @_;
     open FH, __FILE__  or die $!;
     my @lines = <FH>;
     close FH;
     my @names;
-    my $pat = $opt_all ? '^ *sub _?bench_(\w+)' : '^ *sub bench_(\w+)';
+    my $pat = $flag_all ? '^ *sub _?bench_(\w+)' : '^ *sub bench_(\w+)';
     for (@lines) {
         push @names, $1 if /$pat/;
     }
@@ -637,13 +652,13 @@ sub load_context_data {
 
 sub do_benchmark {
     my ($this, $name, $obj, $method, $context) = @_;
-    printf("%-22s  ", $name);
+    printf("%-23s  ", $name);
     my $ntimes = $this->{ntimes};
     my @start_times = times();
     my $start_time  = Time::HiRes::time();
     my $output = $obj->$method($ntimes, $context);
-    my @end_times = times();
-    my $end_time  = Time::HiRes::time();
+    my @end_times   = times();
+    my $end_time    = Time::HiRes::time();
     my $utime = $end_times[0] - $start_times[0];   # user
     my $stime = $end_times[1] - $start_times[1];   # sys
     my $rtime = $end_time - $start_time;           # real
@@ -666,15 +681,13 @@ sub main {
     my %bench_classes = $this->get_bench_classes('true');
     my @target_names;
     if (@ARGV) {
-        ! $opts->{A}  or die "error: cannot specify both '-A' and arguments.";
-        my @all_bench_names   = $this->get_bench_names('true');
+        my @all_bench_names   = $this->get_bench_names($this->{flag_all});
         for my $name (@ARGV) {
             if ($name =~ /\*/) {
-                $_ = $name;
-                s/\*/\.*/g;
-                my $pat = '^'.$_.'$';
+                my $pat = '^'.$name.'$';
+                $pat =~ s/\*/\.*/g;
                 my @matched = grep { /$pat/ } @all_bench_names;
-                @matched  or die "$_: unknown benchmark name.";
+                @matched  or die "$name: unknown benchmark name.";
                 push @target_names, @matched;
             }
             else {
@@ -684,7 +697,7 @@ sub main {
         }
     }
     else {
-        @target_names = $this->get_bench_names($opts->{A});
+        @target_names = $this->get_bench_names($this->{flag_all});
     }
     if ($opts->{x}) {
         my $pat = join '|', split(',', $opts->{x});
@@ -707,9 +720,10 @@ sub main {
     for my $klass (@klasses) {
         $faileds{$klass} = ($klass->before_all() == -1);
     }
+    $Tenjin::USE_STRICT = 1 if $this->{flag_strict};
     ## do benchmark
     print "*** n = $this->{ntimes}\n";
-    print "                              user         sys       total        real\n";
+    print "                               user         sys       total        real\n";
     $| = 1;
     my $output;
     for my $name (@target_names) {
