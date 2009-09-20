@@ -2,6 +2,7 @@
 ##
 ##
 
+
 ###
 
 - name:  basic
@@ -40,38 +41,7 @@
   templates:
   
     - filename: user_layout.xxhtml
-      content*:
-       "python": |
-          <html>
-            <body>
-              <h1>${title}</h1>
-              <div id="sidemenu">
-          <?py include(':sidemenu') ?>
-              </div>
-              <div id="maincontent">
-          #{_content}
-              </div>
-              <div id="footer">
-          #{include('footer.html', False)}
-              </div>
-            </body>
-          </html>
-       "ruby": |
-          <html>
-            <body>
-              <h1>${@title}</h1>
-              <div id="sidemenu">
-          <?rb import :sidemenu ?>
-              </div>
-              <div id="maincontent">
-          #{@_content}
-              </div>
-              <div id="footer">
-          #{import 'footer.html', false}
-              </div>
-            </body>
-          </html>
-       "perl": |
+      content: |
           <html>
             <body>
               <h1>[=$title=]</h1>
@@ -87,191 +57,68 @@
               </div>
             </body>
           </html>
-       "js": |
-          <html>
-            <body>
-              <h1>${title}</h1>
-              <div id="sidemenu">
-          <?js include(':sidemenu') ?>
-              </div>
-              <div id="maincontent">
-          #{$_content}
-              </div>
-              <div id="footer">
-          <?js include('footer.html') ?>
-
-              </div>
-            </body>
-          </html>
   
     - filename: user_list.xxhtml
-      content*:
-       "python": |
-          <ul>
-          <?py for item in items: ?>
-            <li>${item['name']}
-                (${item['email']})</li>
-          <?py #end ?>
-          </ul>
-       "ruby": |
-          <ul>
-          <?rb for item in @items ?>
-            <li>${item['name']}
-                (${item['email']})</li>
-          <?rb end ?>
-          </ul>
-       "perl": |
+      content: |
           <ul>
           <?pl for my $item (@$items) { ?>
             <li>[=$item->{name}=]
                 ([=$item->{email}=])</li>
           <?pl } ?>
           </ul>
-       "js": |
-          <ul>
-          <?js for (var i=0; i<items.length; i++) { ?>
-            <li>${items[i].name}
-                (${item[i].email})</li>
-          <?js } ?>
-          </ul>
   
     - filename: user_show.xxhtml
-      content*:
-       "python": |
-          <p>
-            Name: ${item['name']}<br />
-            Email: ${item['email']}
-          </p>
-       "ruby": |
-          <p>
-            Name: ${@item['name']}<br />
-            Email: ${@item['email']}
-          </p>
-       "perl": |
+      content: |
           <p>
             Name: [=$item->{name}=]<br />
             Email: [=$item->{email}=]
           </p>
-       "js": |
-          <p>
-            Name: ${item.name}<br />
-            Email: ${item.email}
-          </p>
   
     - filename: user_form.xxhtml
-      content*:
-       "python": |
-          <p>
-            Name: <input type="input" name="name" value="${params['name']}" />
-          </p>
-          <p>
-            Email: <input type="input" name="email" value="${params['email']}" />
-          </p>
-       "ruby": |
-          <p>
-            Name: <input type="input" name="name" value="${@params['name']}" />
-          </p>
-          <p>
-            Email: <input type="input" name="email" value="${@params['email']}" />
-          </p>
-       "perl": |
+      content: |
+	  <?pl #@ARGS params ?>
           <p>
             Name: <input type="input" name="name" value="[=$params->{name}=]" />
           </p>
           <p>
             Email: <input type="input" name="email" value="[=$params->{email}=]" />
           </p>
-       "js": |
-          <p>
-            Name: <input type="input" name="name" value="${params.name}" />
-          </p>
-          <p>
-            Email: <input type="input" name="email" value="${params.email}" />
-          </p>
   
     - filename: user_create.xxhtml
       desc:     import()
-      content*:
-       "python": |
-          <form action="create" method="post">
-          <?py include(':form') ?> 
-            <input type="submit" value="Create" />
-          </form>
-       "ruby": |
-          <form action="create" method="post">
-          <?rb import :form ?>
-            <input type="submit" value="Create" />
-          </form>
-       "perl": |
+      content: |
           <form action="create" method="post">
           <?pl include(':form'); ?> 
-            <input type="submit" value="Create" />
-          </form>
-       "js": |
-          <form action="create" method="post">
-          <?js include(':form'); ?> 
             <input type="submit" value="Create" />
           </form>
   
     - filename: user_edit.xxhtml
       desc:     import(append=false)
-      content*:
-       "python": |
-          <form action="edit" method="post">
-          #{include('user_form.pyhtml', False)}
-            <input type="submit" value="Edit" />
-          </form>
-       "ruby": |
-          <form action="edit" method="post">
-          #{import 'user_form.rbhtml', false}
-            <input type="submit" value="Edit" />
-          </form>
-       "perl": |
+      content: |
           <form action="edit" method="post">
           <?pl include('user_form.plhtml')?>
-	  
-            <input type="submit" value="Edit" />
-          </form>
-       "js": |
-          <form action="edit" method="post">
-          <?js include('user_form.plhtml')?>
 	  
             <input type="submit" value="Edit" />
           </form>
   
     - filename: user_sidemenu.xxhtml
       desc:     _engine.render()
-      content*:
-       "python": |
-          <a href="/user/list">List</a><br />
-          <a href="/user/create">Create</a><br />
-       "ruby": |
-          <a href="/user/list">List</a><br />
-          <a href="/user/create">Create</a><br />
-       "perl": |
-          <a href="/user/list">List</a><br />
-          <a href="/user/create">Create</a><br />
-       "js": |
+      content: |
           <a href="/user/list">List</a><br />
           <a href="/user/create">Create</a><br />
   
     - filename: footer.html
       desc:     _engine.evaluate()
-      content*:
-       "python": &footer |
+      content: |
           <hr />
           <address>
             copyright&copy;2007 kuwata-lab.com
           </address>
-       "ruby": *footer
-       "perl": *footer
-       "js": *footer
   
   expected:
   
     - name:     user_list_nolayout
-      content*:
-       "python": &c01 |
+      content: |
           <ul>
             <li>Robert
                 (bob@example.com)</li>
@@ -280,24 +127,16 @@
             <li>William
                 (bill@example.com)</li>
           </ul>
-       "ruby": *c01
-       "perl": *c01
-       "js": *c01
   
     - name:     user_show_nolayout
-      content*:
-       "python": &c02 |
+      content: |
           <p>
             Name: Robert<br />
             Email: bob@example.com
           </p>
-       "ruby": *c02
-       "perl": *c02
-       "js": *c02
   
     - name:     user_create_nolayout
-      content*:
-       "python": &c03 |
+      content: |
           <form action="create" method="post">
           <p>
             Name: <input type="input" name="name" value="" />
@@ -307,13 +146,9 @@
           </p>
             <input type="submit" value="Create" />
           </form>
-       "ruby": *c03
-       "perl": *c03
-       "js": *c03
   
     - name:     user_edit_nolayout
-      content*:
-       "python": &c04 |
+      content: |
           <form action="edit" method="post">
           <p>
             Name: <input type="input" name="name" value="Robert" />
@@ -324,13 +159,9 @@
   
             <input type="submit" value="Edit" />
           </form>
-       "ruby": *c04
-       "perl": *c04
-       "js": *c04
   
     - name:     user_list_withlayout
-      content*:
-       "python": &c05 |
+      content: |
           <html>
             <body>
               <h1>Users List</h1>
@@ -358,13 +189,9 @@
               </div>
             </body>
           </html>
-       "ruby": *c05
-       "perl": *c05
-       "js": *c05
   
     - name:     user_show_withlayout
-      content*:
-       "python": &c06 |
+      content: |
           <html>
             <body>
               <h1>Show User</h1>
@@ -388,13 +215,9 @@
               </div>
             </body>
           </html>
-       "ruby": *c06
-       "perl": *c06
-       "js": *c06
   
     - name:     user_create_withlayout
-      content*:
-       "python": &c07 |
+      content: |
           <html>
             <body>
               <h1>Create User</h1>
@@ -423,13 +246,9 @@
               </div>
             </body>
           </html>
-       "ruby": *c07
-       "perl": *c07
-       "js": *c07
   
     - name:     user_edit_withlayout
-      content*:
-       "python": &c08 |
+      content: |
           <html>
             <body>
               <h1>Edit User</h1>
@@ -459,62 +278,12 @@
               </div>
             </body>
           </html>
-       "ruby": *c08
-       "perl": *c08
-       "js": *c08
 
 
 ### -- for capture test
 
 - name:  test_capture_and_echo
-  layout*:
-   "python": |
-        <?xml version="1.0" encoding="UTF-8"?>
-        <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-                  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-        <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-          <head>
-            <title>${title}</title>
-            <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-            <link rel="stylesheet" type="text/css" href="style.css" />
-          </head>
-          <body>
-            <h1>${title}</h1>
-        
-            <div id="main_content">
-        <?py echo(main_content) ?>
-            </div>
-        
-            <div id="footer">
-        <?py echo(footer) ?>
-            </div>
-        
-          </body>
-        </html>
-   "ruby": |
-        <?xml version="1.0" encoding="UTF-8"?>
-        <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-                  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-        <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-          <head>
-            <title>${@title}</title>
-            <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-            <link rel="stylesheet" type="text/css" href="style.css" />
-          </head>
-          <body>
-            <h1>${@title}</h1>
-        
-            <div id="main_content">
-            <?rb echo(@main_content) ?>
-            </div>
-        
-            <div id="footer">
-            <?rb echo(@footer) ?>
-            </div>
-        
-          </body>
-        </html>
-   "perl": |
+  layout: |
         <?xml version="1.0" encoding="UTF-8"?>
         <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
                   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
@@ -537,87 +306,8 @@
         
           </body>
         </html>
-   "js": |
-        <?xml version="1.0" encoding="UTF-8"?>
-        <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-                  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-        <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-          <head>
-            <title>${title}</title>
-            <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-            <link rel="stylesheet" type="text/css" href="style.css" />
-          </head>
-          <body>
-            <h1>${title}</h1>
-        
-            <div id="main_content">
-        <?js echo(main_content) ?>
-            </div>
-        
-            <div id="footer">
-        <?js echo(footer) ?>
-            </div>
-        
-          </body>
-        </html>
 
-  content*:
-   "python": |
-        <html>
-          <body>
-            <h1><?py
-        start_capture('title')
-        ?>Capturing Example<?py
-        stop_capture()
-        ?></h1>
-        
-        <?py start_capture('main_content') ?>
-            <table>
-        <?py for i, item in enumerate(items): ?>
-        <?py     color = i % 2 == 0 and '#FFCCCC' or '#CCCCFF' ?>
-              <tr bgcolor="#{color}">
-                <td>${item}</td>
-              </tr>
-        <?py #endfor ?>
-            </table>
-        <?py stop_capture(False) ?>
-        <?py _context['main_content'] = main_content ?>
-        
-        <?py start_capture() ?>
-            <hr>
-            <address>
-              <a href="mailto:webmaster@example.com">webmaster@example.com</a>
-            </address>
-        <?py _context['footer'] = stop_capture(False) ?>
-        
-          </body>
-        </html>
-   "ruby": |
-        <html>
-          <body>
-            <h1><?rb start_capture(:title) do ?>Capturing Example<?rb end ?></h1>
-        
-            <?rb start_capture(:main_content) ?>
-            <table>
-              <?rb @items.each_with_index do |item, i| ?>
-              <?rb   color = i % 2 == 0 ? '#FFCCCC' : '#CCCCFF' ?>
-              <tr bgcolor="#{color}">
-                <td>${item}</td>
-              </tr>
-              <?rb end ?>
-            </table>
-            <?rb stop_capture() ?>
-        
-            <?rb start_capture() ?>
-            <hr>
-            <address>
-              <a href="mailto:webmaster@example.com">webmaster@example.com</a>
-            </address>
-            <?rb @footer = stop_capture() ?>
-        
-          </body>
-        </html>
-   "perl": |
+  content: |
         <html>
           <body>
             <h1><?pl start_capture('title') ?>Capturing Example<?pl stop_capture() ?></h1>
@@ -626,7 +316,7 @@
             <table>
 	<?pl my $i = 0; ?>
         <?pl for my $item (@$items) { ?>
-        <?pl     $color = $i++ % 2 == 0 ? '#FFCCCC' : '#CCCCFF'; ?>
+        <?pl     my $color = $i++ % 2 == 0 ? '#FFCCCC' : '#CCCCFF'; ?>
               <tr bgcolor="[==$color=]">
                 <td>[=$item=]</td>
               </tr>
@@ -643,34 +333,8 @@
         
           </body>
         </html>
-   "js": |
-        <html>
-          <body>
-            <h1><?js startCapture('title') ?>Capturing Example<?js stopCapture() ?></h1>
-        
-        <?js startCapture('main_content') ?>
-            <table>
-        <?js for (var i = 0, n = items.length; i < n; i++) { ?>
-        <?js     var color = i % 2 == 0 ? '#FFCCCC' : '#CCCCFF' ?>
-              <tr bgcolor="#{color}">
-                <td>${item[i]}</td>
-              </tr>
-        <?js } ?>
-            </table>
-        <?js stopCapture() ?>
-        
-        <?js start_capture('footer') ?>
-            <hr>
-            <address>
-              <a href="mailto:webmaster@example.com">webmaster@example.com</a>
-            </address>
-        <?js stop_capture(False) ?>
-        
-          </body>
-        </html>
 
-  expected*:
-   "python": &ex11 |
+  expected: |
         <?xml version="1.0" encoding="UTF-8"?>
         <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
                   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
@@ -706,62 +370,12 @@
         
           </body>
         </html>
-   "ruby": *ex11
-   "perl": *ex11
-   "js": *ex11
 
 
 ### -- for captured_as() function test
 
 - name:  test_captured_as
-  baselayout*:
-   "python": |
-        <html>
-         <body>
-        
-          <!-- HEADER -->
-        <?py if not captured_as('header_part'): ?>
-           <img src="img/logo.png" alt="logo" ?>
-        <?py #end ?>
-          <!-- /HEADER -->
-        
-          <!-- CONTENT -->
-        <?py _buf.append(content_part) ?>
-          <!-- /CONTENT -->
-        
-          <!-- FOOTER -->
-        <?py if not captured_as('footer_part'): ?>
-           <hr />
-           <em>webmaster@example.com</em>
-        <?py #end ?>
-          <!-- /FOOTER -->
-          
-         </body>
-        </html>
-   "ruby": |
-        <html>
-         <body>
-        
-          <!-- HEADER -->
-        <?rb unless captured_as('header_part') ?>
-           <img src="img/logo.png" alt="logo" ?>
-        <?rb end ?>
-          <!-- /HEADER -->
-        
-          <!-- CONTENT -->
-        <?rb _buf << @content_part ?>
-          <!-- /CONTENT -->
-        
-          <!-- FOOTER -->
-        <?rb unless captured_as('footer_part') ?>
-           <hr />
-           <em>webmaster@example.com</em>
-        <?rb end ?>
-          <!-- /FOOTER -->
-          
-         </body>
-        </html>
-   "perl": |
+  baselayout: |
         <html>
          <body>
         
@@ -784,50 +398,8 @@
           
          </body>
         </html>
-   "js": |
-        <html>
-         <body>
-        
-          <!-- HEADER -->
-        <?js startPlaceholder('header_part') ?>
-           <img src="img/logo.png" alt="logo" ?>
-        <?js endPlaceholder() ?>
-          <!-- /HEADER -->
-        
-          <!-- CONTENT -->
-        <?js _buf.push(content_part); ?>
-          <!-- /CONTENT -->
-        
-          <!-- FOOTER -->
-        <?js startPlaceholder('footer_part') ?>
-           <hr />
-           <em>webmaster@example.com</em>
-        <?js stopPlaceholder() ?>
-          <!-- /FOOTER -->
-          
-         </body>
-        </html>
 
-  customlayout*:
-   "python": |
-        <?py _context['_layout'] = 'baselayout.pyhtml' ?>
-        
-        <?py start_capture('footer_part') ?>
-        <address style="text-align:right">
-          copyright&copy; 2007 kuwata-lab all rights reserved<br />
-          <a href="webmaster&#64;kuwata-lab.com">webmaster&#64;kuwata-lab.com</a>
-        </address>
-        <?py stop_capture() ?>
-   "ruby": |
-        <?rb _context['_layout'] = 'baselayout.rbhtml' ?>
-        
-        <?rb start_capture('footer_part') ?>
-        <address style="text-align:right">
-          copyright&copy; 2007 kuwata-lab all rights reserved<br />
-          <a href="webmaster&#64;kuwata-lab.com">webmaster&#64;kuwata-lab.com</a>
-        </address>
-        <?rb stop_capture() ?>
-   "perl": |
+  customlayout: |
         <?pl $_context->{_layout} = 'baselayout.plhtml'; ?>
         
         <?pl start_capture('footer_part') ?>
@@ -836,38 +408,8 @@
           <a href="webmaster&#64;kuwata-lab.com">webmaster&#64;kuwata-lab.com</a>
         </address>
         <?pl stop_capture() ?>
-   "js": |
-        <?js _context._layout = 'baselayout.jshtml'; ?>
-        
-        <?js startCapture('footer_part') ?>
-        <address style="text-align:right">
-          copyright&copy; 2007 kuwata-lab all rights reserved<br />
-          <a href="webmaster&#64;kuwata-lab.com">webmaster&#64;kuwata-lab.com</a>
-        </address>
-        <?js stopCapture() ?>
 
-  content*:
-   "python": |
-        <?py _context['_layout'] = 'customlayout.pyhtml' ?>
-        
-        <?py start_capture('content_part') ?>
-        <ul>
-        <?py for item in items: ?>
-          <li>${item}</li>
-        <?py #end ?>
-        </ul>
-        <?py stop_capture() ?>
-   "ruby": |
-        <?rb @_layout = 'customlayout.rbhtml' ?>
-        
-        <?rb start_capture(:content_part) ?>
-        <ul>
-        <?rb for item in @items ?>
-          <li>${item}</li>
-        <?rb end ?>
-        </ul>
-        <?rb stop_capture() ?>
-   "perl": |
+  content: |
         <?pl $_context->{_layout} = 'customlayout.plhtml'; ?>
         
         <?pl start_capture('content_part') ?>
@@ -877,16 +419,6 @@
         <?pl } ?>
         </ul>
         <?pl stop_capture() ?>
-   "js": |
-        <?js _context._layout = 'customlayout.pyhtml'; ?>
-        
-        <?js start_capture('content_part') ?>
-        <ul>
-        <?js for (var i = 0, n = items.length; i < n; i++) { ?>
-          <li>${items[i]}</li>
-        <?js } ?>
-        </ul>
-        <?js stop_capture() ?>
 
   context: { items: ['AAA', 'BBB', 'CCC'] }
   expected: |
@@ -917,108 +449,42 @@
 
 
 
-
-
 ### -- for local layout test
 
 #local_layout_test:
 - name:  test_local_layout
-  layout_html*:
-   "python": |
-        <html>
-          <body>
-        #{_content}
-          </body>
-        </html>
-   "ruby": |
-        <html>
-          <body>
-        #{@_content}
-          </body>
-        </html>
-   "perl": |
+  layout_html: |
         <html>
           <body>
         [==$_content=]
           </body>
         </html>
-   "js": |
-        <html>
-          <body>
-        #{_content}
-          </body>
-        </html>
 
-  layout_xhtml*:
-   "python": |
-        <?xml version="1.0" encoding="UTF-8" ?>
-        <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-          <body>
-        #{_content}
-          </body>
-        </html>
-   "ruby": |
-        <?xml version="1.0" encoding="UTF-8" ?>
-        <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-          <body>
-        #{@_content}
-          </body>
-        </html>
-   "perl": |
+  layout_xhtml: |
         <?xml version="1.0" encoding="UTF-8" ?>
         <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
           <body>
         [==$_content=]
           </body>
         </html>
-   "js": |
-        <?xml version="1.0" encoding="UTF-8" ?>
-        <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-          <body>
-        #{_content}
-          </body>
-        </html>
 
-  content_html*:
-   "python": |
-        <h1>hello #{user}!</h1>
-   "ruby": |
-        <h1>hello #{@user}!</h1>
-   "perl": |
+  content_html: |
         <h1>hello [=$user=]!</h1>
-   "js": |
-        <h1>hello #{user}!</h1>
 
-  context*:
-   "python": { user: world }
-   "ruby":   { user: world }
-   "perl":   { user: world }
-   "js":     { user: world }
+  context:   { user: world }
 
-  expected_nolayout*:
-   "python": |
-        <h1>hello world!</h1>
-   "ruby": |
-        <h1>hello world!</h1>
-   "perl": |
-        <h1>hello world!</h1>
-   "js": |
+  expected_nolayout: |
         <h1>hello world!</h1>
 
-  expected_html*:
-   "python": &expected11 |
+  expected_html: |
         <html>
           <body>
         <h1>hello world!</h1>
         
           </body>
         </html>
-   "ruby": *expected11
-   "perl": *expected11
-   "js": *expected11
 
-  expected_xhtml*:
-   "python": &expected12 |
+  expected_xhtml: |
         <?xml version="1.0" encoding="UTF-8" ?>
         <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
           <body>
@@ -1026,9 +492,6 @@
         
           </body>
         </html>
-   "ruby": *expected12
-   "perl": *expected12
-   "js": *expected12
 
 
 ### -- for caching test
@@ -1036,32 +499,7 @@
 #caching_test:
 - name:  test_cachefile
   desc:  mtime of cachefile
-  layout*:
-   "python": |
-        <html>
-          <head>
-            <title>${title}</title>
-          </head>
-          <body>
-            <h1>${title}</h1>
-            <div id="content">
-        #{_content}
-            </div>
-          </body>
-        </html>
-   "ruby": |
-        <html>
-          <head>
-            <title>${@title}</title>
-          </head>
-          <body>
-            <h1>${@title}</h1>
-            <div id="content">
-        #{@_content}
-            </div>
-          </body>
-        </html>
-   "perl": |
+  layout: |
         <html>
           <head>
             <title>[=$title=]</title>
@@ -1073,65 +511,17 @@
             </div>
           </body>
         </html>
-   "js": |
-        <html>
-          <head>
-            <title>${title}</title>
-          </head>
-          <body>
-            <h1>${title}</h1>
-            <div id="content">
-        #{_content}
-            </div>
-          </body>
-        </html>
 
-  page*:
-   "python": |
-        <?py _context['title'] = 'Create Account' ?>
-        <form action="create" method="post">
-        <?py include(':form') ?>
-          <input type="submit" value="Create" />
-        </form>
-   "ruby": |
-        <?rb @title = 'Create Account' ?>
-        <form action="create" method="post">
-        <?rb import(:form) ?>
-          <input type="submit" value="Create" />
-        </form>
-   "perl": |
+  page: |6
+	<?pl #@ARGS ?>
         <?pl $_context->{title} = 'Create Account'; ?>
         <form action="create" method="post">
         <?pl include(':form') ?>
           <input type="submit" value="Create" />
         </form>
-   "js": |
-        <?js _context.title = 'Create Account'; ?>
-        <form action="create" method="post">
-        <?js include(':form') ?>
-          <input type="submit" value="Create" />
-        </form>
 
-  form*:
-   "python": |5
-          <p>
-            Account:
-            <input type="text" name="account" value="${params.get('account')}" />
-          </p>
-          <p>
-            Password:
-            <input type="text" name="password" value="${params.get('password')}" />
-          </p>
-   "ruby": |5
-          <p>
-            Account:
-            <input type="text" name="account" value="${@params['account']}" />
-          </p>
-          <p>
-            Password:
-            <input type="text" name="password" value="${@params['password']}" />
-          </p>
-   "perl": |5
+  form: |6
+	  <?pl #@ARGS params ?>
           <p>
             Account:
             <input type="text" name="account" value="[=$params->{account}=]" />
@@ -1140,18 +530,8 @@
             Password:
             <input type="text" name="password" value="[=$params->{password}=]" />
           </p>
-   "js": |5
-          <p>
-            Account:
-            <input type="text" name="account" value="${params.account}" />
-          </p>
-          <p>
-            Password:
-            <input type="text" name="password" value="${params.password}" />
-          </p>
 
-  expected*:
-   "python": &caching_test_expected |
+  expected: |
         <html>
           <head>
             <title>Create Account</title>
@@ -1174,9 +554,6 @@
             </div>
           </body>
         </html>
-   "ruby": *caching_test_expected
-   "perl": *caching_test_expected
-   "js": *caching_test_expected
 
 
 ### -- for layout inheritance test
@@ -1184,26 +561,7 @@
 #change_layout:
 - name:  test_change_layout
 
-  baselayout*:
-   "python": |
-        <html>
-          <body>
-        <?py if _context.has_key('title'): ?>
-            <h1>${title}</h1>
-        <?py #end ?>
-        <?py _buf.append(_content) ?>
-          </body>
-        </html>
-   "ruby": |
-        <html>
-          <body>
-        <?rb if @title ?>
-            <h1>${@title}</h1>
-        <?rb end ?>
-        <?rb _buf << @_content ?>
-          </body>
-        </html>
-   "perl": |
+  baselayout: |
         <html>
           <body>
         <?pl if (exists $_context->{title}) { ?>
@@ -1212,74 +570,23 @@
         <?pl $_buf .= $_content; ?>
           </body>
         </html>
-   "js": |
-        <html>
-          <body>
-        <?js if (_context.title) { ?>
-            <h1>${title}</h1>
-        <?js } ?>
-        <?js _buf.append(_content) ?>
-          </body>
-        </html>
 
-  customlayout*:
-   "python": |
-        <?py ## use default layout template name ?>
-        <?py _context['_layout'] = True ?>
-        <div id="content">
-        <?py _buf.append(_content) ?>
-        </div>
-   "ruby": |
-        <?rb ## use default layout template name ?>
-        <?rb @_layout = true ?>
-        <div id="content">
-        <?rb _buf << @_content ?>
-        </div>
-   "perl": |
+  customlayout: |
         <?pl ## use default layout template name ?>
         <?pl $_context->{_layout} = 1; ?>
         <div id="content">
         <?pl $_buf .= $_content; ?>
         </div>
-   "js": |
-        <?js // use default layout template name ?>
-        <?js _context._layout = 1; ?>
-        <div id="content">
-        <?js _buf.push(_content); ?>
-        </div>
 
-  content*:
-   "python": |
-        <?py _context['title'] = 'Changing Layout Template Test' ?>
-        <?py ## specify layout template name ?>
-        <?py _context['_layout'] = 'customlayout.pyhtml' ?>
-        foo
-        bar
-        baz
-   "ruby": |
-        <?rb @title = 'Changing Layout Template Test' ?>
-        <?rb ## specify layout template name ?>
-        <?rb @_layout = 'customlayout.rbhtml' ?>
-        foo
-        bar
-        baz
-   "perl": |
+  content: |
         <?pl $_context->{title} = 'Changing Layout Template Test'; ?>
         <?pl ## specify layout template name ?>
         <?pl $_context->{_layout} = 'customlayout.plhtml'; ?>
         foo
         bar
         baz
-   "js": |
-        <?js _context.title = 'Changing Layout Template Test'; ?>
-        <?js ## specify layout template name ?>
-        <?js _context._layout = 'customlayout.jshtml'; ?>
-        foo
-        bar
-        baz
 
-  expected*:
-   "python": &expected_change_layout |
+  expected: |
         <html>
           <body>
             <h1>Changing Layout Template Test</h1>
@@ -1290,295 +597,90 @@
         </div>
           </body>
         </html>
-   "ruby": *expected_change_layout
-   "perl": *expected_change_layout
-   "js":   *expected_change_layout
-
 
 
 ## -- context_scope
 - name:  test_context_scope
   desc:  context scope
-  base*:
-   "python": |
-        <?py _context['x1'] = 10 ?>
-        <?py x2 = 20 ?>
-        <?py include('part.pyhtml') ?>
-        [base] _context.get('y1') = #{repr(_context.get('y1'))}
-        [base] _context.get('y2') = #{repr(_context.get('y2'))}
-        [base] locals().get('y1') = #{repr(locals().get('y1'))}
-        [base] locals().get('y2') = #{repr(locals().get('y2'))}
-   "ruby": |
-        <?rb @x1 = 10 ?>
-        <?rb x2 = 20 ?>
-        <?rb import('part.rbhtml') ?>
-        [base] @y1 = #{@y1.inspect}
-        [base] @y2 = #{@y2.inspect}
-	[base] local_variables() = #{local_variables().inspect()}
-   "perl": |
+  base: |
         <?pl $_context->{x1} = 10; ?>
         <?pl my $x2 = 20; ?>
         <?pl include('part.plhtml') ?>
         [base] _context->{y1} = '[=$_context->{y1}=]'
         [base] _context->{y2} = '[=$_context->{y2}=]'
-   "js": |
-  part*:
-   "python": |
-        [part] _context.get('x1') = #{repr(_context.get('x1'))}
-        [part] _context.get('x2') = #{repr(_context.get('x2'))}
-        [part] locals().get('x1') = #{repr(locals().get('x1'))}
-        [part] locals().get('x2') = #{repr(locals().get('x2'))}
-        <?py _context['y1'] = 30 ?>
-        <?py y2 = 40 ?>
-   "ruby": |
-        [part] @x1 = #{@x1.inspect}
-        [part] @x2 = #{@x2.inspect}
-        [part] local_variables = #{local_variables().inspect}
-        <?rb @y1 = 30 ?>
-        <?rb y2 = 40 ?>
-   "perl": |
+
+  part: |
         [part] _context->{x1} = '[=$_context->{x1}=]'
         [part] _context->{x2} = '[=$_context->{x2}=]'
         <?pl $_context->{y1} = 30; ?>
         <?pl my $y2 = 40; ?>
-   "js": |
-  expected*:
-   "python": |
-        [part] _context.get('x1') = 10
-        [part] _context.get('x2') = None
-        [part] locals().get('x1') = 10
-        [part] locals().get('x2') = None
-        [base] _context.get('y1') = 30
-        [base] _context.get('y2') = None
-        [base] locals().get('y1') = None
-        [base] locals().get('y2') = None
-#       _context.get('x1') = None
-#       _context.get('x2') = 20
-#       locals().get('x1') = None
-#       locals().get('x2') = 20
-#       _context.get('y1') = None
-#       _context.get('y2') = None
-#       locals().get('y1') = 30
-#       locals().get('y2') = None
-   "ruby": |
-	[part] @x1 = 10
-	[part] @x2 = nil
-	[part] local_variables = ["_buf", "_context"]
-	[base] @y1 = 30
-	[base] @y2 = nil
-	[base] local_variables() = ["x2", "_buf", "_context"]
-   "perl": |
+
+  expected: |
 	[part] _context->{x1} = '10'
 	[part] _context->{x2} = ''
 	[base] _context->{y1} = '30'
 	[base] _context->{y2} = ''
-   "js": |
 
 
 ## -- template args
 - name:  test_template_args
-  content*:
-   "python": |
-        <?py #@ARGS a ?>
-        a = #{repr(a)}
-        b = #{repr(b)}
-   "ruby": |
-        <?rb #@ARGS a ?>
-        a = #{a}
-        b = #{b}
-   "perl": |
+  content: |
         <?pl #@ARGS x ?>
         x = [=$x=]
         y = [=$y=]
-   "js": |
-        <?js //@ARGS a ?>
-        a = #{Tenjin.inspect(a)}
-        b = #{Tenjin.inspect(b)}
-  exception*:
-   "python": NameError
-   "ruby": NameError
-   "perl": 
-   "js": |
-  errormsg*:
-   "python": name 'b' is not defined
-   "ruby": "undefined local variable or method `b' for #<Tenjin::Context>"
-   "perl": |
+
+  exception:
+  errormsg: |
 	*** Error: content.plhtml
 	Global symbol "$y" requires explicit package name at content.plhtml line 3.
-   "js": |
-  context: { a: 10, b: 20 }
-  expected*:
-   "python": |
-        a = 10
-        b = 20
-   "ruby": |
-        a = 10
-        b = 20
-   "perl": 
-   "js": |
+
+  expected: |
 
 
 ## -- template args are stored into and loaded from cache file?
 - name:  test_cached_contents
   desc:  cached script and args are stored into/loaded from cachefile correctly?
-  input1*:
-    "python": |
-	<p>
-	<?py #@ARGS x,y  ,  z?>
-	  x = #{x}, y = #{y}, z = #{z}
-	</p>
-    "ruby": |
-	<p>
-	<?rb #@ARGS x,y  ,  z?>
-	  x = #{x}, y = #{y}, z = #{z}
-	</p>
-  script1*:
-    "python": |
-	_buf.extend(('''<p>\n''', ));
-	x = _context.get('x'); y = _context.get('y'); z = _context.get('z'); 
-	_buf.extend(('''  x = ''', to_str(x), ''', y = ''', to_str(y), ''', z = ''', to_str(z), '''
-	</p>\n''', ));
-    "ruby": |4
-	 _buf << %Q`<p>\n`
-	 x = @x; y = @y; z = @z;
-	 _buf << %Q`  x = #{x}, y = #{y}, z = #{z}
-	</p>\n`
-  cache1*:
-    "python": |
-	_buf.extend(('''<p>\n''', ));
-	x = _context.get('x'); y = _context.get('y'); z = _context.get('z'); 
-	_buf.extend(('''  x = ''', to_str(x), ''', y = ''', to_str(y), ''', z = ''', to_str(z), '''
-	</p>\n''', ));
-    "ruby": |
-	#@ARGS x,y,z
-	 _buf << %Q`<p>\n`
-	 x = @x; y = @y; z = @z;
-	 _buf << %Q`  x = #{x}, y = #{y}, z = #{z}
-	</p>\n`
+  input1: |
+
+  script1: |6
+
+  cache1: |
+
   args1: [ x, y, z ]
-  input2*:
-    "python": |
-	<p>
-	<?py #@ARGS ?>
-	  x = #{x}, y = #{y}, z = #{z}
-	</p>
-    "ruby": |
-	<p>
-	<?rb #@ARGS ?>
-	  x = #{x}, y = #{y}, z = #{z}
-	</p>
-  script2*:
-    "python": |
-	_buf.extend(('''<p>\n''', ));
-	
-	_buf.extend(('''  x = ''', to_str(x), ''', y = ''', to_str(y), ''', z = ''', to_str(z), '''
-	</p>\n''', ));
-    "ruby": |4
-	 _buf << %Q`<p>\n`
-	
-	 _buf << %Q`  x = #{x}, y = #{y}, z = #{z}
-	</p>\n`
-  cache2*:
-    "python": |
-	_buf.extend(('''<p>\n''', ));
-	
-	_buf.extend(('''  x = ''', to_str(x), ''', y = ''', to_str(y), ''', z = ''', to_str(z), '''
-	</p>\n''', ));
-    "ruby": |4
-        #@ARGS 
-	 _buf << %Q`<p>\n`
-	
-	 _buf << %Q`  x = #{x}, y = #{y}, z = #{z}
-	</p>\n`
+
+  input2: |
+
+  script2: |6
+
+  cache2: |6
+
   args2: [ ]
 
 
 ## -- for template path test
 - name:  test_template_path
-  common_layout*:
-   "python": |
-        <html>
-          <body>
-        #{_content}
-        <?py include(':footer') ?>
-          </body>
-        </html>
-   "ruby": |
-        <html>
-          <body>
-        #{@_content}
-        <?rb import(:footer) ?>
-          </body>
-        </html>
-   "perl": |
+  common_layout: |
         <html>
           <body>
         [==$_content=]
         <?pl include(':footer'); ?>
           </body>
         </html>
-   "js": |
-        <html>
-          <body>
-        #{_content}
-        <?js include(':footer'); ?>
-          </body>
-        </html>
 
-  common_body*:
-   "python": |
-        <ul>
-        <?py for item in items: ?>
-          <li>${item}</li>
-        <?py #end ?>
-        </ul>
-   "ruby": |
-        <ul>
-        <?rb for item in @items ?>
-          <li>${item}</li>
-        <?rb end ?>
-        </ul>
-   "perl": |
+  common_body: |
         <ul>
         <?pl for my $item (@$items) { ?>
           <li>[=$item=]</li>
         <?pl } ?>
         </ul>
-   "js": |
-        <ul>
-        <?js for (var i = 0, n = items.length; i < n; i++) { ?>
-          <li>${items[i]}</li>
-        <?js } ?>
-        </ul>
 
-  common_footer*:
-   "python": &common_footer |
+  common_footer: |
         <hr />
         <address>
           <a href="mailto:webmaster@localhost">webmaster@localhost</a>
         </address>
-   "ruby": *common_footer
-   "perl": *common_footer
-   "js":   *common_footer
 
-  user_layout*:
-   "python": |
-        <?xml version="1.0" ?>
-        <html xml:lang="en">
-          <body>
-        <?py _buf.append(_content) ?>
-        <?py include(':footer') ?>
-          </body>
-        </html>
-   "ruby": |
-        <?xml version="1.0" ?>
-        <html xml:lang="en">
-          <body>
-        <?rb _buf << @_content ?>
-        <?rb import(:footer) ?>
-          </body>
-        </html>
-   "perl": |
+  user_layout: |
         <?xml version="1.0" ?>
         <html xml:lang="en">
           <body>
@@ -1586,52 +688,20 @@
         <?pl include(':footer') ?>
           </body>
         </html>
-   "js": |
-        <?xml version="1.0" ?>
-        <html xml:lang="en">
-          <body>
-        <?js echo(_content) ?>
-        <?js include(':footer') ?>
-          </body>
-        </html>
 
-  user_body*:
-   "python": |
-        <table>
-        <?py for item in items: ?>
-          <tr><td>${item}</td></tr>
-        <?py #end ?>
-        </table>
-   "ruby": |
-        <table>
-        <?rb for item in @items ?>
-          <tr><td>${item}</td></tr>
-        <?rb end ?>
-        </table>
-   "perl": |
+  user_body: |
         <table>
         <?pl for my $item (@$items) { ?>
           <tr><td>[=$item=]</td></tr>
         <?pl } ?>
         </table>
-   "js": |
-        <table>
-        <?js for (var i = 0, n = items.length; i < n; i++) { ?>
-          <tr><td>${items[i]}</td></tr>
-        <?js } ?>
-        </table>
 
-  user_footer*:
-   "python": &user_footer |
+  user_footer: |
         <div class="footer" style="margin-top: 20px; background-color: gray">
           <a href="mailto:webmaster@localhost">webmaster@localhost</a>
         </div>
-   "ruby": *user_footer
-   "perl": *user_footer
-   "js": *user_footer
 
-  expected_common_common_common*:
-   "python": &expected41 |
+  expected_common_common_common: |
         <html>
           <body>
         <ul>
@@ -1646,12 +716,8 @@
         </address>
           </body>
         </html>
-   "ruby": *expected41
-   "perl": *expected41
-   "js": *expected41
 
-  expected_user_common_common*:
-   "python": &expected42 |
+  expected_user_common_common: |
         <?xml version="1.0" ?>
         <html xml:lang="en">
           <body>
@@ -1666,12 +732,8 @@
         </address>
           </body>
         </html>
-   "ruby": *expected42
-   "perl": *expected42
-   "js": *expected42
 
-  expected_common_user_common*:
-   "python": &expected43 |
+  expected_common_user_common: |
         <html>
           <body>
         <table>
@@ -1686,12 +748,8 @@
         </address>
           </body>
         </html>
-   "ruby": *expected43
-   "perl": *expected43
-   "js": *expected43
 
-  expected_user_user_common*:
-   "python": &expected44 |
+  expected_user_user_common: |
         <?xml version="1.0" ?>
         <html xml:lang="en">
           <body>
@@ -1706,12 +764,8 @@
         </address>
           </body>
         </html>
-   "ruby": *expected44
-   "perl": *expected44
-   "js": *expected44
 
-  expected_common_common_user*:
-   "python": &expected45 |
+  expected_common_common_user: |
         <html>
           <body>
         <ul>
@@ -1725,12 +779,8 @@
         </div>
           </body>
         </html>
-   "ruby": *expected45
-   "perl": *expected45
-   "js": *expected45
 
-  expected_user_common_user*:
-   "python": &expected46 |
+  expected_user_common_user: |
         <?xml version="1.0" ?>
         <html xml:lang="en">
           <body>
@@ -1744,12 +794,8 @@
         </div>
           </body>
         </html>
-   "ruby": *expected46
-   "perl": *expected46
-   "js": *expected46
 
-  expected_common_user_user*:
-   "python": &expected47 |
+  expected_common_user_user: |
         <html>
           <body>
         <table>
@@ -1763,12 +809,8 @@
         </div>
           </body>
         </html>
-   "ruby": *expected47
-   "perl": *expected47
-   "js":   *expected47
 
-  expected_user_user_user*:
-   "python": &expected48 |
+  expected_user_user_user: |
         <?xml version="1.0" ?>
         <html xml:lang="en">
           <body>
@@ -1782,46 +824,17 @@
         </div>
           </body>
         </html>
-   "ruby": *expected48
-   "perl": *expected48
-   "js":   *expected48
-
 
 
 ## -- preprocessor
 
 - name:  test_preprocessor
   testopts:  { preprocess: true }
-  form*:    # <?PY ... ?>
-    "python": |
-        <?PY states = { "CA": "California", ?>
-        <?PY            "NY": "New York", ?>
-        <?PY            "FL": "Florida", } ?>
-        <?PY # ?>
-        <?py chk = { params['state']: ' checked="checked"' } ?>
-        <?PY codes = states.keys() ?>
-        <?PY codes.sort() ?>
-        <select name="state">
-          <option value="">-</option>
-        <?PY for code in codes: ?>
-          <option value="#{{code}}"#{chk.get(#{{repr(code)}}, '')}>${{states[code]}}</option>
-        <?PY #endfor ?>
-        </select>
-    "ruby": |
-        <?RB states = { :CA => "California", ?>
-        <?RB            :NY => "New York",   ?>
-        <?RB            :FL => "Florida", }  ?>
-        <?rb chk = { @params['state'] => ' checked="checked"' } ?>
-        <select name="state">
-          <option value="">-</option>
-        <?RB for code in states.keys.sort_by{|c| c.to_s} ?>
-          <option value="#{{code}}"#{chk[#{{code.inspect}}]}>${{states[code]}}</option>
-        <?RB end ?>
-        </select>
-    "perl": |
+  form: |
         <?PL my $states = { "CA"=>"California", ?>
         <?PL                "NY"=>"New York", ?>
         <?PL                "FL"=>"Florida", }; ?>
+	<?pl #@ARGS params ?>
         <?pl my $chk = { $params->{state} => ' checked="checked"' }; ?>
         <select name="state">
           <option value="">-</option>
@@ -1829,104 +842,31 @@
           <option value="[*==$code=*]"[==$chk->{[*==$code=*]}=]>[*=$states->{$code}=*]</option>
         <?PL } ?>
         </select>
-    "js": |
-	<?JS var states = { "CA" : "California", ?>
-	<?JS                "NY" : "New York",   ?>
-	<?JS                "FL" : "Florida" };  ?>
-	<?js var chk = {}; ?>
-	<?js chk[params.state] = ' checked="checked"'; ?>
-	<select name="state">
-	  <option value="">-</option>
-	<?JS var codes = []; ?>
-	<?JS for (var code in states) { codes.push(code); } ?>
-	<?JS codes.sort(); ?>
-	<?JS for (var i = 0, n = codes.length; i < n; i++) { ?>
-	<?JS     var code = codes[i]; ?>
-	  <option value="#{{code}}"#{chk.#{{code}}||''}>${{states[code]}}</option>
-	<?JS } ?>
-	</select>
 
-  create*:    # <?py include() ?>
-    "python": |
-        <?PY label = '"Create"' ?>
-        <form action="#{{action}}">
-        <?py include(':form') ?>
-          <input type="submit" value="${{label}}">
-        </form>
-    "ruby": |
-        <?RB label = '"Create"' ?>
-        <form action="#{{@action}}">
-          <?rb import(:form) ?>
-          <input type="submit" value="${{label}}">
-        </form>
-    "perl": |
+  create: |
         <?PL my $label = '"Create"'; ?>
+	<?pl #@ARGS action, label ?>
         <form action="[=$action=]">
           <?pl include(':form') ?>
           <input type="submit" value="[*=$label=*]">
         </form>
-    "js": |
-	<?JS var label = '"Create"'; ?>
-	<form action="#{{action}}">
-	  <?js include(':form'); ?>
-	  <input type="submit" value="${{label}}">
-	</form>
 
-  update*:    # <?PY include() ?>
-    "python": |
-        <form action="#{{action}}">
-        <?PY label = '"Update"' ?>
-        <?PY include(':form') ?>
-          <input type="submit" value="${{label}}">
-        </form>
-    "ruby": |
-        <form action="#{{@action}}">
-          <?RB label = '"Update"' ?>
-          <?RB import(:form) ?>
-          <input type="submit" value="${{label}}">
-        </form>
-    "perl": |
+  update: |
+	<?pl #@ARGS action ?>
         <form action="[==$action=]">
         <?PL my $label = '"Update"'; ?>
         <?PL include(':form'); ?>
           <input type="submit" value="[*=$label=*]">
         </form>
-    "js": |
-	<?JS var label = '"Update"' ?>
-	<form action="#{{action}}">
-	  <?JS include(':form'); ?>
-	  <input type="submit" value="${{label}}">
-	</form>
 
-  layout*:
-    "python": |
-        <html>
-          <body>
-            <h1>${title}</h1>
-        <?py echo(_content) ?>
-          </body>
-        </html>
-    "ruby": |
-        <html>
-          <body>
-            <h1>${@title}</h1>
-        <?rb echo(@_content) ?>
-          </body>
-        </html>
-    "perl": |
+  layout: |
+	<?pl #@ARGS title, _content ?>
         <html>
           <body>
             <h1>[=$title=]</h1>
         <?pl echo($_content); ?>
           </body>
         </html>
-    "js": |
-	<html>
-	  <body>
-	    <h1>${title}</h1>
-	<?js echo(_content); ?>
-	  </body>
-	</html>
 
   expected1: |
         <html>
@@ -1960,80 +900,24 @@
           </body>
         </html>
 
-  cache1*:
-    "python": |
-        chk = { params['state']: ' checked="checked"' }
-        _buf.extend(('''<select name="state">
-          <option value="">-</option>
-          <option value="CA"''', to_str(chk.get('CA', '')), '''>California</option>
-          <option value="FL"''', to_str(chk.get('FL', '')), '''>Florida</option>
-          <option value="NY"''', to_str(chk.get('NY', '')), '''>New York</option>
-        </select>\n''', ));
-    "ruby": |
-    "perl": |
-    "js": |
-	var _buf = [];  var chk = {};
-	 chk[params.state] = ' checked="checked"';
-	 _buf.push('<select name="state">\n\
-	  <option value="">-</option>\n\
-	  <option value="CA"', chk.CA||'', '>California</option>\n\
-	  <option value="FL"', chk.FL||'', '>Florida</option>\n\
-	  <option value="NY"', chk.NY||'', '>New York</option>\n\
-	</select>\n');
-	_buf.join('')
-  cache2*:
-    "python": |
-        _buf.extend(('''<form action="create">\n''', ));
-        include(':form')
-        _buf.extend(('''  <input type="submit" value="&quot;Create&quot;">
-        </form>\n''', ));
-    "ruby": |
-    "perl": |
-    "js": |
-	var _buf = [];  _buf.push('<form action="create">\n');
-	   _buf.push(_context._engine.render(':form', _context, false));
-	 _buf.push('  <input type="submit" value="&quot;Create&quot;">\n\
-	</form>\n');
-	_buf.join('')
-  cache3*:
-    "python": |
-        _buf.extend(('''<html>
-          <body>
-            <h1>''', escape(to_str(title)), '''</h1>\n''', ));
-        echo(_content)
-        _buf.extend(('''  </body>
-        </html>\n''', ));
-    "ruby": |
-    "perl": |
-    "js": |
-	var _buf = [];  _buf.push('<html>\n\
-	  <body>\n\
-	    <h1>', escapeXml(title), '</h1>\n');
-	 _buf.push(_content);
-	 _buf.push('  </body>\n\
-	</html>\n');
-	_buf.join('')
-  cache4*:
-    "python": |
-        _buf.extend(('''<form action="update">
-        <select name="state">
-          <option value="">-</option>
-          <option value="CA">California</option>
-          <option value="FL">Florida</option>
-          <option value="NY" checked="checked">New York</option>
-        </select>
-          <input type="submit" value="&quot;Update&quot;">
-        </form>\n''', ));
-    "ruby": |
-    "perl": |
-    "js": |
-	var _buf = [];  _buf.push('<form action="update">\n\
-	<select name="state">\n\
-	  <option value="">-</option>\n\
-	  <option value="CA">California</option>\n\
-	  <option value="FL">Florida</option>\n\
-	  <option value="NY" checked="checked">New York</option>\n\
-	</select>\n\
-	  <input type="submit" value="&quot;Update&quot;">\n\
-	</form>\n');
-	_buf.join('')
+  cache1: |
+
+  cache2: |
+
+  cache3: |
+
+  cache4: |
+
+
+- name:  test_include_with_preprocess
+  testopts:  { preprocess: true }
+  index_html: |
+	## TODO (index.plhtml)
+
+  show_html: |
+        ## TODO (show.plhtml)
+
+  expected: |
+        value is 10
+        value is 20
+        value is 30
