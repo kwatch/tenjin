@@ -58,11 +58,14 @@ sub read_file {
 
 sub write_file {
     my ($filename, $content, $lock_required) = @_;
-    open(my $fh, ">$filename")  or die "$filename: $!";
+    my $fname = $filename;
+    $fname .= rand() if $lock_required;
+    open(my $fh, ">$fname")  or die "$filename: $!";
     binmode($fh);
-    flock($fh, 2) if $lock_required;
+    #flock($fh, 2) if $lock_required
     print $fh $content;
     close($fh);
+    rename($fname, $filename) if $lock_required;
 }
 
 
