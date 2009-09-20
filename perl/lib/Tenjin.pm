@@ -292,19 +292,21 @@ our @ISA = ('Tenjin::BaseContext');
 our $defun = $Tenjin::BaseContext::defun;
 eval $defun;
 
-*_p = *Tenjin::Util::_p;
-*_P = *Tenjin::Util::_P;
-*escape     = *Tenjin::Helper::Html::escape_xml;
-*escape_xml = *Tenjin::Helper::Html::escape_xml;
-*encode_url = *Tenjin::Helper::Html::encode_url;
-*checked    = *Tenjin::Helper::Html::checked;
-*selected   = *Tenjin::Helper::Html::selected;
-*disabled   = *Tenjin::Helper::Html::disabled;
-*nl2br      = *Tenjin::Helper::Html::nl2br;
-*text2html  = *Tenjin::Helper::Html::text2html;
-*tagattr    = *Tenjin::Helper::Html::tagattr;
-*new_cycle  = *Tenjin::Helper::Html::new_cycle;
-*tagattrs   = *Tenjin::Helper::Html::tagattrs;
+*_p           = *Tenjin::Util::_p;
+*_P           = *Tenjin::Util::_P;
+*escape       = *Tenjin::Helper::Html::escape_xml;
+*escape_xml   = *Tenjin::Helper::Html::escape_xml;
+*unescape_xml = *Tenjin::Helper::Html::unescape_xml;
+*encode_url   = *Tenjin::Helper::Html::encode_url;
+*decode_url   = *Tenjin::Helper::Html::decode_url;
+*checked      = *Tenjin::Helper::Html::checked;
+*selected     = *Tenjin::Helper::Html::selected;
+*disabled     = *Tenjin::Helper::Html::disabled;
+*nl2br        = *Tenjin::Helper::Html::nl2br;
+*text2html    = *Tenjin::Helper::Html::text2html;
+*tagattr      = *Tenjin::Helper::Html::tagattr;
+*tagattrs     = *Tenjin::Helper::Html::tagattrs;
+*new_cycle    = *Tenjin::Helper::Html::new_cycle;
 
 
 
