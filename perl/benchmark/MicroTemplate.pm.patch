@@ -1,0 +1,12 @@
+--- Text/MicroTemplate.pm.orig	2009-08-03 12:14:39.000000000 +0900
++++ Text/MicroTemplate.pm	2009-08-03 12:14:39.000000000 +0900
+@@ -119,7 +119,8 @@
+ 
+             # Expression
+             if ($type eq 'expr') {
+-                $lines[-1] .= "\$_MT_T = scalar $value; \$_MT .= ref \$_MT_T eq 'Text::MicroTemplate::EncodedString' ? \$\$_MT_T : $escape_func(\$_MT_T);";
++                #$lines[-1] .= "\$_MT_T = scalar $value; \$_MT .= ref \$_MT_T eq 'Text::MicroTemplate::EncodedString' ? \$\$_MT_T : $escape_func(\$_MT_T);";
++                $lines[-1] .= "\$_MT .= scalar $value;";
+             }
+         }
+     }
