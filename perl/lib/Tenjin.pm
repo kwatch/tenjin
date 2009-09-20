@@ -389,7 +389,7 @@ sub render {
 
 sub convert_file {
     my ($this, $filename) = @_;
-    my $input = $this->_read_file($filename, 1);
+    my $input = $this->_read_file($filename);
     my $script = $this->convert($input);
     $this->{filename} = $filename;
     #$this->{input}    = $input;
@@ -732,14 +732,14 @@ sub get_template {
 
 sub read_template_file {
     my ($this, $template, $filename, $_context) = @_;
-    my $input = $this->_read_file($filename, 1);
+    my $input = $this->_read_file($filename);
     if ($this->{preprocess}) {
         if (! defined($_context) || ! $_context->{_engine}) {
             $_context = {};
             $this->hook_context($_context);
         }
         #$input = Tenjin::Preprocessor->new($filename)->render($_context);
-        $input = $this->_read_file($filename, 1);
+        $input = $this->_read_file($filename);
         my $pp = $Tenjin::PREPROCESSOR_CLASS->new();
         #$pp->compile();   # DON'T COMPILE!
         $pp->convert($input);
@@ -762,7 +762,7 @@ sub store_cachefile {
 
 sub load_cachefile {
     my ($this, $cachename, $template) = @_;
-    my $cache = $this->_read_file($cachename, 1);
+    my $cache = $this->_read_file($cachename);
     if ($cache =~ s/\A\#\@ARGS (.*)\r?\n//) {
         my $argstr = $1;
         $argstr =~ s/\A\s+|\s+\Z//g;
