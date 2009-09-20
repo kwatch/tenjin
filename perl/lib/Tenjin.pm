@@ -616,8 +616,8 @@ sub defun {   ## (experimental)
     for my $arg (@args) {
         $str .= "my \$$arg = \$_context->{'$arg'}; ";
     }
-    $str = $this->{script};
-    $str = "}\n";
+    $str .= $this->{script};
+    $str .= "}\n";
     return $str;
 }
 
