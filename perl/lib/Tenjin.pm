@@ -21,9 +21,6 @@
 ## WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ##
 
-## $Rev$
-## $Release: 0.0.0 $
-
 
 package Tenjin;
 #use strict;
@@ -31,6 +28,7 @@ package Tenjin;
 our $USE_STRICT     = undef;
 our $TEMPLATE_CLASS = 'Tenjin::Template';
 our $CONTEXT_CLASS  = 'Tenjin::Context';
+our $VERSION        = (split(' ', '$Release: 0.0.0 $'))[1];
 
 sub import {
     my ($klass, %opts) = @_;
