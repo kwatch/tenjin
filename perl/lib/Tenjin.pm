@@ -728,15 +728,18 @@ sub get_template {
 
 sub read_template_file {
     my ($this, $template, $filename, $_context) = @_;
-    my $input;
+    my $input = $this->_read_file($filename, 1);
     if ($this->{preprocess}) {
         if (! defined($_context) || ! $_context->{_engine}) {
             $_context = {};
             $this->hook_context($_context);
         }
-        $input = (new Tenjin::Preprocessor($filename))->render($_context);
-    } else {
+        #$input = Tenjin::Preprocessor->new($filename)->render($_context);
         $input = $this->_read_file($filename, 1);
+        my $pp = Tenjin::Preprocessor->new();
+        #$pp->compile();   # DON'T COMPILE!
+        $pp->convert($input);
+        $input = $pp->render($_context);
     }
     return $input;
 }
