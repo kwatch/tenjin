@@ -28,6 +28,7 @@ package Tenjin;
 our $USE_STRICT     = undef;
 our $TEMPLATE_CLASS = 'Tenjin::Template';
 our $CONTEXT_CLASS  = 'Tenjin::Context';
+our $PREPROCESSOR_CLASS = 'Tenjin::Preprocessor';
 our $VERSION        = (split(' ', '$Release: 0.0.0 $'))[1];
 
 sub import {
@@ -736,7 +737,7 @@ sub read_template_file {
         }
         #$input = Tenjin::Preprocessor->new($filename)->render($_context);
         $input = $this->_read_file($filename, 1);
-        my $pp = Tenjin::Preprocessor->new();
+        my $pp = $Tenjin::PREPROCESSOR_CLASS->new();
         #$pp->compile();   # DON'T COMPILE!
         $pp->convert($input);
         $input = $pp->render($_context);
