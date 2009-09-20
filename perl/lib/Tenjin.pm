@@ -248,8 +248,9 @@ sub _build_decl {
 
 $Tenjin::BaseContext::defun = <<'END';
 sub evaluate {
-    my ($_this, $_script) = @_;
+    my ($_this, $_script, $_filename) = @_;
     my $_context = $_this;
+    $_script = "# line 1 \"$_filename\"\n".$_script if $_filename;  # line directive
     return eval $_script unless $Tenjin::USE_STRICT;
     use strict;
     return eval $_script;
@@ -373,7 +374,7 @@ sub _render {
         }
         my $script = $this->{script};
         $script = Tenjin::BaseContext::_build_decl($context) . $script unless ($this->{args});
-        return $context->evaluate($script);
+        return $context->evaluate($script, $this->{filename});
     }
 }
 
