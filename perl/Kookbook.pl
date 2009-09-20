@@ -5,13 +5,15 @@ use Kook::Utils qw(write_file);
 my $project = prop('project', 'tenjin');
 my $release = prop('release', '0.0.2');
 
-my $copyright  = 'copyright(c) 2007-2008 kuwata-lab.com all rights reserved.';
+my $copyright  = 'copyright(c) 2007-2009 kuwata-lab.com all rights reserved.';
 my @textfiles  = qw(MIT-LICENSE README Changes Kookbook.pl);
 my @docfiles   = qw(doc/users-guide.html doc/faq.html doc/examples.html doc/docstyle.css);
 my @binfiles   = qw(bin/pltenjin);
 my @libfiles   = qw(lib/Tenjin.pm);
 my @testfiles  = qw(t/*.t t/test_*.yaml t/TestHelper.pm t/data/**/*);
 my @benchfiles = qw(benchmark/Makefile benchmark/bench.pl benchmark/bench_context.pl benchmark/templates/*);
+
+$kook_default = 'test';
 
 recipe "package", [ "dist/$project-$release.tar.gz" ];
 
@@ -20,19 +22,33 @@ recipe "test", {
     method => sub {
         cd "t", sub {
             #sys "prove test_template.pl test_engine.pl test_helper_html.pl";
-            sys "prove template.t engine.t helper_html.t";
-            sys "perl docs.t users_guide";
-            sys "perl docs.t examples";
+            sys "prove *.t";
         };
     }
 };
 
-recipe "nytprof", {
-    desc  => "profiling with Devel::NYTProf",
+recipe "profile", {
+    desc   => "profiling with Devel::Profile",
+    spices => [ "-v: view result (invoke 'less' command)" ],
     method => sub {
+        my ($c, $opts, $rest) = @_;
+        my $filename = $rest->[0] || "try.pl";
+        rm "prof.out" if -f "prof.out";
+        sys "perl -d:Profile $filename";
+        sys "less prof.out" if $opts->{v};
+    }
+};
+
+recipe "nytprof", {
+    desc   => "profiling with Devel::NYTProf",
+    spices => [ "-v: view result (open 'nytprof/index.html')" ],
+    method => sub {
+        my ($c, $opts, $rest) = @_;
+        my $filename = $rest->[0] || "try.pl";
         rm_rf "nytprof*";
-        sys "perl -d:NYTProf try.pl";
+        sys "perl -d:NYTProf $filename";
         sys "nytprofhtml";
+        sys "open nytprof/index.html" if $opts->{v};
     }
 };
 
@@ -105,5 +121,14 @@ recipe "dist/$project-$release.tar.gz", [ "examples" ], {
         chmod 0755, "$dir/bin/*";
         ## create tar.gz file
         cd "dist", sub { sys "tar czf $base.tar.gz $base"; };
+    }
+};
+
+
+recipe "clean", {
+    method => sub {
+        rm_rf 'prof.out', 'nytprof*';
+        cd 'benchmark', sub { sys "make clean" };
+        cd 'doc', sub { sys "plkook clean" };
     }
 };
