@@ -792,8 +792,7 @@ sub create_template {
         my $input = $this->read_template_file($template, $filename, $_context);
         $template->convert($input, $filename);
     }
-    elsif (!(-f $cachename) ||
-           ((-f $filename) && _mtime($cachename) < _mtime($filename)) ) {
+    elsif (! -f $cachename || _mtime($cachename) < _mtime($filename)) {
         #print STDERR "*** debug: $cachename: cache file is not found or old.\n";
         my $input = $this->read_template_file($template, $filename, $_context);
         $template->convert($input, $filename);
