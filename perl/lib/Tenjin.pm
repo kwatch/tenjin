@@ -253,7 +253,7 @@ sub _build_decl {
 }
 
 
-$Tenjin::BaseContext::defun = <<'END';
+our $defun = '# line '.(__LINE__+1).' "'.__FILE__.'"'."\n" . <<'END';
 sub evaluate {
     my ($_this, $_script, $_filename) = @_;
     my $_context = $_this;
@@ -277,7 +277,7 @@ sub to_func {    # returns closure
 }
 END
 
-eval $Tenjin::BaseContext::defun;
+eval $defun;
 
 
 sub escape {
