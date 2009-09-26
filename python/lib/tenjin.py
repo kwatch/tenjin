@@ -110,27 +110,27 @@ def _create_helpers_module():
                 if decode:
                     raise ValueError("can't specify both encode and decode encoding.")
                 else:
-                    def to_str(val):
+                    def to_str(val,   _str=str, _unicode=unicode, _isa=isinstance, _encode=encode):
                         """Convert val into string or return '' if None. Unicode will be encoded into binary(=str)."""
-                        if val is None:              return ''
-                        if isinstance(val, str):     return val
-                        if isinstance(val, unicode): return val.encode(encode)  # unicode to binary(=str)
-                        return str(val)
+                        if _isa(val, _str):     return val
+                        if val is None:                return ''
+                        if _isa(val, _unicode): return val.encode(_encode)  # unicode to binary(=str)
+                        return _str(val)
             else:
                 if decode:
-                    def to_str(val):
+                    def to_str(val,   _str=str, _unicode=unicode, _isa=isinstance, _decode=decode):
                         """Convert val into string or return '' if None. Binary(=str) will be decoded into unicode."""
-                        if val is None:              return ''
-                        if isinstance(val, str):     return val.decode(decode)  # binary(=str) to unicode
-                        if isinstance(val, unicode): return val
-                        return unicode(val)
+                        if _isa(val, _str):     return val.decode(_decode)  # binary(=str) to unicode
+                        if val is None:         return ''
+                        if _isa(val, _unicode): return val
+                        return _unicode(val)
                 else:
-                    def to_str(val):
+                    def to_str(val,   _str=str, _unicode=unicode, _isa=isinstance):
                         """Convert val into string or return '' if None. Both binary(=str) and unicode will be retruned as-is."""
-                        if val is None:              return ''
-                        if isinstance(val, str):     return val
-                        if isinstance(val, unicode): return val
-                        return str(val)
+                        if _isa(val, _str):     return val
+                        if val is None:         return ''
+                        if _isa(val, _unicode): return val
+                        return _str(val)
             return to_str
 
     elif python3:
@@ -147,27 +147,27 @@ def _create_helpers_module():
                 if decode:
                     raise ValueError("can't specify both encode and decode encoding.")
                 else:
-                    def to_str(val):
+                    def to_str(val,   _str=str, _bytes=bytes, _isa=isinstance, _encode=encode):
                         """Convert val into string or return '' if None. Unicode(=str) will be encoded into bytes."""
-                        if val is None:              return ''
-                        if isinstance(val, str):     return val.encode(encode)  # unicode(=str) to binary
-                        if isinstance(val, bytes):   return val
-                        return str(val).encode(encode)
+                        if _isa(val, _str):   return val.encode(_encode)  # unicode(=str) to binary
+                        if val is None:       return ''
+                        if _isa(val, _bytes): return val
+                        return _str(val).encode(_encode)
             else:
                 if decode:
-                    def to_str(val):
+                    def to_str(val,   _str=str, _bytes=bytes, _isa=isinstance, _decode=decode):
                         """Convert val into string or return '' if None. Bytes will be decoded into unicode(=str)."""
-                        if val is None:              return ''
-                        if isinstance(val, str):     return val
-                        if isinstance(val, bytes):   return val.decode(decode)  # binary to unicode(=str)
-                        return str(val)
+                        if _isa(val, _str):    return val
+                        if val is None:        return ''
+                        if _isa(val, _bytes):  return val.decode(_decode)  # binary to unicode(=str)
+                        return _str(val)
                 else:
-                    def to_str(val):
+                    def to_str(val,   _str=str, _bytes=bytes, _isa=isinstance):
                         """Convert val into string or return '' if None. Both bytes and unicode(=str) will be retruned as-is."""
-                        if val is None:              return ''
-                        if isinstance(val, str):     return val
-                        if isinstance(val, bytes):   return val
-                        return str(val)
+                        if _isa(val, _str):    return val
+                        if val is None:        return ''
+                        if _isa(val, _bytes):  return val
+                        return _str(val)
             return to_str
 
     if python2:
