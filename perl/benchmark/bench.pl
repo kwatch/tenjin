@@ -22,6 +22,8 @@ sub read_file {
 sub write_file {
     my ($filename, $content) = @_;
     #Tenjin::Util::write_file($filename, $content);   # or File::Slurp
+    $filename =~ /\A\w[-\w.]*\Z/  or die "$filename: invalid file name.";
+    $filename = $&;   # avoid error on taint mode
     open my $fh, ">$filename"  or die "$filename: $!";
     print $fh $content;
     close $fh;
@@ -642,8 +644,9 @@ sub get_bench_names {
 sub load_context_data {
     my ($this, $mode) = @_;
     my $context_filename = 'bench_context.pl';
-    my $s = main::read_file($context_filename);
-    my $context = eval $s;
+    #my $s = main::read_file($context_filename);
+    #my $context = eval $s;   # error on taint mode
+    my $context = require "./$context_filename";
     $context->{list} = $context->{$mode == 'hash' ? 'hash_list' : 'user_list'};
     #use Data::Dumper;
     #print Dumper($context);
@@ -733,7 +736,9 @@ sub main {
         my $obj = $klass->new();
         my $method = "bench_$name";
         my %symbols = eval "%${klass}::";
-        $method = "_bench_$name" unless defined $symbols{$method};
+        #$method = "_bench_$name" unless defined $symbols{$method};  # error on taint mode
+        my $c = $symbols{$method};
+        $method = "_bench_$name" unless ($c);
         if ($obj->before_each() != -1) {
             $output = $this->do_benchmark($name, $obj, $method, $context);
         }
