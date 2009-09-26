@@ -166,14 +166,14 @@ $SCRIPT9 =~ s/^\t//mg;
 
 
 
-sub before_each {
+before_each {
     for (glob($FILENAME.'*')) { unlink $_; }
     write_file($FILENAME, $INPUT1);
-}
+};
 
-sub after_each {
+after_each {
     unlink $FILENAME if -f $FILENAME;
-}
+};
 
 
 

@@ -18,11 +18,11 @@ use Tenjin strict=>1;
 *write_file = *Tenjin::Util::write_file;
 
 
-sub before_each {
-}
+before_each {
+};
 
-sub after_each {
-}
+after_each {
+};
 
 
 

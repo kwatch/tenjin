@@ -14,11 +14,11 @@ use Specofit tests => 3;
 use Data::Dumper;
 
 
-#sub before_each {
-#}
+#before_each {
+#};
 #
-#sub after_each {
-#}
+#after_each {
+#};
 
 
 spec_of 'Tenjn', sub {

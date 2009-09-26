@@ -20,11 +20,11 @@ $Tenjin::USE_STRICT = 1;
 *write_file = *Tenjin::Util::write_file;
 
 
-sub before_each {
-}
+before_each {
+};
 
-sub after_each {
-}
+after_each {
+};
 
 
 spec_of "Tenjin::Helper::Html::escape_xml()", sub {
