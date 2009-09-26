@@ -462,7 +462,7 @@ sub hook_stmt {
                 $arg =~ s/(^\s+|\s+$)//g;
                 next unless $arg;
                 $arg =~ m/\A([\$\@\%])?([a-zA-Z_]\w*)\Z/  or die "$arg: invalid template argument.";
-                ! $1 || $1 eq '$'  or die "$arg: only '$var' is available for template argument.";
+                ! $1 || $1 eq '$'  or die "$arg: only '\$var' is available for template argument.";
                 my $name = $2;
                 push(@args, $name);
                 push(@declares, "my \$$name = \$_context->{$name}; ");
