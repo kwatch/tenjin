@@ -26,6 +26,7 @@ package Tenjin;
 #use strict;
 
 our $USE_STRICT     = undef;
+our $BYPASS_TAINT   = 1;          # unset if you like taint mode
 our $TEMPLATE_CLASS = 'Tenjin::Template';
 our $CONTEXT_CLASS  = 'Tenjin::Context';
 our $PREPROCESSOR_CLASS = 'Tenjin::Preprocessor';
@@ -256,15 +257,18 @@ $Tenjin::BaseContext::defun = <<'END';
 sub evaluate {
     my ($_this, $_script, $_filename) = @_;
     my $_context = $_this;
-    $_script = "# line 1 \"$_filename\"\n".$_script if $_filename;  # line directive
-    return eval($_script) unless $Tenjin::USE_STRICT;
+    $_script = ($_script =~ /\A.*\Z/s) && $& if $Tenjin::BYPASS_TAINT;
+    my $_s = $_filename ? "# line 1 \"$_filename\"\n" : '';  # line directive
+    $_s = $_s.$_script;
+    return eval($_s) unless $Tenjin::USE_STRICT;
     use strict;
-    return eval($_script);
+    return eval($_s);
 }
 
 
 sub to_func {    # returns closure
     my ($_klass, $_script, $_filename) = @_;
+    $_script = ($_script =~ /\A.*\Z/s) && $& if $Tenjin::BYPASS_TAINT;
     my $_s = $_filename ? "# line 1 \"$_filename\"\n" : '';  # line directive
     $_s = "${_s}sub { my (\$_context) = \@_; $_script }";
     return eval($_s) unless $Tenjin::USE_STRICT;
