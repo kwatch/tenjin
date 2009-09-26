@@ -1,6 +1,7 @@
 use Data::Dumper;
 use File::Basename;
 use Kook::Utils qw(write_file);
+use Cwd;
 
 my $project = prop('project', 'tenjin');
 my $package = prop('package', 'Tenjin');
@@ -13,12 +14,14 @@ my @docfiles   = qw(doc/users-guide.html doc/faq.html doc/examples.html doc/docs
 my @binfiles   = qw(bin/pltenjin);
 my @libfiles   = qw(lib/Tenjin.pm);
 my @testfiles  = qw(t/*.t t/test_*.yaml t/Specofit.pm t/data/**/*);
-my @benchfiles = qw(benchmark/Makefile benchmark/bench.pl benchmark/bench_context.pl benchmark/templates/*);
+my @benchfiles = qw(benchmark/Makefile benchmark/bench.pl benchmark/bench_context.pl benchmark/templates/* benchmark/MicroTemplate.pm.patch);
 my @makefiles  = qw(MANIFEST.SKIP Makefile.PL);
+my $common_path = getcwd();
+$common_path =~ s/\/perl\.git.*/\/common.git\/common/g;
 
 $kook_default = 'test';
 
-recipe "test", {
+recipe "test", [ "t/Specofit.pm" ], {
     desc   => "do test",
     method => sub {
         cd "t", sub {
@@ -26,6 +29,26 @@ recipe "test", {
         };
     }
 };
+
+recipe "t/test_*.yaml", {
+    ingreds => [ "$common_path/test/test_\$(1).yaml.eruby" ],
+    method => sub {
+        my ($c) = @_;
+        sys "erubis -E PercentLine -p '%%%: :%%%' -c '\@lang=%q|perl|' $c->{ingred} > $c->{product}";
+    }
+};
+
+$_ = getcwd();
+$_ =~ /(.*?)\/tenjin\//;
+my $specofit_path = $1.'/specofit/perl/lib/Specofit.pm';
+
+recipe "t/Specofit.pm", [ $specofit_path ], {
+    method => sub {
+        my ($c) = @_;
+        cp $c->{ingred}, $c->{product};
+    }
+};
+
 
 recipe "package", [ "$package-$release.tar.gz" ];
 
@@ -148,7 +171,7 @@ recipe "nytprof", {
 
 recipe "clean", {
     method => sub {
-        rm_rf 'prof.out', 'nytprof*';
+        rm_rf 'prof.out', 'nytprof*', 'dist';
         cd 'benchmark', sub { sys "make clean" };
         cd 'doc', sub { sys "plkook clean" };
     }
