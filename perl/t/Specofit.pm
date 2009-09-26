@@ -7,8 +7,11 @@
 package Specofit;
 use strict;
 use Data::Dumper;
-use Exporter 'import';
-our @EXPORT = qw(spec_of describe it and_it and_that examples_of
+#use Exporter 'import';
+use Exporter;
+our @EXPORT = qw(spec_of describe it when and_it and_that examples_of scenario
+                 before_each after_each before_all after_all
+                 invoke_before_each invoke_after_each invoke_before_all invoke_after_all
                  pre_cond pre_task post_task repr
                  should_eq should_be_true should_be_false should_be_undef should_match
                  should_exist should_not_exist should_be_file should_be_dir);
@@ -25,41 +28,74 @@ use Data::Dumper;
 use Carp;
 
 
-our $target;
+our $_before_all;
+our $_after_all;
+our $_before_each;
+our $_after_each;
+
+sub before_all  (&) { $_before_all  = shift; }
+sub after_all   (&) { $_after_all   = shift; }
+sub before_each (&) { $_before_each = shift; }
+sub after_each  (&) { $_after_each  = shift; }
+
+sub invoke_before_all  { return $_before_all->(@_);  }
+sub invoke_after_all   { return $_after_all->(@_);   }
+sub invoke_before_each { return $_before_each->(@_); }
+sub invoke_after_each  { return $_after_each->(@_);  }
+
+
+our $current_target;
+
+sub _spec_of {
+    my ($envkey, $target, @args) = @_;
+    return if $ENV{$envkey} && $target ne $ENV{$envkey};
+    my $closure = pop @args;
+    local ($_before_all,  $_after_all)  = ($_before_all,  $_after_all);
+    local ($_before_each, $_after_each) = ($_before_each, $_after_each);
+    $current_target = $target;
+    $_before_all->() if $_before_all;
+    $closure->();
+    $_after_all->()  if $_after_all;
+    $current_target = undef;
+}
 
 sub spec_of {
-    my ($target, $closure) = @_;
-    $target = $target;
-    if (! $ENV{'SPEC_OF'} || $target eq $ENV{'SPEC_OF'}) {
-        main::before_all($target) if defined(&main::before_all);
-        $closure->();
-        main::after_all($target) if defined(&main::after_all);
-    }
-    $target = undef;
+    return _spec_of('SPEC_OF', @_);
 }
 
-*describe = *spec_of;
+sub describe {
+    return _spec_of('DESCRIBE', @_);
+}
 
 sub examples_of {
-    my ($target, $closure) = @_;
-    $target = $target;
-    if (! $ENV{'EXAMPLE_OF'} || $target eq $ENV{'EXAMPLE_OF'}) {
-        main::before_all($target) if defined(&main::before_all);
-        $closure->();
-        main::after_all($target) if defined(&main::after_all);
-    }
-    $target = undef;
+    return _spec_of('EXAMPLES_OF', @_);
 }
 
+sub scenario {
+    return _spec_of('SCENARIO', @_);
+}
+
+our $current_desc;
+
+sub _it {
+    my ($envkey, $desc, @args) = @_;
+    return if $ENV{$envkey} && $desc ne $ENV{$envkey};
+    my $closure = pop @args;
+    $current_desc = $desc;
+    $_before_each->(@args) if $_before_each;
+    $closure->();
+    $_after_each->(@args)  if $_after_each;
+    $current_desc = undef;
+}
 
 sub it {
-    my ($desc, $closure) = @_;
-    if (! $ENV{'IT'} || $desc eq $ENV{'IT'}) {
-        main::before_each($desc) if defined(&main::before_each);
-        $closure->();
-        main::after_each($desc) if defined(&main::after_each);
-    }
+    return _it("IT", @_);
 }
+
+sub when {
+    return _it("WHEN", @_);
+}
+
 
 sub and_it {
     my ($desc, $closure) = @_;
@@ -67,6 +103,7 @@ sub and_it {
 }
 
 *and_that = *and_it;
+
 
 sub pre_cond(&) {
     my ($closure) = @_;
@@ -89,6 +126,7 @@ sub post_task(&) {
 ### ----------------------------------------
 
 sub _diff {
+    ## TODO: remove dependency on external 'diff' command
     my ($expected, $actual) = @_;
     my ($f1, $tmp1) = File::Temp::tempfile();
     my ($f2, $tmp2) = File::Temp::tempfile();
@@ -106,7 +144,7 @@ sub _report {
     my ($content, $testname) = @_;
     if ($content) {
         $content =~ s/^/\# /mg;
-        print "# ---------- $testname (-: expected, +: actual)\n";
+        print "# ---------- $testname\n";
         print $content;
         print "# ----------\n";
     }
@@ -127,7 +165,7 @@ sub should_eq {
     my ($actual, $expected, $testname) = @_;
     my $result = $actual eq $expected;
     Test::Simple->builder->ok($result, $testname);
-    _report _diff($expected, $actual), $testname unless $result;
+    _report _diff($expected, $actual), "$testname (-: expected, +: actual)" unless $result;
 }
 
 sub should_be_true {
