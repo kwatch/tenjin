@@ -120,6 +120,27 @@ sub _decode_params {
 
 
 ##
+## raw string
+##
+package Tenjin::RawString;
+
+
+sub new {
+    #my ($class, $str) = @_;
+    #return bless { str => $str }, $class;
+    bless { str => $_[1] }, $_[0];
+}
+
+
+sub to_str {
+    #my ($this) = @_;
+    #return $this->{str};
+    $_[0]->{str};
+}
+
+
+
+##
 ## HTML Helper
 ##
 package Tenjin::Helper::Html;
@@ -355,10 +376,12 @@ package Tenjin::Template;
 sub new {
     my ($class, $filename, $opts) = @_;
     my $escapefunc = defined($opts) && exists($opts->{escapefunc}) ? $opts->{escapefunc} : undef;
+    my $rawclass   = defined($opts) && exists($opts->{rawclass}) ? $opts->{rawclass} : undef;
     my $this = {
         'filename'   => $filename,
         'script'     => undef,
         'escapefunc' => $escapefunc,
+        'rawclass'   => $rawclass,
         'timestamp'  => undef,
         'args'       => undef,
     };
@@ -597,7 +620,12 @@ sub add_expr {
 
 sub escaped_expr {
     my ($this, $expr) = @_;
-    return "$this->{escapefunc}($expr)" if $this->{escapefunu};
+    if ($this->{escapefunu}) {
+        return "$this->{escapefunc}($expr)";
+    }
+    if ($this->{rawclass}) {
+        return "(ref(\$_V = ($expr)) eq '$this->{rawclass}' ? \$_V->{str} : (\$_V =~ s/[&<>\"]/\$Tenjin::_H{\$&}/ge, \$_V))";
+    }
     #return "((\$_V = ($expr)) =~ s/[&<>\"]/\$ESCAPE_HTML{\$&}/ge, \$_V)";
     return "((\$_V = ($expr)) =~ s/[&<>\"]/\$Tenjin::_H{\$&}/ge, \$_V)";
 }
