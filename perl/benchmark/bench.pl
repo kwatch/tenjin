@@ -42,6 +42,7 @@ sub _touch {
 package BenchmarkObject;
 
 our @subclasses;
+our $flag_escape = undef;
 
 sub new {
     my ($class) = @_;
@@ -83,7 +84,13 @@ sub build_template {
     my $body   = main::read_file("templates/$filename")    or die $!;
     my $header = main::read_file("templates/_header.html") or die $!;
     my $footer = main::read_file("templates/_footer.html") or die $!;
+    $body = $class->escape_template($body) if $flag_escape;
     main::write_file($filename, $header . $body . $footer);
+}
+
+sub escape_template {
+    my ($class, $content) = @_;
+    return $content;
 }
 
 
@@ -99,6 +106,12 @@ sub before_all {
     my ($class) = @_;
     $class->build_template($template_filename);
     $class->load_package('Tenjin')  and return -1;
+}
+
+sub escape_template {
+    my ($class, $s) = @_;
+    $s =~ s/\[==/[=/g;
+    return $s;
 }
 
 sub before_each {
@@ -256,6 +269,12 @@ sub before_all {
     $this->load_package('Template')  and return -1;
 }
 
+sub escape_template {
+    my ($class, $s) = @_;
+    $s =~ s/\[%\s*([^A-Z ].*?)\s*%\]/[% $1 | html %]/g;
+    return $s;
+}
+
 ## Template-Toolkit (render)
 sub bench_tt {
     my ($this, $n, $context) = @_;
@@ -293,6 +312,12 @@ sub before_all {
     my ($this) = @_;
     $this->build_template($template_filename);
     $this->load_package("HTML::Template")  and return -1;
+}
+
+sub escape_template {
+    my ($class, $s) = @_;
+    $s =~ s/<TMPL_VAR (.*?)>/<TMPL_VAR $1 ESCAPE=HTML>/g;
+    return $s;
 }
 
 sub _convert_context {
@@ -373,6 +398,12 @@ sub before_all {
     $this->load_package("MobaSiF::Template")  and return -1;
     $this->load_package("MobaSiF::Template::Compiler")  and return -1;
     MobaSiF::Template::Compiler::compile($template_filename, $compiled_filename);
+}
+
+sub escape_template {
+    my ($class, $s) = @_;
+    $s =~ s/\$=b:(.*?)\$/\$=h:$1\$/g;
+    return $s;
 }
 
 ## MobaSiF::Template (render)
@@ -456,6 +487,12 @@ sub before_all {
     $class->load_package("Text::MicroTemplate::File")  and return -1;
     use Text::MicroTemplate qw(encoded_string);
     use Text::MicroTemplate::File;
+}
+
+sub escape_template {
+    my ($class, $s) = @_;
+    #$s =~ s/<\?=\s*(.*?)\s*\?>/<? encoded_string($1) ?>/g;
+    return $s;
 }
 
 ## Text::MicroTemplate (render)
@@ -589,11 +626,12 @@ sub new {
 sub parse_command_options {
     my ($this) = @_;
     my %opts;
-    getopts('hvpwn:m:x:A', \%opts)  or die $@;
+    getopts('hvpewn:m:x:A', \%opts)  or die $@;
     $this->{ntimes}      = 0 + $opts{n}  if $opts{n};
     $this->{flag_print}  = 1             if $opts{p};
     $this->{flag_all}    = 1             if $opts{A};
     $this->{flag_strict} = 1             if $opts{w};
+    $BenchmarkObject::flag_escape = 1    if $opts{e};
     $this->{mode}        = $opts{m}      if $opts{m};
     ! $opts{m} || $opts{m} =~ /^(class|hash)$/  or
         die "-m $opts{m}: 'class' or 'hash' expected.\n";
@@ -606,6 +644,7 @@ sub help_message {
 Usage: perl $script [..options..] [testname ...]
   -h              :  help
   -n N            :  repeat loop N times
+  -e              :  escape html
   -p              :  print output
   -m [hash|class] :  mode
   -w              :  set Tenjin::USE_STRICT = 1
