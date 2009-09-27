@@ -6,21 +6,24 @@ python3 = sys.version_info[0] == 3
 python2 = sys.version_info[0] == 2
 
 
+@recipe
 @ingreds('test_engine.yaml', 'test_template.yaml')
 def task_copy(c):
     """copy data file (*.yaml)"""
     pass
 
 
+@recipe
 @product('test_*.yaml')
 @ingreds(srcdir + '/test_$(1).yaml')
 def file_test_engine_yaml(c):
     cp_p(c.ingred, c.product)
 
 
+@recipe
 @ingreds('copy')
 @byprods('test.log')
-@cmdopts('-v: verbose')
+@spices('-v: verbose')
 def task_test(c, *args):
     options, rest = c.parse_cmdopts(args)
     opts = options.get('v') and ' -v ' or ''
@@ -37,5 +40,6 @@ def task_test(c, *args):
     task_clean(c)
 
 
+@recipe
 def task_clean(c):
     rm_f('test.log', '*.pyc', '**/*.pyc', '**/*.cache')

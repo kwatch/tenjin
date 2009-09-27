@@ -46,17 +46,20 @@ textfiles = [ x+'.txt' for x in basenames]
 htmlfiles = [ x+'.html' for x in basenames]
 
 
+@recipe
 @ingreds('doc', 'test')
 def task_all(c):
     pass
 
 
+@recipe
 @ingreds(htmlfiles, stylesheet)
 def task_doc(c):
     """generate *.html"""
     pass
 
 
+@recipe
 @product(stylesheet)
 @ingreds(original_docdir + stylesheet)
 def file_css(c):
@@ -86,6 +89,7 @@ def file_css(c):
 #    rm(c.byprod)
 
 
+@recipe
 @product('*.html')
 @ingreds('$(1).txt')
 @byprods('$(1).toc.html')
@@ -100,6 +104,7 @@ def file_html(c):
     )
     edit(c.product, by=f)
 
+@recipe
 @product('*.txt')
 @ingreds(original_docdir + '$(1).eruby')
 #@ingreds('$(1).eruby', if_exists(original_docdir + '/$(1).eruby')
@@ -135,6 +140,7 @@ def file_txt(c):
         cp('../misc/my_template.py', datadir)
 
 
+@recipe
 @ingreds(testdir + '/test_users_guide.py',
          testdir + '/test_faq.py',
          testdir + '/test_examples.py')
@@ -148,15 +154,18 @@ def task_create_test(c):
 #    pass
 
 
+@recpe
 def task_clean(c):
     rm_rf('*.toc.html', 'test.log', '*.pyc')
 
 
+@recipe
 @ingreds('test_users_guide', 'test_faq', 'test_examples')
 def task_test(c):
     pass
 
 
+@recipe
 @ingreds(testdir+'/test_users_guide.py', 'users-guide.txt')
 def task_test_users_guide(c):
     name = re.sub(r'^test_', '', c.product)
@@ -164,16 +173,19 @@ def task_test_users_guide(c):
         system(c%'python $(ingred)')
 
 
+@recipe
 @ingreds(testdir+'/test_faq.py', 'faq.txt')
 def task_test_faq(c):
     task_test_users_guide(c)
 
 
+@recipe
 @ingreds(testdir+'/test_examples.py', 'examples.txt')
 def task_test_examples(c):
     task_test_users_guide(c)
 
 
+@recipe
 @product(testdir + '/test_users_guide.py')
 @ingreds(testdir + '/test_users-guide.py')
 def task_test_users_guide_py(c):
@@ -181,6 +193,7 @@ def task_test_users_guide_py(c):
     #mv("data/users-guide", "data/users_guide")
 
 
+@recipe
 @product(testdir+'/test_*.py')
 def task_test_py(c):
     ## base name

@@ -25,8 +25,10 @@ site_packages_path = "%s/site-packages" % python_basepath
 script_file     = "pytenjin"
 library_files   = [ "tenjin.py" ]
 
+kook_default_product = 'test'
 
-@product("package")
+
+@recipe
 @ingreds("examples")
 def task_package(c):
     """create package"""
@@ -71,6 +73,7 @@ def task_package(c):
             rm_rf("build", "dist")
 
 
+@recipe
 #@ingreds("doc/examples.txt")
 def task_examples(c):
     """create examples"""
@@ -110,6 +113,7 @@ def task_examples(c):
         f.close()
 
 
+@recipe
 def task_uninstall(c):
     #script_file    = "$python_basepath/bin/" + script_file;
     #library_files  = [ os.path.join(site_packages_path, item) for item in library_files ]
@@ -129,11 +133,13 @@ def task_uninstall(c):
         edit(filename, by=repl)
 
 
+@recipe
 def task_test(c):
     with chdir('test'):
         system("pykook test")
 
 
+@recipe
 def task_clean(c):
     from glob import glob
     dirs = glob("examples/*");
