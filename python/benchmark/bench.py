@@ -311,61 +311,61 @@ class CheetahEntry(Entry):
 Entry.register(CheetahEntry)
 
 
-class MyghtyEntry(Entry):
-
-    basename = 'myghty'
-    template_filename = 'bench_myghty.myt'
-    salts = [None, 'reuse']
-
-    def create_template(cls):
-        global encoding
-        content = Entry.create_template(cls.template_filename)
-        content = "<%args>\n    list\n</%args>\n" + content
-        if encoding:
-            content = ("# -*- coding: %s -*-\n" % encoding) + content
-        open(cls.template_filename, 'w').write(content)
-    create_template = classmethod(create_template)
-
-    def load_library(cls):
-        global myghty
-        if globals().get('myghty'): return
-        try:
-            myghty = import_module('myghty')
-            import_module('myghty.interp')
-        except ImportError:
-            myghty = None
-        return myghty
-    load_library = classmethod(load_library)
-
-    def available(self):
-        global myghty
-        return myghty and True or False
-
-    def _execute(self, context, ntimes):
-        filename = self.template_filename
-        _encoding = self.encoding or sys.getdefaultencoding()
-        for i in xrange(ntimes):
-            interpreter = myghty.interp.Interpreter(component_root='.', output_encoding=_encoding)
-            component = interpreter.make_component(open(filename).read())
-            buf = StringIO()
-            interpreter.execute(component, request_args=context, out_buffer=buf)
-            output = buf.getvalue()
-            buf.close()
-        return output
-
-    def _execute_reuse(self, context, ntimes):
-        filename = self.template_filename
-        _encoding = self.encoding or sys.getdefaultencoding()
-        interpreter = myghty.interp.Interpreter(component_root='.', output_encoding=_encoding)
-        component = interpreter.make_component(open(filename).read())
-        for i in xrange(ntimes):
-            buf = StringIO()
-            interpreter.execute(component, request_args=context, out_buffer=buf)
-            output = buf.getvalue()
-            buf.close()
-        return output
-
-Entry.register(MyghtyEntry)
+#class MyghtyEntry(Entry):
+#
+#    basename = 'myghty'
+#    template_filename = 'bench_myghty.myt'
+#    salts = [None, 'reuse']
+#
+#    def create_template(cls):
+#        global encoding
+#        content = Entry.create_template(cls.template_filename)
+#        content = "<%args>\n    list\n</%args>\n" + content
+#        if encoding:
+#            content = ("# -*- coding: %s -*-\n" % encoding) + content
+#        open(cls.template_filename, 'w').write(content)
+#    create_template = classmethod(create_template)
+#
+#    def load_library(cls):
+#        global myghty
+#        if globals().get('myghty'): return
+#        try:
+#            myghty = import_module('myghty')
+#            import_module('myghty.interp')
+#        except ImportError:
+#            myghty = None
+#        return myghty
+#    load_library = classmethod(load_library)
+#
+#    def available(self):
+#        global myghty
+#        return myghty and True or False
+#
+#    def _execute(self, context, ntimes):
+#        filename = self.template_filename
+#        _encoding = self.encoding or sys.getdefaultencoding()
+#        for i in xrange(ntimes):
+#            interpreter = myghty.interp.Interpreter(component_root='.', output_encoding=_encoding)
+#            component = interpreter.make_component(open(filename).read())
+#            buf = StringIO()
+#            interpreter.execute(component, request_args=context, out_buffer=buf)
+#            output = buf.getvalue()
+#            buf.close()
+#        return output
+#
+#    def _execute_reuse(self, context, ntimes):
+#        filename = self.template_filename
+#        _encoding = self.encoding or sys.getdefaultencoding()
+#        interpreter = myghty.interp.Interpreter(component_root='.', output_encoding=_encoding)
+#        component = interpreter.make_component(open(filename).read())
+#        for i in xrange(ntimes):
+#            buf = StringIO()
+#            interpreter.execute(component, request_args=context, out_buffer=buf)
+#            output = buf.getvalue()
+#            buf.close()
+#        return output
+#
+#Entry.register(MyghtyEntry)
 
 
 class KidEntry(Entry):
