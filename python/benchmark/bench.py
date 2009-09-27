@@ -838,11 +838,11 @@ def execute_benchmark(entries, context, ntimes, print_output):
     msg('*** start benchmark\n')
 
     print  "*** ntimes=%d" % ntimes
-    #print "             target        utime      stime      total       real"
-    print  "                           utime      stime      total       real"
+    #print "                   target           utime     stime     total      real"
+    print  "                                    utime     stime     total      real"
 
     for entry in entries:
-        print "%-20s " % entry.name,
+        print "%-30s " % entry.name,
         sys.stdout.flush()
 
         ## start time
@@ -864,10 +864,10 @@ def execute_benchmark(entries, context, ntimes, print_output):
             #total = t2[4]-t1[4]
             total = utime + stime
             real  = end_t-start_t
-            #print "%-20s  %10.5f %10.5f %10.5f %10.5f" % (target, utime, stime, total, real)
-            print         "%10.5f %10.5f %10.5f %10.5f" % (        utime, stime, total, real)
+            #print "%-24s  %9.4f %9.4f %9.4f %9.4f" % (target, utime, stime, total, real)
+            print         "%9.4f %9.4f %9.4f %9.4f" % (        utime, stime, total, real)
         else:
-            #print "%-20s     (module not installed)" % target
+            #print "%-24s     (module not installed)" % target
             print         "   (module not installed)"
 
         ## print output
