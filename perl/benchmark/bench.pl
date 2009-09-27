@@ -535,9 +535,8 @@ sub _bench_microtmpl_nocache {
 package PerlBenchmark;
 our @ISA = ('BenchmarkObject');
 push @BenchmarkObject::subclasses, 'PerlBenchmark';
-our $template_filename = "bench_mobasif.html";
-our $compiled_filename = "bench_mobasif.bin";
 our $mode = $ENV{'MODE'} || 'func';
+#use strict;
 
 sub _invoke_benchmark {
     my ($name, $n, $_context) = @_;
@@ -546,6 +545,7 @@ sub _invoke_benchmark {
     if ($mode eq 'func') {
         my $func = "render_$name";
         eval "sub $func { my (\$_context) = \@_; $s }";
+        ! $@  or die $@;
         while ($n--) { $ret = &$func($_context); }  # error when 'strict ref' is enabled
     }
     elsif ($mode eq 'closure') {
@@ -609,7 +609,6 @@ use Data::Dumper;
 use Getopt::Std;
 use Time::HiRes;
 use File::Basename;
-
 
 sub new {
     my $class = shift;
