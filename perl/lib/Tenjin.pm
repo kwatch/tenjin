@@ -124,24 +124,24 @@ sub _decode_params {
 package Tenjin::Helper::Html;
 
 
-our %_escape_table = ( '&'=>'&amp;', '<'=>'&lt;', '>'=>'&gt;', '"'=>'&quot;', "'"=>'&#039;');
+our %ESCAPE_HTML = ( '&'=>'&amp;', '<'=>'&lt;', '>'=>'&gt;', '"'=>'&quot;', "'"=>'&#039;');
 
 
 sub escape_xml {
     my ($s) = @_;
     #return HTML::Entities::encode_entities($s);
-    $s =~ s/[&<>"]/$_escape_table{$&}/ge if $s;
+    $s =~ s/[&<>"]/$ESCAPE_HTML{$&}/ge if $s;
     return $s;
 }
 
 
-our %_unescape_table = ('lt'=>'<', 'gt'=>'>', 'amp'=>'&', 'quot'=>'"', '#039'=>"'");
+our %UNESCAPE_HTML = ('lt'=>'<', 'gt'=>'>', 'amp'=>'&', 'quot'=>'"', '#039'=>"'");
 
 
 sub unescape_xml {
     my ($s) = @_;
     $s =~ tr/+/ /;
-    $s =~ s/&(lt|gt|amp|quot|#039);/$_unescape_table{$1}/ge if $s;
+    $s =~ s/&(lt|gt|amp|quot|#039);/$UNESCAPE_HTML{$1}/ge if $s;
     return $s;
 }
 
