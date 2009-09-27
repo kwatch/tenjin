@@ -866,9 +866,8 @@ sub _mtime {
 }
 
 
-sub _render {
-    my $this = shift;
-    my ($template_name, $context, $layout) = @_;
+sub render {
+    my ($this, $template_name, $context, $layout) = @_;
     $context = {} unless defined $context;
     $layout = 1 unless defined $layout;
     $this->hook_context($context);
@@ -876,7 +875,7 @@ sub _render {
     while (1) {
         my $template = $this->get_template($template_name, $context); # pass $context only for preprocessing
         $output = $template->_render($context);
-        return $template->{filename} if $@; # return template filename when error happened
+        ! $@  or die "*** ERROR: $template->{filename}\n", $@;
         $layout = $context->{_layout} if exists $context->{_layout};
         $layout = $this->{layout} if $layout == 1;
         last unless $layout;
@@ -885,18 +884,6 @@ sub _render {
         $context->{_content} = $output;
         delete $context->{_layout};
     }
-    return $output;
-}
-
-
-sub render {
-    my $this = shift;
-    my $ret = $this->_render(@_);
-    if ($@) {  # error happened
-        my $template_filename = $ret;
-        die "*** ERROR: $template_filename\n", $@;
-    }
-    my $output = $ret;
     return $output;
 }
 
