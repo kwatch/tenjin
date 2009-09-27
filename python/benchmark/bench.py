@@ -853,7 +853,7 @@ def get_entries(targets, **kwargs):
     entries = []
     classtable = {}
     for target in targets:
-        L = re.split(r'[-_]', target)
+        L = re.split(r'[-_]', target, 1)
         base = L[0]
         salt = len(L) > 1 and L[1] or None
         if base in classtable:
@@ -862,7 +862,7 @@ def get_entries(targets, **kwargs):
             classname = base.capitalize() + 'Entry'
             classobj = globals().get(classname)
             if not classobj:
-                raise "%s: invalid target name." % target
+                raise Exception("%s: invalid target name." % target)
             ret = classobj.class_setup(**kwargs)
             if not ret: classobj = None
             classtable[base] = classobj
