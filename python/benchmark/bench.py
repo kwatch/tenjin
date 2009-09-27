@@ -694,7 +694,7 @@ def main(ntimes=1000):
 
     ## parse options
     try:
-        optlist, targets = getopt.getopt(sys.argv[1:], "hpf:n:t:x:Aqm:k:e:l:")
+        optlist, targets = getopt.getopt(sys.argv[1:], "hpf:n:t:x:Aqm:k:e:l:C")
         options = dict([(key[1:], val == '' and True or val) for key, val in optlist])
     except Exception:
         ex = sys.exc_info()[1]
@@ -737,13 +737,34 @@ def main(ntimes=1000):
         for salt in cls.salts:
             target = salt and basename+'-'+salt or basename
             target_list.append(target)
-
+    ##
     targets = filter_targets(targets, target_list, options.get('x'))
     entries = get_entries(targets)
     datafile = options.get('f')
     context = load_context_data(datafile)
+    if options.get('C'):
+        context = _convert(context)
     print_output = options.get('p')
     execute_benchmark(entries, context, ntimes, print_output)
+
+
+def _convert(val):
+    if isinstance(val, list):
+        i = 0
+        n = len(val)
+        while i < n:
+            val[i] = _convert(val[i])
+            i += 1
+    elif isinstance(val, dict):
+        for k in val.keys():
+            val[k] = _convert(val[k])
+    elif val is None:
+        val = ""
+    elif hasattr(val, '__dict__'):
+        _convert(val.__dict__)
+    else:
+        val = str(val)
+    return val
 
 
 def print_help(script, ntimes, mode):
@@ -757,6 +778,7 @@ def print_help(script, ntimes, mode):
     print "  -m mode     :  'class' or 'dict' (default '%s')" % mode
     #print "  -k encodng  :  encoding (default None)"
     #print "  -l lang     :  language ('ja') (default None)"
+    print "  -C          :  convert numbers in context data into string in advance"
 
 
 def filter_targets(targets, target_list, excludes):
