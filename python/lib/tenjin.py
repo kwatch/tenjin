@@ -34,7 +34,7 @@ __license__  = "MIT License"
 __all__      = ['Template', 'Engine', 'helpers', 'html', ]
 
 
-import re, sys, os
+import re, sys, os, time
 random = marshal = pickle = memcache = unquote = None   # lazy import
 python3 = sys.version_info[0] == 3
 python2 = sys.version_info[0] == 2
@@ -1137,13 +1137,15 @@ class Engine(object):
         cache = self.cache
         template = cache and cache.get(fullpath, self.templateclass) or None
         mtime = None
+        now = time.time()
         if template:
             assert template.timestamp is not None
-            mtime = os.path.getmtime(filename)
-            if template.timestamp != mtime:
-                #if cache: cache.delete(path)
-                template = None
-                if logger: logger.info("[tenjin.Engine] cache is old (filename=%s, template=%s)" % (repr(filename), repr(template)))
+            if now > getattr(template, '_last_checked_at', 0) + 10:
+                mtime = os.path.getmtime(filename)
+                if template.timestamp != mtime:
+                    #if cache: cache.delete(path)
+                    template = None
+                    if logger: logger.info("[tenjin.Engine] cache is old (filename=%s, template=%s)" % (repr(filename), repr(template)))
         if not template:
             if not mtime: mtime = os.path.getmtime(filename)
             if self.preprocess:   ## required for preprocess
@@ -1151,6 +1153,7 @@ class Engine(object):
                 if _globals is None: _globals = sys._getframe(1).f_globals
             template = self._create_template(filename, _context, _globals)
             template.timestamp = mtime
+            template._last_checked_at = now
             if cache:
                 if not template.bytecode: template.compile()
                 cache.set(fullpath, template)
