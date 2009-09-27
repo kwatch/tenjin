@@ -774,7 +774,7 @@ sub get_template {
     my ($this, $template_name, $_context) = @_;
     my $template = $this->{templates}->{$template_name};
     my $t = $template;
-    if (! $t || $t->{timestamp} && $t->{filename} && $t->{timestamp} < _mtime($t->{filename})) {
+    if (! $t || $t->{timestamp} && $t->{filename} && $t->{timestamp} < (stat $t->{filename})[9]) {
         my $filename = $this->to_filename($template_name);
         my $filepath = $this->find_template_file($filename);
         $template = $this->create_template($filepath, $_context);  # $_context is passed only for preprocessor
@@ -844,7 +844,7 @@ sub create_template {
         my $input = $this->read_template_file($template, $filename, $_context);
         $template->convert($input, $filename);
     }
-    elsif (! -f $cachename || _mtime($cachename) < _mtime($filename)) {
+    elsif (! -f $cachename || (stat $cachename)[9] < (stat $filename)[9]) {
         #print STDERR "*** debug: $cachename: cache file is not found or old.\n";
         my $input = $this->read_template_file($template, $filename, $_context);
         $template->convert($input, $filename);
@@ -857,12 +857,6 @@ sub create_template {
     }
     $template->compile();
     return $template;
-}
-
-
-sub _mtime {
-    my ($filename) = @_;
-    return (stat($filename))[9];
 }
 
 
