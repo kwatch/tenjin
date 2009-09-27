@@ -230,9 +230,13 @@ if True:
         """start capturing with name."""
         frame = sys._getframe(_depth)
         context = frame.f_locals
-        context['_buf_tmp'] = context['_buf']
+        context['_buf_tmp']    = context['_buf']
+        context['_extend_tmp'] = context['_extend']
         context['_capture_varname'] = varname
-        context['_buf'] = []
+        _buf2 = []
+        context['_buf']    = _buf2
+        context['_extend'] = _buf2.extend
+
 
     def stop_capture(store_to_context=True, _depth=1):
         """stop capturing and return the result of capturing.
@@ -241,7 +245,8 @@ if True:
         frame = sys._getframe(_depth)
         context = frame.f_locals
         result = ''.join(context['_buf'])
-        context['_buf'] = context.pop('_buf_tmp')
+        context['_buf']    = context.pop('_buf_tmp')
+        context['_extend'] = context.pop('_extend_tmp')
         varname = context.pop('_capture_varname')
         if varname:
             context[varname] = result
@@ -557,7 +562,7 @@ class Template(object):
         if smarttrim  is not None:  self.smarttrim  = smarttrim
         if trace      is not None:  self.trace      = trace
         #
-        if preamble  is True:  self.preamble = "_buf = []"
+        if preamble  is True:  self.preamble = "_buf = []; _extend = _buf.extend"
         if postamble is True:  self.postamble = "print(''.join(_buf))"
         if input:
             self.convert(input, filename)
@@ -751,7 +756,8 @@ class Template(object):
             buf.append("\n")
 
     def start_text_part(self, buf):
-        buf.append("_buf.extend((")
+        #buf.append("_buf.extend((")
+        buf.append("_extend((")
 
     def stop_text_part(self, buf):
         buf.append("));")
@@ -934,6 +940,7 @@ class Template(object):
         if _buf is None:
             _buf = []
         locals['_buf'] = _buf
+        locals['_extend'] = _buf.extend
         if not self.bytecode:
             self.compile()
         if self.trace:
