@@ -772,12 +772,22 @@ sub register_template {
 
 sub get_template {
     my ($this, $template_name, $_context) = @_;
+    ## get cached template
     my $template = $this->{templates}->{$template_name};
-    my $t = $template;
-    if (! $t || $t->{timestamp} && $t->{filename} && $t->{timestamp} < (stat $t->{filename})[9]) {
+    ## check whether template file is updated or not
+    my $now = time();
+    if ($template && $template->{timestamp} && $template->{filename}) {
+        if ($now >= $template->{_last_checked_at} + 10) {
+            $template->{_last_checked_at} = $now;
+            $template = undef if $template->{timestamp} < (stat $template->{filename})[9];
+        }
+    }
+    ## load and register template
+    if (! $template) {
         my $filename = $this->to_filename($template_name);
         my $filepath = $this->find_template_file($filename);
         $template = $this->create_template($filepath, $_context);  # $_context is passed only for preprocessor
+        $template->{_last_checked_at} = $now;
         $this->register_template($template_name, $template);
     }
     return $template;
