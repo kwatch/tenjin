@@ -599,6 +599,45 @@ sub _bench_perl_concatpushjoin {
     return _invoke_benchmark("perl_concatpushjoin", $n, $_context);
 }
 
+sub _bench_perl_escapehtml1 {
+    my ($this, $n, $_context) = @_;
+    return _invoke_benchmark("perl_escapehtml1", $n, $_context);
+}
+
+sub _bench_perl_escapehtml2 {
+    my ($this, $n, $_context) = @_;
+    return _invoke_benchmark("perl_escapehtml2", $n, $_context);
+}
+
+sub _bench_perl_escapehtml3 {
+    my ($this, $n, $_context) = @_;
+    return _invoke_benchmark("perl_escapehtml3", $n, $_context);
+}
+
+sub _bench_perl_escapehtml4 {
+    my ($this, $n, $_context) = @_;
+    return _invoke_benchmark("perl_escapehtml4", $n, $_context);
+}
+
+our %_ESCAPE_HTML = (
+    '&'=>'&amp;', '<'=>'&lt;', '>'=>'&gt;', '"'=>'&quot;', "'"=>'&#039;',
+);
+our %_EH = %_ESCAPE_HTML;
+
+sub escape_html {
+    (my $s = $_[0]) =~ s/[&<>"]/$_EH{$&}/ge;
+    $s;
+}
+
+sub escape_html2 {
+    my $s = $_[0];
+    $s =~ s/&/&amp;/g;
+    $s =~ s/</&lt;/g;
+    $s =~ s/>/&gt;/g;
+    $s =~ s/"/&quot;/g;
+    $s;
+}
+
 
 ##
 ## main application
