@@ -14,6 +14,20 @@ quiet    = None
 template_dir = 'templates'
 use_str  = False
 
+def read_file(filename):
+    f = open(filename)
+    try:
+        return f.read()
+    finally:
+        f.close()
+
+def write_file(filename, content):
+    f = open(filename, 'w')
+    try:
+        f.write(content)
+    finally:
+        f.close()
+
 
 class Entry(object):
 
