@@ -12,6 +12,7 @@ mode     = 'class'  # 'class' or 'dict'
 lang     = None
 quiet    = None
 template_dir = 'templates'
+use_str  = False
 
 
 class Entry(object):
@@ -91,11 +92,12 @@ class TenjinEntry(Entry):
     #create_template = classmethod(create_template)
 
     def load_library(cls):
-        global tenjin, escape, to_str
+        global tenjin, escape, to_str, use_str
         if globals().get('tenjin'): return
         try:
             tenjin = import_module('tenjin')
             from tenjin.helpers import escape, to_str
+            if use_str: to_str = str
         except ImportError:
             tenjin = None
         return tenjin
@@ -694,7 +696,7 @@ def main(ntimes=1000):
 
     ## parse options
     try:
-        optlist, targets = getopt.getopt(sys.argv[1:], "hpf:n:t:x:Aqm:k:e:l:C")
+        optlist, targets = getopt.getopt(sys.argv[1:], "hpf:n:t:x:Aqm:k:e:l:C", ['str'])
         options = dict([(key[1:], val == '' and True or val) for key, val in optlist])
     except Exception:
         ex = sys.exc_info()[1]
@@ -728,8 +730,9 @@ def main(ntimes=1000):
         #tostr_encoding = encoding
         #tmpl_encoding  = None
         #to_str = tenjin.generate_to_str_func(tostr_encoding)
-    ##
-
+    if options.get('-str'):
+        global use_str
+        use_str = True
     ## default targets
     target_list = []
     for cls in Entry.subclasses:
@@ -779,6 +782,7 @@ def print_help(script, ntimes, mode):
     #print "  -k encodng  :  encoding (default None)"
     #print "  -l lang     :  language ('ja') (default None)"
     print "  -C          :  convert numbers in context data into string in advance"
+    print "  --str       :  use 'str()' instead of 'tenjin.helper.to_str()'"
 
 
 def filter_targets(targets, target_list, excludes):
