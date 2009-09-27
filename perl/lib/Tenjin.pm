@@ -155,60 +155,57 @@ our %UNESCAPE_HTML = ('lt'=>'<', 'gt'=>'>', 'amp'=>'&', 'quot'=>'"', '#039'=>"'"
 
 
 sub unescape_xml {
-    my ($s) = @_;
+    my $s = $_[0];
     $s =~ tr/+/ /;
-    $s =~ s/&(lt|gt|amp|quot|#039);/$UNESCAPE_HTML{$1}/ge if $s;
-    return $s;
+    $s =~ s/&(lt|gt|amp|quot|#039);/$UNESCAPE_HTML{$1}/ge;
+    $s;  # returns
 }
 
 
 sub encode_url {
-    my ($s) = @_;
+    my $s = $_[0];
     $s =~ s/([^-A-Za-z0-9_.\/])/sprintf("%%%02X", ord($1))/sge;
     $s =~ tr/ /+/;
-    return $s;
+    $s;  # returns
 }
 
 
 sub decode_url {
-    my ($s) = @_;
+    my $s = $_[0];
     #$s =~ s/\%([a-fA-F0-9][a-fA-F0-9])/pack('H2', $1)/sge;
     $s =~ s/\%([a-fA-F0-9][a-fA-F0-9])/pack('C', hex($1))/sge;
-    return $s;
+    $s;  # returns
 }
 
 
 sub checked {
-    my ($expr) = @_;
-    return $expr ? ' checked="checked"' : '';
+    $_[0] ? ' checked="checked"' : '';  # returns
 }
 
 
 sub selected {
-    my ($expr) = @_;
-    return $expr ? ' selected="selected"' : '';
+    $_[0] ? ' selected="selected"' : '';  # returns
 }
 
 
 sub disabled {
-    my ($expr) = @_;
-    return $expr ? ' disabled="disabled"' : '';
+    $_[0] ? ' disabled="disabled"' : '';  # returns
 }
 
 
 sub nl2br {
-    my ($text) = @_;
+    my $text = $_[0];
     #$text = Tenjin::Helper::Html::escape_xml($text);
     $text =~ s/(\r?\n)/<br \/>$1/g;
-    return $text;
+    $text;  # returns
 }
 
 
 sub text2html {
-    my ($text) = @_;
+    my $text = $_[0];
     $text = Tenjin::Helper::Html::escape_xml($text);
     $text =~ s/(\r?\n)/<br \/>$1/g;
-    return $text;
+    $text;  # returns
 }
 
 
@@ -216,7 +213,7 @@ sub tagattr {   ## [experimental]
     my ($name, $expr, $value) = @_;
     return '' unless $expr;
     $value = $expr unless defined $value;
-    return " $name=\"".escape_xml($value)."\"";
+    " $name=\"".escape_xml($value)."\"";   # returns
 }
 
 
@@ -226,7 +223,7 @@ sub tagattrs {   ## [experimental]
     while (my ($k, $v) = each %attrs) {
         $s .= " $k=\"".escape_xml($v)."\"" if defined $v;
     }
-    return $s;
+    $s;  # returns
 }
 
 
@@ -240,7 +237,7 @@ sub new_cycle {   ## [experimental]
     my @items = @_;
     my $len = @items;
     my $i = 0;
-    return sub { $items[$i++ % $len] };
+    sub { $items[$i++ % $len] };  # returns
 }
 
 
@@ -297,8 +294,8 @@ eval $defun;
 
 
 sub escape {
-    my ($arg) = @_;
-    return $arg;        # do nothing
+    #my $arg = $_[0];  return $arg;
+    $_[0];      # returns as is
 }
 
 
