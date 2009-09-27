@@ -625,11 +625,12 @@ sub new {
 sub parse_command_options {
     my ($this) = @_;
     my %opts;
-    getopts('hvpewn:m:x:A', \%opts)  or die $@;
+    getopts('hvpeHwn:m:x:A', \%opts)  or die $@;
     $this->{ntimes}      = 0 + $opts{n}  if $opts{n};
     $this->{flag_print}  = 1             if $opts{p};
     $this->{flag_all}    = 1             if $opts{A};
     $this->{flag_strict} = 1             if $opts{w};
+    $this->{flag_html}   = 1             if $opts{H};
     $BenchmarkObject::flag_escape = 1    if $opts{e};
     $this->{mode}        = $opts{m}      if $opts{m};
     ! $opts{m} || $opts{m} =~ /^(class|hash)$/  or
@@ -648,6 +649,7 @@ Usage: perl $script [..options..] [testname ...]
   -m [hash|class] :  mode
   -w              :  set Tenjin::USE_STRICT = 1
   -A              :  invoke all benchmarks (= public + private)
+  -H              :  change context data to add '<B></B>'
 END
     return $msg;
 }
@@ -680,12 +682,18 @@ sub get_bench_names {
 }
 
 sub load_context_data {
-    my ($this, $mode) = @_;
+    my ($this) = @_;
     my $context_filename = 'bench_context.pl';
     #my $s = main::read_file($context_filename);
     #my $context = eval $s;   # error on taint mode
     my $context = require "./$context_filename";
-    $context->{list} = $context->{$mode == 'hash' ? 'hash_list' : 'user_list'};
+    $context->{list} = $this->{mode} eq 'hash' ? $context->{hash_list}
+                                               : $context->{user_list};
+    if ($this->{flag_html}) {
+        for (@{$context->{list}}) {
+            $_->{name} = '<B>'.($_->{name}).'</B>';
+        }
+    }
     #use Data::Dumper;
     #print Dumper($context);
     return $context;
