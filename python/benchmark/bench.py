@@ -668,6 +668,56 @@ class Jinja2Entry(Entry):
 Entry.register(Jinja2Entry)
 
 
+class PythonEntry(Entry):
+
+    basename = 'python'
+    template_filename = None
+    salts = [ re.match('pythoncode/python_(.*)\.py', x).group(1)
+                for x in glob('pythoncode/python_*.py') ]
+    salts.sort()
+    salts = []
+
+    def create_template(cls):
+        pass
+    create_template = classmethod(create_template)
+
+    def load_library(cls):
+        return True
+    load_library = classmethod(load_library)
+
+    def available(self):
+        return True
+
+    def _execute_(self, filename, context, ntimes, _buf = None):
+        script = read_file(filename)
+        code = compile(script, filename, 'exec')
+        from tenjin.helpers import to_str
+        global use_str
+        if use_str: to_str = str
+        global_vars = globals()
+        for i in xrange(ntimes):
+            local_vars = { 'to_str': to_str, 'list': context['list'], '_buf': _buf }
+            exec(code, global_vars, local_vars)
+            output = local_vars.get('output')
+        return output or True
+
+    def _execute_mmap_str(self, context, ntimes):
+        filename = 'pythoncode/python_mmap_str.py'
+        import mmap
+        _buf = mmap.mmap(-1, 2*1024*1024);
+        return self._execute_(filename, context, ntimes, _buf)
+
+for filename in glob('pythoncode/python_*.py'):
+    name = re.match('pythoncode/python_(.*).py', filename).group(1)
+    method_name = "_execute_%s" % name
+    if hasattr(PythonEntry, method_name): continue
+    def method_func(self, context, ntimes, _filename=filename):
+        return self._execute_(_filename, context, ntimes)
+    setattr(PythonEntry, method_name, method_func)
+
+Entry.register(PythonEntry)
+
+
 ## ----------------------------------------
 
 
