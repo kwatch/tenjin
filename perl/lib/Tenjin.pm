@@ -128,10 +128,26 @@ our %ESCAPE_HTML = ( '&'=>'&amp;', '<'=>'&lt;', '>'=>'&gt;', '"'=>'&quot;', "'"=
 
 
 sub escape_xml {
-    my ($s) = @_;
-    #return HTML::Entities::encode_entities($s);
-    $s =~ s/[&<>"]/$ESCAPE_HTML{$&}/ge if $s;
-    return $s;
+    #my ($s) = @_; $s =~ s/[&<>"]/$ESCAPE_HTML{$&}/ge; return $s;       # 7.63
+    #my ($s) = @_; $s =~ s/[&<>"]/$ESCAPE_HTML{$&}/ge; $s;              # 7.48
+    #my $s = shift; $s =~ s/[&<>"]/$ESCAPE_HTML{$&}/ge; $s;             # 7.44
+    #my $s = $_[0]; $s =~ s/[&<>"]/$ESCAPE_HTML{$&}/ge; $s;             # 7.28
+    #my $s; ($s = $_[0]) =~ s/[&<>"]/$ESCAPE_HTML{$&}/ge; $s;           # 7.27
+    (my $s = $_[0]) =~ s/[&<>"]/$ESCAPE_HTML{$&}/ge; $s;               # 7.19
+    #$_[0] =~ s/[&<>"]/$ESCAPE_HTML{$&}/ge; $_[0];                      # error
+    #($_ = $_[0]) =~ s/[&<>"]/$ESCAPE_HTML{$&}/ge; $_;                  # 7.21
+    #my $s; (($s = $_[0]) =~ s/[&<>"]/$ESCAPE_HTML{$&}/ge, $s)[1];      # 7.49
+    #(($_ = $_[0]) =~ s/[&<>"]/$ESCAPE_HTML{$&}/ge, $_)[1];             # 7.43
+    #my $s; ($s = $_[0]) =~ s/[&<>"]/$ESCAPE_HTML{$&}/ge && undef, $s;  # 7.46
+    #my $s; ($s = $_[0]) =~ s/[&<>"]/$ESCAPE_HTML{$&}/ge ? $s : $s;     # 7.30
+    #my $s; ($s = $_[0]) =~ s/[&<>"]/$ESCAPE_HTML{$&}/ge && $s || $s;   # 7.39
+    #{ my $s; ($s = $_[0]) =~ s/[&<>"]/$ESCAPE_HTML{$&}/ge; $s };       # 7.68
+    #
+    #$_ = $_[0]; s/&/&amp;/g; s/</&lt;/g; s/>/&gt;/g; s/"/&quot;/g; $_;    # 7.59
+    #($_ = $_[0]) =~ s/&/&amp;/g; s/</&lt;/g; s/>/&gt;/g; s/"/&quot;/g; $_;  # 7.61
+    #my $s=$_[0]; $s=~s/&/&amp;/g; $s=~s/</&lt;/g; $s=~s/>/&gt;/g; $s=~s/"/&quot;/g; $s;    # 7.70
+    #(my $s=$_[0])=~s/&/&amp;/g; $s=~s/</&lt;/g; $s=~s/>/&gt;/g; $s=~s/"/&quot;/g; $s;    # 7.67
+
 }
 
 
