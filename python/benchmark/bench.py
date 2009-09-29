@@ -691,12 +691,12 @@ class PythonEntry(Entry):
     def _execute_(self, filename, context, ntimes, _buf = None):
         script = read_file(filename)
         code = compile(script, filename, 'exec')
-        from tenjin.helpers import to_str
+        from tenjin.helpers import to_str, escape
         global use_str
         if use_str: to_str = str
         global_vars = globals()
         for i in xrange(ntimes):
-            local_vars = { 'to_str': to_str, 'list': context['list'], '_buf': _buf }
+            local_vars = { 'to_str': to_str, 'list': context['list'], '_buf': _buf, 'escape': escape }
             exec(code, global_vars, local_vars)
             output = local_vars.get('output')
         return output or True
