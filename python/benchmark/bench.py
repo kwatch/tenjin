@@ -107,7 +107,7 @@ class TenjinEntry(Entry):
 
     def load_library(cls):
         global tenjin, escape, to_str, use_str
-        if globals().get('tenjin'): return
+        if globals().get('tenjin'): return tenjin
         try:
             tenjin = import_module('tenjin')
             from tenjin.helpers import escape, to_str
