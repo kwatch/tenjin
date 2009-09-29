@@ -274,15 +274,41 @@ generate_tostrfunc = helpers.generate_tostrfunc
 def _create_html_module():
 
     to_str = helpers.to_str
-    _escape_table = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }
-    _escape_pattern = re.compile(r'[&<>"]')
-    _escape_callable = lambda m: _escape_table[m.group(0)]
+
+    #_escape_table = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }
+    #_escape_pattern = re.compile(r'[&<>"]')
+    ##_escape_callable = lambda m: _escape_table[m.group(0)]
+    ##_escape_callable = lambda m: _escape_table.__get__(m.group(0))
+    #_escape_get     = _escape_table.__getitem__
+    #_escape_callable = lambda m: _escape_get(m.group(0))
+    #_escape_sub     = _escape_pattern.sub
+
+    #def escape_xml(s):
+    #    return s                                          # 3.02
+
+    #def escape_xml(s):
+    #    return _escape_pattern.sub(_escape_callable, s)   # 6.31
+
+    #def escape_xml(s):
+    #    return _escape_sub(_escape_callable, s)           # 6.01
+
+    #def escape_xml(s, _p=_escape_pattern, _f=_escape_callable):
+    #    return _p.sub(_f, s)                              # 6.27
+
+    #def escape_xml(s, _sub=_escape_pattern.sub, _callable=_escape_callable):
+    #    return _sub(_callable, s)                         # 6.04
+
+    #def escape_xml(s):
+    #    s = s.replace('&', '&amp;')
+    #    s = s.replace('<', '&lt;')
+    #    s = s.replace('>', '&gt;')
+    #    s = s.replace('"', '&quot;')
+    #    return s                                          # 5.83
 
     def escape_xml(s):
-        """Escape '&', '<', '>', '"' into '&amp;', '&lt;', '&gt;', '&quot;'.
-        """
-        return _escape_pattern.sub(_escape_callable, s)
-        #return s.replace('&','&amp;').replace('<','&lt;').replace('>','&gt;').replace('"','&quot;')
+        """Escape '&', '<', '>', '"' into '&amp;', '&lt;', '&gt;', '&quot;'."""
+        return s.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;').replace('"', '&quot;')   # 5.72
+
 
     def tagattr(name, expr, value=None, escape=True):
         """(experimental) Return ' name="value"' if expr is true value, else '' (empty string).
@@ -365,7 +391,7 @@ def _create_html_module():
         elif python3:  return gen(values).__next__
 
     mod = _create_module('tenjin.helpers.html')
-    mod._escape_table = _escape_table
+    #mod._escape_table = _escape_table
     mod.escape_xml = escape_xml
     mod.escape     = escape_xml
     mod.tagattr    = tagattr
