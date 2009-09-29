@@ -877,25 +877,33 @@ def filter_targets(targets, target_list, excludes):
 def load_context_data(datafile):
     global mode, lang
     ## context data
-    msg("*** loading context data...\n")
-    if not datafile:
-        if   mode == 'dict':   datafile = 'bench_context.yaml'
-        elif mode == 'class':  datafile = 'bench_context.py'
-        else: assert False, "** unreachable"
-    if lang:
-        datafile = re.sub(r'(\.\w+)', r'_%s\1' % lang, datafile)
-    context = {}
-    if datafile.endswith('.py'):
-        exec(open(datafile).read(), globals(), context)
-    elif datafile.endswith('.yaml') or datafile.endswith('.yml'):
-        import yaml
-        s = open(datafile).read()
-        if encoding:
-            s = s.decode(encoding)
-        context = yaml.load(s)
-    else:
-        raise "-f %s: invalid datafile type" % datafile
+    #msg("*** loading context data...\n")
+    #if not datafile:
+    #    if   mode == 'dict':   datafile = 'bench_context.yaml'
+    #    elif mode == 'class':  datafile = 'bench_context.py'
+    #    else: assert False, "** unreachable"
+    #if datafile.endswith('.py'):
+    #    exec(open(datafile).read(), globals(), context)
+    #elif datafile.endswith('.yaml') or datafile.endswith('.yml'):
+    #    import yaml
+    #    s = open(datafile).read()
+    #    if encoding:
+    #        s = s.decode(encoding)
+    #    context = yaml.load(s)
+    #else:
+    #    raise "-f %s: invalid datafile type" % datafile
     #sys.stderr.write("*** debug: context=%s\n" % (repr(context)))
+    #return context
+    if not datafile: datafile = 'bench_context.py'
+    if lang: datafile = re.sub(r'(\.\w+)', r'_%s\1' % lang, datafile)
+    msg("*** loading context data (file=%s)...\n" % datafile)
+    s = read_file(datafile)
+    if encoding: s = s.decode(encoding)
+    context = {}
+    exec(s, globals(), context)
+    if 'items' in context and 'items2' in context:
+        k = mode == 'dict' and 'items' or 'items2'
+        context['list'] = context[k]
     return context
 
 
