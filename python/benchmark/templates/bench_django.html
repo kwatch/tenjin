@@ -1,22 +1,22 @@
    <tbody>
 {% for item in list %}
     <tr class="{% cycle odd,even %}">
-     <td style="text-align: center">{{ forloop.counter }}</td>
+     <td style="text-align: center">{{ forloop.counter|safe }}</td>
      <td>
-      <a href="/stocks/{{ item.symbol }}">{{ item.symbol }}</a>
+      <a href="/stocks/{{ item.symbol|safe }}">{{ item.symbol|safe }}</a>
      </td>
      <td>
-      <a href="{{ item.url }}">{{ item.name }}</a>
+      <a href="{{ item.url|safe }}">{{ item.name|safe }}</a>
      </td>
      <td>
-      <strong>{{ item.price }}</strong>
+      <strong>{{ item.price|safe }}</strong>
      </td>
     {% if item.change  %}
-     <td class="minus">{{ item.change }}</td>
-     <td class="minus">{{ item.ratio }}</td>
+     <td class="minus">{{ item.change|safe }}</td>
+     <td class="minus">{{ item.ratio|safe }}</td>
     {% else %}
-     <td>{{ item.change }}</td>
-     <td>{{ item.ratio }}</td>
+     <td>{{ item.change|safe }}</td>
+     <td>{{ item.ratio|safe }}</td>
     {% endif %}
     </tr>
 {% endfor %}

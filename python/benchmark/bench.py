@@ -13,6 +13,8 @@ lang     = None
 quiet    = None
 template_dir = 'templates'
 use_str  = False
+flag_escape = False
+
 
 def read_file(filename):
     f = open(filename)
@@ -67,6 +69,8 @@ class Entry(object):
             s = s.replace(u'encoding="UTF-8"', u'encoding="%s"' % charset)
             s = s.replace(u'charset=UTF-8', u'charset=%s' % charset)
             content = s.encode(encoding)
+        ## convert template
+        content = cls.convert_template(content)
         ## foo['name'] => foo.name
         if mode == 'class':
             content = re.sub(r"(\w+)\['(\w+)'\]", r"\1.\2", content)
@@ -74,6 +78,10 @@ class Entry(object):
         open(filename, 'w').write(content)
         return content
     create_template = classmethod(create_template)
+
+    def convert_template(cls, content):
+        return content
+    convert_template = classmethod(convert_template)
 
     def load_library(cls):
         raise NotImplementedError("%s.load_library(): not implemented yet." % cls.__class__.__name__)
@@ -100,10 +108,11 @@ class TenjinEntry(Entry):
     template_filename = 'bench_tenjin.pyhtml'
     salts = [None, 'reuse', 'nocache']
 
-    #def create_template(cls):
-    #    content = Entry.create_template(cls)
-    #    open(cls.template_filename, 'w').write(content)
-    #create_template = classmethod(create_template)
+    def convert_template(cls, content):
+        if flag_escape:
+            content = re.sub(r'#\{(.*?)\}', r'${\1}', content)
+        return content
+    convert_template = classmethod(convert_template)
 
     def load_library(cls):
         global tenjin, escape, to_str, use_str
@@ -112,6 +121,10 @@ class TenjinEntry(Entry):
             tenjin = import_module('tenjin')
             from tenjin.helpers import escape, to_str
             if use_str: to_str = str
+            if os.environ.get('WEBEXT'):
+                import webext
+                to_str = webext.to_str
+                escape = webext.escape_html
         except ImportError:
             tenjin = None
         return tenjin
@@ -206,10 +219,11 @@ class DjangoEntry(Entry):
     template_filename = 'bench_django.html'
     salts = [None, 'reuse']
 
-    #def create_template(cls):
-    #    content = Entry.create_template(cls)
-    #    open(cls.template_filename, 'w').write(content)
-    #create_template = classmethod(create_template)
+    def convert_template(cls, content):
+        if flag_escape:
+            content = re.sub(r'\|safe ?\}\}', ' }}', content)
+        return content
+    convert_template = classmethod(convert_template)
 
     def load_library(cls):
         global django
@@ -270,13 +284,16 @@ class CheetahEntry(Entry):
     template_filename = 'bench_cheetah.tmpl'
     salts = [None, 'reuse']
 
-    def create_template(cls):
-        global encoding
-        content = Entry.create_template(cls.template_filename)
+    def convert_template(cls, content):
         if encoding:
             content = ('#unicode %s\n' % encoding) + content
-            open(cls.template_filename, 'w').write(content)
-    create_template = classmethod(create_template)
+        if flag_escape:
+            content = re.sub(r'>(\$\w+(\.\w+|\[.*?\])?)<', r'>$cgi.escape(str(\1))<', content)
+            content = re.sub(r'"(\$\w+(\.\w+|\[.*?\])?)"', r'"$cgi.escape(str(\1))"', content)
+            content = re.sub(r'/(\$\w+(\.\w+|\[.*?\])?)"', r'/$cgi.escape(str(\1))"', content)
+            content = "#import cgi\n" + content
+        return content
+    convert_template = classmethod(convert_template)
 
     def load_library(cls):
         global Cheetah, bench_cheetah
@@ -333,14 +350,13 @@ Entry.register(CheetahEntry)
 #    template_filename = 'bench_myghty.myt'
 #    salts = [None, 'reuse']
 #
-#    def create_template(cls):
+#    def convert_template(cls, content):
 #        global encoding
-#        content = Entry.create_template(cls.template_filename)
 #        content = "<%args>\n    list\n</%args>\n" + content
 #        if encoding:
 #            content = ("# -*- coding: %s -*-\n" % encoding) + content
-#        open(cls.template_filename, 'w').write(content)
-#    create_template = classmethod(create_template)
+#        return content
+#    convert_template = classmethod(convert_template)
 #
 #    def load_library(cls):
 #        global myghty
@@ -390,13 +406,14 @@ class KidEntry(Entry):
     template_filename = 'bench_kid.kid'
     salts = [None, 'reuse']
 
-    def create_template(cls):
-        content = Entry.create_template(cls.template_filename)
+    def convert_template(cls, content):
         content = re.sub(r'<html(.*)>',
                          r'<html\1 xmlns:py="http://purl.org/kid/ns#">',
                          content)
-        open(cls.template_filename, 'w').write(content)
-    create_template = classmethod(create_template)
+        if flag_escape:
+            pass
+        return content
+    convert_template = classmethod(convert_template)
 
     def load_library(cls):
         global kid, encoding
@@ -458,13 +475,14 @@ class GenshiEntry(Entry):
     template_filename = 'bench_genshi.html'
     salts = [None, 'reuse']
 
-    def create_template(cls):
-        content = Entry.create_template(cls.template_filename)
+    def convert_template(cls, content):
         content = re.sub(r'<html(.*)>',
                          r'<html\1 xmlns:py="http://genshi.edgewall.org/">',
                          content)
-        open(cls.template_filename, 'w').write(content)
-    create_template = classmethod(create_template)
+        if flag_escape:
+            content = re.sub(r'py:content="Markup\((.*?)\)"', r'py:content="\1"', content)
+        return content
+    convert_template = classmethod(convert_template)
 
     def load_library(cls):
         global genshi
@@ -513,10 +531,11 @@ class MakoEntry(Entry):
 
     mako_module_dir = 'mako_modules'
 
-    #def create_template(cls):
-    #    content = Entry.create_template(cls)
-    #    open(cls.template_filename, 'w').write(content)
-    #create_template = classmethod(create_template)
+    def convert_template(cls, content):
+        if flag_escape:
+            content = re.sub(r'\$\{(.*?)\}', r'${\1|h}', content)
+        return content
+    convert_template = classmethod(convert_template)
 
     def load_library(cls):
         global mako
@@ -580,11 +599,12 @@ class TempletorEntry(Entry):
     template_filename = 'bench_templetor.html'
     salts = [None, 'reuse']
 
-    def create_template(cls):
-        content = Entry.create_template(cls.template_filename)
+    def convert_template(cls, content):
         content = "$def with (list)\n" + content
-        open(cls.template_filename, 'w').write(content)
-    create_template = classmethod(create_template)
+        if flag_escape:
+            content = re.sub(r'\$:', r'$', content)
+        return content
+    convert_template = classmethod(convert_template)
 
     def load_library(cls):
         global web
@@ -605,7 +625,7 @@ class TempletorEntry(Entry):
         for i in xrange(ntimes):
             render = web.template.render('.', cache=True)
             output = render.bench_templetor(context['list'])
-        return output
+        return str(output)
 
     def _execute_reuse(self, context, ntimes):
         filename = self.template_filename
@@ -630,10 +650,11 @@ class Jinja2Entry(Entry):
     template_filename = 'bench_jinja2.html'
     salts = [None, 'reuse']
 
-    def create_template(cls):
-        content = Entry.create_template(cls.template_filename)
-        open(cls.template_filename, 'w').write(content)
-    create_template = classmethod(create_template)
+    def convert_template(cls, content):
+        if flag_escape:
+            content = re.sub(r'\}\}', '|e}}', content)
+        return content
+    convert_template = classmethod(convert_template)
 
     def load_library(cls):
         global jinja2
@@ -676,10 +697,6 @@ class PythonEntry(Entry):
                 for x in glob('pythoncode/python_*.py') ]
     salts.sort()
     salts = []
-
-    def create_template(cls):
-        pass
-    create_template = classmethod(create_template)
 
     def load_library(cls):
         return True
@@ -756,11 +773,11 @@ def remove_file(*filenames):
 
 
 def main(ntimes=1000):
-    global encoding, mode, quiet
+    global encoding, mode, quiet, flag_escape
 
     ## parse options
     try:
-        optlist, targets = getopt.getopt(sys.argv[1:], "hpf:n:t:x:Aqm:k:e:l:C", ['str'])
+        optlist, targets = getopt.getopt(sys.argv[1:], "hpf:n:t:x:Aqm:ek:l:C", ['str'])
         options = dict([(key[1:], val == '' and True or val) for key, val in optlist])
     except Exception:
         ex = sys.exc_info()[1]
@@ -786,10 +803,8 @@ def main(ntimes=1000):
     #tostr_encoding = None   # for PyTenjin
     #tmpl_encoding  = None   # for PyTenjin
     if options.get('e'):
-        encoding       = options['e']
-        #tostr_encoding = None
-        #tmpl_encoding  = encoding
-    elif options.get('k'):
+        flag_escape = True
+    if options.get('k'):
         encoding       = options['k']
         #tostr_encoding = encoding
         #tmpl_encoding  = None
@@ -838,6 +853,7 @@ def print_help(script, ntimes, mode):
     print "Usage: python %s [..options..] [..targets..]" % script
     print "  -h          :  help"
     print "  -p          :  print output"
+    print "  -e          :  escape html"
     print "  -f file     :  datafile ('*.py' or '*.yaml')"
     print "  -n N        :  loop N times (default %d)" % ntimes
     print "  -x exclude  :  excluded target name"
