@@ -35,7 +35,7 @@ stylesheet = 'docstyle.css'
 tidy_opts = 'tidy_opts', '-q -i -wrap 9999 --hide-comments yes'
 
 #users_guide_eruby = 'users-guide.eruby'
-original_docdir = '../../common/doc/'
+original_docdir = re.sub(r'/tenjin/.*$', r'/tenjin/common/doc/', os.getcwd())
 users_guide_eruby = original_docdir + 'users-guide.eruby'
 faq_eruby         = original_docdir + 'faq.eruby'
 examples_eruby    = original_docdir + 'examples.eruby'
@@ -112,6 +112,7 @@ def file_txt(c):
     """create *.txt from *.eruby and retrieve testdata from *.txt"""
     #if os.path.exists(c.ingreds[1]):
     #    cp(c.ingreds[1], c.ingred)
+    os.environ['RUBYLIB'] = ''
     system(c%"erubis -E PercentLine -c '@lang=%q|python|' -p '\\[% %\\]' $(ingred) > $(product)");
     #
     name = re.sub(r'\.txt$', '', c.product.replace('-', '_'))
@@ -154,7 +155,7 @@ def task_create_test(c):
 #    pass
 
 
-@recpe
+@recipe
 def task_clean(c):
     rm_rf('*.toc.html', 'test.log', '*.pyc')
 
