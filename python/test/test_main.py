@@ -59,28 +59,28 @@ INPUT3 = r"""<?py
 </ul>
 """
 
-SOURCE = r"""_buf = []; _buf.extend(('''<ul>\n''', ));
+SOURCE = r"""_buf = []; _extend = _buf.extend; _extend(('''<ul>\n''', ));
 for item in ['<a&b>', '["c",'+"'d']"]:
-    _buf.extend(('''  <li>''', to_str(item), '''
+    _extend(('''  <li>''', to_str(item), '''
       ''', escape(to_str(item)), '''</li>\n''', ));
 #end
-_buf.extend(('''</ul>\n''', ));
+_extend(('''</ul>\n''', ));
 print(''.join(_buf))
 """
-SOURCE2 = """_buf = []; _buf.extend(('''<ul>\\r\\n''', ));\n\
+SOURCE2 = """_buf = []; _extend = _buf.extend; _extend(('''<ul>\\r\\n''', ));\n\
 for item in ['<a&b>', '["c",'+"'d']"]:\n\
-    _buf.extend(('''  <li>''', to_str(item), '''\r\n\
+    _extend(('''  <li>''', to_str(item), '''\r\n\
       ''', escape(to_str(item)), '''</li>\\r\\n''', ));\n\
 #end\n\
-_buf.extend(('''</ul>\\r\\n''', ));\n\
+_extend(('''</ul>\\r\\n''', ));\n\
 print(''.join(_buf))
 """
-SOURCE_N = r"""    1:  _buf = []; _buf.extend(('''<ul>\n''', ));
+SOURCE_N = r"""    1:  _buf = []; _extend = _buf.extend; _extend(('''<ul>\n''', ));
     2:  for item in ['<a&b>', '["c",'+"'d']"]:
-    3:      _buf.extend(('''  <li>''', to_str(item), '''
+    3:      _extend(('''  <li>''', to_str(item), '''
     4:        ''', escape(to_str(item)), '''</li>\n''', ));
     5:  #end
-    6:  _buf.extend(('''</ul>\n''', ));
+    6:  _extend(('''</ul>\n''', ));
     7:  print(''.join(_buf))
 """
 
@@ -185,8 +185,8 @@ class MainTest(object):
                     ok (str(ex)) == errormsg
             else:
                 output = app.execute()
-                #print "*** expected=%s" % repr(expected)
-                #print "*** output=%s" % repr(output)
+                #print "*** expected=%s" % expected
+                #print "*** output=%s" % output
                 if python2:
                     if encoding and isinstance(output, unicode):
                         output = output.encode(encoding)
@@ -253,7 +253,7 @@ class MainTest(object):
         n2 = len("</ul>\n")
         self.input    = INPUT[n1:-n2]
         buf = SOURCE.splitlines(True)[1:-2]
-        buf.insert(0, "_buf = []\n")
+        buf.insert(0, "_buf = []; _extend = _buf.extend\n")
         buf.append("print(''.join(_buf))\n")
         self.expected = ''.join(buf)
         self._test()
@@ -263,7 +263,7 @@ class MainTest(object):
     def test_source3(self):  # -sb, -baconvert
         self.options  = "-sb"
         self.input    = INPUT
-        n1 = len("_buf = []; ")
+        n1 = len("_buf = []; _extend = _buf.extend; ")
         n2 = len("print(''.join(_buf))\n")
         self.expected = SOURCE[n1:-n2]
         self._test()
@@ -279,7 +279,7 @@ class MainTest(object):
     def test_number2(self):   # -sbN
         self.options  = "-sbN"
         self.input    = INPUT
-        self.expected = re.sub(r'\n    7:.*?\n$', "\n", SOURCE_N).replace('_buf = []; ', '')
+        self.expected = re.sub(r'\n    7:.*?\n$', "\n", SOURCE_N).replace('_buf = []; _extend = _buf.extend; ', '')
         self._test()
 
     def test_cache1(self):   # -a cache
@@ -296,12 +296,12 @@ class MainTest(object):
         self.expected = ''
         script = (
             "title = _context.get('title'); items = _context.get('items'); \n"
-            "_buf.extend(('''<h1>''', escape(to_str(title)), '''</h1>\n"
+            "_extend(('''<h1>''', escape(to_str(title)), '''</h1>\n"
             "<ul>\\n''', ));\n"
             "for item in items:\n"
-            "    _buf.extend(('''  <li>''', escape(to_str(item)), '''</li>\\n''', ));\n"
+            "    _extend(('''  <li>''', escape(to_str(item)), '''</li>\\n''', ));\n"
             "#endfor\n"
-            "_buf.extend(('''</ul>\\n''', ));\n"
+            "_extend(('''</ul>\\n''', ));\n"
             )
         self.filename = 'test_cache1.pyhtml'
         cachename = self.filename + '.cache'
@@ -343,7 +343,7 @@ class MainTest(object):
         '</div>\n'
         )
     expected_for_retrieve = '\n'.join((
-        '_buf = []; ',
+        '_buf = []; _extend = _buf.extend; ',
         'if list:',
         '',
         '',
@@ -377,7 +377,7 @@ class MainTest(object):
 
     def test_retrieve2(self):  # -SU, -SNU
         expected = '\n'.join((
-            '_buf = []; ',
+            '_buf = []; _extend = _buf.extend; ',
             'if list:',
             '',
             '    i = 0',
@@ -400,7 +400,7 @@ class MainTest(object):
         self._test()
         #
         expected = '\n'.join((
-            '    1:  _buf = []; ',
+            '    1:  _buf = []; _extend = _buf.extend; ',
             '    2:  if list:',
             '',
             '    9:      i = 0',
@@ -423,7 +423,7 @@ class MainTest(object):
 
     def test_retrieve3(self):  # -SC, -SNC
         expected = '\n'.join((
-            '_buf = []; ',
+            '_buf = []; _extend = _buf.extend; ',
             'if list:',
             '    i = 0',
             '    for item in list:',
@@ -441,7 +441,7 @@ class MainTest(object):
         self._test()
         #
         expected = '\n'.join((
-            '    1:  _buf = []; ',
+            '    1:  _buf = []; _extend = _buf.extend; ',
             '    2:  if list:',
             '    9:      i = 0',
             '   10:      for item in list:',
@@ -459,7 +459,7 @@ class MainTest(object):
 
     def test_statements(self):  # -X, -a statements
         expected = '\n'.join((
-            '_buf = []; ',
+            '_buf = []; _extend = _buf.extend; ',
             'if list:',
             '',
             '',
@@ -503,7 +503,7 @@ class MainTest(object):
         try:
             self.filename = False
             self.input    = False
-            self.expected = SOURCE[len('_buf = []; '):-len("print(''.join(_buf))\n")]
+            self.expected = SOURCE[len('_buf = []; _extend = _buf.extend; '):-len("print(''.join(_buf))\n")]
             #self.options = '-d %s' % cachename
             #self._test()
             self.options = '-a dump %s' % cachename
@@ -514,7 +514,8 @@ class MainTest(object):
     def test_indent(self):  # -i2
         self.options  = "-si2"
         self.input    = INPUT
-        self.expected = SOURCE.replace('    _buf', '  _buf')
+        pat = re.compile(r'^    _extend', re.M)
+        self.expected = pat.sub(r'  _extend',  SOURCE)
         self._test()
 
     def test_quiet(self):  # -q, -qasyntax
@@ -667,7 +668,7 @@ class MainTest(object):
     def test_preamble(self):  # --preamble --postamble
         self.options  = ["-s", "--preamble=_buf=list()", "--postamble=return ''.join(_buf)"]
         self.input    = INPUT
-        self.expected = re.sub(r'print\((.*?)\)', r'return \1', SOURCE).replace("_buf = []", "_buf=list()")
+        self.expected = re.sub(r'print\((.*?)\)', r'return \1', SOURCE).replace("_buf = []; _extend = _buf.extend;", "_buf=list();")
         self._test()
 
     def test_xencoding1(self):  # --encoding=encoding

@@ -111,11 +111,11 @@ else:
                 "</ul>\n"
             )
             script = (
-                "_buf.extend(('''<ul>\\n''', ));\n"
+                "_extend(('''<ul>\\n''', ));\n"
                 "for item in items:\n"
-                "    _buf.extend(('''  <li>''', escape(to_str(item)), '''</li>\\n''', ));\n"
+                "    _extend(('''  <li>''', escape(to_str(item)), '''</li>\\n''', ));\n"
                 "#endfor\n"
-                "_buf.extend(('''</ul>\\n''', ));\n"
+                "_extend(('''</ul>\\n''', ));\n"
             )
             def func():
                 engine = tenjin.Engine()

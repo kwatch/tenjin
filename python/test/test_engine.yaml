@@ -664,15 +664,15 @@
 	</p>
 
   script1: |6
-	_buf.extend(('''<p>\n''', ));
+	_extend(('''<p>\n''', ));
 	x = _context.get('x'); y = _context.get('y'); z = _context.get('z'); 
-	_buf.extend(('''  x = ''', to_str(x), ''', y = ''', to_str(y), ''', z = ''', to_str(z), '''
+	_extend(('''  x = ''', to_str(x), ''', y = ''', to_str(y), ''', z = ''', to_str(z), '''
 	</p>\n''', ));
 
   cache1: |
-	_buf.extend(('''<p>\n''', ));
+	_extend(('''<p>\n''', ));
 	x = _context.get('x'); y = _context.get('y'); z = _context.get('z'); 
-	_buf.extend(('''  x = ''', to_str(x), ''', y = ''', to_str(y), ''', z = ''', to_str(z), '''
+	_extend(('''  x = ''', to_str(x), ''', y = ''', to_str(y), ''', z = ''', to_str(z), '''
 	</p>\n''', ));
 
   args1: [ x, y, z ]
@@ -684,15 +684,15 @@
 	</p>
 
   script2: |6
-	_buf.extend(('''<p>\n''', ));
+	_extend(('''<p>\n''', ));
 	
-	_buf.extend(('''  x = ''', to_str(x), ''', y = ''', to_str(y), ''', z = ''', to_str(z), '''
+	_extend(('''  x = ''', to_str(x), ''', y = ''', to_str(y), ''', z = ''', to_str(z), '''
 	</p>\n''', ));
 
   cache2: |6
-	_buf.extend(('''<p>\n''', ));
+	_extend(('''<p>\n''', ));
 	
-	_buf.extend(('''  x = ''', to_str(x), ''', y = ''', to_str(y), ''', z = ''', to_str(z), '''
+	_extend(('''  x = ''', to_str(x), ''', y = ''', to_str(y), ''', z = ''', to_str(z), '''
 	</p>\n''', ));
 
   args2: [ ]
@@ -942,7 +942,7 @@
 
   cache1: |
         chk = { params['state']: ' checked="checked"' }
-        _buf.extend(('''<select name="state">
+        _extend(('''<select name="state">
           <option value="">-</option>
           <option value="CA"''', to_str(chk.get('CA', '')), '''>California</option>
           <option value="FL"''', to_str(chk.get('FL', '')), '''>Florida</option>
@@ -950,21 +950,21 @@
         </select>\n''', ));
 
   cache2: |
-        _buf.extend(('''<form action="create">\n''', ));
+        _extend(('''<form action="create">\n''', ));
         include(':form')
-        _buf.extend(('''  <input type="submit" value="&quot;Create&quot;">
+        _extend(('''  <input type="submit" value="&quot;Create&quot;">
         </form>\n''', ));
 
   cache3: |
-        _buf.extend(('''<html>
+        _extend(('''<html>
           <body>
             <h1>''', escape(to_str(title)), '''</h1>\n''', ));
         echo(_content)
-        _buf.extend(('''  </body>
+        _extend(('''  </body>
         </html>\n''', ));
 
   cache4: |
-        _buf.extend(('''<form action="update">
+        _extend(('''<form action="update">
         <select name="state">
           <option value="">-</option>
           <option value="CA">California</option>

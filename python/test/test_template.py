@@ -179,6 +179,7 @@ class TemplateTest(object):
             template.convert(input)
         ok (f).raises(ValueError)
 
+
 #    def test_dummy_if_stmt(self):     ## NEVER!
 #        input = r"""
 #<html>
@@ -194,16 +195,16 @@ class TemplateTest(object):
 #</html>
 #"""[1:]
 #        expected = r"""
-#_buf.extend(('''<html>
+#_extend(('''<html>
 #  <body>
 #    <ul>\n''', ));
 #if True: ## dummy
 #      if items:
 #        for item in items:
-#            _buf.extend(('''      <li>''', to_str(item), '''</li>\n''', ));
+#            _extend(('''      <li>''', to_str(item), '''</li>\n''', ));
 #        #endfor
 #      #endif
-#      _buf.extend(('''    </ul>
+#      _extend(('''    </ul>
 #  </body>
 #</html>\n''', ));
 #"""[1:]
@@ -220,12 +221,12 @@ class TemplateTest(object):
 <?py #endfor ?>
 </ul>
 """
-        script = r"""_buf.extend(('''<!DOCTYPE>
+        script = r"""_extend(('''<!DOCTYPE>
 <ul>\n''', ));
 for item in items:
-    _buf.extend(('''  <li>''', to_str(item), '''</li>\n''', ));
+    _extend(('''  <li>''', to_str(item), '''</li>\n''', ));
 #endfor
-_buf.extend(('''</ul>\n''', ));
+_extend(('''</ul>\n''', ));
 """
         t = tenjin.Template("test.foobar.pyhtml", input=input)
         if "input argument is specified then regard it as template content":

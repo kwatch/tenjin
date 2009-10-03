@@ -43,7 +43,7 @@ class EncodingTest(object):
     def test_with_binary_template_and_binary_data(self):
         t = tenjin.Template()
         input = "**あ**\n#{'あ'}\n"
-        script = "_buf.extend(('''**\xe3\x81\x82**\n''', to_str('\xe3\x81\x82'), '''\\n''', ));\n"
+        script = "_extend(('''**\xe3\x81\x82**\n''', to_str('\xe3\x81\x82'), '''\\n''', ));\n"
         ok (t.convert(input)) == script
         ## do nothing in to_str()
         self._test_render(
@@ -71,7 +71,7 @@ class EncodingTest(object):
     def test_with_unicode_template_and_binary_data(self):
         t = tenjin.Template(encoding='utf-8')
         input = "**あ**\n#{'あ'}\n"
-        script = u"_buf.extend((u'''**\u3042**\n''', to_str('\u3042'), u'''\\n''', ));\n"
+        script = u"_extend((u'''**\u3042**\n''', to_str('\u3042'), u'''\\n''', ));\n"
         ok (t.convert(input)) == script
         ## do nothing in to_str()
         self._test_render(
@@ -100,7 +100,7 @@ class EncodingTest(object):
     def test_binary_template_with_unicode_data(self):
         t = tenjin.Template()
         input = "**あ**\n#{u'あ'}\n"
-        script = "_buf.extend(('''**\xe3\x81\x82**\n''', to_str(u'\xe3\x81\x82'), '''\\n''', ));\n"
+        script = "_extend(('''**\xe3\x81\x82**\n''', to_str(u'\xe3\x81\x82'), '''\\n''', ));\n"
         ok (t.convert(input)) == script
         ## do nothing in to_str()
         self._test_render(
@@ -130,7 +130,7 @@ class EncodingTest(object):
     def test_unicode_template_with_unicode_data(self):
         t = tenjin.Template(encoding='utf-8')
         input = "**あ**\n#{u'あ'}\n"
-        script = u"_buf.extend((u'''**\u3042**\n''', to_str(u'\u3042'), u'''\\n''', ));\n"
+        script = u"_extend((u'''**\u3042**\n''', to_str(u'\u3042'), u'''\\n''', ));\n"
         ok (t.convert(input)) == script
         ## do nothing in to_str()
         self._test_render(

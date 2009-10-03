@@ -27,12 +27,12 @@ class PreprocessTest(object):
 	"""[1:].replace("\t", "")
         script = r"""
 	WEEKDAY = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
-	_buf.extend(('''<select>
+	_extend(('''<select>
 	<?py curr = params.get(\'wday\') ?>\n''', ));
 	for i, wday in enumerate(WEEKDAY):
-	    _buf.extend(('''  <option value="''', to_str(_decode_params(i)), '''"#{selected(curr==''', to_str(_decode_params(i)), ''')}>''', escape(to_str(_decode_params(wday))), '''</option>\n''', ));
+	    _extend(('''  <option value="''', to_str(_decode_params(i)), '''"#{selected(curr==''', to_str(_decode_params(i)), ''')}>''', escape(to_str(_decode_params(wday))), '''</option>\n''', ));
 	#endfor
-	_buf.extend(('''</select>\n''', ));
+	_extend(('''</select>\n''', ));
 	"""[1:].replace("\t", "")
         preprocessed = r"""
 	<select>

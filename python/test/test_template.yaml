@@ -28,7 +28,7 @@
         </html>
 
   source: &convert1_source |6
-        _buf.extend(('''<html>
+        _extend(('''<html>
          <body>
           <table>\n''', ));
         i = 0
@@ -39,11 +39,11 @@
             else:
                 color = '#FFF'
             #endif
-            _buf.extend(('''   <tr bgcolor="''', to_str(color), '''">
+            _extend(('''   <tr bgcolor="''', to_str(color), '''">
             <td>''', escape(to_str(item)), '''</td>
            </tr>\n''', ));
         #endfor
-        _buf.extend(('''  </table>
+        _extend(('''  </table>
          </body>
         </html>\n''', ));
 
@@ -121,7 +121,7 @@
         </html>
 
   source: |6
-        _buf.extend(('''<html>
+        _extend(('''<html>
          <body>
           <table>\n''', ));
         
@@ -134,13 +134,13 @@
                 color = '#FFF'
             #endif
         
-            _buf.extend(('''   <tr bgcolor="''', to_str(color), '''">
+            _extend(('''   <tr bgcolor="''', to_str(color), '''">
             <td>''', escape(to_str(item)), '''</td>
            </tr>\n''', ));
         
         #endfor
         
-        _buf.extend(('''  </table>
+        _extend(('''  </table>
          </body>
         </html>\n''', ));
 
@@ -180,19 +180,19 @@
         {'name': 'Baz', 'email': 'baz@mail.org'},
         ]
         
-        _buf.extend(('''<ul>\n''', ));
+        _extend(('''<ul>\n''', ));
         i = 0
         for user in users:
             i += 1
-            _buf.extend(('''  <li>''', ));
+            _extend(('''  <li>''', ));
             if user.get('email'):
-                _buf.extend(('''<a href="mailto:''', escape(to_str(user['email'])), '''">''', escape(to_str(user['name'])), '''</a>''', ));
+                _extend(('''<a href="mailto:''', escape(to_str(user['email'])), '''">''', escape(to_str(user['name'])), '''</a>''', ));
             else:
-                _buf.extend((escape(to_str(user['name'])), ));
+                _extend((escape(to_str(user['name'])), ));
             #endif
-            _buf.extend(('''</li>\n''', ));
+            _extend(('''</li>\n''', ));
         #endfor
-        _buf.extend(('''</ul>\n''', ));
+        _extend(('''</ul>\n''', ));
 
   expected: |
         <ul>
@@ -214,13 +214,13 @@
         </ul>
 
   source: |6
-        _buf.extend(('''<ul>\n''', ));
+        _extend(('''<ul>\n''', ));
         for i in range(1,4):
-            _buf.extend(('''<li>
+            _extend(('''<li>
         ''', to_str(i), '''
         </li>\n''', ));
         #endfor
-        _buf.extend(('''</ul>\n''', ));
+        _extend(('''</ul>\n''', ));
 
   expected: |6
         <ul>
@@ -260,11 +260,11 @@
         for item in ['a', 'b', 'c']:
             i += 1
           
-            _buf.extend(('''<p>\n''', ));
+            _extend(('''<p>\n''', ));
             if i % 2 == 1:
-                _buf.extend(('''<span>''', to_str(item), '''</span>\n''', ));
+                _extend(('''<span>''', to_str(item), '''</span>\n''', ));
             #endif
-            _buf.extend(('''</p>\n''', ));
+            _extend(('''</p>\n''', ));
         
         #endfor
           
@@ -288,7 +288,7 @@
         r"a'b'\n"
 
   source: |6
-        _buf.extend(('''\'foo\' and \'bar\'
+        _extend(('''\'foo\' and \'bar\'
         r"a\'b\'\\n"\n''', ));
 
   expected: *quotation1_input
@@ -306,7 +306,7 @@
 
   source: |6
         for value in range(0,3):
-            _buf.extend((to_str(value), '''^
+            _extend((to_str(value), '''^
         i = ''', to_str(value), '''\r\n''', ));
         #end
 
@@ -336,16 +336,16 @@
         </p>^
 
   source: |6
-        _buf.extend(('''<p>\r\n''', ));
+        _extend(('''<p>\r\n''', ));
         
         for value in range(0,3):
         
-            _buf.extend(('''i = ''', to_str(value), '''^
+            _extend(('''i = ''', to_str(value), '''^
         ''', to_str(value), '''\r\n''', ));
         
         #end
         
-        _buf.extend(('''</p>\r\n''', ));
+        _extend(('''</p>\r\n''', ));
 
   expected: |
         <p>^
@@ -371,11 +371,11 @@
         </ul>
 
   source: |
-        _buf = []; _buf.extend(('''<ul>\n''', ));
+        _buf = []; _extend = _buf.extend; _extend(('''<ul>\n''', ));
         for i in range(0,3):
-            _buf.extend(('''<li>''', to_str(i), '''</li>\n''', ));
+            _extend(('''<li>''', to_str(i), '''</li>\n''', ));
         #end
-        _buf.extend(('''</ul>\n''', ));
+        _extend(('''</ul>\n''', ));
         print(''.join(_buf))
 
 
@@ -390,9 +390,9 @@
         <?py #end ?>
 
   source: |
-        _buf = []
+        _buf = []; _extend = _buf.extend
         for i in range(0,3):
-            _buf.extend((to_str(i), '''\n''', ));
+            _extend((to_str(i), '''\n''', ));
         #end
         print(''.join(_buf))
 
@@ -407,7 +407,7 @@
         ${value}
 
   source: |6
-        _buf.extend((to_str(value), '''
+        _extend((to_str(value), '''
         ''', cgi.escape(to_str(value)), '''\n''', ));
 
 
@@ -420,7 +420,7 @@
         #{value}
         ${value}
   source: |6
-        _buf.extend((str(value), '''
+        _extend((str(value), '''
         ''', escape(str(value)), '''\n''', ));
 
 
@@ -437,7 +437,7 @@
 
   source: |
         for i in range(0,3):
-          _buf.extend(('''i = ''', to_str(value), '''\n''', ));
+          _extend(('''i = ''', to_str(value), '''\n''', ));
         #end
 
 
@@ -456,12 +456,12 @@
         </ul>
 
   source: |
-        _buf.extend((u'''こんにちは''', escape(to_str(user)), u'''!
+        _extend((u'''こんにちは''', escape(to_str(user)), u'''!
         <ul>\n''', ));
         for ch in [u'日', u'本', u'語', u'']:
-            _buf.extend((u'''  <li>''', to_str(ch), u'''</li>\n''', ));
+            _extend((u'''  <li>''', to_str(ch), u'''</li>\n''', ));
         #end
-        _buf.extend((u'''</ul>\n''', ));
+        _extend((u'''</ul>\n''', ));
 
   context: { user: 世界 }
   expected: |
@@ -497,7 +497,7 @@
         ${var}
 
   source: &source_escape1 |6
-        _buf.extend((escape(to_str(var)), '''\n''', ));
+        _extend((escape(to_str(var)), '''\n''', ));
 
   expected: |
         &amp; &lt; &gt; &quot;
@@ -514,7 +514,7 @@
         ${var},${flag},${flag2}
 
   source: |6
-        _buf.extend((to_str(var), ''',''', to_str(flag), ''',''', to_str(flag2), '''
+        _extend((to_str(var), ''',''', to_str(flag), ''',''', to_str(flag2), '''
         ''', escape(to_str(var)), ''',''', escape(to_str(flag)), ''',''', escape(to_str(flag2)), '''\n''', ));
 
   expected: |
@@ -536,9 +536,9 @@
         </ul>
 
   source: |6
-        _buf = []; _buf.extend(('''<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN">\n''', ));
+        _buf = []; _extend = _buf.extend; _extend(('''<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN">\n''', ));
         name = _context.get('name'); x = _context.get('x'); y = _context.get('y'); z = _context.get('z'); 
-        _buf.extend(('''<span>hello ''', to_str(name), '''</span>
+        _extend(('''<span>hello ''', to_str(name), '''</span>
           <span>hello ''', to_str(name2), '''</span>
         </ul>\n''', ));
         print(''.join(_buf))
@@ -557,9 +557,9 @@
         <p>hello</p>
 
   source: |6
-        _buf.extend(('''<!DOCTYPE>\n''', ));
+        _extend(('''<!DOCTYPE>\n''', ));
         
-        _buf.extend(('''<p>hello</p>\n''', ));
+        _extend(('''<p>hello</p>\n''', ));
 
 
 ##
@@ -601,15 +601,15 @@
         "NY": "New York",
         "FL": "Florida", }
         #
-        _buf.extend(('''<?py chk = { params[\'state\']: \' checked="checked"\' } ?>\n''', ));
+        _extend(('''<?py chk = { params[\'state\']: \' checked="checked"\' } ?>\n''', ));
         codes = list(states.keys())
         codes.sort()
-        _buf.extend(('''<select name="state">
+        _extend(('''<select name="state">
           <option value="">-</option>\n''', ));
         for code in codes:
-            _buf.extend(('''  <option value="''', to_str(_decode_params(code)), '''"#{chk.get(''', to_str(_decode_params(repr(code))), ''', \'\')}>''', escape(to_str(_decode_params(states[code]))), '''</option>\n''', ));
+            _extend(('''  <option value="''', to_str(_decode_params(code)), '''"#{chk.get(''', to_str(_decode_params(repr(code))), ''', \'\')}>''', escape(to_str(_decode_params(states[code]))), '''</option>\n''', ));
         #endfor
-        _buf.extend(('''</select>\n''', ));
+        _extend(('''</select>\n''', ));
 
   expected: |
         <?py chk = { params['state']: ' checked="checked"' } ?>
@@ -639,7 +639,7 @@
             import urllib
             return '<a href="%s">%s</a>' % (urllib.quote(url), label)
         #end
-        _buf.extend((to_str(_decode_params(link_to('<b>Create</b>', '/items/create'))), '''
+        _extend((to_str(_decode_params(link_to('<b>Create</b>', '/items/create'))), '''
         ''', to_str(_decode_params(link_to('"Show '+_P("item['name']")+'"', '/items/show/'+_p("item['id']")))), '''
         ''', to_str(_decode_params(escape('<b>'+_P('item["name"]')+'</b>'))), '''\n''', ));
 
@@ -677,18 +677,18 @@
         #{"M"}
 
   source: |6
-        _buf.extend((to_str("A"), 
+        _extend((to_str("A"), 
         to_str("B"), 
         to_str("C"), 
         '''foo''', to_str("D"), '''
         ''', to_str("E"), '''bar
         ''', to_str("F"), to_str("G"), ));
         if True:
-            _buf.extend((to_str("H"), 
+            _extend((to_str("H"), 
         to_str("I"), 
         to_str("J"), ));
         #end
-        _buf.extend((escape(to_str("K")), '''
+        _extend((escape(to_str("K")), '''
         ''', escape(to_str("L")), '''
         ''', to_str("M"), ));
 
