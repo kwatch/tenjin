@@ -60,7 +60,7 @@
       </div>
       <pre class="terminal">
 $ pytenjin -a convert table.pyhtml
-_buf = []; _buf.extend(('''&lt;html&gt;
+_buf = []; _extend = _buf.extend; _extend(('''&lt;html&gt;
   &lt;body&gt;
     &lt;h1&gt;''', <strong>escape(to_str(title))</strong>, '''&lt;/h1&gt;
     &lt;table&gt;\n''', ));
@@ -68,12 +68,12 @@ _buf = []; _buf.extend(('''&lt;html&gt;
 <strong>for item in items:</strong>
     <strong>i += 1</strong>
     <strong>color = i % 2 == 0 and '#FFCCCC' or '#CCCCFF'</strong>
-    _buf.extend(('''      &lt;tr bgcolor="''', <strong>to_str(color)</strong>, '''"&gt;
+    _extend(('''      &lt;tr bgcolor="''', <strong>to_str(color)</strong>, '''"&gt;
         &lt;td&gt;''', <strong>to_str(i)</strong>, '''&lt;/td&gt;
         &lt;td&gt;''', <strong>escape(to_str(item))</strong>, '''&lt;/td&gt;
       &lt;/tr&gt;\n''', ));
 <strong>#endfor</strong>
-_buf.extend(('''    &lt;/table&gt;
+_extend(('''    &lt;/table&gt;
   &lt;/body&gt;
 &lt;/html&gt;\n''', ));
 print(''.join(_buf))
