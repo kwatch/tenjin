@@ -94,7 +94,7 @@ def _create_module(module_name):
 ## helper method's module
 ##
 
-def _create_helpers_module():
+if True:
 
     if python2:
         def generate_tostrfunc(encode=None, decode=None):
@@ -259,21 +259,17 @@ def _create_helpers_module():
                    'start_capture', 'stop_capture', 'captured_as',
                    '_p', '_P', '_decode_params',
                    ]
-    return mod
 
-helpers = _create_helpers_module()
-del _create_helpers_module
-generate_tostrfunc = helpers.generate_tostrfunc
-
+helpers = mod
+del echo, start_capture, stop_capture, captured_as, _p, _P, _decode_params
+#del to_str, generate_tostrfunc
+del mod
 
 
 ##
 ## module for html
 ##
-
-def _create_html_module():
-
-    to_str = helpers.to_str
+if True:
 
     #_escape_table = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }
     #_escape_pattern = re.compile(r'[&<>"]')
@@ -350,13 +346,13 @@ def _create_html_module():
             return ''
         return text.replace('\n', '<br />\n')
 
-    def text2html(text):
+    def text2html(text, _nl2br=nl2br):
         """(experimental) escape xml characters, replace "\n" to "<br />\n", and return it."""
         if not text:
             return ''
-        return nl2br(escape_xml(text).replace('  ', ' &nbsp;'))
+        return _nl2br(escape_xml(text).replace('  ', ' &nbsp;'))
 
-    def nv(name, value, sep=None, **kwargs):
+    def nv(name, value, sep=None, _tagattrs=tagattrs, **kwargs):
         """(experimental) Build name and value attributes.
            ex.
            >>> nv('rank', 'A')
@@ -370,7 +366,7 @@ def _create_html_module():
         """
         s = sep and 'name="%s" value="%s" id="%s"' % (name, value, name+sep+value) \
                 or  'name="%s" value="%s"'         % (name, escape_xml(value))
-        return kwargs and s + tagattrs(**kwargs) or s
+        return kwargs and s + _tagattrs(**kwargs) or s
 
     def new_cycle(*values):
         """Generate cycle object.
@@ -403,11 +399,11 @@ def _create_html_module():
     mod.text2html  = text2html
     mod.nv         = nv
     mod.new_cycle  = new_cycle
-    return mod
 
-helpers.html = _create_html_module()
-del _create_html_module
-
+helpers.html = mod
+#del escape_xml
+del tagattr, tagattrs, checked, selected, disabled, nl2br, text2html, nv, new_cycle
+del mod
 helpers.escape = helpers.html.escape_xml
 
 
