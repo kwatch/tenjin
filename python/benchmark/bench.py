@@ -698,6 +698,10 @@ class PythonEntry(Entry):
     salts.sort()
     salts = []
 
+    def create_template(cls, filename=None):
+        pass
+    create_template = classmethod(create_template)
+
     def load_library(cls):
         return True
     load_library = classmethod(load_library)
