@@ -208,6 +208,8 @@ class EngineTest(unittest.TestCase, TestCaseHelper):
         def fname(base):
             return 'local_%s.pyhtml' % base
         try:
+            interval = tenjin.Engine.timestamp_interval
+            tenjin.Engine.timestamp_interval = 0
             for name in names:
                 write_file(fname(name), hash[name])
             engine = tenjin.Engine(prefix='local_', postfix='.pyhtml', layout=':layout_html')
@@ -225,6 +227,7 @@ class EngineTest(unittest.TestCase, TestCaseHelper):
             _test(hash['expected_nolayout'], "<?py _context['_layout'] = False ?>\n")
             ##
         finally:
+            tenjin.Engine.timestamp_interval = interval
             #for name in names:
             #    for suffix in ['', '.cache', '.marshal']:
             #        filename = fname(name) + suffix
@@ -332,6 +335,8 @@ class EngineTest(unittest.TestCase, TestCaseHelper):
         context = { 'params': { } }
         cache_filenames = ['account_create.pyhtml.cache', 'account_form.pyhtml.cache']
         try:
+            interval = tenjin.Engine.timestamp_interval
+            tenjin.Engine.timestamp_interval = 0
             for key, filename in filenames.items():
                 write_file(filename, data[key])
             props = { 'prefix': 'account_', 'postfix':'.pyhtml', 'layout':'layout.pyhtml', 'cache':True }
@@ -361,6 +366,7 @@ class EngineTest(unittest.TestCase, TestCaseHelper):
                 self.assertNotEqual(id(t), id(cached[fname]))
                 self.assertEquals(os.path.getmtime(fname), t.timestamp)
         finally:
+            tenjin.Engine.timestamp_interval = interval
             _remove_files(filenames.values())
 
 
