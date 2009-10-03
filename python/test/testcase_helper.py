@@ -174,27 +174,23 @@ class TestCaseHelper:
         doclist = TestCaseHelper.load_testdata(filename, untabify)
         table = {}
         buf = []
+        a = buf.append
         for doc in doclist:
-            if 'name' not in doc:
-                raise Exception("'name:' is required.")
-            name = doc['name']
-            if name in table:
-                raise Exception("'name: %s' is duplicated." % name)
+            name = doc.get('name')
+            if name is None:  raise Exception("'name:' is required.")
+            if name in table: raise Exception("'name: %s' is duplicated." % name)
             table[name] = doc
-            buf.append(        "def test_%s(self):" % name)
-            for key, val in doc.items():
-                if key[-1] == '*':
-                    key = key[:-1]
-                    val = val.get(lang)
-                if key == 'exception':
-                    buf.append("    self.%s = %s" % (key, val))
-                elif isinstance(val, str):
-                    buf.append('    self.%s = r"""%s"""' % (key, val))
-                else:
-                    buf.append("    self.%s = %s" % (key, repr(val)))
-            buf.append(        "    self.%s()" % testmethod)
-            buf.append(        "#")
-        buf.append('')
+            a(                             'def test_%s(self):' % name)
+            for k, v in doc.items():
+                if k[-1] == '*':
+                    k = k[:-1]
+                    v = v.get(lang)
+                if k == 'exception':     a('    self.%s = %s'        % (k, v))
+                elif isinstance(v, str): a('    self.%s = r"""%s"""' % (k, v))
+                else:                    a('    self.%s = %s'        % (k, repr(v)))
+            a(                             '    self.%s()' % testmethod)
+            a(                             '#')
+        a('')
         code = "\n".join(buf)
         return code
     generate_testcode = staticmethod(generate_testcode)

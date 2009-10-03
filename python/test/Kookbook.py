@@ -1,9 +1,10 @@
-srcdir = "../../common/test"
-kook_default_product = 'test'
 
-import sys
+import sys, os, re
 python3 = sys.version_info[0] == 3
 python2 = sys.version_info[0] == 2
+
+srcdir = re.sub(r'/tenjin.*$', r'/tenjin/common/test', os.getcwd())
+kook_default_product = 'test'
 
 
 @recipe
@@ -15,9 +16,11 @@ def task_copy(c):
 
 @recipe
 @product('test_*.yaml')
-@ingreds(srcdir + '/test_$(1).yaml')
+@ingreds(srcdir + '/test_$(1).yaml.eruby')
 def file_test_engine_yaml(c):
-    cp_p(c.ingred, c.product)
+    os.environ['RUBYLIB'] = ''
+    system(c%"erubis -E PercentLine -p '%%%%%%= =%%%%%' -c '@lang=%q|python|' $(ingred) > $(product)")
+    #cp_p(c.ingred, c.product)
 
 
 @recipe
