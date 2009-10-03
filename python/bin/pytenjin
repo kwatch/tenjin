@@ -52,10 +52,10 @@ class NoTextTemplate(tenjin.Template):
             if n:
                 buf.append("\n" * n)
         elif flag_escape is None:
-            #buf.extend(("_buf.extend((", code, ", )); "))
+            #buf.extend(("_extend((", code, ", )); "))
             buf.extend((code, "; ", ))
         elif flag_escape is False:
-            #buf.extend(("_buf.extend((", self.tostrfunc, "(", code, "), )); "))
+            #buf.extend(("_extend((", self.tostrfunc, "(", code, "), )); "))
             buf.extend((self.tostrfunc, "(", code, "); ", ))
         else:
             buf.extend((self.escapefunc, "(", self.tostrfunc, "(", code, ")); "))
