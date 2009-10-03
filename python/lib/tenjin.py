@@ -1049,6 +1049,7 @@ class Engine(object):
     path       = None
     cache      = None
     preprocess = False
+    timestamp_interval = 5  # seconds
     _cache_storage_classes = {
         'marshal': MarshalCacheStorage,
         'pickle' : PickleCacheStorage,
@@ -1166,7 +1167,7 @@ class Engine(object):
         now = time.time()
         if template:
             assert template.timestamp is not None
-            if now > getattr(template, '_last_checked_at', 0) + 10:
+            if now > getattr(template, '_last_checked_at', 0) + self.timestamp_interval:
                 mtime = os.path.getmtime(filename)
                 if template.timestamp != mtime:
                     #if cache: cache.delete(path)
