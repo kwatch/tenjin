@@ -52,10 +52,10 @@ class Entry(object):
     def available(self):
         return True
 
-    def create_template(cls, filename=None):
+    def create_template(self, filename=None):
         global lang, encodin, mode
         ## create template content
-        if filename is None: filename = cls.template_filename
+        if filename is None: filename = self.template_filename
         filenames = ['_header.html', filename, '_footer.html']
         dir = template_dir
         content = ''.join([ open(dir+'/'+fname).read() for fname in filenames ])
@@ -70,28 +70,31 @@ class Entry(object):
             s = s.replace(u'charset=UTF-8', u'charset=%s' % charset)
             content = s.encode(encoding)
         ## convert template
-        content = cls.convert_template(content)
+        content = self.convert_template(content)
         ## foo['name'] => foo.name
         if mode == 'class':
             content = re.sub(r"(\w+)\['(\w+)'\]", r"\1.\2", content)
         ## write template file
         open(filename, 'w').write(content)
         return content
-    create_template = classmethod(create_template)
 
-    def convert_template(cls, content):
+    def convert_template(self, content):
         return content
-    convert_template = classmethod(convert_template)
 
     def load_library(cls):
         raise NotImplementedError("%s.load_library(): not implemented yet." % cls.__class__.__name__)
     load_library = classmethod(load_library)
 
     def class_setup(cls):
-        cls.create_template()
         ret = cls.load_library()
         return bool(ret)
     class_setup = classmethod(class_setup)
+
+    def setup(self):
+        self.create_template()
+
+    def teardown(self):
+        pass
 
     def execute(self, context, ntimes):
         raise NotImplementedError("%s.execute(): not implemented yet." % self.__class__.__name__)
@@ -108,11 +111,10 @@ class TenjinEntry(Entry):
     template_filename = 'bench_tenjin.pyhtml'
     salts = [None, 'create', 'nocache']
 
-    def convert_template(cls, content):
+    def convert_template(self, content):
         if flag_escape:
             content = re.sub(r'#\{(.*?)\}', r'${\1}', content)
         return content
-    convert_template = classmethod(convert_template)
 
     def load_library(cls):
         global tenjin, escape, to_str, use_str
@@ -227,11 +229,10 @@ class DjangoEntry(Entry):
     template_filename = 'bench_django.html'
     salts = [None, 'create']
 
-    def convert_template(cls, content):
+    def convert_template(self, content):
         if flag_escape:
             content = re.sub(r'\|safe ?\}\}', ' }}', content)
         return content
-    convert_template = classmethod(convert_template)
 
     def load_library(cls):
         global django
@@ -292,7 +293,7 @@ class CheetahEntry(Entry):
     template_filename = 'bench_cheetah.tmpl'
     salts = [None, 'create']
 
-    def convert_template(cls, content):
+    def convert_template(self, content):
         if encoding:
             content = ('#unicode %s\n' % encoding) + content
         if flag_escape:
@@ -301,7 +302,6 @@ class CheetahEntry(Entry):
             content = re.sub(r'/(\$\w+(\.\w+|\[.*?\])?)"', r'/$cgi.escape(str(\1))"', content)
             content = "#import cgi\n" + content
         return content
-    convert_template = classmethod(convert_template)
 
     def load_library(cls):
         global Cheetah, bench_cheetah
@@ -358,14 +358,13 @@ Entry.register(CheetahEntry)
 #    template_filename = 'bench_myghty.myt'
 #    salts = [None, 'create']
 #
-#    def convert_template(cls, content):
+#    def convert_template(self, content):
 #        global encoding
 #        content = "<%args>\n    list\n</%args>\n" + content
 #        if encoding:
 #            content = ("# -*- coding: %s -*-\n" % encoding) + content
 #        return content
-#    convert_template = classmethod(convert_template)
-#
+##
 #    def load_library(cls):
 #        global myghty
 #        if globals().get('myghty'): return
@@ -414,14 +413,13 @@ class KidEntry(Entry):
     template_filename = 'bench_kid.kid'
     salts = [None, 'create']
 
-    def convert_template(cls, content):
+    def convert_template(self, content):
         content = re.sub(r'<html(.*)>',
                          r'<html\1 xmlns:py="http://purl.org/kid/ns#">',
                          content)
         if flag_escape:
             pass
         return content
-    convert_template = classmethod(convert_template)
 
     def load_library(cls):
         global kid, encoding
@@ -483,14 +481,13 @@ class GenshiEntry(Entry):
     template_filename = 'bench_genshi.html'
     salts = [None, 'create']
 
-    def convert_template(cls, content):
+    def convert_template(self, content):
         content = re.sub(r'<html(.*)>',
                          r'<html\1 xmlns:py="http://genshi.edgewall.org/">',
                          content)
         if flag_escape:
             content = re.sub(r'py:content="Markup\((.*?)\)"', r'py:content="\1"', content)
         return content
-    convert_template = classmethod(convert_template)
 
     def load_library(cls):
         global genshi
@@ -539,11 +536,10 @@ class MakoEntry(Entry):
 
     mako_module_dir = 'mako_modules'
 
-    def convert_template(cls, content):
+    def convert_template(self, content):
         if flag_escape:
             content = re.sub(r'\$\{(.*?)\}', r'${\1|h}', content)
         return content
-    convert_template = classmethod(convert_template)
 
     def load_library(cls):
         global mako
@@ -607,12 +603,11 @@ class TempletorEntry(Entry):
     template_filename = 'bench_templetor.html'
     salts = [None, 'create']
 
-    def convert_template(cls, content):
+    def convert_template(self, content):
         content = "$def with (list)\n" + content
         if flag_escape:
             content = re.sub(r'\$:', r'$', content)
         return content
-    convert_template = classmethod(convert_template)
 
     def load_library(cls):
         global web
@@ -658,11 +653,10 @@ class Jinja2Entry(Entry):
     template_filename = 'bench_jinja2.html'
     salts = [None, 'create']
 
-    def convert_template(cls, content):
+    def convert_template(self, content):
         if flag_escape:
             content = re.sub(r'\}\}', '|e}}', content)
         return content
-    convert_template = classmethod(convert_template)
 
     def load_library(cls):
         global jinja2
@@ -971,6 +965,9 @@ def execute_benchmark(entries, context, ntimes, print_output):
         print "%-30s " % entry.name,
         sys.stdout.flush()
 
+        ## setup
+        entry.setup()
+
         ## start time
         start_t = time.time()
         t1 = os.times()
@@ -982,6 +979,9 @@ def execute_benchmark(entries, context, ntimes, print_output):
         ## end time
         t2 = os.times()
         end_t = time.time()
+
+        ## teardown
+        entry.teardown()
 
         ## result
         if done:
