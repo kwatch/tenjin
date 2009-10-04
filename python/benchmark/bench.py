@@ -337,6 +337,7 @@ class CheetahEntry(Entry):
         try:
             import_module('Cheetah')
             if 'Cheetah' not in globals(): import Cheetah    # why?
+            cls().create_template()  # create template
             filename = cls.template_filename
             compiled = filename.replace('.tmpl', 'py')
             do_with_report('compiling %s' % filename,
@@ -455,6 +456,7 @@ class KidEntry(Entry):
         try:
             kid = import_module('kid')
             #kid.enable_import()
+            cls().create_template()
             filename = cls.template_filename
             if not encoding:
                 do_with_report('compling %s ...' % filename,
