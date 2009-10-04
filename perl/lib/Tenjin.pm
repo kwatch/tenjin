@@ -709,6 +709,9 @@ sub add_expr {
 package Tenjin::Engine;
 
 
+our $TIMESTAMP_INTERVAL = 5;
+
+
 sub new {
     my ($class, $options) = @_;
     my $this = {};
@@ -777,7 +780,7 @@ sub get_template {
     ## check whether template file is updated or not
     my $now = time();
     if ($template && $template->{timestamp} && $template->{filename}) {
-        if ($now >= $template->{_last_checked_at} + 10) {
+        if ($now >= $template->{_last_checked_at} + $TIMESTAMP_INTERVAL) {
             $template->{_last_checked_at} = $now;
             $template = undef if $template->{timestamp} < (stat $template->{filename})[9];
         }
