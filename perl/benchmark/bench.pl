@@ -183,7 +183,7 @@ sub _bench_tenjin_template_compile {
 sub bench_tenjin {
     my ($this, $n, $context) = @_;
     my $output;
-    my $engine = new Tenjin::Engine();
+    my $engine = Tenjin::Engine->new();
     while ($n--) {
         $output = $engine->render($template_filename, $context);
     }
@@ -207,6 +207,28 @@ sub bench_tenjin_nocache {
     my $output;
     while ($n--) {
         my $engine = Tenjin::Engine->new({cache=>0});
+        $output = $engine->render($template_filename, $context);
+    }
+    return $output;
+}
+
+## tenjin (with Webext module)
+sub bench_tenjin_webext {
+    $@ = undef;
+    eval {
+        #use Webext;
+        require Webext;
+        import Webext;
+    };
+    if ($@) {
+        print "(Webext is not installed.)\n";
+        $@ = undef;
+        return -1;
+    }
+    my ($this, $n, $context) = @_;
+    my $output;
+    my $engine = Tenjin::Engine->new({cache=>0, escapefunc=>'Webext::escape_html'});
+    while ($n--) {
         $output = $engine->render($template_filename, $context);
     }
     return $output;
@@ -747,6 +769,7 @@ sub do_benchmark {
     my $output = $obj->$method($ntimes, $context);
     my @end_times   = times();
     my $end_time    = Time::HiRes::time();
+    return $output if $output == -1;
     my $utime = $end_times[0] - $start_times[0];   # user
     my $stime = $end_times[1] - $start_times[1];   # sys
     my $rtime = $end_time - $start_time;           # real
