@@ -149,6 +149,14 @@ class TenjinEntry(Entry):
             output = engine.render(filename, context)
         return output
 
+    def _execute_str(self, context, ntimes):
+        """use str() instead of to_str()"""
+        filename = self.template_filename
+        engine = tenjin.Engine(cache=True, tostrfunc='str')
+        for i in xrange(ntimes):
+            output = engine.render(filename, context)
+        return output
+
     def _execute_nocache(self, context, ntimes):
         filename = self.template_filename
         for i in xrange(ntimes):
