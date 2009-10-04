@@ -106,7 +106,7 @@ class TenjinEntry(Entry):
 
     basename = 'tenjin'
     template_filename = 'bench_tenjin.pyhtml'
-    salts = [None, 'reuse', 'nocache']
+    salts = [None, 'create', 'nocache']
 
     def convert_template(cls, content):
         if flag_escape:
@@ -135,14 +135,14 @@ class TenjinEntry(Entry):
         global tenjin
         return tenjin and True or False
 
-    def _execute(self, context, ntimes):
+    def _execute_create(self, context, ntimes):
         filename = self.template_filename
         for i in xrange(ntimes):
             engine = tenjin.Engine(cache=True)
             output = engine.render(filename, context)
         return output
 
-    def _execute_reuse(self, context, ntimes):
+    def _execute(self, context, ntimes):
         filename = self.template_filename
         engine = tenjin.Engine(cache=True)
         for i in xrange(ntimes):
@@ -217,7 +217,7 @@ class DjangoEntry(Entry):
 
     basename = 'django'
     template_filename = 'bench_django.html'
-    salts = [None, 'reuse']
+    salts = [None, 'create']
 
     def convert_template(cls, content):
         if flag_escape:
@@ -249,7 +249,7 @@ class DjangoEntry(Entry):
         global django
         return django and True or False
 
-    def _execute(self, context, ntimes):
+    def _execute_create(self, context, ntimes):
         filename = self.template_filename
         for i in xrange(ntimes):
             s = open(filename).read()
@@ -262,7 +262,7 @@ class DjangoEntry(Entry):
             #    output = output.decode('utf-8').encode(encoding)
         return output
 
-    def _execute_reuse(self, context, ntimes):
+    def _execute(self, context, ntimes):
         filename = self.template_filename
         s = open(filename).read()
         #if encoding:
@@ -282,7 +282,7 @@ class CheetahEntry(Entry):
 
     basename = 'cheetah'
     template_filename = 'bench_cheetah.tmpl'
-    salts = [None, 'reuse']
+    salts = [None, 'create']
 
     def convert_template(cls, content):
         if encoding:
@@ -315,7 +315,7 @@ class CheetahEntry(Entry):
         global Cheetah
         return Cheetah and True or False
 
-    def _execute(self, context, ntimes):
+    def _execute_create(self, context, ntimes):
         filename = self.template_filename
         for i in xrange(ntimes):
             template = bench_cheetah.bench_cheetah()
@@ -328,7 +328,7 @@ class CheetahEntry(Entry):
             #    delattr(template, key)
         return output
 
-    def _execute_reuse(self, context, ntimes):
+    def _execute(self, context, ntimes):
         filename = self.template_filename
         template = bench_cheetah.bench_cheetah()
         for key, val in context.items():
@@ -348,7 +348,7 @@ Entry.register(CheetahEntry)
 #
 #    basename = 'myghty'
 #    template_filename = 'bench_myghty.myt'
-#    salts = [None, 'reuse']
+#    salts = [None, 'create']
 #
 #    def convert_template(cls, content):
 #        global encoding
@@ -373,7 +373,7 @@ Entry.register(CheetahEntry)
 #        global myghty
 #        return myghty and True or False
 #
-#    def _execute(self, context, ntimes):
+#    def _execute_create(self, context, ntimes):
 #        filename = self.template_filename
 #        _encoding = self.encoding or sys.getdefaultencoding()
 #        for i in xrange(ntimes):
@@ -385,7 +385,7 @@ Entry.register(CheetahEntry)
 #            buf.close()
 #        return output
 #
-#    def _execute_reuse(self, context, ntimes):
+#    def _execute(self, context, ntimes):
 #        filename = self.template_filename
 #        _encoding = self.encoding or sys.getdefaultencoding()
 #        interpreter = myghty.interp.Interpreter(component_root='.', output_encoding=_encoding)
@@ -404,7 +404,7 @@ class KidEntry(Entry):
 
     basename = 'kid'
     template_filename = 'bench_kid.kid'
-    salts = [None, 'reuse']
+    salts = [None, 'create']
 
     def convert_template(cls, content):
         content = re.sub(r'<html(.*)>',
@@ -434,7 +434,7 @@ class KidEntry(Entry):
         global kid
         return kid and True or False
 
-    def _execute(self, context, ntimes):
+    def _execute_create(self, context, ntimes):
         filename = self.template_filename
         encoding = self.encoding
         for i in xrange(ntimes):
@@ -450,7 +450,7 @@ class KidEntry(Entry):
                 delattr(template, key)
         return output
 
-    def _execute_reuse(self, context, ntimes):
+    def _execute(self, context, ntimes):
         filename = self.template_filename
         encoding = self.encoding
         if encoding:
@@ -473,7 +473,7 @@ class GenshiEntry(Entry):
 
     basename = 'genshi'
     template_filename = 'bench_genshi.html'
-    salts = [None, 'reuse']
+    salts = [None, 'create']
 
     def convert_template(cls, content):
         content = re.sub(r'<html(.*)>',
@@ -498,7 +498,7 @@ class GenshiEntry(Entry):
         global genshi
         return genshi and True or False
 
-    def _execute(self, context, ntimes):
+    def _execute_create(self, context, ntimes):
         filename = self.template_filename
         encoding = self.encoding
         for i in xrange(ntimes):
@@ -509,7 +509,7 @@ class GenshiEntry(Entry):
             #    pass
         return output
 
-    def _execute_reuse(self, context, ntimes):
+    def _execute(self, context, ntimes):
         filename = self.template_filename
         encoding = self.encoding
         loader = genshi.template.TemplateLoader('.', auto_reload=True)
@@ -527,7 +527,7 @@ class MakoEntry(Entry):
 
     basename = 'mako'
     template_filename = 'bench_mako.html'
-    salts = [None, 'reuse', 'nocache']
+    salts = [None, 'create', 'nocache']
 
     mako_module_dir = 'mako_modules'
 
@@ -554,7 +554,7 @@ class MakoEntry(Entry):
         global mako
         return mako and True or False
 
-    def _execute(self, context, ntimes):
+    def _execute_create(self, context, ntimes):
         filename = self.template_filename
         mako_module_dir = self.mako_module_dir
         for i in xrange(ntimes):
@@ -566,7 +566,7 @@ class MakoEntry(Entry):
             output = template.render(items=context['list'])
         return output
 
-    def _execute_reuse(self, context, ntimes):
+    def _execute(self, context, ntimes):
         filename = self.template_filename
         mako_module_dir = self.mako_module_dir
         lookup = mako.lookup.TemplateLookup(directories=['.'], module_directory=mako_module_dir)
@@ -597,7 +597,7 @@ class TempletorEntry(Entry):
 
     basename = 'templetor'
     template_filename = 'bench_templetor.html'
-    salts = [None, 'reuse']
+    salts = [None, 'create']
 
     def convert_template(cls, content):
         content = "$def with (list)\n" + content
@@ -620,14 +620,14 @@ class TempletorEntry(Entry):
         global web
         return web and True or False
 
-    def _execute(self, context, ntimes):
+    def _execute_create(self, context, ntimes):
         filename = self.template_filename
         for i in xrange(ntimes):
             render = web.template.render('.', cache=True)
             output = render.bench_templetor(context['list'])
         return str(output)
 
-    def _execute_reuse(self, context, ntimes):
+    def _execute(self, context, ntimes):
         filename = self.template_filename
         render = web.template.render('.', cache=True)
         for i in xrange(ntimes):
@@ -648,7 +648,7 @@ class Jinja2Entry(Entry):
 
     basename = 'jinja2'
     template_filename = 'bench_jinja2.html'
-    salts = [None, 'reuse']
+    salts = [None, 'create']
 
     def convert_template(cls, content):
         if flag_escape:
@@ -670,7 +670,7 @@ class Jinja2Entry(Entry):
         global jinja2
         return jinja2 and True or False
 
-    def _execute(self, context, ntimes):
+    def _execute_create(self, context, ntimes):
         filename = self.template_filename
         for i in xrange(ntimes):
             env = jinja2.Environment(loader=jinja2.FileSystemLoader(['.']))
@@ -678,7 +678,7 @@ class Jinja2Entry(Entry):
             output = template.render(context)
         return output
 
-    def _execute_reuse(self, context, ntimes):
+    def _execute(self, context, ntimes):
         filename = self.template_filename
         env = jinja2.Environment(loader=jinja2.FileSystemLoader(['.']))
         for i in xrange(ntimes):
