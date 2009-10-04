@@ -133,6 +133,12 @@ class TenjinEntry(Entry):
 
     load_library = classmethod(load_library)
 
+    def setup(self):
+        Entry.setup(self)
+        cachename = self.template_filename + '.cache'
+        if os.path.isfile(cachename):
+            os.unlink(cachename)
+
     def available(self):
         global tenjin
         return tenjin and True or False
