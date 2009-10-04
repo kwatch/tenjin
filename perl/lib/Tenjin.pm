@@ -620,7 +620,7 @@ sub add_expr {
 
 sub escaped_expr {
     my ($this, $expr) = @_;
-    if ($this->{escapefunu}) {
+    if ($this->{escapefunc}) {
         return "$this->{escapefunc}($expr)";
     }
     if ($this->{rawclass}) {
