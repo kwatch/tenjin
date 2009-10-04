@@ -6,6 +6,8 @@ python3 = sys.version_info[0] == 3
 if python3:
     xrange = range
 
+webext = None
+
 ## global vars
 encoding = None
 mode     = 'class'  # 'class' or 'dict'
@@ -109,7 +111,7 @@ class TenjinEntry(Entry):
 
     basename = 'tenjin'
     template_filename = 'bench_tenjin.pyhtml'
-    salts = [None, 'create', 'nocache']
+    salts = [None, 'create', 'str', 'webext']
 
     def convert_template(self, content):
         if flag_escape:
@@ -123,12 +125,14 @@ class TenjinEntry(Entry):
             tenjin = import_module('tenjin')
             from tenjin.helpers import escape, to_str
             if use_str: to_str = str
-            if os.environ.get('WEBEXT'):
-                import webext
-                to_str = webext.to_str
-                escape = webext.escape_html
         except ImportError:
             tenjin = None
+        #
+        global webext
+        try:
+            webext = import_module('webext')
+        except ImportError:
+            webext = None
         return tenjin
 
     load_library = classmethod(load_library)
@@ -163,6 +167,24 @@ class TenjinEntry(Entry):
         engine = tenjin.Engine(cache=True, tostrfunc='str')
         for i in xrange(ntimes):
             output = engine.render(filename, context)
+        return output
+
+    def _execute_webext(self, context, ntimes):
+        """use webext.to_str() and webext.escape_html() instead of tenjin's helper functions"""
+        global webext, to_str, escape
+        if not webext:
+            print("(webext is not installed)")
+            return False
+        #
+        _to_str, _escape = to_str, escape
+        to_str, escape = webext.to_str, webext.escape_html
+        try:
+            filename = self.template_filename
+            engine = tenjin.Engine()
+            for i in xrange(ntimes):
+                output = engine.render(filename, context)
+        finally:
+            to_str, escape = _to_str, _escape
         return output
 
     def _execute_nocache(self, context, ntimes):
@@ -998,9 +1020,12 @@ def execute_benchmark(entries, context, ntimes, print_output):
             real  = end_t-start_t
             #print "%-24s  %9.4f %9.4f %9.4f %9.4f" % (target, utime, stime, total, real)
             print         "%9.4f %9.4f %9.4f %9.4f" % (        utime, stime, total, real)
-        else:
+        elif output is None:
             #print "%-24s     (module not installed)" % target
             print         "   (module not installed)"
+        else:
+            assert output is False
+            pass
 
         ## print output
         if print_output:
