@@ -38,4 +38,34 @@ module Test::Unit::Assertions
   alias assert_equal_with_diff assert_text_equal    # for compatibility
   alias assert_text_equals     assert_text_equal    # for typo
 
+#  def assert_true(val, message=nil)
+#    message ||= "true is expected but got #{val.inspect}"
+#    assert(val == true, message)
+#  end
+#
+#  def assert_false(val, message=nil)
+#    message ||= "false is expected but got #{val.inspect}"
+#    assert(val == false, message)
+#  end
+
+  def assert_exist(path, message=nil)
+    message ||= "'#{path}' doesn't exist"
+    assert(File.exist?(path), message)
+  end
+
+  def assert_not_exist(path, message=nil)
+    message ||= "'#{path}' exist"
+    assert(! File.exist?(path), message)
+  end
+
+  def assert_file_exist(path, message=nil)
+    message ||= "'#{path}' doesn't exist or not a file"
+    assert(File.file?(path), message)
+  end
+
+  def assert_dir_exist(path, message=nil)
+    message ||= "'#{path}' doesn't exist or not a directory"
+    assert(File.file?(path), message)
+  end
+
 end
