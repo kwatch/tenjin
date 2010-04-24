@@ -1018,7 +1018,7 @@ class GaeMemcacheCacheStorage(CacheStorage):
         if logger: logger.info("[tenjin.GaeMemcacheCacheStorage] store cache (key=%s)" % repr(key))
         ret = memcache.set(key, dict, self.lifetime)
         if not ret:
-            if logger: logger.info("[tenjin.GaeMemcacheCacheStorage: failed to store cache (key=%s)" % repr(key))
+            if logger: logger.info("[tenjin.GaeMemcacheCacheStorage] failed to store cache (key=%s)" % repr(key))
 
     def _delete(self, fullpath):
         memcache.delete(self._cachename(fullpath))
