@@ -785,7 +785,7 @@ class Template(object):
             except UnicodeDecodeError:
                 ex = sys.exc_info()[1]
                 logger.error("[tenjin.Template] " + str(ex))
-                logger.error("[tenjin.Template] (_buf=%s)" % repr(_buf))
+                logger.error("[tenjin.Template] (_buf=%r)" % (_buf, ))
                 raise
 
     def compile(self):
@@ -916,13 +916,13 @@ class MarshalCacheStorage(FileCacheStorage):
     def _load(self, fullpath):
         cachepath = self._cachename(fullpath)
         if not _isfile(cachepath): return None
-        if logger: logger.info("[tenjin.MarshalCacheStorage] load cache (file=%s)" % repr(cachepath))
+        if logger: logger.info("[tenjin.MarshalCacheStorage] load cache (file=%r)" % cachepath)
         dump = _read_binary_file(cachepath)
         return marshal.loads(dump)
 
     def _store(self, fullpath, dict):
         cachepath = self._cachename(fullpath)
-        if logger: logger.info("[tenjin.MarshalCacheStorage] store cache (file=%s)" % repr(cachepath))
+        if logger: logger.info("[tenjin.MarshalCacheStorage] store cache (file=%r)" % cachepath)
         _write_binary_file(cachepath, marshal.dumps(dict))
 
 
@@ -938,14 +938,14 @@ class PickleCacheStorage(FileCacheStorage):
     def _load(self, fullpath):
         cachepath = self._cachename(fullpath)
         if not _isfile(cachepath): return None
-        if logger: logger.info("[tenjin.PickleCacheStorage] load cache (file=%s)" % repr(cachepath))
+        if logger: logger.info("[tenjin.PickleCacheStorage] load cache (file=%r)" % cachepath)
         dump = _read_binary_file(cachepath)
         return pickle.loads(dump)
 
     def _store(self, fullpath, dict):
         if 'bytecode' in dict: dict.pop('bytecode')
         cachepath = self._cachename(fullpath)
-        if logger: logger.info("[tenjin.PickleCacheStorage] store cache (file=%s)" % repr(cachepath))
+        if logger: logger.info("[tenjin.PickleCacheStorage] store cache (file=%r)" % cachepath)
         _write_binary_file(cachepath, pickle.dumps(dict))
 
 
@@ -954,7 +954,7 @@ class TextCacheStorage(FileCacheStorage):
     def _load(self, fullpath):
         cachepath = self._cachename(fullpath)
         if not _isfile(cachepath): return None
-        if logger: logger.info("[tenjin.TextCacheStorage] load cache (file=%s)" % repr(cachepath))
+        if logger: logger.info("[tenjin.TextCacheStorage] load cache (file=%r)" % cachepath)
         s = _read_binary_file(cachepath)
         if python2:
             header, script = s.split("\n\n", 1)
@@ -991,7 +991,7 @@ class TextCacheStorage(FileCacheStorage):
             if isinstance(s, str):
                 s = s.encode(dict.get('encoding') or 'utf-8')   ## unicode(=str) to binary
         cachepath = self._cachename(fullpath)
-        if logger: logger.info("[tenjin.TextCacheStorage] store cache (file=%s)" % repr(cachepath))
+        if logger: logger.info("[tenjin.TextCacheStorage] store cache (file=%r)" % cachepath)
         _write_binary_file(cachepath, s)
 
     def _save_data_of(self, template):
@@ -1012,16 +1012,16 @@ class GaeMemcacheCacheStorage(CacheStorage):
 
     def _load(self, fullpath):
         key = self._cachename(fullpath)
-        if logger: logger.info("[tenjin.GaeMemcacheCacheStorage] load cache (key=%s)" % repr(key))
+        if logger: logger.info("[tenjin.GaeMemcacheCacheStorage] load cache (key=%r)" % key)
         return memcache.get(key)
 
     def _store(self, fullpath, dict):
         if 'bytecode' in dict: dict.pop('bytecode')
         key = self._cachename(fullpath)
-        if logger: logger.info("[tenjin.GaeMemcacheCacheStorage] store cache (key=%s)" % repr(key))
+        if logger: logger.info("[tenjin.GaeMemcacheCacheStorage] store cache (key=%r)" % key)
         ret = memcache.set(key, dict, self.lifetime)
         if not ret:
-            if logger: logger.info("[tenjin.GaeMemcacheCacheStorage] failed to store cache (key=%s)" % repr(key))
+            if logger: logger.info("[tenjin.GaeMemcacheCacheStorage] failed to store cache (key=%r)" % key)
 
     def _delete(self, fullpath):
         memcache.delete(self._cachename(fullpath))
@@ -1297,7 +1297,7 @@ class Engine(object):
         elif self._cache_storage_classes.get(cache):
             self.cache = self._cache_storage_classes[cache]()
         else:
-            raise ValueError("%s: invalid cache object." % repr(cache))
+            raise ValueError("%r: invalid cache object." % (cache, ))
 
     def to_filename(self, template_name):
         """Convert template short name to filename.
@@ -1318,7 +1318,7 @@ class Engine(object):
         filename = self.to_filename(template_name)
         filepath = self._find_file(filename)
         if not filepath:
-            raise IOError('%s: filename not found (path=%s).' % (filename, repr(self.path)))
+            raise IOError('%s: filename not found (path=%r).' % (filename, self.path, ))
         fullpath = os.path.abspath(filepath)
         self._filepaths[template_name] = pair = (filepath, fullpath)
         return pair
@@ -1371,7 +1371,7 @@ class Engine(object):
                 if template.timestamp != mtime:
                     #if cache: cache.delete(path)
                     template = None
-                    if logger: logger.info("[tenjin.Engine] cache is old (filename=%s, template=%s)" % (repr(filename), repr(template)))
+                    if logger: logger.info("[tenjin.Engine] cache is old (filename=%r, template=%r)" % (filename, template, ))
         if not template:
             if not mtime: mtime = _getmtime(filename)
             if self.preprocess:   ## required for preprocess
