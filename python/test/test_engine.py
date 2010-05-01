@@ -582,6 +582,21 @@ class EngineTest(unittest.TestCase, TestCaseHelper):
             _remove_files(filenames)
 
 
+    def test_include_with_kwargs(self):
+        data = EngineTest.testdata['test_include_with_kwargs']
+        write_file('index.pyhtml', data['index_html'])
+        write_file('sub.pyhtml', data['sub_html'])
+        expected = data['expected']
+        #
+        try:
+            engine = tenjin.Engine()
+            context = {}
+            output = engine.render('index.pyhtml', context)
+            self.assertTextEqual(expected, output)
+        finally:
+            _remove_files(['index', 'sub'])
+
+
 remove_unmatched_test_methods(EngineTest)
 
 

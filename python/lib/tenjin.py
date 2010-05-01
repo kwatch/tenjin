@@ -1184,7 +1184,7 @@ class Engine(object):
         #    template.compile()
         return template
 
-    def include(self, template_name, append_to_buf=True):
+    def include(self, template_name, append_to_buf=True, **kwargs):
         """Evaluate template using current local variables as context.
 
            template_name:str
@@ -1203,11 +1203,17 @@ class Engine(object):
         globals = frame.f_globals
         assert '_context' in locals
         context = locals['_context']
+        if kwargs:
+            context.update(kwargs)
         # context and globals are passed to get_template() only for preprocessing.
         template = self.get_template(template_name, context, globals)
         if append_to_buf:  _buf = locals['_buf']
         else:              _buf = None
-        return template.render(context, globals, _buf=_buf)
+        s = template.render(context, globals, _buf=_buf)
+        if kwargs:
+            for k in kwargs:
+                del context[k]
+        return s
 
     def render(self, template_name, context=None, globals=None, layout=True):
         """Evaluate template with layout file and return result of evaluation.

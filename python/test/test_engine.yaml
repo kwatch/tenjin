@@ -987,3 +987,23 @@
         value is 10
         value is 20
         value is 30
+
+
+## -- include() with kwargs
+
+- name:  test_include_with_kwargs
+  index_html: |
+        <div>
+        <?py assert 'x' not in _context ?>
+        <?py include('sub.pyhtml', x=10) ?>
+        <?py assert 'x' not in _context ?>
+        </div>
+
+  sub_html: |
+        <?py assert 'x' in _context ?>
+        <p>x=#{x}</p>
+
+  expected: |
+        <div>
+        <p>x=10</p>
+        </div>
