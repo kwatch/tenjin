@@ -1147,21 +1147,24 @@ class GaeMemcacheStore(KeyValueStore):
     def __init__(self, namespace=None):
         global memcache
         if not memcache: from google.appengine.api import memcache
-        self.memcache = memcache
         self.namespace = namespace
 
     def get(self, key):
-        return self.memcache.get(key, namespace=self.namespace)
+        global memcache
+        return memcache.get(key, namespace=self.namespace)
 
     def set(self, key, value, lifetime=0):
-        return self.memcache.set(key, value, lifetime, namespace=self.namespace)
+        global memcache
+        return memcache.set(key, value, lifetime, namespace=self.namespace)
 
     def delete(self, key):
-        return self.memcache.delete(key, namespace=self.namespace)
+        global memcache
+        return memcache.delete(key, namespace=self.namespace)
 
     def has(self, key):
-        if self.memcache.add(key, 'dummy', namespace=self.namespace):
-            self.memcache.delete(key, namespace=self.namespace)
+        global memcache
+        if memcache.add(key, 'dummy', namespace=self.namespace):
+            memcache.delete(key, namespace=self.namespace)
             return False
         else:
             return True
