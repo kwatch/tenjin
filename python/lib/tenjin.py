@@ -1155,7 +1155,11 @@ class GaeMemcacheStore(KeyValueStore):
 
     def set(self, key, value, lifetime=0):
         global memcache
-        return memcache.set(key, value, lifetime, namespace=self.namespace)
+        if memcache.set(key, value, lifetime, namespace=self.namespace):
+            return True
+        else:
+            if logger: logger.info("[tenjin.GaeMemcacheStore] failed to set (key=%r)" % key)
+            return False
 
     def delete(self, key):
         global memcache
