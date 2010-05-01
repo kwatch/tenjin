@@ -1125,6 +1125,34 @@ class FileBaseDataCache(DataCache):
         return True
 
 
+##
+## Google App Engine memcache base data cache
+##
+class GaeMemcacheBaseDataCache(DataCache):
+
+    def __init__(self, namespace=None):
+        global memcache
+        if not memcache: from google.appengine.api import memcache
+        self.memcache = memcache
+        self.namespace = namespace
+
+    def get(self, key, lifetime=0):
+        return self.memcache.get(key, namespace=self.namespace)
+
+    def set(self, key, value, lifetime=0):
+        return self.memcache.set(key, value, lifetime, namespace=self.namespace)
+
+    def delete(self, key, lifetime=0):
+        return self.memcache.delete(key, namespace=self.namespace)
+
+    def has(self, key, lifetime=0):
+        if self.memcache.add(key, 'dummy', namespace=self.namespace):
+            self.memcache.delete(key, namespace=self.namespace)
+            return False
+        else:
+            return True
+
+
 
 ##
 ## template engine class
