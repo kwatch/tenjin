@@ -1169,7 +1169,7 @@ class GaeMemcacheBaseDataCache(DataCache):
 ##
 class FragmentCacheHelper(object):
 
-    def __init__(self, datacache, prefix='fragment.'):
+    def __init__(self, datacache, prefix=None):
         self.datacache = datacache
         self.prefix = prefix
 
