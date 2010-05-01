@@ -1163,6 +1163,8 @@ class Engine(object):
         now = time.time()
         if template:
             assert template.timestamp is not None
+            if not template.filename:
+                template.filename = fullpath   # or filename
             if now > getattr(template, '_last_checked_at', 0) + self.timestamp_interval:
                 mtime = os.path.getmtime(filename)
                 if template.timestamp != mtime:
@@ -1177,6 +1179,7 @@ class Engine(object):
             template = self._create_template(filename, _context, _globals)
             template.timestamp = mtime
             template._last_checked_at = now
+            template.filename = fullpath     # set fullpath instead of filename
             if cache:
                 if not template.bytecode: template.compile()
                 cache.set(fullpath, template)
