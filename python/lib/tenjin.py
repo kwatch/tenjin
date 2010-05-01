@@ -1183,7 +1183,7 @@ class FragmentCacheHelper(object):
         self.store = store
         self.prefix = prefix
 
-    def not_cached(self, cache_name, lifetime=0):
+    def not_cached(self, cache_key, lifetime=0):
         """html fragment cache helper.
            ex.
                <?py if not_cached('item_list', 10): ?>
@@ -1196,26 +1196,26 @@ class FragmentCacheHelper(object):
                <?py echo_cached()  # necessary! ?>
         """
         context = sys._getframe(1).f_locals['_context']
-        context['_cache_name'] = cache_name
-        key = self.prefix and self.prefix + cache_name or cache_name
-        value = self.store.get(key, lifetime)
+        context['_cache_key'] = cache_key
+        key = self.prefix and self.prefix + cache_key or cache_key
+        value = self.store.get(key)
         if value:    ## cached
-            if logger: logger.debug('[tenjin.not_cached] %r: cached.' % cache_name)
+            if logger: logger.debug('[tenjin.not_cached] %r: cached.' % cache_key)
             context[key] = value
             return False
         else:        ## not cached
-            if logger: logger.debug('[tenjin.not_cached]: %r: not cached.' % cache_name)
+            if logger: logger.debug('[tenjin.not_cached]: %r: not cached.' % cache_key)
             if key in context: del context[key]
             context['_cache_lifetime'] = lifetime
-            helpers.start_capture(cache_name, _depth=2)
+            helpers.start_capture(cache_key, _depth=2)
             return True
 
     def echo_cached(self):
         """html fragment cache helper. see not_cached() docment."""
         f_locals = sys._getframe(1).f_locals
         context = f_locals['_context']
-        cache_name = context.pop('_cache_name')
-        key = self.prefix and self.prefix + cache_name or cache_name
+        cache_key = context.pop('_cache_key')
+        key = self.prefix and self.prefix + cache_key or cache_key
         if key in context:    ## cached
             value = context.pop(key)
         else:                 ## not cached
