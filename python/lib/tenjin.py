@@ -1100,7 +1100,8 @@ class FileBaseDataCache(DataCache):
         fpath = self.filepath(key)
         if not os.path.isfile(fpath):
             return
-        if lifetime and os.path.getmtime(fpath) + lifetime <= time.time():
+        if os.path.getmtime(fpath) < time.time():
+            os.unlink(fpath)
             return
         return _read_binary_file(fpath)
 
@@ -1109,7 +1110,11 @@ class FileBaseDataCache(DataCache):
         dirname = os.path.dirname(fpath)
         if not os.path.isdir(dirname):
             os.makedirs(dirname)
+        now = time.time()
         _write_binary_file(fpath, value)
+        ts = now + (lifetime or 604800)   # 60*60*24*7 = 604800
+        os.utime(fpath, (ts, ts))
+        return self
 
     def delete(self, key, lifetime=0):
         fpath = self.filepath(key)
@@ -1120,9 +1125,7 @@ class FileBaseDataCache(DataCache):
 
     def has(self, key, lifetime=0):
         fpath = self.filepath(key)
-        if not os.path.isfile(fpath): return False
-        if linetime: return os.path.getmtime(fpath) + lifetime <= time.time()
-        return True
+        return os.path.isfile(fpath) and os.path.getmtime(fpath) >= time.time()
 
 
 ##
