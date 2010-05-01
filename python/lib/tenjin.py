@@ -1031,7 +1031,7 @@ class GaeMemcacheCacheStorage(CacheStorage):
 ##
 ## abstract class for data cache
 ##
-class DataCache(object):
+class KeyValueStore(object):
 
     def get(self, key, *options):
         raise NotImplementedError("%s.get(): not implemented yet." % self.__class__.__name__)
@@ -1049,7 +1049,7 @@ class DataCache(object):
 ##
 ## memory base data cache
 ##
-class MemoryBaseDataCache(DataCache):
+class MemoryBaseStore(KeyValueStore):
 
     def __init__(self):
         self.values = {}
@@ -1090,7 +1090,7 @@ class MemoryBaseDataCache(DataCache):
 ##
 ## file base data cache
 ##
-class FileBaseDataCache(DataCache):
+class FileBaseStore(KeyValueStore):
 
     def __init__(self, root_path):
         if not os.path.isdir(root_path):
@@ -1142,7 +1142,7 @@ class FileBaseDataCache(DataCache):
 ##
 ## Google App Engine memcache base data cache
 ##
-class GaeMemcacheBaseDataCache(DataCache):
+class GaeMemcacheStore(KeyValueStore):
 
     def __init__(self, namespace=None):
         global memcache
@@ -1172,8 +1172,8 @@ class GaeMemcacheBaseDataCache(DataCache):
 ##
 class FragmentCacheHelper(object):
 
-    def __init__(self, datacache, prefix=None):
-        self.datacache = datacache
+    def __init__(self, store, prefix=None):
+        self.store = store
         self.prefix = prefix
 
     def not_cached(self, cache_name, lifetime=0):
@@ -1191,7 +1191,7 @@ class FragmentCacheHelper(object):
         context = sys._getframe(1).f_locals['_context']
         context['_cache_name'] = cache_name
         key = self.prefix and self.prefix + cache_name or cache_name
-        value = self.datacache.get(key, lifetime)
+        value = self.store.get(key, lifetime)
         if value:    ## cached
             if logger: logger.debug('[tenjin.not_cached] %r: cached.' % cache_name)
             context[key] = value
@@ -1214,7 +1214,7 @@ class FragmentCacheHelper(object):
         else:                 ## not cached
             value = helpers.stop_capture(False, _depth=2)
             lifetime = context.pop('_cache_lifetime')
-            self.datacache.set(key, value, lifetime)
+            self.store.set(key, value, lifetime)
         f_locals['_buf'].append(value)
 
 

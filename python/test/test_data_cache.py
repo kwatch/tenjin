@@ -12,10 +12,10 @@ import tenjin
 from tenjin.helpers import *
 
 
-class MemoryBaseDataCacheTest(unittest.TestCase):
+class MemoryBaseStoreTest(unittest.TestCase):
 
     def setUp(self):
-        self.data_cache = tenjin.MemoryBaseDataCache()
+        self.data_cache = tenjin.MemoryBaseStore()
         self.key = 'values/foo'
         self.value = "FOOBAR"
 
@@ -73,12 +73,12 @@ class MemoryBaseDataCacheTest(unittest.TestCase):
             ok (key).not_in(data_cache.values)
 
 
-class FileBaseDataCacheTest(unittest.TestCase):
+class FileBaseStoreTest(unittest.TestCase):
 
     def setUp(self):
         self.root_dir = '_test.caches.d'
         os.mkdir(self.root_dir)
-        self.data_cache = tenjin.FileBaseDataCache(self.root_dir)
+        self.data_cache = tenjin.FileBaseStore(self.root_dir)
         self.key = 'values/foo'
         self.value = "FOOBAR"
 
@@ -164,7 +164,7 @@ class FragmentCacheTest(unittest.TestCase):
         write_file(self.tname, pyhtml)
         self.root_dir = '_test.caches.d'
         os.mkdir(self.root_dir)
-        data_cache = tenjin.FileBaseDataCache(self.root_dir)
+        data_cache = tenjin.FileBaseStore(self.root_dir)
         self.fragment_cache = tenjin.FragmentCacheHelper(data_cache, prefix='fragment.')
         global not_cached, echo_cached
         not_cached  = self.fragment_cache.not_cached
