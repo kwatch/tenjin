@@ -35,13 +35,13 @@ __all__      = ['Template', 'Engine', 'helpers', 'html', ]
 
 
 import re, sys, os, time
+from time import time as _time
+from os.path import getmtime as _getmtime
 random = marshal = pickle = memcache = unquote = None   # lazy import
 python3 = sys.version_info[0] == 3
 python2 = sys.version_info[0] == 2
 
 logger = None
-
-from time import time as _time
 
 
 ##
@@ -1105,7 +1105,7 @@ class FileBaseDataCache(DataCache):
         fpath = self.filepath(key)
         if not os.path.isfile(fpath):
             return
-        if os.path.getmtime(fpath) < _time():
+        if _getmtime(fpath) < _time():
             os.unlink(fpath)
             return
         return _read_binary_file(fpath)
@@ -1132,7 +1132,7 @@ class FileBaseDataCache(DataCache):
         fpath = self.filepath(key)
         if not os.path.isfile(fpath):
             return False
-        if os.path.getmtime(fpath) < _time():
+        if _getmtime(fpath) < _time():
             os.unlink(fpath)
             return False
         return True
@@ -1359,13 +1359,13 @@ class Engine(object):
             if not template.filename:
                 template.filename = filename   # or fullpath
             if now > getattr(template, '_last_checked_at', 0) + self.timestamp_interval:
-                mtime = os.path.getmtime(filename)
+                mtime = _getmtime(filename)
                 if template.timestamp != mtime:
                     #if cache: cache.delete(path)
                     template = None
                     if logger: logger.info("[tenjin.Engine] cache is old (filename=%s, template=%s)" % (repr(filename), repr(template)))
         if not template:
-            if not mtime: mtime = os.path.getmtime(filename)
+            if not mtime: mtime = _getmtime(filename)
             if self.preprocess:   ## required for preprocess
                 if _context is None: _context = {}
                 if _globals is None: _globals = sys._getframe(1).f_globals
