@@ -1067,7 +1067,7 @@ class MemoryBaseStore(KeyValueStore):
     def set(self, key, value, lifetime=0):
         ts = lifetime and _time() + lifetime or 0
         self.values[key] = (value, ts)
-        return self
+        return True
 
     def delete(self, key):
         try:
@@ -1120,7 +1120,7 @@ class FileBaseStore(KeyValueStore):
         _write_binary_file(fpath, value)
         ts = now + (lifetime or 604800)   # 60*60*24*7 = 604800
         os.utime(fpath, (ts, ts))
-        return self
+        return True
 
     def delete(self, key):
         fpath = self.filepath(key)
