@@ -1190,11 +1190,11 @@ class FragmentCacheHelper(object):
         key = self.prefix and self.prefix + cache_name or cache_name
         value = self.datacache.get(key, lifetime)
         if value:    ## cached
-            logger.debug('[tenjin.not_cached] %r: cached.' % cache_name)
+            if logger: logger.debug('[tenjin.not_cached] %r: cached.' % cache_name)
             context[key] = value
             return False
         else:        ## not cached
-            logger.debug('[tenjin.not_cached]: %r: not cached.' % cache_name)
+            if logger: logger.debug('[tenjin.not_cached]: %r: not cached.' % cache_name)
             if key in context: del context[key]
             context['_cache_lifetime'] = lifetime
             helpers.start_capture(cache_name, _depth=2)
