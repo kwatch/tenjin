@@ -5,6 +5,7 @@
 ###
 
 import unittest
+from oktest import ok, not_ok
 import os, traceback
 import yaml
 
@@ -111,7 +112,7 @@ items = ['aaa', 'bbb', 'ccc']
 """
 
 
-class MainTest(unittest.TestCase, TestCaseHelper):
+class MainTest(unittest.TestCase):
 
     def setUp(self):
         pass
@@ -171,10 +172,10 @@ class MainTest(unittest.TestCase, TestCaseHelper):
                         ex = sys.exc_info()[1]
                         lst[0] = ex
                         raise ex
-                self.assertRaises(exception, f1)
+                ok (f1).raises(exception)
                 if errormsg:
                     ex = lst[0]
-                    self.assertTextEqual(errormsg, str(ex))
+                    ok (str(ex)) == errormsg
             else:
                 output = app.execute()
                 #print "*** expected=%s" % repr(expected)
@@ -182,7 +183,7 @@ class MainTest(unittest.TestCase, TestCaseHelper):
                 if python2:
                     if encoding and isinstance(output, unicode):
                         output = output.encode(encoding)
-                self.assertTextEqual(expected, output)
+                ok (output) == expected
         finally:
             try:
                 if filename:
@@ -287,14 +288,14 @@ class MainTest(unittest.TestCase, TestCaseHelper):
         cachename = self.filename + '.cache'
         try:
             self._test()
-            self.assertExists(cachename)
+            ok (cachename).exists()
             import marshal
             dct = marshal.load(open(cachename, 'rb'))
-            self.assertTextEqual(['title', 'items'], dct.get('args'))
+            ok (dct.get('args')) == ['title', 'items']
             if   python2:  expected = "<type 'code'>"
             elif python3:  expected = "<class 'code'>"
-            self.assertEquals(expected, str(type(dct.get('bytecode'))))
-            self.assertTextEqual(script, dct.get('script'))
+            ok (str(type(dct.get('bytecode')))) == expected
+            ok (dct.get('script')) == script
         finally:
             if os.path.exists(cachename):
                 os.unlink(cachename)
@@ -472,7 +473,7 @@ class MainTest(unittest.TestCase, TestCaseHelper):
         self.expected = EXECUTED
         self.options = '-a render --cache=true'
         self._test()
-        self.assertExists(cachename)
+        ok (cachename).exists()
         # dump test
         try:
             self.filename = False

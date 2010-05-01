@@ -4,6 +4,7 @@
 ###
 
 import unittest
+from oktest import ok, not_ok
 import sys, os, re, time, shutil
 from testcase_helper import *
 from oktest import *

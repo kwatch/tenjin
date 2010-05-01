@@ -6,6 +6,7 @@
 ###
 
 import unittest
+from oktest import ok, not_ok
 import sys, os, re
 
 from testcase_helper import *
@@ -13,7 +14,7 @@ import tenjin
 from tenjin.helpers import *
 
 
-class EncodingTest(unittest.TestCase, TestCaseHelper):
+class EncodingTest(unittest.TestCase):
 
 
     def _test_render(self, template=None, to_str=None,
@@ -22,16 +23,21 @@ class EncodingTest(unittest.TestCase, TestCaseHelper):
         buf = []
         context = {'to_str': to_str}
         template.render(context, _buf=buf)
-        self.assertEquals(expected_buf, buf)
+        ok (buf) == expected_buf
         if expected_errcls:
-            ex = self.assertRaise(expected_errcls, lambda: template.render(context))
+            def f():
+                template.render(context)
+            ok (f).raises(expected_errcls)
+            ex = f.exception
             if expected_errmsg:
-                self.assertEquals(expected_errmsg, str(ex))
+                ok (str(ex)) == expected_errmsg
         elif expected_output:
-            self.assertNotRaise(lambda: template.render(context))
+            def f():
+                lambda: template.render(context)
+            ok (f).not_raise()
             output = template.render(context)
-            self.assertTextEqual(expected_output, output)
-            self.assertTrue(isinstance(output, type(output)))
+            ok (output) == expected_output
+            ok (output).is_a(type(output))
         else:
             raise "*** internal error"
 
@@ -39,7 +45,7 @@ class EncodingTest(unittest.TestCase, TestCaseHelper):
         t = tenjin.Template()
         input = "**あ**\n#{'あ'}\n"
         script = "_buf.extend(('''**\xe3\x81\x82**\n''', to_str('\xe3\x81\x82'), '''\\n''', ));\n"
-        self.assertTextEqual(script, t.convert(input))
+        ok (t.convert(input)) == script
         ## do nothing in to_str()
         self._test_render(
             template        = t,
@@ -67,7 +73,7 @@ class EncodingTest(unittest.TestCase, TestCaseHelper):
         t = tenjin.Template(encoding='utf-8')
         input = "**あ**\n#{'あ'}\n"
         script = u"_buf.extend((u'''**\u3042**\n''', to_str('\u3042'), u'''\\n''', ));\n"
-        self.assertTextEqual(script, t.convert(input))
+        ok (t.convert(input)) == script
         ## do nothing in to_str()
         self._test_render(
             template        = t,
@@ -96,7 +102,7 @@ class EncodingTest(unittest.TestCase, TestCaseHelper):
         t = tenjin.Template()
         input = "**あ**\n#{u'あ'}\n"
         script = "_buf.extend(('''**\xe3\x81\x82**\n''', to_str(u'\xe3\x81\x82'), '''\\n''', ));\n"
-        self.assertTextEqual(script, t.convert(input))
+        ok (t.convert(input)) == script
         ## do nothing in to_str()
         self._test_render(
             template        = t,
@@ -126,7 +132,7 @@ class EncodingTest(unittest.TestCase, TestCaseHelper):
         t = tenjin.Template(encoding='utf-8')
         input = "**あ**\n#{u'あ'}\n"
         script = u"_buf.extend((u'''**\u3042**\n''', to_str(u'\u3042'), u'''\\n''', ));\n"
-        self.assertTextEqual(script, t.convert(input))
+        ok (t.convert(input)) == script
         ## do nothing in to_str()
         self._test_render(
             template        = t,

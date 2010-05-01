@@ -4,6 +4,7 @@
 ###
 
 import unittest
+from oktest import ok, not_ok
 import sys, os, re, time
 from glob import glob
 
@@ -13,7 +14,7 @@ import tenjin
 from tenjin.helpers import *
 
 
-class PreprocessTest(unittest.TestCase, TestCaseHelper):
+class PreprocessTest(unittest.TestCase):
 
     def test_preprocessor_class(self):
         input = r"""
@@ -50,8 +51,8 @@ class PreprocessTest(unittest.TestCase, TestCaseHelper):
         try:
             write_file(filename, input)
             preprocessor = tenjin.Preprocessor(filename)
-            self.assertTextEqual(script, preprocessor.script)
-            self.assertTextEqual(preprocessed, preprocessor.render())
+            ok (preprocessor.script) == script
+            ok (preprocessor.render()) == preprocessed
         finally:
             if os.path.exists(filename):
                 os.unlink(filename)
