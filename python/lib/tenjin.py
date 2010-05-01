@@ -1051,7 +1051,7 @@ class MemoryBaseDataCache(DataCache):
     def __init__(self):
         self.values = {}
 
-    def get(self, key, lifetime=0):
+    def get(self, key):
         pair = self.values.get(key)
         if not pair:
             return None
@@ -1066,14 +1066,14 @@ class MemoryBaseDataCache(DataCache):
         self.values[key] = (value, ts)
         return self
 
-    def delete(self, key, lifetime=0):
+    def delete(self, key):
         try:
             del self.values[key]
             return True
         except KeyError:
             return False
 
-    def has(self, key, lifetime=0):
+    def has(self, key):
         pair = self.values.get(key)
         if not pair:
             return False
@@ -1099,7 +1099,7 @@ class FileBaseDataCache(DataCache):
     def filepath(self, key, _pat1=_pat):
         return os.path.join(self.root_path, _pat1.sub('_', key))
 
-    def get(self, key, lifetime=0):
+    def get(self, key):
         fpath = self.filepath(key)
         if not os.path.isfile(fpath):
             return
@@ -1119,14 +1119,14 @@ class FileBaseDataCache(DataCache):
         os.utime(fpath, (ts, ts))
         return self
 
-    def delete(self, key, lifetime=0):
+    def delete(self, key):
         fpath = self.filepath(key)
         if os.path.isfile(fpath):
             os.unlink(fpath)
             return True
         return False
 
-    def has(self, key, lifetime=0):
+    def has(self, key):
         fpath = self.filepath(key)
         if not os.path.isfile(fpath):
             return False
@@ -1147,16 +1147,16 @@ class GaeMemcacheBaseDataCache(DataCache):
         self.memcache = memcache
         self.namespace = namespace
 
-    def get(self, key, lifetime=0):
+    def get(self, key):
         return self.memcache.get(key, namespace=self.namespace)
 
     def set(self, key, value, lifetime=0):
         return self.memcache.set(key, value, lifetime, namespace=self.namespace)
 
-    def delete(self, key, lifetime=0):
+    def delete(self, key):
         return self.memcache.delete(key, namespace=self.namespace)
 
-    def has(self, key, lifetime=0):
+    def has(self, key):
         if self.memcache.add(key, 'dummy', namespace=self.namespace):
             self.memcache.delete(key, namespace=self.namespace)
             return False
