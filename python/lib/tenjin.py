@@ -1056,12 +1056,14 @@ class MemoryBaseDataCache(DataCache):
         if not pair:
             return None
         value, timestamp = pair
-        if lifetime and timestamp + lifetime < time.time():
+        if timestamp and timestamp < time.time():
+            self.values.pop(key)
             return None
         return value
 
     def set(self, key, value, lifetime=0):
-        self.values[key] = (value, time.time())
+        ts = lifetime and time.time() + lifetime or 0
+        self.values[key] = (value, ts)
         return self
 
     def delete(self, key, lifetime=0):
@@ -1075,10 +1077,11 @@ class MemoryBaseDataCache(DataCache):
         pair = self.values.get(key)
         if not pair:
             return False
-        if not lifetime:
-            return True
         value, timestamp = pair
-        return timestamp + lifetime > time.time()
+        if timestamp and timestamp < time.time():
+            self.values.pop(key)
+            return False
+        return True
 
 
 ##
@@ -1125,7 +1128,12 @@ class FileBaseDataCache(DataCache):
 
     def has(self, key, lifetime=0):
         fpath = self.filepath(key)
-        return os.path.isfile(fpath) and os.path.getmtime(fpath) >= time.time()
+        if not os.path.isfile(fpath):
+            return False
+        if os.path.getmtime(fpath) < time.time():
+            os.unlink(fpath)
+            return False
+        return True
 
 
 ##
