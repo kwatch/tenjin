@@ -1094,7 +1094,7 @@ class FileBaseDataCache(DataCache):
             raise ArgumentError("%s: directory not found." % root_path)
         self.root_path = root_path
 
-    _pat = re.compile(r'[^-\/\w]')
+    _pat = re.compile(r'[^-.\/\w]')
 
     def filepath(self, key, _pat1=_pat):
         return os.path.join(self.root_path, _pat1.sub('_', key))
