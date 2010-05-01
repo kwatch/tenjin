@@ -181,19 +181,19 @@ if True:
         context = frame.f_locals
         context['_buf'].append(string)
 
-    def start_capture(varname=None):
+    def start_capture(varname=None, _depth=1):
         """start capturing with name."""
-        frame = sys._getframe(1)
+        frame = sys._getframe(_depth)
         context = frame.f_locals
         context['_buf_tmp'] = context['_buf']
         context['_capture_varname'] = varname
         context['_buf'] = []
 
-    def stop_capture(store_to_context=True):
+    def stop_capture(store_to_context=True, _depth=1):
         """stop capturing and return the result of capturing.
            if store_to_context is True then the result is stored into _context[varname].
         """
-        frame = sys._getframe(1)
+        frame = sys._getframe(_depth)
         context = frame.f_locals
         result = ''.join(context['_buf'])
         context['_buf'] = context.pop('_buf_tmp')
@@ -204,12 +204,12 @@ if True:
                 context['_context'][varname] = result
         return result
 
-    def captured_as(name):
+    def captured_as(name, _depth=1):
         """helper method for layout template.
            if captured string is found then append it to _buf and return True,
            else return False.
         """
-        frame = sys._getframe(1)
+        frame = sys._getframe(_depth)
         context = frame.f_locals
         if name in context:
             _buf = context['_buf']
