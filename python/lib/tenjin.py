@@ -37,6 +37,7 @@ __all__      = ['Template', 'Engine', 'helpers', 'html', ]
 import re, sys, os, time
 from time import time as _time
 from os.path import getmtime as _getmtime
+from os.path import isfile as _isfile
 random = marshal = pickle = memcache = unquote = None   # lazy import
 python3 = sys.version_info[0] == 3
 python2 = sys.version_info[0] == 2
@@ -902,7 +903,7 @@ class FileCacheStorage(CacheStorage):
 
     def _delete(self, fullpath):
         cachepath = self._cachename(fullpath)
-        if os.path.isfile(cachepath): os.unlink(cachepath)
+        if _isfile(cachepath): os.unlink(cachepath)
 
 
 class MarshalCacheStorage(FileCacheStorage):
@@ -914,7 +915,7 @@ class MarshalCacheStorage(FileCacheStorage):
 
     def _load(self, fullpath):
         cachepath = self._cachename(fullpath)
-        if not os.path.isfile(cachepath): return None
+        if not _isfile(cachepath): return None
         if logger: logger.info("[tenjin.MarshalCacheStorage] load cache (file=%s)" % repr(cachepath))
         dump = _read_binary_file(cachepath)
         return marshal.loads(dump)
@@ -936,7 +937,7 @@ class PickleCacheStorage(FileCacheStorage):
 
     def _load(self, fullpath):
         cachepath = self._cachename(fullpath)
-        if not os.path.isfile(cachepath): return None
+        if not _isfile(cachepath): return None
         if logger: logger.info("[tenjin.PickleCacheStorage] load cache (file=%s)" % repr(cachepath))
         dump = _read_binary_file(cachepath)
         return pickle.loads(dump)
@@ -952,7 +953,7 @@ class TextCacheStorage(FileCacheStorage):
 
     def _load(self, fullpath):
         cachepath = self._cachename(fullpath)
-        if not os.path.isfile(cachepath): return None
+        if not _isfile(cachepath): return None
         if logger: logger.info("[tenjin.TextCacheStorage] load cache (file=%s)" % repr(cachepath))
         s = _read_binary_file(cachepath)
         if python2:
@@ -1103,7 +1104,7 @@ class FileBaseDataCache(DataCache):
 
     def get(self, key):
         fpath = self.filepath(key)
-        if not os.path.isfile(fpath):
+        if not _isfile(fpath):
             return
         if _getmtime(fpath) < _time():
             os.unlink(fpath)
@@ -1123,14 +1124,14 @@ class FileBaseDataCache(DataCache):
 
     def delete(self, key):
         fpath = self.filepath(key)
-        if os.path.isfile(fpath):
+        if _isfile(fpath):
             os.unlink(fpath)
             return True
         return False
 
     def has(self, key):
         fpath = self.filepath(key)
-        if not os.path.isfile(fpath):
+        if not _isfile(fpath):
             return False
         if _getmtime(fpath) < _time():
             os.unlink(fpath)
@@ -1319,10 +1320,10 @@ class Engine(object):
         if self.path:
             for dirname in self.path:
                 filepath = os.path.join(dirname, filename)
-                if os.path.isfile(filepath):
+                if _isfile(filepath):
                     return filepath
         else:
-            if os.path.isfile(filename):
+            if _isfile(filename):
                 return filename
         return None
 
