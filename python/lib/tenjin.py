@@ -1153,6 +1153,57 @@ class GaeMemcacheBaseDataCache(DataCache):
             return True
 
 
+##
+## html fragment cache helper class
+##
+class FragmentCacheHelper(object):
+
+    def __init__(self, datacache, prefix='fragment.'):
+        self.datacache = datacache
+        self.prefix = prefix
+
+    def not_cached(self, cache_name, lifetime=0):
+        """html fragment cache helper.
+           ex.
+               <?py if not_cached('item_list', 10): ?>
+               <ol>
+               <?py     for item in items: ?>
+                 <li>${item}</li>
+               <?py     #endif ?>
+               </ol>
+               <?py #endif ?>
+               <?py echo_cached()  # necessary! ?>
+        """
+        context = sys._getframe(1).f_locals['_context']
+        context['_cache_name'] = cache_name
+        key = self.prefix and self.prefix + cache_name or cache_name
+        value = self.datacache.get(key, lifetime)
+        if value:    ## cached
+            logger.debug('[tenjin.not_cached] %r: cached.' % cache_name)
+            context[key] = value
+            return False
+        else:        ## not cached
+            logger.debug('[tenjin.not_cached]: %r: not cached.' % cache_name)
+            if key in context: del context[key]
+            context['_cache_lifetime'] = lifetime
+            helpers.start_capture(cache_name, _depth=2)
+            return True
+
+    def echo_cached(self):
+        """html fragment cache helper. see not_cached() docment."""
+        f_locals = sys._getframe(1).f_locals
+        context = f_locals['_context']
+        cache_name = context.pop('_cache_name')
+        key = self.prefix and self.prefix + cache_name or cache_name
+        if key in context:    ## cached
+            value = context.pop(key)
+        else:                 ## not cached
+            value = helpers.stop_capture(False, _depth=2)
+            lifetime = context.pop('_cache_lifetime')
+            self.datacache.set(key, value, lifetime)
+        f_locals['_buf'].append(value)
+
+
 
 ##
 ## template engine class
