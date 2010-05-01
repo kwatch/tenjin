@@ -1026,6 +1026,69 @@ class GaeMemcacheCacheStorage(CacheStorage):
 
 
 ##
+## abstract class for data cache
+##
+class DataCache(object):
+
+    def get(self, cache_key, *options):
+        raise NotImplementedError("%s.get(): not implemented yet." % self.__class__.__name__)
+
+    def set(self, cache_key, data, *options):
+        raise NotImplementedError("%s.set(): not implemented yet." % self.__class__.__name__)
+
+    def delete(self, cache_key, *options):
+        raise NotImplementedError("%s.del(): not implemented yet." % self.__class__.__name__)
+
+    def has(self, cache_key, *options):
+        raise NotImplementedError("%s.has(): not implemented yet." % self.__class__.__name__)
+
+
+##
+## file base data cache
+##
+class FileBaseDataCache(DataCache):
+
+    def __init__(self, root_path):
+        if not os.path.isdir(root_path):
+            raise ArgumentError("%s: directory not found." % root_path)
+        self.root_path = root_path
+
+    _pat = re.compile(r'[^-\/\w]')
+
+    def filepath(self, cache_key, _pat1=_pat):
+        return os.path.join(self.root_path, _pat1.sub('_', cache_key))
+
+    def get(self, cache_key, lifetime=0):
+        fpath = self.filepath(cache_key)
+        if not os.path.isfile(fpath):
+            return
+        if lifetime and os.path.getmtime(fpath) + lifetime <= time.time():
+            return
+        return _read_binary_file(fpath)
+
+    def set(self, cache_key, data, lifetime=0):
+        fpath = self.filepath(cache_key)
+        dirname = os.path.dirname(fpath)
+        if not os.path.isdir(dirname):
+            os.makedirs(dirname)
+        _write_binary_file(fpath, data)
+
+    def delete(self, cache_key, lifetime=0):
+        fpath = self.filepath(cache_key)
+        if os.path.isfile(fpath):
+            os.unlink(fpath)
+            return True
+        return False
+
+    def has(self, cache_key, lifetime=0):
+        fpath = self.filepath(cache_key)
+        if not os.path.isfile(fpath): return False
+        if linetime: return os.path.getmtime(fpath) + lifetime <= time.time()
+        return True
+
+
+
+##
 ## template engine class
 ##
 
