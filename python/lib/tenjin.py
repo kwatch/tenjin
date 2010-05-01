@@ -41,6 +41,8 @@ python2 = sys.version_info[0] == 2
 
 logger = None
 
+from time import time as _time
+
 
 ##
 ## utilities
@@ -1056,13 +1058,13 @@ class MemoryBaseDataCache(DataCache):
         if not pair:
             return None
         value, timestamp = pair
-        if timestamp and timestamp < time.time():
+        if timestamp and timestamp < _time():
             self.values.pop(key)
             return None
         return value
 
     def set(self, key, value, lifetime=0):
-        ts = lifetime and time.time() + lifetime or 0
+        ts = lifetime and _time() + lifetime or 0
         self.values[key] = (value, ts)
         return self
 
@@ -1078,7 +1080,7 @@ class MemoryBaseDataCache(DataCache):
         if not pair:
             return False
         value, timestamp = pair
-        if timestamp and timestamp < time.time():
+        if timestamp and timestamp < _time():
             self.values.pop(key)
             return False
         return True
@@ -1103,7 +1105,7 @@ class FileBaseDataCache(DataCache):
         fpath = self.filepath(key)
         if not os.path.isfile(fpath):
             return
-        if os.path.getmtime(fpath) < time.time():
+        if os.path.getmtime(fpath) < _time():
             os.unlink(fpath)
             return
         return _read_binary_file(fpath)
@@ -1113,7 +1115,7 @@ class FileBaseDataCache(DataCache):
         dirname = os.path.dirname(fpath)
         if not os.path.isdir(dirname):
             os.makedirs(dirname)
-        now = time.time()
+        now = _time()
         _write_binary_file(fpath, value)
         ts = now + (lifetime or 604800)   # 60*60*24*7 = 604800
         os.utime(fpath, (ts, ts))
@@ -1130,7 +1132,7 @@ class FileBaseDataCache(DataCache):
         fpath = self.filepath(key)
         if not os.path.isfile(fpath):
             return False
-        if os.path.getmtime(fpath) < time.time():
+        if os.path.getmtime(fpath) < _time():
             os.unlink(fpath)
             return False
         return True
@@ -1351,7 +1353,7 @@ class Engine(object):
         cache = self.cache
         template = cache and cache.get(fullpath, self.templateclass) or None
         mtime = None
-        now = time.time()
+        now = _time()
         if template:
             assert template.timestamp is not None
             if not template.filename:
