@@ -36,6 +36,7 @@ def main(verbose):
     else:
 
         import unittest
+        from oktest import ok, not_ok
         suite = unittest.TestSuite()
         for basename in basenames:
             test_module = __import__(basename)

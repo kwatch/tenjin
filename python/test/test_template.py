@@ -4,6 +4,7 @@
 ###
 
 import unittest
+from oktest import ok, not_ok
 import sys, os, re
 
 from testcase_helper import *
@@ -11,7 +12,7 @@ import tenjin
 from tenjin.helpers import *
 
 
-class TemplateTest(unittest.TestCase, TestCaseHelper):
+class TemplateTest(unittest.TestCase):
 
     code = TestCaseHelper.generate_testcode(__file__)
     exec(code)
@@ -72,14 +73,14 @@ class TemplateTest(unittest.TestCase, TestCaseHelper):
                 self.fail('%s is expected but not raised.' % exception)
             except Exception:
                 ex = sys.exc_info()[1]
-                self.assertEqual(exception, ex.__class__)
-                #self.assertTrue(isinstance(ex, exception))
+                ok (ex.__class__) == exception
+                #ok (ex).is_a(exception)
                 if errormsg:
                     ## SyntaxError has 'msg' attribute instead of 'message'. Why?
-                    #self.assertEqual(errormsg, ex.message or ex.msg) # failed in python2.3
-                    self.assertEqual(errormsg, ex.args[0])
+                    #ok (ex.message or ex.msg) == errormsg # failed in python2.3
+                    ok (ex.args[0]) == errormsg
                 if filename:
-                    self.assertEqual(filename, ex.filename)
+                    ok (ex.filename) == filename
         else:
             if templateclass:
                 templateclass = eval(templateclass)
@@ -87,10 +88,10 @@ class TemplateTest(unittest.TestCase, TestCaseHelper):
             else:
                 template = tenjin.Template(**options)
             script = template.convert(input, filename)
-            self.assertTextEqual(source, script, encoding=encoding)
+            ok (script) == source         # encoding=encoding
             if expected:
                 output = template.render(context)
-                self.assertTextEqual(expected, output, encoding=encoding)
+                ok (output) == expected   # encoding=encoding
 
 
 
@@ -107,7 +108,7 @@ class TemplateTest(unittest.TestCase, TestCaseHelper):
 #        context = {'items': items}
 #        output1 = template.render(context)
 #        output2 = template.render(items=items)
-#        self.assertTextEqual(output1, output2)
+#        ok (output2) == output1
 
 
     def test_filename1(self):
@@ -122,8 +123,8 @@ class TemplateTest(unittest.TestCase, TestCaseHelper):
             write_file(filename, input)
             template1 = tenjin.Template(filename)
             template2 = tenjin.Template()
-            self.assertTextEqual(template1.script, template2.convert(input))
-            self.assertTextEqual(template1.render(), template2.render())
+            ok (template2.convert(input)) == template1.script
+            ok (template2.render()) == template1.render()
         finally:
             try:
                 os.remove(filename)
@@ -141,10 +142,10 @@ class TemplateTest(unittest.TestCase, TestCaseHelper):
         template.convert(input)
         def f1():
             template.render()
-        self.assertRaises(NameError, f1)
+        ok (f1).raises(NameError)
         #tenjin.import_module('base64')
         globals()['base64'] = base64
-        #self.assertNotRaise(f1)
+        #ok (f1).not_raise()
         f1()
 
 
@@ -159,13 +160,13 @@ class TemplateTest(unittest.TestCase, TestCaseHelper):
         template.convert(input)
         def f1():
             template.render()
-        self.assertRaises(NameError, f1)
+        ok (f1).raises(NameError)
         if python2:
             #tenjin.import_module(rfc822)
             globals()['rfc822'] = rfc822
         elif python3:
             globals()['email'] = email
-        #self.assertNotRaise(f1)
+        #ok (f1).not_raise()
         f1()
 
 
@@ -174,7 +175,7 @@ class TemplateTest(unittest.TestCase, TestCaseHelper):
             input = "<?py #@ARGS 1x ?>"
             template = tenjin.Template()
             template.convert(input)
-        self.assertRaises(ValueError, f)
+        ok (f).raises(ValueError)
 
     def test_dummy_if_stmt(self):
         input = r"""
@@ -206,7 +207,7 @@ if True: ## dummy
 """[1:]
         t = tenjin.Template()
         actual = t.convert(input)
-        self.assertTextEqual(expected, actual)
+        ok (actual) == expected
 
 
 remove_unmatched_test_methods(TemplateTest)

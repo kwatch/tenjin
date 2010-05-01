@@ -4,6 +4,7 @@
 ###
 
 import unittest
+from oktest import ok, not_ok
 import sys, os, re, time, marshal
 from glob import glob
 try:    import cPickle as pickle
@@ -20,7 +21,7 @@ def _convert_data(data, lang='python'):
         for k in list(data.keys()):
             v = data[k]
             if k[-1] == '*':
-                assert isinstance(v, dict)
+                ok (v).is_a(dict)
                 data[k[:-1]] = v.get(lang)
             if isinstance(v, dict) and lang in v:
                 data[k] = v[lang]
@@ -40,7 +41,7 @@ def _remove_files(basenames=[]):
             os.unlink(filename)
 
 
-class EngineTest(unittest.TestCase, TestCaseHelper):
+class EngineTest(unittest.TestCase):
 
     #code = TestCaseHelper.generate_testcode(__file__)
     #exec(code)
@@ -69,6 +70,12 @@ class EngineTest(unittest.TestCase, TestCaseHelper):
     #                os.unlink(fname)
 
 
+    def _testname(self):
+        try:
+            return self._TestCase__testMethodName
+        except AttributeError:
+            return self._testMethodName
+
     def _test_basic(self):
         try:
             testdata = EngineTest.testdata['basic']
@@ -91,7 +98,7 @@ class EngineTest(unittest.TestCase, TestCaseHelper):
                 output = engine.render(tplname, context)
             else:
                 output = engine.render(tplname, context, layout=False)
-            self.assertTextEqual(expected, output)
+            ok (output) == expected
         finally:
             filenames = [ hash['filename'] for hash in EngineTest.testdata['basic']['templates'] ]
             _remove_files(filenames)
@@ -178,7 +185,7 @@ class EngineTest(unittest.TestCase, TestCaseHelper):
             write_file(content_filename, content)
             engine = tenjin.Engine(prefix='user_', postfix='.pyhtml', layout=':layout')
             output = engine.render(':content', context)
-            self.assertTextEqual(expected, output)
+            ok (output) == expected
         finally:
             _remove_files([layout_filename, content_filename])
 
@@ -196,7 +203,7 @@ class EngineTest(unittest.TestCase, TestCaseHelper):
                 write_file(filename, content)
             engine = tenjin.Engine(postfix='.pyhtml')
             output = engine.render(':content', context)
-            self.assertTextEqual(expected, output)
+            ok (output) == expected
         finally:
             _remove_files([ t[0] for t in files ])
 
@@ -218,7 +225,7 @@ class EngineTest(unittest.TestCase, TestCaseHelper):
                 content_html = hash['content_html'] + statement
                 write_file(fname('content_html'), content_html)
                 actual = engine.render(':content_html', context)
-                self.assertTextEqual(expected, actual)
+                ok (actual) == expected
             ##
             _test(hash['expected_html'], '')
             time.sleep(1)
@@ -253,74 +260,72 @@ class EngineTest(unittest.TestCase, TestCaseHelper):
             props['cache'] = False
             engine = tenjin.Engine(**props)
             output = engine.render(':create', context)
-            self.assertTextEqual(expected, output)
-            for fname in cache_filenames: self.assertNotExist(fname)
+            ok (output) == expected
+            for fname in cache_filenames: not_ok (fname).exists()
             ## marshal caching
             props['cache'] = True
             engine = tenjin.Engine(**props)
             output = engine.render(':create', context)
-            self.assertTextEqual(expected, output)
+            ok (output) == expected
             if   python2:  nullbyte = '\0'
             elif python3:  nullbyte = '\0'.encode('ascii')
             for fname in cache_filenames:
-                self.assertExists(fname)                         # file created?
+                ok (fname).exists()                         # file created?
                 s = read_file(fname, 'rb')                       # read binary file
-                self.assertTrue(s.find(nullbyte) >= 0)           # binary file?
+                ok (s.find(nullbyte)) >= 0           # binary file?
                 f = lambda: marshal.load(open(fname, 'rb'))
-                self.assertNotRaise(f)                           # marshal?
+                ok (f).not_raise()                           # marshal?
             engine = tenjin.Engine(**props)
             output = engine.render(':create', context)
-            self.assertTextEqual(expected, output)               # reloadable?
+            ok (output) == expected               # reloadable?
             #
             for fname in glob('*.pyhtml.cache'): os.unlink(fname)
             for fname in cache_filenames:
-                self.assertNotExist(fname)
+                not_ok (fname).exists()
             ## pickle caching
             props['cache'] = tenjin.PickleCacheStorage()
             engine = tenjin.Engine(**props)
             output = engine.render(':create', context)
-            self.assertTextEqual(expected, output)
+            ok (output) == expected
             if   python2:  nullbyte = '\0'
             elif python3:  nullbyte = '\0'.encode('ascii')
             for fname in cache_filenames:
-                self.assertExists(fname)                         # file created?
+                ok (fname).exists()                         # file created?
                 s = read_file(fname, 'rb')                       # read text file
                 if python2:
-                    self.assertTrue(s.find(nullbyte) < 0)        # text file? (pickle protocol ver 2)
+                    ok (s.find(nullbyte)) < 0        # text file? (pickle protocol ver 2)
                 elif python3:
-                    self.assertTrue(s.find(nullbyte) >= 0)       # binary file? (pickle protocol ver 3)
+                    ok (s.find(nullbyte)) >= 0       # binary file? (pickle protocol ver 3)
                 f = lambda: Pickle.load(open(fname, 'rb'))
-                self.assertNotRaise(ValueError, f)               # pickle?
+                ok (f).not_raise(ValueError)
                 pickle.load(open(fname, 'rb'))
             engine = tenjin.Engine(**props)
             output = engine.render(':create', context)
-            self.assertTextEqual(expected, output)               # reloadable?
+            ok (output) == expected               # reloadable?
             #
             for fname in glob('*.cache'): os.unlink(fname)
             for fname in cache_filenames:
-                self.assertNotExist(fname)
+                not_ok (fname).exists()
             ## text caching
             props['cache'] = tenjin.TextCacheStorage()
             engine = tenjin.Engine(**props)
             output = engine.render(':create', context)
-            self.assertTextEqual(expected, output)
+            ok (output) == expected
             if   python2:  nullchar = '\0'
             elif python3:  nullchar = '\0'
             for fname in cache_filenames:
-                self.assertExists(fname)                         # file created?
+                ok (fname).exists()                         # file created?
                 s = read_file(fname, 'r')                        # read text file
-                self.assertTrue(s.find(nullchar) < 0)            # text file?
+                ok (s.find(nullchar)) < 0            # text file?
                 #f = lambda: marshal.loads(s)
                 f = lambda: marshal.load(open(fname, 'rb'))
                 if python3:
-                    ex = self.assertRaise(ValueError, f)         # non-marshal?
-                    self.assertEquals("bad marshal data", str(ex))
+                    ok (f).raises(ValueError, "bad marshal data")   # non-marshal?
                 elif python2 and sys.version_info[1] >= 5:
-                    ex = self.assertRaise(EOFError, f)           # non-marshal?
-                    self.assertEquals("EOF read where object expected", str(ex))
+                    ok (f).raises(EOFError, "EOF read where object expected")  # non-marshal?
             engine = tenjin.Engine(**props)
             output = engine.render(':create', context)
-            self.assertTextEqual(expected, output)               # reloadable?
+            ok (output) == expected               # reloadable?
         finally:
             _remove_files(filenames.values())
 
@@ -346,16 +351,16 @@ class EngineTest(unittest.TestCase, TestCaseHelper):
             engine = tenjin.Engine(**props)
             output = engine.render(':create', context)
             for fname in filenames.values():
-                self.assertExists(fname)                         # file created?
-                self.assertTrue(engine.get_template(fname).timestamp < curr_time)
-                self.assertEquals(os.path.getmtime(fname), engine.get_template(fname).timestamp)
+                ok (fname).exists()                         # file created?
+                ok (engine.get_template(fname).timestamp) < curr_time
+                ok (engine.get_template(fname).timestamp) == os.path.getmtime(fname)
             ## save current cached object
             cached = {}
             for fname in filenames.values():
                 cached[fname] = engine.get_template(fname)
             ## confirm that get_template() returns the same object
             for fname in filenames.values():
-                self.assertEquals(id(engine.get_template(fname)), id(cached[fname]))
+                ok (cached[fname]).is_(engine.get_template(fname))
             ## change timestamp of templates to be old
             for fname in filenames.values():
                 atime = mtime = os.path.getmtime(fname) - 10
@@ -363,8 +368,8 @@ class EngineTest(unittest.TestCase, TestCaseHelper):
             ## check whether new caches are created
             for fname in filenames.values():
                 t = engine.get_template(fname)
-                self.assertNotEqual(id(t), id(cached[fname]))
-                self.assertEquals(os.path.getmtime(fname), t.timestamp)
+                not_ok (cached[fname]).is_(t)
+                ok (t.timestamp) == os.path.getmtime(fname)
         finally:
             tenjin.Engine.timestamp_interval = interval
             _remove_files(filenames.values())
@@ -379,14 +384,14 @@ class EngineTest(unittest.TestCase, TestCaseHelper):
             engine = tenjin.Engine(cache=storage)
             engine.render(template_name)
             fullpath = os.path.abspath(template_name)
-            self.assertTrue(fullpath in storage.items)
-            self.assertExists(template_name + '.cache')
+            ok (storage.items).contains(fullpath)
+            ok (template_name + '.cache').exists()
             storage.unset(fullpath)
-            self.assertFalse(fullpath in storage.items)
-            self.assertNotExist(template_name + '.cache')
+            not_ok (storage.items).contains(fullpath)
+            not_ok (template_name + '.cache').exists()
             def f():
                 storage.unset(fullpath)
-            self.assertNotRaise(f)
+            ok (f).not_raise()
         finally:
             _remove_files([template_name, template_name+'.cache'])
 
@@ -402,7 +407,7 @@ class EngineTest(unittest.TestCase, TestCaseHelper):
             engine = tenjin.Engine(layout='baselayout.pyhtml')
             output = engine.render('content.pyhtml')
             expected = data['expected']
-            self.assertTextEqual(expected, output)
+            ok (output) == expected
         ## teardown
         finally:
             _remove_files(basenames)
@@ -421,7 +426,7 @@ class EngineTest(unittest.TestCase, TestCaseHelper):
             context = {}
             output = engine.render('base.pyhtml', context)
             expected = data['expected']
-            self.assertTextEqual(expected, output)
+            ok (output) == expected
         finally:
             _remove_files(['base', 'part'])
 
@@ -437,15 +442,15 @@ class EngineTest(unittest.TestCase, TestCaseHelper):
         try:
             def f1():
                 engine = tenjin.Engine(cache=True)
-                assert engine.get_template('content.pyhtml').args is not None
+                ok (engine.get_template('content.pyhtml').args) != None
                 output = engine.render('content.pyhtml', context)
-            ex = self.assertRaises(NameError, f1)
+            ok (f1).raises(NameError); ex = f1.exception
             #import sys; sys.stderr.write("*** debug: ex=%s\n" % (repr(ex)))
             #engine = tenjin.Engine(cache=True)
-            #assert engine.get_template('content.pyhtml').args is not None
+            #ok (engine.get_template('content.pyhtml').args) != None
             #output = engine.render('content.pyhtml', context)
-            #self.assertTextEqual(expected, output)
-            ex = self.assertRaises(NameError, f1)
+            #ok (output) == expected
+            ok (f1).raises(NameError); ex = f1.exception
         finally:
             _remove_files(['content'])
 
@@ -457,12 +462,12 @@ class EngineTest(unittest.TestCase, TestCaseHelper):
                 write_file(filename, input)
             engine = tenjin.Engine(cache=cachemode)
             t = engine.get_template(filename)
-            self.assertEqual(expected_args, t.args)
-            self.assertTextEqual(expected_script, t.script)
+            ok (t.args) == expected_args
+            ok (t.script) == expected_script
             import marshal
             dct = marshal.load(open(filename + '.cache', 'rb'))
-            self.assertEqual(expected_args, dct['args'])
-            self.assertTextEqual(expected_script, dct['script'])
+            ok (dct['args']) == expected_args
+            ok (dct['script']) == expected_script
         ##
         try:
             ## args=[x,y,z], cache=1
@@ -472,9 +477,9 @@ class EngineTest(unittest.TestCase, TestCaseHelper):
             args  = data['args1']
             input = data['input1']
             cachename = filename+'.cache'
-            self.assertNotExist(cachename)
+            not_ok (cachename).exists()
             _test(filename, cachename, True, input, script, args)
-            self.assertExists(cachename)
+            ok (cachename).exists()
             _test(filename, cachename, True, None, script, args)
             ## args=[], cache=1
             cachename = filename+'.cache'
@@ -482,9 +487,9 @@ class EngineTest(unittest.TestCase, TestCaseHelper):
             script = data['script2']  # re.sub(r'#@ARGS.*?\n', '#@ARGS \n', cache)
             args  = data['args2']   # []
             time.sleep(1)
-            #self.assertExists(cachename)
+            #ok (cachename).exists()
             _test(filename, cachename, True, input, script, args)
-            #self.assertExists(cachename)
+            #ok (cachename).exists()
             _test(filename, cachename, True, None, script, args)
         finally:
             _remove_files(['input.pyhtml'])
@@ -511,7 +516,7 @@ class EngineTest(unittest.TestCase, TestCaseHelper):
             output = engine.render(':body', context)
             #
             expected = data['expected_' + '_'.join(keys)]
-            self.assertTextEqual(expected, output)
+            ok (output) == expected
         finally:
             #os.removedirs(basedir)
             #pass
@@ -556,11 +561,12 @@ class EngineTest(unittest.TestCase, TestCaseHelper):
                 'params': { 'state': 'NY' },
             }
             actual = engine.render(':create', context)  # 1st
-            self.assertTextEqual(data['expected1'], actual)
+            ok (actual) == data['expected1']
             context['params'] = {'state': 'xx'}
             actual = engine.render(':create', context)  # 2nd
-            #self.assertEqual(data['expected1'], actual)
-            self.assertEqual(data['expected1'].replace(r' checked="checked"', ''), actual)
+            #ok (actual) == data['expected1']
+            expected = data['expected1'].replace(r' checked="checked"', '')
+            ok (actual) == expected
             #
             context = {
                 'title': 'Update',
@@ -568,15 +574,15 @@ class EngineTest(unittest.TestCase, TestCaseHelper):
                 'params': { 'state': 'NY' },
             }
             actual = engine.render(':update', context)  # 1st
-            self.assertTextEqual(data['expected2'], actual)
+            ok (actual) == data['expected2']
             context['params'] = { 'state': 'xx' }
             actual = engine.render(':update', context)  # 2nd
-            self.assertEqual(data['expected2'], actual) # not changed!
+            ok (actual) == data['expected2'] # not changed!
             #
-            self.assertTextEqual(data['cache1'], engine.get_template(':form').script)
-            self.assertTextEqual(data['cache2'], engine.get_template(':create').script)
-            self.assertTextEqual(data['cache3'], engine.get_template(':layout').script)
-            self.assertTextEqual(data['cache4'], engine.get_template(':update').script)
+            ok (engine.get_template(':form').script) == data['cache1']
+            ok (engine.get_template(':create').script) == data['cache2']
+            ok (engine.get_template(':layout').script) == data['cache3']
+            ok (engine.get_template(':update').script) == data['cache4']
             #
         finally:
             _remove_files(filenames)
@@ -592,7 +598,7 @@ class EngineTest(unittest.TestCase, TestCaseHelper):
             engine = tenjin.Engine()
             context = {}
             output = engine.render('index.pyhtml', context)
-            self.assertTextEqual(expected, output)
+            ok (output) == expected
         finally:
             _remove_files(['index', 'sub'])
 
