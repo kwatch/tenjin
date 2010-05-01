@@ -1044,6 +1044,44 @@ class DataCache(object):
 
 
 ##
+## memory base data cache
+##
+class MemoryBaseDataCache(DataCache):
+
+    def __init__(self):
+        self.values = {}
+
+    def get(self, key, lifetime=0):
+        pair = self.values.get(key)
+        if not pair:
+            return None
+        value, timestamp = pair
+        if lifetime and timestamp + lifetime < time.time():
+            return None
+        return value
+
+    def set(self, key, value, lifetime=0):
+        self.values[key] = (value, time.time())
+        return self
+
+    def delete(self, key, lifetime=0):
+        try:
+            del self.values[key]
+            return True
+        except KeyError:
+            return False
+
+    def has(self, key, lifetime=0):
+        pair = self.values.get(key)
+        if not pair:
+            return False
+        if not lifetime:
+            return True
+        value, timestamp = pair
+        return timestamp + lifetime > time.time()
+
+
+##
 ## file base data cache
 ##
 class FileBaseDataCache(DataCache):
