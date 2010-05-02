@@ -12,6 +12,21 @@ from oktest import *
 import tenjin
 from tenjin.helpers import *
 
+if python2:
+    def _read_file(filepath):
+        f = open(filepath, 'rb')
+        try:
+            return f.read()
+        finally:
+            f.close()
+elif python3:
+    def _read_file(filepath):
+        f = open(filepath, encoding='utf-8')
+        try:
+            return f.read()
+        finally:
+            f.close()
+
 
 class MemoryBaseStoreTest(unittest.TestCase):
 
@@ -93,7 +108,7 @@ class FileBaseStoreTest(unittest.TestCase):
             not_ok (cache_fpath).is_file()
             data_cache.set(key, value, 1)
             ok (cache_fpath).is_file()
-            ok (read_file(cache_fpath, 'rb')) == value
+            ok (_read_file(cache_fpath)) == value
         if "called with lifetime then set cache file's mtime as lifetime seconds ahead":
             data_cache.set(key, value, 10)
             ok (int(os.path.getmtime(cache_fpath))) == int(time.time()) + 10
@@ -184,7 +199,7 @@ class FragmentCacheTest(unittest.TestCase):
             ok (output) == expected
             cache_fpath = self.root_dir + '/fragment.value/x'
             ok (cache_fpath).is_file()
-            ok (read_file(cache_fpath, 'rb')) == "<p>x=3</p>\n"
+            ok (_read_file(cache_fpath)) == "<p>x=3</p>\n"
         if "called within lifetime then cache file content should be used":
             context = {'x': 4}
             output = engine.render(tname, context)
@@ -195,7 +210,12 @@ class FragmentCacheTest(unittest.TestCase):
             output = engine.render(tname, context)
             expected = expected.replace('x=3', 'x=4')
             ok (output) == expected
-            ok (read_file(cache_fpath, 'rb')) == "<p>x=4</p>\n"
+            ok (_read_file(cache_fpath)) == "<p>x=4</p>\n"
+
+
+remove_unmatched_test_methods(MemoryBaseStoreTest)
+remove_unmatched_test_methods(FileBaseStoreTest)
+remove_unmatched_test_methods(FragmentCacheTest)
 
 
 if __name__ == '__main__':

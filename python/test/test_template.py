@@ -137,7 +137,10 @@ class TemplateTest(unittest.TestCase):
         if python2:
             input = "#{base64.encodestring('tenjin')}"
         elif python3:
-            input = "#{base64.encodestring(b'tenjin')}"
+            if hasattr(base64, 'encodebytes'):             # python 3.1 or later
+                input = "#{base64.encodebytes(b'tenjin')}"
+            else:                                          # python 3.0
+                input = "#{base64.encodestring(b'tenjin')}"
         template = tenjin.Template()
         template.convert(input)
         def f1():
