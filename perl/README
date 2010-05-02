@@ -3,7 +3,7 @@ README
 ======
 
 Release: $Release$
-$Copyright$
+$Copyright: copyright(c) 2007-2010 kuwata-lab.com all rights reserved.$
 
 
 About
@@ -95,14 +95,15 @@ Features
 * Very fast (about five times faster than Template-Toolkit)
 * Lightweight (only one file which contains about 1000 lines)
 * Not break HTML design because it uses XML Processing
-  Instructions (PI) as embedded notation for Python statements.
+  Instructions (PI) as embedded notation for Perl statements.
 * Secure because it supports escaping expression value by default.
-* Auto caching of converted Python code.
+* Auto caching of converted Perl code.
 * Nestable layout template
 * Inlucde other templates
 * Capture part of template
 * Load YAML file as context data
 * Preprocessing support
+* Fragment cache support
 
 See 'doc/*.html' for details.
 
@@ -117,7 +118,7 @@ It's spec is subject to change without prior notice.
 License
 -------
 
-MIT License
+$License: MIT License $
 
 
 Author
