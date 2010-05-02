@@ -197,7 +197,9 @@ spec_of "Tenjin::Engine", sub {
         my $data = $TESTDATA->{$testname};
         my $context = $data->{context};
         my @names = ('layout_html', 'layout_xhtml', 'content_html');
+        my $interval = $Tenjin::Engine::TIMESTAMP_INTERVAL;
         pre_task {
+            $Tenjin::Engine::TIMESTAMP_INTERVAL = 0;
             for my $name (@names) {
                 write_file("local_$name.plhtml", $data->{$name});
             }
@@ -226,6 +228,7 @@ spec_of "Tenjin::Engine", sub {
         };
         report_error($@, $testname);
         post_task {
+            $Tenjin::Engine::TIMESTAMP_INTERVAL = $interval;
             unlink glob('local_*');
         };
     };

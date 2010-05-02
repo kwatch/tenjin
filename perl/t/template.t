@@ -54,7 +54,7 @@ END
 $INPUT1 =~ s/^\t//mg;
 
 my $SCRIPT1 = <<'END';
-	my $_buf = "";  $_buf .= q`<html>
+	my $_buf = ""; my $_V;  $_buf .= q`<html>
 	  <body>
 	    <table>
 	`; my $i = 0;
@@ -66,7 +66,7 @@ my $SCRIPT1 = <<'END';
 	        $color = '#FFF';
 	    }
 	 $_buf .= q`      <tr bgcolor="` . ($color) . q`">
-	        <td>` . escape($item) . q`</td>
+	        <td>` . (($_V = ($item)) =~ s/[&<>"]/$Tenjin::_H{$&}/ge, $_V) . q`</td>
 	      </tr>
 	`; }
 	 $_buf .= q`    </table>
@@ -119,7 +119,7 @@ END
 $INPUT2 =~ s/^\t//mg;
 
 my $SCRIPT2 = <<'END';
-	my $_buf = "";  $_buf .= q`<html>
+	my $_buf = ""; my $_V;  $_buf .= q`<html>
 	  <body>
 	    <table>
 	`;     my $i = 0;
@@ -131,7 +131,7 @@ my $SCRIPT2 = <<'END';
 	        $color = '#FFF';
 	      }
 	 $_buf .= q`      <tr bgcolor="` . ($color) . q`">
-	        <td>` . escape($item) . q`</td>
+	        <td>` . (($_V = ($item)) =~ s/[&<>"]/$Tenjin::_H{$&}/ge, $_V) . q`</td>
 	      </tr>
 	`;     }
 	 $_buf .= q`    </table>
@@ -169,7 +169,7 @@ END
 $INPUT3 =~ s/^\t//mg;
 
 my $SCRIPT3 = <<'END';
-	my $_buf = "";  $_buf .= q`<html>
+	my $_buf = ""; my $_V;  $_buf .= q`<html>
 	  <body>
 	    <table>
 	`;     
@@ -183,7 +183,7 @@ my $SCRIPT3 = <<'END';
 	        }
 	    
 	 $_buf .= q`      <tr bgcolor="` . ($color) . q`">
-	        <td>` . escape($item) . q`</td>
+	        <td>` . (($_V = ($item)) =~ s/[&<>"]/$Tenjin::_H{$&}/ge, $_V) . q`</td>
 	      </tr>
 	`;     
 	      }
@@ -209,11 +209,11 @@ $INPUT9 =~ s/^\t//mg;
 
 
 my $SCRIPT9 = <<'END';
-	my $_buf = ""; my $title = $_context->{title}; my $items = $_context->{items}; 
-	 $_buf .= q`<h1>` . escape( $title ) . q`</h1>
+	my $_buf = ""; my $_V; my $title = $_context->{title}; my $items = $_context->{items}; 
+	 $_buf .= q`<h1>` . (($_V = ( $title )) =~ s/[&<>"]/$Tenjin::_H{$&}/ge, $_V) . q`</h1>
 	<ul>
 	`; for (@$items) {
-	 $_buf .= q`  <li>` . escape( $_ ) . q`</li>
+	 $_buf .= q`  <li>` . (($_V = ( $_ )) =~ s/[&<>"]/$Tenjin::_H{$&}/ge, $_V) . q`</li>
 	`; }
 	 $_buf .= q`</ul>
 	`;  $_buf;
