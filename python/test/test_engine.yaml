@@ -995,15 +995,17 @@
   index_html: |
         <div>
         <?py assert 'x' not in _context ?>
-        <?py include('sub.pyhtml', x=10) ?>
+        <?py include('sub.pyhtml', x=10, y='foo') ?>
         <?py assert 'x' not in _context ?>
         </div>
 
   sub_html: |
         <?py assert 'x' in _context ?>
         <p>x=#{x}</p>
+        <p>y=#{y}</p>
 
   expected: |
         <div>
         <p>x=10</p>
+        <p>y=foo</p>
         </div>
