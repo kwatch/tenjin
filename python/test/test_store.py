@@ -212,6 +212,11 @@ class FragmentCacheTest(unittest.TestCase):
             ok (output) == expected
             ok (_read_file(cache_fpath)) == "<p>x=4</p>\n"
 
+    def test_functions(self):
+        tupl = self.fragment_cache.functions()
+        ok (tupl[0]) == self.fragment_cache.not_cached
+        ok (tupl[1]) == self.fragment_cache.echo_cached
+
 
 remove_unmatched_test_methods(MemoryBaseStoreTest)
 remove_unmatched_test_methods(FileBaseStoreTest)
