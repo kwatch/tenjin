@@ -281,13 +281,13 @@ sub _cache_with {
     my $code_block = pop @_;
     my $_context   = pop @_;
     my $cache_key  = shift @_;
-    my $datacache = $_context->{_datacache}  or die "data cache object is not passed.";
-    my $fragment  = $datacache->get($cache_key, @_);
+    my $store = $_context->{_store}  or die "key-value store for fragment cache is not passed.";
+    my $fragment  = $store->get($cache_key, @_);
     unless (defined($fragment)) {
         my $_context_block = $_context->{_context_block};
         my $values = ref($_context_block) eq 'CODE' ? $_context_block->($cache_key) : {};
         $fragment = $code_block->($values);
-        $datacache->set($cache_key, $fragment, @_);
+        $store->set($cache_key, $fragment, @_);
     }
     return $fragment;
 }
@@ -726,38 +726,38 @@ sub add_expr {
 
 
 ##
-## abstract class for data cache
+## abstract class for key-value store
 ##
-package Tenjin::DataCache;
+package Tenjin::KeyValueStore;
 
 sub get {
-    my ($this, $cache_key, @options) = @_;
+    my ($this, $key, @options) = @_;
     die "get() is not implemented yet.";
 }
 
 sub set {
-    my ($this, $cache_key, $data, @options) = @_;
+    my ($this, $key, $value, @options) = @_;
     die "set() is not implemented yet.";
 }
 
 sub del {
-    my ($this, $cache_key, @options) = @_;
+    my ($this, $key, @options) = @_;
     die "del() is not implemented yet.";
 }
 
 sub has {
-    my ($this, $cache_key, @options) = @_;
+    my ($this, $key, @options) = @_;
     die "has() is not implemented yet.";
 }
 
 
 ##
-## file base data cache
+## file base key-value store
 ##
-package Tenjin::FileBaseDataCache;
+package Tenjin::FileBaseStore;
 use File::Basename;     # dirname
 use File::Path;         # mkpath, rmtree
-our $ISA = ('Tenjin::DataCache');
+our $ISA = ('Tenjin::KeyValueStore');
 
 sub new {
     my ($class, $root_path) = @_;
@@ -772,38 +772,38 @@ sub new {
 
 sub filepath {
     $this->{root_path} ne '0'  or die "root path is not set yet.";
-    my ($this, $cache_key) = @_;
-    $_ = $cache_key;
+    my ($this, $key) = @_;
+    $_ = $key;
     s/[^-\/\w]/_/g;
     return $this->{root_path}.'/'.$_;
 }
 
 sub get {
-    my ($this, $cache_key, $lifetime) = @_;
-    my $fpath = $this->filepath($cache_key);
+    my ($this, $key, $lifetime) = @_;
+    my $fpath = $this->filepath($key);
     return unless -f $fpath;
     return if $lifetime && (stat $fpath)[9] + $lifetime <= time();
     return Tenjin::Util::read_file($fpath);
 }
 
 sub set {
-    my ($this, $cache_key, $data, $lifetime) = @_;
-    my $fpath = $this->filepath($cache_key);
+    my ($this, $key, $value, $lifetime) = @_;
+    my $fpath = $this->filepath($key);
     my $dir = dirname($fpath);
     mkpath($dir) unless -d $dir;
-    Tenjin::Util::write_file($fpath, $data, 't');
+    Tenjin::Util::write_file($fpath, $value, 't');
 }
 
 sub del {
-    my ($this, $cache_key, $lifetime) = @_;
-    my $fpath = $this->filepath($cache_key);
+    my ($this, $key, $lifetime) = @_;
+    my $fpath = $this->filepath($key);
     return unless -f $fpath;
     return unlink($fpath);
 }
 
 sub has {
-    my ($this, $cache_key, $lifetime) = @_;
-    my $fpath = $this->filepath($cache_key);
+    my ($this, $key, $lifetime) = @_;
+    my $fpath = $this->filepath($key);
     return unless -f $fpath;
     return if $lifetime && (stat $fpath)[9] + $lifetime <= time();
     return 1;
@@ -824,13 +824,13 @@ package Tenjin::Engine;
 
 
 our $TIMESTAMP_INTERVAL = 5;
-our $DATACACHE;   # default datacache object
+our $STORE;   # default key-value store object for fragment cache
 
 
 sub new {
     my ($class, $options) = @_;
     my $this = {};
-    for my $key (qw[prefix postfix layout path cache datacache preprocess templateclass]) {
+    for my $key (qw[prefix postfix layout path cache store preprocess templateclass]) {
         $this->{$key} = delete($options->{$key});
         #$this->{$key} = $options->{$key};
     }
@@ -839,7 +839,7 @@ sub new {
     $this->{templates} = {};
     $this->{prefix} = '' if (! $this->{prefix});
     $this->{postfix} = '' if (! $this->{postfix});
-    $this->{datacache} = $Tenjin::Engine::DATACACHE unless $this->{datacache};
+    $this->{store} = $Tenjin::Engine::STORE unless $this->{store};
     return bless($this, $class);
 }
 
@@ -1021,7 +1021,7 @@ sub render {
 sub hook_context {
     my ($this, $context) = @_;
     $context->{_engine} = $this;
-    $context->{_datacache} = $this->{datacache};
+    $context->{_store} = $this->{store};
 }
 
 

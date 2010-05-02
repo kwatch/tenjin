@@ -143,14 +143,14 @@ after_each {
 
 spec_of "Tenjin::Engine::render()", sub {
 
-    my ($engine, $datacache, $entries, $cache_key, $cache_path);
+    my ($engine, $store, $entries, $cache_key, $cache_path);
     pre_task {
-        $datacache = Tenjin::FileBaseDataCache->new($root_path);
-        $engine = Tenjin::Engine->new({datacache=>$datacache});
+        $store = Tenjin::FileBaseStore->new($root_path);
+        $engine = Tenjin::Engine->new({store=>$store});
         $entries = [ { title=>"Foo", content=>"<p>Fooooo</p>", },
                      { title=>"Bar", content=>"<p>Baaaar</p>", }, ];
         $cache_key = "entries/index";
-        $cache_path = $datacache->filepath($cache_key);
+        $cache_path = $store->filepath($cache_key);
     };
 
     it "calls context block when rendered at first time", sub {
@@ -189,7 +189,7 @@ spec_of "Tenjin::Engine::render()", sub {
     it "calls context block when cache is deleted", sub {
         pre_task {
             push @$entries, {title=>"Baz", content=>"<p>Bazzzz</p>"};
-            $datacache->del($cache_key);
+            $store->del($cache_key);
         };
         pre_cond { ! -e $cache_path };
         my $context = { user=>undef };
