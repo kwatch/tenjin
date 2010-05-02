@@ -7,7 +7,7 @@ my $project = prop('project', 'tenjin');
 my $package = prop('package', 'Tenjin');
 my $release = prop('release', '0.0.2');
 
-my $copyright  = 'copyright(c) 2007-2009 kuwata-lab.com all rights reserved.';
+my $copyright  = 'copyright(c) 2007-2010 kuwata-lab.com all rights reserved.';
 my $license    = 'MIT License';
 my @textfiles  = qw(MIT-LICENSE README Changes Kookbook.pl);
 my @docfiles   = qw(doc/users-guide.html doc/faq.html doc/examples.html doc/docstyle.css);
@@ -74,8 +74,8 @@ recipe "$package-$release.tar.gz", [ "examples" ], {
         edit "$dir/**/*", sub {
             s/\$Release\$/$release/g;
             s/\$Release:.*?\$/\$Release: $release \$/g;
-            s/\$Copyright\$/$copyright/g;
-            s/\$License\$/$license/g;
+            s/\$Copyright.*?\$/$copyright/g;
+            s/\$License.*?\$/$license/g;
             $_;
         };
         ## chmod
