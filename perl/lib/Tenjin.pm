@@ -59,7 +59,7 @@ sub read_file {
 
 
 sub write_file {
-    my ($filename, $content, $lock_required) = @_;
+    my ($filename, $content, $lock_required, $mtime) = @_;
     my $fname = $filename;
     $fname .= rand() if $lock_required;
     open(my $fh, ">$fname")  or die "$filename: $!";
@@ -67,6 +67,7 @@ sub write_file {
     #flock($fh, 2) if $lock_required
     print $fh $content;
     close($fh);
+    utime($mtime, $mtime, $fname) if $mtime;
     rename($fname, $filename) if $lock_required;
 }
 
@@ -758,6 +759,7 @@ package Tenjin::FileBaseStore;
 use File::Basename;     # dirname
 use File::Path;         # mkpath, rmtree
 our $ISA = ('Tenjin::KeyValueStore');
+our $LIFE_TIME = 60*60*24*7;    # 1 week
 
 sub new {
     my ($class, $root_path) = @_;
@@ -779,33 +781,40 @@ sub filepath {
 }
 
 sub get {
-    my ($this, $key, $lifetime) = @_;
+    my ($this, $key) = @_;
     my $fpath = $this->filepath($key);
     return unless -f $fpath;
-    return if $lifetime && (stat $fpath)[9] + $lifetime <= time();
+    if ((stat $fpath)[9] < time()) {
+        #unlink($fpath);
+        return;
+    }
     return Tenjin::Util::read_file($fpath);
 }
 
 sub set {
     my ($this, $key, $value, $lifetime) = @_;
+    $lifetime ||= $Tenjin::FileBaseStore::LIFE_TIME;
     my $fpath = $this->filepath($key);
     my $dir = dirname($fpath);
     mkpath($dir) unless -d $dir;
-    Tenjin::Util::write_file($fpath, $value, 't');
+    Tenjin::Util::write_file($fpath, $value, 't', time() + $lifetime);
 }
 
 sub del {
-    my ($this, $key, $lifetime) = @_;
+    my ($this, $key) = @_;
     my $fpath = $this->filepath($key);
     return unless -f $fpath;
     return unlink($fpath);
 }
 
 sub has {
-    my ($this, $key, $lifetime) = @_;
+    my ($this, $key) = @_;
     my $fpath = $this->filepath($key);
     return unless -f $fpath;
-    return if $lifetime && (stat $fpath)[9] + $lifetime <= time();
+    if ((stat $fpath)[9] < time()) {
+        #unlink($fpath);
+        return;
+    }
     return 1;
 }
 
