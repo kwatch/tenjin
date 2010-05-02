@@ -356,8 +356,9 @@ class CheetahEntry(Entry):
         filename = self.template_filename
         for i in xrange(ntimes):
             template = bench_cheetah.bench_cheetah()
-            for key, val in context.items():
-                setattr(template, key, val)
+            #for key, val in context.items():
+            #    setattr(template, key, val)
+            template.stocks = context['stocks']
             output = template.respond()
             #if encoding:
             #    output = output.encode(encoding)
@@ -368,8 +369,9 @@ class CheetahEntry(Entry):
     def _execute(self, context, ntimes):
         filename = self.template_filename
         template = bench_cheetah.bench_cheetah()
-        for key, val in context.items():
-            setattr(template, key, val)
+        #for key, val in context.items():
+        #    setattr(template, key, val)
+        template.stocks = context['stocks']
         for i in xrange(ntimes):
             output = template.respond()
             #if encoding:
@@ -389,7 +391,7 @@ Entry.register(CheetahEntry)
 #
 #    def convert_template(self, content):
 #        global encoding
-#        content = "<%args>\n    list\n</%args>\n" + content
+#        content = "<%args>\n    stocks\n</%args>\n" + content
 #        if encoding:
 #            content = ("# -*- coding: %s -*-\n" % encoding) + content
 #        return content
@@ -597,7 +599,7 @@ class MakoEntry(Entry):
             #if encoding:
             #    pass
             #output = template.render(**context)
-            output = template.render(items=context['list'])
+            output = template.render(stocks=context['stocks'])
         return output
 
     def _execute(self, context, ntimes):
@@ -609,7 +611,7 @@ class MakoEntry(Entry):
         #    pass
         for i in xrange(ntimes):
             #output = template.render(**context)
-            output = template.render(items=context['list'])
+            output = template.render(stocks=context['stocks'])
         return output
 
     def _execute_nocache(self, context, ntimes):
@@ -621,7 +623,7 @@ class MakoEntry(Entry):
             #if encoding:
             #    pass
             #output = template.render(**context)
-            output = template.render(items=context['list'])
+            output = template.render(stocks=context['stocks'])
         return output
 
 Entry.register(MakoEntry)
@@ -634,7 +636,7 @@ class TempletorEntry(Entry):
     salts = [None, 'create']
 
     def convert_template(self, content):
-        content = "$def with (list)\n" + content
+        content = "$def with (stocks)\n" + content
         if flag_escape:
             content = re.sub(r'\$:', r'$', content)
         return content
@@ -657,21 +659,21 @@ class TempletorEntry(Entry):
         filename = self.template_filename
         for i in xrange(ntimes):
             render = web.template.render('.', cache=True)
-            output = render.bench_templetor(context['list'])
+            output = render.bench_templetor(context['stocks'])
         return str(output)
 
     def _execute(self, context, ntimes):
         filename = self.template_filename
         render = web.template.render('.', cache=True)
         for i in xrange(ntimes):
-            output = render.bench_templetor(context['list'])
+            output = render.bench_templetor(context['stocks'])
         return output
 
     def _execute_nocache(self, context, ntimes):
         filename = self.template_filename
         for i in xrange(ntimes):
             render = web.template.render('.', cache=False)
-            output = render.bench_templetor(context['list'])
+            output = render.bench_templetor(context['stocks'])
         return output
 
 Entry.register(TempletorEntry)
@@ -749,7 +751,7 @@ class PythonEntry(Entry):
         if use_str: to_str = str
         global_vars = globals()
         for i in xrange(ntimes):
-            local_vars = { 'to_str': to_str, 'list': context['list'], '_buf': _buf, 'escape': escape }
+            local_vars = { 'to_str': to_str, 'stocks': context['stocks'], '_buf': _buf, 'escape': escape }
             exec(code, global_vars, local_vars)
             output = local_vars.get('output')
         return output or True
@@ -955,7 +957,7 @@ def load_context_data(datafile):
     exec(s, globals(), context)
     if 'items' in context and 'items2' in context:
         k = mode == 'dict' and 'items' or 'items2'
-        context['list'] = context[k]
+        context['stocks'] = context[k]
     return context
 
 

@@ -1,5 +1,5 @@
    <tbody>
-    <tr py:for="i, item in enumerate(list)" class="${i % 2 == 1 and 'even' or 'odd'}">
+    <tr py:for="i, item in enumerate(stocks)" class="${i % 2 == 1 and 'even' or 'odd'}">
      <td style="text-align: center" py:content="i + 1">n</td>
      <td>
       <a href="/stocks/${item['symbol']}" py:content="item['symbol']">item['symbol']</a>

@@ -1,6 +1,6 @@
    <tbody>
 % n = 0
-% for item in list:
+% for item in stocks:
 %     n += 1
     <tr class="<% n % 2 == 0 and 'even' or 'odd' %>">
      <td style="text-align: center"><% n %></td>
