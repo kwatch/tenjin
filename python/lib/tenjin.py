@@ -1122,7 +1122,7 @@ class FileBaseStore(KeyValueStore):
 
     def __init__(self, root_path, encoding=None):
         if not os.path.isdir(root_path):
-            raise ArgumentError("%s: directory not found." % root_path)
+            raise ValueError("%s: directory not found." % root_path)
         self.root_path = root_path
         if encoding is None and python3:
             encoding = 'utf-8'
