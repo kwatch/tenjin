@@ -1282,7 +1282,7 @@ class Engine(object):
     path       = None
     cache      = None
     preprocess = False
-    timestamp_interval = 5  # seconds
+    timestamp_interval = 1  # seconds
     _cache_storage_classes = {
         'marshal': MarshalCacheStorage,
         'pickle' : PickleCacheStorage,
