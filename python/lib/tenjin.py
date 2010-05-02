@@ -72,16 +72,44 @@ def _read_binary_file(filename):
 
 if python2:
 
+    def _read_text_file(filename, encoding=None):
+        global codecs
+        if not codecs: import codecs
+        f = codecs.open(filename, encoding=(encoding or 'utf-8'))
+        try:
+            return f.read()
+        finally:
+            f.close()
+
     def _read_template_file(filename, encoding=None):
         s = _read_binary_file(filename)          ## binary(=str)
         if encoding: s = s.decode(encoding)      ## binary(=str) to unicode
         return s
 
+    def _is_unicode(val):
+        return isinstance(val, unicode)
+
+    def _is_binary(val):
+        return isinstance(val, str)
+
 elif python3:
+
+    def _read_text_file(filename, encoding=None):
+        f = open(filename, encoding=(encoding or 'utf-8'))
+        try:
+            return f.read()
+        finally:
+            f.close()
 
     def _read_template_file(filename, encoding=None):
         s = _read_binary_file(filename)          ## binary
         return s.decode(encoding or 'utf-8')     ## binary to unicode(=str)
+
+    def _is_unicode(val):
+        return isinstance(val, str)
+
+    def _is_binary(val):
+        return isinstance(val, bytes)
 
 def _create_module(module_name):
     """ex. mod = _create_module('tenjin.util')"""
