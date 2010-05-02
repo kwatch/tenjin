@@ -873,7 +873,7 @@ sub has {
 package Tenjin::Engine;
 
 
-our $TIMESTAMP_INTERVAL = 5;
+our $TIMESTAMP_INTERVAL = 1;
 our $STORE;   # default key-value store object for fragment cache
 
 
