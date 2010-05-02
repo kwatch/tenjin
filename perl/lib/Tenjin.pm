@@ -283,11 +283,9 @@ sub _cache_with {
     my $_context   = pop @_;
     my $cache_key  = shift @_;
     my $store = $_context->{_store}  or die "key-value store for fragment cache is not passed.";
-    my $fragment  = $store->get($cache_key, @_);
+    my $fragment  = $store->get($cache_key);
     unless (defined($fragment)) {
-        my $_context_block = $_context->{_context_block};
-        my $values = ref($_context_block) eq 'CODE' ? $_context_block->($cache_key) : {};
-        $fragment = $code_block->($values);
+        $fragment = $code_block->();
         $store->set($cache_key, $fragment, @_);
     }
     return $fragment;
@@ -553,13 +551,10 @@ our $MACRO_HANDLER_TABLE = {
         " \$_buf .= $arg;";
     },
     'start_cache' => sub { my ($arg) = @_;
-        ' $_buf .= cache_with(' . $arg . ', $_context, sub {' .
-        ' my $_buf = "";' .
-        ' my ($_vals) = @_;' .
-        ' eval join("", map { "\\$$_=\\$_vals->{$_};" } keys %$_vals) if ref($_vals) eq "HASH";';
+        ' $_buf .= cache_with(' . $arg . ', $_context, sub { my $_buf = "";';
     },
     'stop_cache' => sub { my ($arg) = @_;
-        '});';
+        '$_buf });';
     },
 };
 
@@ -1045,17 +1040,10 @@ sub create_template {
 
 
 sub render {
-    my ($this, $template_name, $context, $layout, $context_block) = @_;
+    my ($this, $template_name, $context, $layout) = @_;
     $context = {} unless defined $context;
-    if (ref($layout) eq 'CODE') {
-        $context_block = $layout;
-        $layout = 1;
-    }
-    else {
-        $layout = 1 unless defined $layout;
-    }
+    $layout = 1 unless defined $layout;
     $this->hook_context($context);
-    $context->{_context_block} = $context_block;
     my $output;
     while (1) {
         my $template = $this->get_template($template_name, $context); # pass $context only for preprocessing

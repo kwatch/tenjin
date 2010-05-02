@@ -11,7 +11,7 @@ BEGIN {
 
 use strict;
 use Data::Dumper;
-use Test::More tests=>33;
+use Test::More tests=>30;
 use Specofit;
 use File::Path;
 use Tenjin;
@@ -23,7 +23,7 @@ $Tenjin::USE_STRICT = 1;
 
 
 my $TEMPLATE = <<'END';
-<?pl #@ARGS $user, $entries ?>
+<?pl #@ARGS $user, $get_entries ?>
 <html>
   <body>
     <!-- normal part -->
@@ -40,6 +40,7 @@ my $TEMPLATE = <<'END';
     <!-- cached part -->
     <?pl start_cache("entries/index", 10); ?>
     <dl>
+      <?pl my $entries = $get_entries->(); ?>
       <?pl for my $entry (@$entries) { ?>
       <dt>[=$entry->{title}=]</dt>
       <dd>[==$entry->{content}=]</dd>
@@ -263,14 +264,12 @@ spec_of "Tenjin::Engine::render()", sub {
     };
 
     it "calls context block when rendered at first time", sub {
-        my $context = { user=>"Haruhi" };
-        pre_cond { ! -e $cache_path };
         my $block_called = 0;
-        my $html = $engine->render($filename, $context, sub {
-            $block_called = 1;
-            should_eq($_[0], $cache_key);
-            { entries => $entries };
-        });
+        my $context = { user => "Haruhi",
+                        get_entries => sub { $block_called = 1; $entries },
+                      };
+        pre_cond { ! -e $cache_path };
+        my $html = $engine->render($filename, $context);
         should_eq($block_called, 1);
         should_eq($html, $EXPECTED1);
         and_it "creates cache file", sub {
@@ -283,14 +282,12 @@ spec_of "Tenjin::Engine::render()", sub {
     };
 
     it "doesn't call context block when rendered at 2nd time", sub {
-        my $context = { user=>undef };
-        pre_cond { -f $cache_path };
         my $block_called = 0;
-        my $html = $engine->render($filename, $context, sub {
-            $block_called = 1;
-            should_eq($_[0], $cache_key);
-            { entries => $entries };
-        });
+        my $context = { user => undef,
+                        get_entries => sub { $block_called = 1; $entries },
+                      };
+        pre_cond { -f $cache_path };
+        my $html = $engine->render($filename, $context);
         should_eq($block_called, 0);
         should_eq($html, $EXPECTED2);
     };
@@ -301,13 +298,11 @@ spec_of "Tenjin::Engine::render()", sub {
             $store->del($cache_key);
         };
         pre_cond { ! -e $cache_path };
-        my $context = { user=>undef };
         my $block_called = 0;
-        my $html = $engine->render($filename, $context, sub {
-            $block_called = 1;
-            should_eq($_[0], $cache_key);
-            { entries => $entries };
-        });
+        my $context = { user => undef,
+                        get_entries => sub { $block_called = 1; $entries },
+                      };
+        my $html = $engine->render($filename, $context);
         should_eq($block_called, 1);
         should_eq($html, $EXPECTED3);
     };
@@ -319,13 +314,11 @@ spec_of "Tenjin::Engine::render()", sub {
             utime($atime, $mtime, $cache_path);
             pre_cond { (stat $cache_path)[9] + 5*60 - 1 < time() };
         };
-        my $context = { user=>undef };
         my $block_called = 0;
-        my $html = $engine->render($filename, $context, sub {
-            $block_called = 1;
-            should_eq($_[0], $cache_key);
-            { entries => $entries };
-        });
+        my $context = { user => undef,
+                        get_entries => sub { $block_called = 1; $entries },
+                      };
+        my $html = $engine->render($filename, $context);
         should_eq($block_called, 1);
         should_eq($html, $EXPECTED3);
     };
