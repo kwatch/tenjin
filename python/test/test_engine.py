@@ -314,18 +314,22 @@ class EngineTest(unittest.TestCase):
             if   python2:  nullchar = '\0'
             elif python3:  nullchar = '\0'
             for fname in cache_filenames:
-                ok (fname).exists()                         # file created?
-                s = read_file(fname, 'r')                        # read text file
+                ok (fname).exists()                  # file created?
+                s = read_file(fname, 'r')            # read text file
                 ok (s.find(nullchar)) < 0            # text file?
                 #f = lambda: marshal.loads(s)
                 f = lambda: marshal.load(open(fname, 'rb'))
                 if python3:
-                    ok (f).raises(ValueError, "bad marshal data")   # non-marshal?
+                    ok (f).raises(ValueError)        # non-marshal?
+                    if sys.version_info[1] == 0:     # python 3.0
+                        ok (str(f.exception)) == "bad marshal data"
+                    else:                            # python 3.1 or later
+                        ok (str(f.exception)) == "bad marshal data (unknown type code)"
                 elif python2 and sys.version_info[1] >= 5:
                     ok (f).raises(EOFError, "EOF read where object expected")  # non-marshal?
             engine = tenjin.Engine(**props)
             output = engine.render(':create', context)
-            ok (output) == expected               # reloadable?
+            ok (output) == expected                  # reloadable?
         finally:
             _remove_files(filenames.values())
 
