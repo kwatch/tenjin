@@ -1120,10 +1120,13 @@ class MemoryBaseStore(KeyValueStore):
 ##
 class FileBaseStore(KeyValueStore):
 
-    def __init__(self, root_path):
+    def __init__(self, root_path, encoding=None):
         if not os.path.isdir(root_path):
             raise ArgumentError("%s: directory not found." % root_path)
         self.root_path = root_path
+        if encoding is None and python3:
+            encoding = 'utf-8'
+        self.encoding = encoding
 
     _pat = re.compile(r'[^-.\/\w]')
 
@@ -1137,7 +1140,10 @@ class FileBaseStore(KeyValueStore):
         if _getmtime(fpath) < _time():
             os.unlink(fpath)
             return
-        return _read_binary_file(fpath)
+        if self.encoding:
+            return _read_text_file(fpath, self.encoding)
+        else:
+            return _read_binary_file(fpath)
 
     def set(self, key, value, lifetime=0):
         fpath = self.filepath(key)
@@ -1145,6 +1151,8 @@ class FileBaseStore(KeyValueStore):
         if not os.path.isdir(dirname):
             os.makedirs(dirname)
         now = _time()
+        if _is_unicode(value):
+            value = value.encode(self.encoding or 'utf-8')
         _write_binary_file(fpath, value)
         ts = now + (lifetime or 604800)   # 60*60*24*7 = 604800
         os.utime(fpath, (ts, ts))
