@@ -12,7 +12,7 @@ BEGIN {
 use strict;
 use Tenjin;
 use Data::Dumper;
-use Specofit tests => 47;
+use Specofit tests => 50;
 use YAML::Syck;
 use File::Path;
 
@@ -448,6 +448,49 @@ spec_of "Tenjin::Engine", sub {
         report_error($@, $testname);
         post_task {
             unlink glob("prep_*");
+        };
+    };
+
+};
+
+
+describe 'Template::Engine', sub {
+
+    my ($main_plhtml, $sub_plhtml, $expected);
+    $main_plhtml = <<'END';
+	<div>
+	<?pl include('sub.plhtml', {x=>10, y=>'foo'}) ?>
+	</div>
+END
+    $main_plhtml =~ s/^\t//mg;
+    $sub_plhtml = <<'END';
+	<?pl #@ARGS $x, $y ?>
+	<p>x=[=$x=]</p>
+	<p>y=[=$y=]</p>
+END
+    $sub_plhtml =~ s/^\t//mg;
+    $expected = <<'END';
+	<div>
+	<p>x=10</p>
+	<p>y=foo</p>
+	</div>
+END
+    $expected =~ s/^\t//mg;
+
+    spec_of 'include() macro', sub {
+        pre_task {
+            write_file('main.plhtml', $main_plhtml);
+            write_file('sub.plhtml', $sub_plhtml);
+        };
+        my $engine = Tenjin::Engine->new();
+        my $context = {x=>1};
+        my $output = $engine->render('main.plhtml', $context);
+        should_eq($output, $expected);
+        should_be_false($context->{x});
+        should_be_false($context->{y});
+        post_task {
+            unlink glob('main.plhtml*');
+            unlink glob('sub.plhtml*');
         };
     };
 

@@ -533,7 +533,7 @@ sub hook_stmt {
 
 our $MACRO_HANDLER_TABLE = {
     'include' => sub { my ($arg) = @_;
-        " \$_buf .= \$_context->{_engine}->render($arg, \$_context, 0);";
+        " \$_buf .= \$_context->{_engine}->_include(\$_context, $arg);";
     },
     'start_capture' => sub { my ($arg) = @_;
         " my \$_buf_bkup=\$_buf; \$_buf=''; my \$_capture_varname=$arg;";
@@ -1065,6 +1065,21 @@ sub hook_context {
     my ($this, $context) = @_;
     $context->{_engine} = $this;
     $context->{_store} = $this->{store};
+}
+
+
+sub _include {
+    my ($this, $context, $template_name, $localvars) = @_;
+    my $s;
+    if ($localvars) {
+        $context->{$_} = $localvars->{$_} for (keys %$localvars);
+        $s = $this->render($template_name, $context, 0);
+        undef $context->{$_} for (keys %$localvars);
+    }
+    else {
+        $s = $this->render($template_name, $context, 0);
+    }
+    $s;
 }
 
 
