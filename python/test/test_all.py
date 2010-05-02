@@ -18,6 +18,7 @@ def main(verbose):
         "test_htmlhelper",
         "test_main",
         "test_encoding",
+        "test_store",
         "test_users_guide",
         "test_faq",
         "test_examples",
