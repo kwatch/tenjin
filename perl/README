@@ -104,6 +104,7 @@ Features
 * Load YAML file as context data
 * Preprocessing support
 * Fragment cache support
+* Webext support
 
 See 'doc/*.html' for details.
 
