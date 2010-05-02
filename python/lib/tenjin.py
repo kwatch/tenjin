@@ -1217,9 +1217,7 @@ class FragmentCacheHelper(object):
     """html fragment cache helper.
        ex (main script):
            kv_store = tenjin.FileBaseStore('cache.d')
-           helper = tenjin.FragmentCacheHelper(kv_store)
-           not_cached = helper.not_cached
-           echo_cached = helper.echo_cached
+           not_cached, echo_cached = tenjin.FragmentCacheHelper(kv_store).functions()
            engine = tenjin.Engine()
            context = {'get_items': lambda: ['AAA', 'BBB', 'CCC'] }
            html = engine.render('template.pyhtml', context)
@@ -1269,6 +1267,9 @@ class FragmentCacheHelper(object):
             lifetime = context.pop('_cache_lifetime')
             self.store.set(key, value, lifetime)
         f_locals['_buf'].append(value)
+
+    def functions(self):
+        return (self.not_cached, self.echo_cached)
 
 
 
