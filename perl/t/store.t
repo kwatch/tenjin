@@ -141,6 +141,62 @@ after_each {
 };
 
 
+describe "Tenjin::FileBaseStore", sub {
+    my $store = Tenjin::FileBaseStore->new($root_path);
+    my ($key, $value, $cache_fpath) = ("value/foo", "FOOBAR", "$root_path/value/foo");
+    spec_of "#set()", sub {
+        it "saves data into cache file", sub {
+            $store->set($key, $value);
+            should_exist($cache_fpath);
+        };
+        it "sets cache file timestamp to 1 week ahead if lifetime is not specified", sub {
+            should_eq((stat $cache_fpath)[9], time() + $Tenjin::FileBaseStore::LIFE_TIME);
+        };
+        it "sets cache file timestamp to lifetime seconds ahead if it is specified", sub {
+            $store->set($key, $value, 10);
+            should_eq((stat $cache_fpath)[9], time() + 10);
+        };
+    };
+    spec_of "#get()", sub {
+        $store->set($key, $value, 10);
+        it "returns nothing if cache file doen't exist", sub {
+            should_eq($store->get('hogehogehoge'), '');
+        };
+        it "reads cache file contents if it exists", sub {
+            should_eq($store->get($key), $value);
+        };
+        it "returns nothing if cache file is expired", sub {
+            my $now = time();
+            utime($now-1, $now-1, $cache_fpath);
+            should_eq($store->get($key), '');
+        };
+    };
+    spec_of "#del()", sub {
+        $store->set($key, $value);
+        it "deletes cache file if it exists", sub {
+            pre_cond { -f $cache_fpath };
+            $store->del($key);
+            should_not_exist($cache_fpath);
+        };
+        it "do nothng if cache file doesn't exist", sub {
+            pre_cond { ! -f $cache_fpath };
+            $store->del($key);
+            should_not_exist($cache_fpath);
+        };
+    };
+    spec_of "#has()", sub {
+        $store->set($key, $value);
+        it "return 1 if cache file exists", sub {
+            should_be_true($store->has($key))
+        };
+        unlink($cache_fpath);
+        it "returns nothing if cache file doesn't exist", sub {
+            should_be_false($store->has($key))
+        };
+    };
+};
+
+
 spec_of "Tenjin::Engine::render()", sub {
 
     my ($engine, $store, $entries, $cache_key, $cache_path);
