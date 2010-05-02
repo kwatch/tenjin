@@ -753,6 +753,52 @@ sub has {
 
 
 ##
+## memory base key-value store
+##
+package Tenjin::MemoryBaseStore;
+our $ISA = ('Tenjin::KeyValueStore');
+
+sub new {
+    my ($class) = @_;
+    my $this = {
+        values => {},
+    };
+    return bless($this, $class);
+}
+
+sub get {
+    my ($this, $key) = @_;
+    my $pair = $this->{values}->{$key};
+    return unless $pair;
+    my ($value, $timestamp) = @$pair;
+    if ($timestamp && $timestamp < time()) {
+        undef $this->{values}->{$key};
+        return;
+    }
+    return $value;
+}
+
+sub set {
+    my ($this, $key, $value, $lifetime) = @_;
+    my $timestamp = $lifetime ? time() + $lifetime : 0;
+    $this->{values}->{$key} = [$value, $timestamp];
+    return 1;
+}
+
+sub del {
+    my ($this, $key) = @_;
+    undef $this->{values}->{$key};
+    return 1;
+}
+
+sub has {
+    my ($this, $key) = @_;
+    return unless $this->{values}->{$key};
+    return 1;
+}
+
+
+##
 ## file base key-value store
 ##
 package Tenjin::FileBaseStore;

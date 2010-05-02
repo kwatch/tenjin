@@ -11,7 +11,7 @@ BEGIN {
 
 use strict;
 use Data::Dumper;
-use Test::More tests=>13;
+use Test::More tests=>33;
 use Specofit;
 use File::Path;
 use Tenjin;
@@ -141,6 +141,59 @@ after_each {
 };
 
 
+describe "Tenjin::MemoryBaseStore", sub {
+    my $store = Tenjin::MemoryBaseStore->new();
+    my ($key, $value) = ("value/foo", "FOOBAR");
+    spec_of "#set()", sub {
+        it "saves data into memory", sub {
+            $store->set($key, $value);
+            should_eq($store->{values}->{$key}->[0], $value);
+        };
+        it "sets cache data timestamp to 0 if lifetime is not specified", sub {
+            should_eq($store->{values}->{$key}->[1], 0);
+        };
+        it "sets cache data timestamp to lifetime seconds ahead if it is specified", sub {
+            $store->set($key, $value, 10);
+            should_eq($store->{values}->{$key}->[1], time() + 10);
+        };
+    };
+    spec_of "#get()", sub {
+        $store->set($key, $value, 1);
+        it "returns nothing if cache data doen't exist", sub {
+            should_eq($store->get('hogehogehoge'), '');
+        };
+        it "returns cached value if it exists", sub {
+            should_eq($store->get($key), $value);
+        };
+        it "returns nothing if cache is expired", sub {
+            sleep(2);
+            should_eq($store->get($key), '');
+        };
+    };
+    spec_of "#del()", sub {
+        $store->set($key, $value);
+        it "deletes value if it exists", sub {
+            $store->del($key);
+            should_be_false($store->{values}->{$key});
+        };
+        it "do nothng if value doesn't exist", sub {
+            $store->del($key);
+            should_be_false($store->{values}->{$key});
+        };
+    };
+    spec_of "#has()", sub {
+        $store->set($key, $value);
+        it "returns 1 if value exists", sub {
+            should_be_true($store->has($key))
+        };
+        $store->del($key);
+        it "returns nothing if value doesn't exist", sub {
+            should_be_false($store->has($key))
+        };
+    };
+};
+
+
 describe "Tenjin::FileBaseStore", sub {
     my $store = Tenjin::FileBaseStore->new($root_path);
     my ($key, $value, $cache_fpath) = ("value/foo", "FOOBAR", "$root_path/value/foo");
@@ -186,7 +239,7 @@ describe "Tenjin::FileBaseStore", sub {
     };
     spec_of "#has()", sub {
         $store->set($key, $value);
-        it "return 1 if cache file exists", sub {
+        it "returns 1 if cache file exists", sub {
             should_be_true($store->has($key))
         };
         unlink($cache_fpath);
