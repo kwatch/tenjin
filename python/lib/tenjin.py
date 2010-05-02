@@ -1214,23 +1214,33 @@ class GaeMemcacheStore(KeyValueStore):
 ## html fragment cache helper class
 ##
 class FragmentCacheHelper(object):
+    """html fragment cache helper.
+       ex (main script):
+           kv_store = tenjin.FileBaseStore('cache.d')
+           helper = tenjin.FragmentCacheHelper(kv_store)
+           not_cached = helper.not_cached
+           echo_cached = helper.echo_cached
+           engine = tenjin.Engine()
+           context = {'get_items': lambda: ['AAA', 'BBB', 'CCC'] }
+           html = engine.render('template.pyhtml', context)
+           print(html)
+       ex (template):
+           <?py if not_cached('item_list', 10): ?>
+           <ol>
+           <?py     for item in get_items(): ?>
+             <li>${item}</li>
+           <?py     #endif ?>
+           </ol>
+           <?py #endif ?>
+           <?py echo_cached()  # necessary! ?>
+    """
 
     def __init__(self, store, prefix=None):
         self.store = store
         self.prefix = prefix
 
     def not_cached(self, cache_key, lifetime=0):
-        """html fragment cache helper.
-           ex.
-               <?py if not_cached('item_list', 10): ?>
-               <ol>
-               <?py     for item in items: ?>
-                 <li>${item}</li>
-               <?py     #endif ?>
-               </ol>
-               <?py #endif ?>
-               <?py echo_cached()  # necessary! ?>
-        """
+        """html fragment cache helper. see document of FragmentCacheHelper class."""
         context = sys._getframe(1).f_locals['_context']
         context['_cache_key'] = cache_key
         key = self.prefix and self.prefix + cache_key or cache_key
@@ -1247,7 +1257,7 @@ class FragmentCacheHelper(object):
             return True
 
     def echo_cached(self):
-        """html fragment cache helper. see not_cached() docment."""
+        """html fragment cache helper. see document of FragmentCacheHelper class."""
         f_locals = sys._getframe(1).f_locals
         context = f_locals['_context']
         cache_key = context.pop('_cache_key')
