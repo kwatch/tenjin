@@ -198,7 +198,7 @@ class FragmentCacheTest(unittest.TestCase):
 
     def test_not_cached_and_echo_cached(self):
         expected, tname = self.expected, self.tname
-        engine = tenjin.Engine()
+        engine = tenjin.Engine(cache=False)
         if "called 1st time then cache file should be created":
             context = {'x': 3}
             output = engine.render(tname, context)
