@@ -3,7 +3,7 @@
 ###
 ### oktest.py -- new style test utility
 ###
-### $Release: 0.3.0 $
+### $Release: 0.4.0 $
 ### $Copyright: copyright(c) 2010 kuwata-lab.com all rights reserved $
 ### $License: MIT License $
 ###
@@ -67,6 +67,8 @@ def _diff(target, other):
             expected, actual = [other + "\n"], [target + "\n"]
         else:
             expected, actual = other.splitlines(True), target.splitlines(True)
+            if not expected: expected.append('')
+            if not actual:   actual.append('')
             for lines in (expected, actual):
                 if not lines[-1].endswith("\n"):
                     lines[-1] += "\n\\ No newline at end of string\n"
@@ -129,6 +131,13 @@ class AssertionObject(object):
     def __le__(self, other):
         if (self.value <= other) == self._bool:  return True
         self._failed(_msg(self.value, '<=', other))
+
+    def in_delta(self, other, delta):
+        if (self.value <= other - delta) == self._bool:
+            self._failed(_msg(self.value, '>', other - delta))
+        if (self.value >= other + delta) == self._bool:
+            self._failed(_msg(self.value, '<', other + delta))
+        return True
 
 #    def __contains__(self, other):
 #        if (self.value in other) == self._bool:  return True
@@ -387,6 +396,7 @@ class BaseReporter(Reporter):
         if not hasattr(self, '_lines'):
             self._lines = {}
         if file not in self._lines:
+            if not os.path.isfile(file): return None
             f = open(file)
             s = f.read()
             f.close()
@@ -395,7 +405,8 @@ class BaseReporter(Reporter):
 
     def _get_location(self, ex):
         if hasattr(ex, 'file') and hasattr(ex, 'line'):
-            text = self._get_line_text(ex.file, ex.line).strip()
+            text = self._get_line_text(ex.file, ex.line)
+            if text: text = text.strip()
             return (ex.file, ex.line, None, text)
         else:
             tb = traceback.extract_tb(sys.exc_info()[2])
