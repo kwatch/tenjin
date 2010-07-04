@@ -1506,10 +1506,15 @@ class GaeMemcacheStore(KeyValueStore):
             return True
 
 
-try:
-    from google.appengine.api import memcache
-    ver = os.environ.get('CURRENT_VERSION_ID').split('.', 1)[0]
-    Engine.cache = GaeMemcacheCacheStorage(prefix='.cache.'+ver)
-    del ver
-except ImportError:
-    pass
+def init():
+    ## avoid cache confliction between versions
+    ver = os.environ.get('CURRENT_VERSION_ID').split('.')[0]
+    Engine.cache = GaeMemcacheCacheStorage(postfix='.cache.'+ver)
+
+
+gae = _create_module('tenjin.gae')
+gae.GaeMemcacheCacheStorage = GaeMemcacheCacheStorage
+gae.GaeMemcacheStore        = GaeMemcacheStore
+gae.init = init
+#del GaeMemcacheCacheStorage, GaeMemcacheStore, init   # will be activated from 1.0
+del init   # till 1.0
