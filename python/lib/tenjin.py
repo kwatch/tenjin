@@ -114,8 +114,7 @@ elif python3:
 
 def _create_module(module_name):
     """ex. mod = _create_module('tenjin.util')"""
-    import types
-    mod = types.ModuleType(module_name)  # or module_name.split('.')[-1] ?
+    mod = type(sys)(module_name)    # or type(sys)(module_name.split('.')[-1]) ?
     mod.__file__ = __file__
     sys.modules[module_name] = mod
     return mod
