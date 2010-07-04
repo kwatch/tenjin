@@ -1274,6 +1274,18 @@ class FragmentCacheHelper(object):
         return (self.not_cached, self.echo_cached)
 
 
+##
+## default classes
+##
+try:
+    ## for Google App Engine
+    from google.appengine.api import memcache
+    CACHE_STORAGE_CLASS   = GaeMemcacheCacheStorage
+    KEY_VALUE_STORE_CLASS = GaeMemcacheStore
+except ImportError:
+    CACHE_STORAGE_CLASS   = MarshalCacheStorage
+    KEY_VALUE_STORE_CLASS = FileBaseStore
+
 
 ##
 ## template engine class
@@ -1293,7 +1305,7 @@ class Engine(object):
     layout     = None
     templateclass = Template
     path       = None
-    cache      = MarshalCacheStorage()
+    cache      = CACHE_STORAGE_CLASS()
     preprocess = False
     timestamp_interval = 1  # seconds
 
