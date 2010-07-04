@@ -36,7 +36,7 @@ def task_test(c, *args):
         #system(c%'python test_all.py $(opts) 2>&1 > $(byprod)')
     elif python3:
         unsupported_tests = ['test_all.py', 'test_users_guide.py', 'test_faq.py',
-                             'test_examples.py', 'test_encoding.py', ]
+                             'test_examples.py', 'test_encoding.py', 'test_gae.py', ]
         from glob import glob
         for x in glob('test_*.py'):
             if x not in unsupported_tests:
