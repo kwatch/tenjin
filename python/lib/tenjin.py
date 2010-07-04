@@ -1174,11 +1174,14 @@ class FragmentCacheHelper(object):
            <?py echo_cached()  # necessary! ?>
     """
 
-    def __init__(self, store, prefix=None):
+    lifetime = 300   # 5 minutes
+
+    def __init__(self, store, lifetime=None, prefix=None):
         self.store = store
+        if lifetime is not None:  self.lifetime = lifetime
         self.prefix = prefix
 
-    def not_cached(self, cache_key, lifetime=0):
+    def not_cached(self, cache_key, lifetime=None):
         """html fragment cache helper. see document of FragmentCacheHelper class."""
         context = sys._getframe(1).f_locals['_context']
         context['_cache_key'] = cache_key
@@ -1191,6 +1194,7 @@ class FragmentCacheHelper(object):
         else:        ## not cached
             if logger: logger.debug('[tenjin.not_cached]: %r: not cached.' % cache_key)
             if key in context: del context[key]
+            if lifetime is None:  lifetime = self.lifetime
             context['_cache_lifetime'] = lifetime
             helpers.start_capture(cache_key, _depth=2)
             return True

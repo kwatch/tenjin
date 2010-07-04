@@ -196,6 +196,18 @@ class FragmentCacheTest(unittest.TestCase):
         tenjin.helpers.fragment_cache.store  = self._orig_store
         tenjin.helpers.fragment_cache.prefix = self._orig_preifx
 
+    def test_init(self):
+        if "lifetime is None or not specified then default value is used":
+            def chk(frag_cache):
+                ok ('lifetime' in frag_cache.__dict__) == False
+                ok (frag_cache.lifetime) == tenjin.FragmentCacheHelper.lifetime
+            chk(tenjin.FragmentCacheHelper(None, ))
+            chk(tenjin.FragmentCacheHelper(None, lifetime=None))
+        if "lifetime is specified then it is used":
+            frag_cache = tenjin.FragmentCacheHelper(None, lifetime=0)
+            ok (frag_cache.lifetime) == 0
+            ok (frag_cache.lifetime) != tenjin.FragmentCacheHelper.lifetime
+
     def test_not_cached_and_echo_cached(self):
         expected, tname = self.expected, self.tname
         engine = tenjin.Engine(cache=False)
