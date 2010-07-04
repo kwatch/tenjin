@@ -1443,7 +1443,6 @@ class Engine(object):
 
 ##
 ## for Google App Engine
-##
 ## (should separate into individual file or module?)
 ##
 
@@ -1460,19 +1459,20 @@ class GaeMemcacheCacheStorage(CacheStorage):
 
     def _load(self, fullpath):
         key = self._cachename(fullpath)
-        if logger: logger.info("[tenjin.GaeMemcacheCacheStorage] load cache (key=%r)" % key)
+        if logger: logger.info("[tenjin.gae.GaeMemcacheCacheStorage] load cache (key=%r)" % key)
         return memcache.get(key, namespace=self.namespace)
 
     def _store(self, fullpath, dict):
         if 'bytecode' in dict: dict.pop('bytecode')
         key = self._cachename(fullpath)
-        if logger: logger.info("[tenjin.GaeMemcacheCacheStorage] store cache (key=%r)" % key)
+        if logger: logger.info("[tenjin.gae.GaeMemcacheCacheStorage] store cache (key=%r)" % key)
         ret = memcache.set(key, dict, self.lifetime, namespace=self.namespace)
         if not ret:
-            if logger: logger.info("[tenjin.GaeMemcacheCacheStorage] failed to store cache (key=%r)" % key)
+            if logger: logger.info("[tenjin.gae.GaeMemcacheCacheStorage] failed to store cache (key=%r)" % key)
 
     def _delete(self, fullpath):
-        memcache.delete(self._cachename(fullpath), namespace=self.namespace)
+        key = self._cachename(fullpath)
+        memcache.delete(key, namespace=self.namespace)
 
 
 class GaeMemcacheStore(KeyValueStore):
