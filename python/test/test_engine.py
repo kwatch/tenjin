@@ -460,6 +460,33 @@ class EngineTest(unittest.TestCase):
             _remove_files(['content'])
 
 
+    def test__set_cache_storage(self):
+        if "default then Engine.cache is MarshalCacheStorage instance":
+            ok (tenjin.Engine.cache).is_a(tenjin.MarshalCacheStorage)
+        if "cache=True specified then use default cache object":
+            engine = tenjin.Engine(cache=True)
+            ok ('cache' in engine.__dict__) == False
+            ok (engine.cache).is_(tenjin.Engine.cache)
+            ok (engine.cache).is_(tenjin.Engine(cache=True).cache)
+        if "cache=None specified then set MemoryCacheObject instance as cache object":
+            engine = tenjin.Engine(cache=None)
+            ok ('cache' in engine.__dict__) == True
+            ok (engine.cache).is_a(tenjin.MemoryCacheStorage)
+        if "cache=False specified then don't use cache object":
+            engine = tenjin.Engine(cache=False)
+            ok ('cache' in engine.__dict__) == True
+            ok (engine.cache) == None
+        if "CacheStorage instance is specified then use it as cache object":
+            cache_storage = tenjin.MarshalCacheStorage()
+            engine = tenjin.Engine(cache=cache_storage)
+            ok ('cache' in engine.__dict__) == True
+            ok (engine.cache).is_(cache_storage)
+        if "invalid object is specified as cache object then raise ValueError":
+            def f():
+                tenjin.Engine(cache=123)
+            ok (f).raises(ValueError, '123: invalid cache object.')
+
+
     def test_cached_contents(self):
         data = EngineTest.testdata['test_cached_contents']
         def _test(filename, cachename, cachemode, input, expected_script, expected_args):
