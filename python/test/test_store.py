@@ -60,7 +60,7 @@ class MemoryBaseStoreTest(unittest.TestCase):
             data_cache.set(key, value, 1)
             ok (data_cache.get(key)) == value
         if "called after lifetime seconds passed then retunrs None":
-            time.sleep(1)
+            time.sleep(2)
             ok (data_cache.get(key)) == None
         if "called after lifetime seconds passed then remove cache data":
             ok (key).not_in(data_cache.values)
