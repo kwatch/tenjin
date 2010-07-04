@@ -1,6 +1,7 @@
 ##
 ## $Release: $
-## $Copyright$
+## $Copyright: copyright(c) 2007-2010 kuwata-lab.com all rights reserved. $
+## $License: MIT License $
 ##
 ## Permission is hereby granted, free of charge, to any person obtaining
 ## a copy of this software and associated documentation files (the
@@ -1292,7 +1293,7 @@ class Engine(object):
     layout     = None
     templateclass = Template
     path       = None
-    cache      = MarshalCacheStorage()
+    cache      = MarshalCacheStorage()  # save converted Python code into file by marshal-format
     preprocess = False
     timestamp_interval = 1  # seconds
 
@@ -1319,11 +1320,11 @@ class Engine(object):
              Options for Template class constructor.
              See document of Template.__init__() for details.
         """
-        if prefix:  self.prefix = prefix
+        if prefix:  self.prefix  = prefix
         if postfix: self.postfix = postfix
-        if layout:  self.layout = layout
+        if layout:  self.layout  = layout
         if templateclass: self.templateclass = templateclass
-        if path  is not None:  self.path = path
+        if path is not None:  self.path = path
         if preprocess is not None: self.preprocess = preprocess
         self.kwargs = kwargs
         self.encoding = kwargs.get('encoding')
@@ -1420,7 +1421,7 @@ class Engine(object):
             template = self._create_template(filename, _context, _globals)
             template.timestamp = mtime
             template._last_checked_at = now
-            #template.filename = fullpath     # set fullpath instead of filename
+            #template.filename = fullpath     ## set fullpath instead of filename
             if cache:
                 if not template.bytecode: template.compile()
                 cache.set(fullpath, template)
@@ -1449,7 +1450,7 @@ class Engine(object):
         context = locals['_context']
         if kwargs:
             context.update(kwargs)
-        # context and globals are passed to get_template() only for preprocessing.
+        ## context and globals are passed to get_template() only for preprocessing.
         template = self.get_template(template_name, context, globals)
         if append_to_buf:  _buf = locals['_buf']
         else:              _buf = None
@@ -1482,7 +1483,7 @@ class Engine(object):
             globals = sys._getframe(1).f_globals
         self.hook_context(context)
         while True:
-            # context and globals are passed to get_template() only for preprocessing
+            ## context and globals are passed to get_template() only for preprocessing
             template = self.get_template(template_name, context, globals)
             content  = template.render(context, globals)
             layout   = context.pop('_layout', layout)
