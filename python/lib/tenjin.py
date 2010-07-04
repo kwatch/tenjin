@@ -634,7 +634,7 @@ class Template(object):
                     arg = s.strip()
                     if not s: continue
                     if not re.match('^[a-zA-Z_]\w*$', arg):
-                        raise ValueError("%s: invalid template argument." % arg)
+                        raise ValueError("%r: invalid template argument." % arg)
                     args.append(arg)
                     declares.append("%s = _context.get('%s'); " % (arg, arg))
                 self.args = args
@@ -942,7 +942,7 @@ class MarshalCacheStorage(FileCacheStorage):
     def _load(self, fullpath):
         cachepath = self._cachename(fullpath)
         if not _isfile(cachepath): return None
-        if logger: logger.info("[tenjin.MarshalCacheStorage] load cache (file=%r)" % cachepath)
+        if logger: logger.info("[tenjin.MarshalCacheStorage] load cache (file=%r)" % (cachepath, ))
         dump = _read_binary_file(cachepath)
         global marshal
         if marshal is None: import marshal
@@ -950,7 +950,7 @@ class MarshalCacheStorage(FileCacheStorage):
 
     def _store(self, fullpath, dict):
         cachepath = self._cachename(fullpath)
-        if logger: logger.info("[tenjin.MarshalCacheStorage] store cache (file=%r)" % cachepath)
+        if logger: logger.info("[tenjin.MarshalCacheStorage] store cache (file=%r)" % (cachepath, ))
         global marshal
         if marshal is None: import marshal
         _write_binary_file(cachepath, marshal.dumps(dict))
@@ -968,14 +968,14 @@ class PickleCacheStorage(FileCacheStorage):
     def _load(self, fullpath):
         cachepath = self._cachename(fullpath)
         if not _isfile(cachepath): return None
-        if logger: logger.info("[tenjin.PickleCacheStorage] load cache (file=%r)" % cachepath)
+        if logger: logger.info("[tenjin.PickleCacheStorage] load cache (file=%r)" % (cachepath, ))
         dump = _read_binary_file(cachepath)
         return pickle.loads(dump)
 
     def _store(self, fullpath, dict):
         if 'bytecode' in dict: dict.pop('bytecode')
         cachepath = self._cachename(fullpath)
-        if logger: logger.info("[tenjin.PickleCacheStorage] store cache (file=%r)" % cachepath)
+        if logger: logger.info("[tenjin.PickleCacheStorage] store cache (file=%r)" % (cachepath, ))
         _write_binary_file(cachepath, pickle.dumps(dict))
 
 
@@ -984,7 +984,7 @@ class TextCacheStorage(FileCacheStorage):
     def _load(self, fullpath):
         cachepath = self._cachename(fullpath)
         if not _isfile(cachepath): return None
-        if logger: logger.info("[tenjin.TextCacheStorage] load cache (file=%r)" % cachepath)
+        if logger: logger.info("[tenjin.TextCacheStorage] load cache (file=%r)" % (cachepath, ))
         s = _read_binary_file(cachepath)
         if python2:
             header, script = s.split("\n\n", 1)
@@ -1021,7 +1021,7 @@ class TextCacheStorage(FileCacheStorage):
             if isinstance(s, str):
                 s = s.encode(dict.get('encoding') or 'utf-8')   ## unicode(=str) to binary
         cachepath = self._cachename(fullpath)
-        if logger: logger.info("[tenjin.TextCacheStorage] store cache (file=%r)" % cachepath)
+        if logger: logger.info("[tenjin.TextCacheStorage] store cache (file=%r)" % (cachepath, ))
         _write_binary_file(cachepath, s)
 
     def _save_data_of(self, template):
@@ -1097,7 +1097,7 @@ class FileBaseStore(KeyValueStore):
 
     def __init__(self, root_path, encoding=None):
         if not os.path.isdir(root_path):
-            raise ValueError("%s: directory not found." % root_path)
+            raise ValueError("%r: directory not found." % (root_path, ))
         self.root_path = root_path
         if encoding is None and python3:
             encoding = 'utf-8'
@@ -1189,11 +1189,11 @@ class FragmentCacheHelper(object):
         key = self.prefix and self.prefix + cache_key or cache_key
         value = self.store.get(key)
         if value:    ## cached
-            if logger: logger.debug('[tenjin.not_cached] %r: cached.' % cache_key)
+            if logger: logger.debug('[tenjin.not_cached] %r: cached.' % (cache_key, ))
             context[key] = value
             return False
         else:        ## not cached
-            if logger: logger.debug('[tenjin.not_cached]: %r: not cached.' % cache_key)
+            if logger: logger.debug('[tenjin.not_cached]: %r: not cached.' % (cache_key, ))
             if key in context: del context[key]
             if lifetime is None:  lifetime = self.lifetime
             context['_cache_lifetime'] = lifetime
@@ -1471,16 +1471,16 @@ class GaeMemcacheCacheStorage(CacheStorage):
 
     def _load(self, fullpath):
         key = self._cachename(fullpath)
-        if logger: logger.info("[tenjin.gae.GaeMemcacheCacheStorage] load cache (key=%r)" % key)
+        if logger: logger.info("[tenjin.gae.GaeMemcacheCacheStorage] load cache (key=%r)" % (key, ))
         return memcache.get(key, namespace=self.namespace)
 
     def _store(self, fullpath, dict):
         if 'bytecode' in dict: dict.pop('bytecode')
         key = self._cachename(fullpath)
-        if logger: logger.info("[tenjin.gae.GaeMemcacheCacheStorage] store cache (key=%r)" % key)
+        if logger: logger.info("[tenjin.gae.GaeMemcacheCacheStorage] store cache (key=%r)" % (key, ))
         ret = memcache.set(key, dict, self.lifetime, namespace=self.namespace)
         if not ret:
-            if logger: logger.info("[tenjin.gae.GaeMemcacheCacheStorage] failed to store cache (key=%r)" % key)
+            if logger: logger.info("[tenjin.gae.GaeMemcacheCacheStorage] failed to store cache (key=%r)" % (key, ))
 
     def _delete(self, fullpath):
         key = self._cachename(fullpath)
@@ -1503,7 +1503,7 @@ class GaeMemcacheStore(KeyValueStore):
         if memcache.set(key, value, lifetime, namespace=self.namespace):
             return True
         else:
-            if logger: logger.info("[tenjin.gae.GaeMemcacheStore] failed to set (key=%r)" % key)
+            if logger: logger.info("[tenjin.gae.GaeMemcacheStore] failed to set (key=%r)" % (key, ))
             return False
 
     def delete(self, key):
