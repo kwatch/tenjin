@@ -1030,33 +1030,6 @@ class TextCacheStorage(FileCacheStorage):
         return dict
 
 
-class GaeMemcacheCacheStorage(CacheStorage):
-
-    lifetime = 0     # 0 means unlimited
-
-    def __init__(self, lifetime=None, postfix='.cache'):
-        CacheStorage.__init__(self, postfix)
-        if lifetime is not None:  self.lifetime = lifetime
-        global memcache
-        if memcache is None: from google.appengine.api import memcache
-
-    def _load(self, fullpath):
-        key = self._cachename(fullpath)
-        if logger: logger.info("[tenjin.GaeMemcacheCacheStorage] load cache (key=%r)" % key)
-        return memcache.get(key)
-
-    def _store(self, fullpath, dict):
-        if 'bytecode' in dict: dict.pop('bytecode')
-        key = self._cachename(fullpath)
-        if logger: logger.info("[tenjin.GaeMemcacheCacheStorage] store cache (key=%r)" % key)
-        ret = memcache.set(key, dict, self.lifetime)
-        if not ret:
-            if logger: logger.info("[tenjin.GaeMemcacheCacheStorage] failed to store cache (key=%r)" % key)
-
-    def _delete(self, fullpath):
-        memcache.delete(self._cachename(fullpath))
-
-
 
 ##
 ## abstract class for data cache
@@ -1176,40 +1149,6 @@ class FileBaseStore(KeyValueStore):
             return False
         return True
 
-
-##
-## Google App Engine memcache base data cache
-##
-class GaeMemcacheStore(KeyValueStore):
-
-    def __init__(self, namespace=None):
-        global memcache
-        if not memcache: from google.appengine.api import memcache
-        self.namespace = namespace
-
-    def get(self, key):
-        global memcache
-        return memcache.get(key, namespace=self.namespace)
-
-    def set(self, key, value, lifetime=0):
-        global memcache
-        if memcache.set(key, value, lifetime, namespace=self.namespace):
-            return True
-        else:
-            if logger: logger.info("[tenjin.GaeMemcacheStore] failed to set (key=%r)" % key)
-            return False
-
-    def delete(self, key):
-        global memcache
-        return memcache.delete(key, namespace=self.namespace)
-
-    def has(self, key):
-        global memcache
-        if memcache.add(key, 'dummy', namespace=self.namespace):
-            memcache.delete(key, namespace=self.namespace)
-            return False
-        else:
-            return True
 
 
 ##
@@ -1507,6 +1446,66 @@ class Engine(object):
 ##
 ## (should separate into individual file or module?)
 ##
+
+class GaeMemcacheCacheStorage(CacheStorage):
+
+    lifetime = 0     # 0 means unlimited
+
+    def __init__(self, lifetime=None, postfix='.cache'):
+        CacheStorage.__init__(self, postfix)
+        if lifetime is not None:  self.lifetime = lifetime
+        global memcache
+        if memcache is None: from google.appengine.api import memcache
+
+    def _load(self, fullpath):
+        key = self._cachename(fullpath)
+        if logger: logger.info("[tenjin.GaeMemcacheCacheStorage] load cache (key=%r)" % key)
+        return memcache.get(key)
+
+    def _store(self, fullpath, dict):
+        if 'bytecode' in dict: dict.pop('bytecode')
+        key = self._cachename(fullpath)
+        if logger: logger.info("[tenjin.GaeMemcacheCacheStorage] store cache (key=%r)" % key)
+        ret = memcache.set(key, dict, self.lifetime)
+        if not ret:
+            if logger: logger.info("[tenjin.GaeMemcacheCacheStorage] failed to store cache (key=%r)" % key)
+
+    def _delete(self, fullpath):
+        memcache.delete(self._cachename(fullpath))
+
+
+class GaeMemcacheStore(KeyValueStore):
+
+    def __init__(self, namespace=None):
+        global memcache
+        if not memcache: from google.appengine.api import memcache
+        self.namespace = namespace
+
+    def get(self, key):
+        global memcache
+        return memcache.get(key, namespace=self.namespace)
+
+    def set(self, key, value, lifetime=0):
+        global memcache
+        if memcache.set(key, value, lifetime, namespace=self.namespace):
+            return True
+        else:
+            if logger: logger.info("[tenjin.GaeMemcacheStore] failed to set (key=%r)" % key)
+            return False
+
+    def delete(self, key):
+        global memcache
+        return memcache.delete(key, namespace=self.namespace)
+
+    def has(self, key):
+        global memcache
+        if memcache.add(key, 'dummy', namespace=self.namespace):
+            memcache.delete(key, namespace=self.namespace)
+            return False
+        else:
+            return True
+
+
 try:
     from google.appengine.api import memcache
     ver = os.environ.get('CURRENT_VERSION_ID').split('.', 1)[0]
