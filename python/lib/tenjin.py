@@ -937,8 +937,6 @@ class FileCacheStorage(CacheStorage):
 class MarshalCacheStorage(FileCacheStorage):
 
     def __init__(self, postfix='.cache'):
-        global marshal
-        if marshal is None: import marshal
         FileCacheStorage.__init__(self, postfix)
 
     def _load(self, fullpath):
@@ -946,11 +944,15 @@ class MarshalCacheStorage(FileCacheStorage):
         if not _isfile(cachepath): return None
         if logger: logger.info("[tenjin.MarshalCacheStorage] load cache (file=%r)" % cachepath)
         dump = _read_binary_file(cachepath)
+        global marshal
+        if marshal is None: import marshal
         return marshal.loads(dump)
 
     def _store(self, fullpath, dict):
         cachepath = self._cachename(fullpath)
         if logger: logger.info("[tenjin.MarshalCacheStorage] store cache (file=%r)" % cachepath)
+        global marshal
+        if marshal is None: import marshal
         _write_binary_file(cachepath, marshal.dumps(dict))
 
 
