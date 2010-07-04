@@ -1451,27 +1451,28 @@ class GaeMemcacheCacheStorage(CacheStorage):
 
     lifetime = 0     # 0 means unlimited
 
-    def __init__(self, lifetime=None, postfix='.cache'):
+    def __init__(self, lifetime=None, postfix='.cache', namespace=None):
         CacheStorage.__init__(self, postfix)
         if lifetime is not None:  self.lifetime = lifetime
+        self.namespace = namespace
         global memcache
         if memcache is None: from google.appengine.api import memcache
 
     def _load(self, fullpath):
         key = self._cachename(fullpath)
         if logger: logger.info("[tenjin.GaeMemcacheCacheStorage] load cache (key=%r)" % key)
-        return memcache.get(key)
+        return memcache.get(key, namespace=self.namespace)
 
     def _store(self, fullpath, dict):
         if 'bytecode' in dict: dict.pop('bytecode')
         key = self._cachename(fullpath)
         if logger: logger.info("[tenjin.GaeMemcacheCacheStorage] store cache (key=%r)" % key)
-        ret = memcache.set(key, dict, self.lifetime)
+        ret = memcache.set(key, dict, self.lifetime, namespace=self.namespace)
         if not ret:
             if logger: logger.info("[tenjin.GaeMemcacheCacheStorage] failed to store cache (key=%r)" % key)
 
     def _delete(self, fullpath):
-        memcache.delete(self._cachename(fullpath))
+        memcache.delete(self._cachename(fullpath), namespace=self.namespace)
 
 
 class GaeMemcacheStore(KeyValueStore):
