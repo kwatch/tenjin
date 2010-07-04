@@ -1293,7 +1293,7 @@ class Engine(object):
     layout     = None
     templateclass = Template
     path       = None
-    cache      = None
+    cache      = MarshalCacheStorage()
     preprocess = False
     timestamp_interval = 1  # seconds
     _cache_storage_classes = {
@@ -1339,7 +1339,7 @@ class Engine(object):
         self._set_cache_storage(cache)
 
     def _set_cache_storage(self, cache):
-        if   cache is True:  self.cache = MarshalCacheStorage()
+        if   cache is True:  pass  # self.cache = MarshalCacheStorage()
         elif cache is None:  self.cache = MemoryCacheStorage()
         elif cache is False: self.cache = None
         elif isinstance(cache, CacheStorage):  self.cache = cache

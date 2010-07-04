@@ -403,6 +403,7 @@ class EngineTest(unittest.TestCase):
     def test_change_layout(self):
         data = EngineTest.testdata['test_change_layout']
         ## setup
+        tenjin.Engine.cache.clear()
         basenames = ['baselayout', 'customlayout', 'content']
         for basename in basenames:
             write_file('%s.pyhtml' % basename, data[basename])
