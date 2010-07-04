@@ -1484,13 +1484,17 @@ class GaeMemcacheCacheStorage(CacheStorage):
 
 class GaeMemcacheStore(KeyValueStore):
 
-    def __init__(self, namespace=None):
+    lifetime = 0
+
+    def __init__(self, lifetime=None, namespace=None):
+        if lifetime is not None:  self.lifetime = lifetime
         self.namespace = namespace
 
     def get(self, key):
         return memcache.get(key, namespace=self.namespace)
 
-    def set(self, key, value, lifetime=0):
+    def set(self, key, value, lifetime=None):
+        if lifetime is None:  lifetime = self.lifetime
         if memcache.set(key, value, lifetime, namespace=self.namespace):
             return True
         else:
