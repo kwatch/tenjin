@@ -1313,11 +1313,10 @@ class Engine(object):
              Default layout template name.
            path:list of str(=None)
              List of directory names which contain template files.
-           cache:bool or 'text' (=True)
-             Cache converted python code into file.
-             If True, marshal-base cache files are created.
-             If 'text', text-base cache files are created.
-             If False, no cache files are created.
+           cache:bool or CacheStorage instance (=True)
+             Cache storage object to store converted python code.
+             If True, default cache storage (=Engine.cache) is used and caches are saved as file.
+             If False, no cache storage is used nor no cache files are created.
            preprocess:bool(=False)
              Activate preprocessing or not.
            templateclass:class (=Template)
