@@ -320,7 +320,7 @@ class Main(object):
                 return "%5d:  " % n[0]
             pat = re.compile(r'^', re.M)
             output = pat.sub(f, output)
-            output = re.sub(r"(print ''.join\(_buf\)\r?\n) +\d+:  $", r'\1', output)
+            output = re.sub(r'\n +\d+:  $', "\n", output)
             if flag_compact:
                 pat2 = re.compile(r'^\s*\d+:\s+?\n', re.M)
                 output = pat2.sub('', output)
