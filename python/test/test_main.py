@@ -76,6 +76,14 @@ for item in ['<a&b>', '["c",'+"'d']"]:\n\
 _buf.extend(('''</ul>\\r\\n''', ));\n\
 print ''.join(_buf)
 """
+SOURCE_N = r"""    1:  _buf = []; _buf.extend(('''<ul>\n''', ));
+    2:  for item in ['<a&b>', '["c",'+"'d']"]:
+    3:      _buf.extend(('''  <li>''', to_str(item), '''
+    4:        ''', escape(to_str(item)), '''</li>\n''', ));
+    5:  #end
+    6:  _buf.extend(('''</ul>\n''', ));
+    7:  print ''.join(_buf)
+"""
 
 EXECUTED = r"""<ul>
   <li><a&b>
@@ -261,6 +269,18 @@ class MainTest(unittest.TestCase):
         self.expected = SOURCE[n1:-n2]
         self._test()
         self.options = "-baconvert"
+        self._test()
+
+    def test_number1(self):   # -sN
+        self.options  = "-sN"
+        self.input    = INPUT
+        self.expected = SOURCE_N
+        self._test()
+
+    def test_number2(self):   # -sbN
+        self.options  = "-sbN"
+        self.input    = INPUT
+        self.expected = re.sub(r'\n    7:.*?\n$', "\n", SOURCE_N).replace('_buf = []; ', '')
         self._test()
 
     def test_cache1(self):   # -a cache
