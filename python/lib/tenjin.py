@@ -1339,8 +1339,8 @@ class Engine(object):
         self._set_cache_storage(cache)
 
     def _set_cache_storage(self, cache):
-        if   cache is True:  pass  # self.cache = MarshalCacheStorage()
-        elif cache is None:  self.cache = MemoryCacheStorage()
+        if   cache is True:  pass  # or self.cache = MarshalCacheStorage() ?
+        elif cache is None:  pass  # or self.cache = MemoryCacheStorage() ?
         elif cache is False: self.cache = None
         elif isinstance(cache, CacheStorage):  self.cache = cache
         elif self._cache_storage_classes.get(cache):

@@ -468,10 +468,13 @@ class EngineTest(unittest.TestCase):
             ok ('cache' in engine.__dict__) == False
             ok (engine.cache).is_(tenjin.Engine.cache)
             ok (engine.cache).is_(tenjin.Engine(cache=True).cache)
-        if "cache=None specified then set MemoryCacheObject instance as cache object":
+        #if "cache=None specified then set MemoryCacheObject instance as cache object":
+        #    engine = tenjin.Engine(cache=None)
+        #    ok ('cache' in engine.__dict__) == True
+        #    ok (engine.cache).is_a(tenjin.MemoryCacheStorage)
+        if "cache=None means same as cache=True":
             engine = tenjin.Engine(cache=None)
-            ok ('cache' in engine.__dict__) == True
-            ok (engine.cache).is_a(tenjin.MemoryCacheStorage)
+            ok ('cache' in engine.__dict__) == False
         if "cache=False specified then don't use cache object":
             engine = tenjin.Engine(cache=False)
             ok ('cache' in engine.__dict__) == True
