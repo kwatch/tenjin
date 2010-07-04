@@ -1175,11 +1175,12 @@ class FragmentCacheHelper(object):
     """
 
     lifetime = 300   # 5 minutes
+    prefix   = None
 
     def __init__(self, store, lifetime=None, prefix=None):
         self.store = store
         if lifetime is not None:  self.lifetime = lifetime
-        self.prefix = prefix
+        if prefix   is not None:  self.prefix   = prefix
 
     def not_cached(self, cache_key, lifetime=None):
         """html fragment cache helper. see document of FragmentCacheHelper class."""
