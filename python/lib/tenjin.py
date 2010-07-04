@@ -1524,6 +1524,10 @@ def init():
     ## avoid cache confliction between versions
     ver = os.environ.get('CURRENT_VERSION_ID').split('.')[0]
     Engine.cache = GaeMemcacheCacheStorage(namespace=ver)
+    ## set fragment cache store
+    helpers.fragment_cache.store    = GaeMemcacheStore(namespace=ver)
+    helpers.fragment_cache.lifetime = 300
+    helpers.fragment_cache.prefix   = 'fragment.'
 
 
 gae = _create_module('tenjin.gae')
