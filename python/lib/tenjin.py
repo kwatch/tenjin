@@ -1174,7 +1174,7 @@ class FragmentCacheHelper(object):
            <?py echo_cached()  # necessary! ?>
     """
 
-    lifetime = 300   # 5 minutes
+    lifetime = 60   # 1 minute
     prefix   = None
 
     def __init__(self, store, lifetime=None, prefix=None):
@@ -1222,6 +1222,7 @@ helpers.fragment_cache = FragmentCacheHelper(MemoryBaseStore())
 helpers.not_cached  = helpers.fragment_cache.not_cached
 helpers.echo_cached = helpers.fragment_cache.echo_cached
 helpers.__all__.extend(('not_cached', 'echo_cached'))
+
 
 
 ##
@@ -1452,6 +1453,7 @@ class Engine(object):
         context['include'] = self.include
 
 
+
 ##
 ## for Google App Engine
 ## (should separate into individual file or module?)
@@ -1526,7 +1528,7 @@ def init():
     Engine.cache = GaeMemcacheCacheStorage(namespace=ver)
     ## set fragment cache store
     helpers.fragment_cache.store    = GaeMemcacheStore(namespace=ver)
-    helpers.fragment_cache.lifetime = 300
+    helpers.fragment_cache.lifetime = 60    #  1 minute
     helpers.fragment_cache.prefix   = 'fragment.'
 
 
