@@ -1510,7 +1510,7 @@ class GaeMemcacheStore(KeyValueStore):
 def init():
     ## avoid cache confliction between versions
     ver = os.environ.get('CURRENT_VERSION_ID').split('.')[0]
-    Engine.cache = GaeMemcacheCacheStorage(postfix='.cache.'+ver)
+    Engine.cache = GaeMemcacheCacheStorage(namespace=ver)
 
 
 gae = _create_module('tenjin.gae')
