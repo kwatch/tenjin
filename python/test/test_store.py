@@ -180,15 +180,21 @@ class FragmentCacheTest(unittest.TestCase):
         write_file(self.tname, pyhtml)
         self.root_dir = '_test.caches.d'
         os.mkdir(self.root_dir)
-        data_cache = tenjin.FileBaseStore(self.root_dir)
-        self.fragment_cache = tenjin.FragmentCacheHelper(data_cache, prefix='fragment.')
-        global not_cached, echo_cached
-        not_cached  = self.fragment_cache.not_cached
-        echo_cached = self.fragment_cache.echo_cached
+        #data_cache = tenjin.FileBaseStore(self.root_dir)
+        #self.fragment_cache = tenjin.FragmentCacheHelper(data_cache, prefix='fragment.')
+        #global not_cached, echo_cached
+        #not_cached  = self.fragment_cache.not_cached
+        #echo_cached = self.fragment_cache.echo_cached
+        self._orig_store  = tenjin.helpers.fragment_cache.store
+        self._orig_preifx = tenjin.helpers.fragment_cache.prefix
+        tenjin.helpers.fragment_cache.store = tenjin.FileBaseStore(self.root_dir)
+        tenjin.helpers.fragment_cache.prefix = 'fragment.'
 
     def tearDown(self):
         os.unlink(self.tname)
         shutil.rmtree(self.root_dir)
+        tenjin.helpers.fragment_cache.store  = self._orig_store
+        tenjin.helpers.fragment_cache.prefix = self._orig_preifx
 
     def test_not_cached_and_echo_cached(self):
         expected, tname = self.expected, self.tname
@@ -213,9 +219,10 @@ class FragmentCacheTest(unittest.TestCase):
             ok (_read_file(cache_fpath)) == "<p>x=4</p>\n"
 
     def test_functions(self):
-        tupl = self.fragment_cache.functions()
-        ok (tupl[0]) == self.fragment_cache.not_cached
-        ok (tupl[1]) == self.fragment_cache.echo_cached
+        fragment_cache = tenjin.helpers.fragment_cache
+        tupl = fragment_cache.functions()
+        ok (tupl[0]) == fragment_cache.not_cached
+        ok (tupl[1]) == fragment_cache.echo_cached
 
 
 remove_unmatched_test_methods(MemoryBaseStoreTest)
