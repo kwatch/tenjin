@@ -1212,6 +1212,12 @@ class FragmentCacheHelper(object):
     def functions(self):
         return (self.not_cached, self.echo_cached)
 
+## you can change default store by 'tenjin.helpers.fragment_cache.store = ...'
+helpers.fragment_cache = FragmentCacheHelper(MemoryBaseStore())
+helpers.not_cached  = helpers.fragment_cache.not_cached
+helpers.echo_cached = helpers.fragment_cache.echo_cached
+helpers.__all__.extend(('not_cached', 'echo_cached'))
+
 
 ##
 ## template engine class
