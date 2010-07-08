@@ -463,7 +463,7 @@ class Template(object):
     args       = None
     timestamp  = None
 
-    def __init__(self, filename=None, encoding=None, escapefunc=None, tostrfunc=None, indent=None, preamble=None, postamble=None, smarttrim=None):
+    def __init__(self, filename=None, encoding=None, input=None, escapefunc=None, tostrfunc=None, indent=None, preamble=None, postamble=None, smarttrim=None):
         """Initailizer of Template class.
 
            filename:str (=None)
@@ -473,6 +473,9 @@ class Template(object):
              unicode object internally.
              Template.render() returns str object if encoding is None,
              else returns unicode object if encoding name is specified.
+           input:str (=None)
+             Input string. In other words, content of template file.
+             Template file will not be read if this argument is specified.
            escapefunc:str (='escape')
              Escape function name.
            tostrfunc:str (='to_str')
@@ -499,7 +502,10 @@ class Template(object):
         #
         if preamble  is True:  self.preamble = "_buf = []"
         if postamble is True:  self.postamble = "print ''.join(_buf)"
-        if filename:
+        if input:
+            self.convert(input, filename)
+            self.timestamp = False      # False means 'file not exist' (= Engine should not check timestamp of file)
+        elif filename:
             self.convert_file(filename)
         else:
             self._reset()
