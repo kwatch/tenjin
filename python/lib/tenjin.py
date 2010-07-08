@@ -1297,13 +1297,13 @@ class Engine(object):
             raise ValueError("%r: invalid cache object." % (cache, ))
 
     def to_filename(self, template_name):
-        """Convert template short name to filename.
+        """Convert template short name into filename.
            ex.
              >>> engine = tenjin.Engine(prefix='user_', postfix='.pyhtml')
-             >>> engine.to_filename('list')
-             'list'
              >>> engine.to_filename(':list')
              'user_list.pyhtml'
+             >>> engine.to_filename('list')
+             'list'
         """
         if template_name[0] == ':' :
             return self.prefix + template_name[1:] + self.postfix
