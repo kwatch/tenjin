@@ -213,6 +213,28 @@ if True: ## dummy
         ok (actual) == expected
 
 
+    def test_input(self):
+        input = r"""<!DOCTYPE>
+<ul>
+<?py for item in items: ?>
+  <li>#{item}</li>
+<?py #endfor ?>
+</ul>
+"""
+        script = r"""_buf.extend(('''<!DOCTYPE>
+<ul>\n''', ));
+for item in items:
+    _buf.extend(('''  <li>''', to_str(item), '''</li>\n''', ));
+#endfor
+_buf.extend(('''</ul>\n''', ));
+"""
+        t = tenjin.Template("test.foobar.pyhtml", input=input)
+        if "input argument is specified then regard it as template content":
+            ok (t.script) == script
+        if "input argument is specified then timestamp is set to False":
+            ok (t.timestamp) == False
+
+
 remove_unmatched_test_methods(TemplateTest)
 
 
