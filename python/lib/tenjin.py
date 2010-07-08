@@ -1353,8 +1353,8 @@ class Engine(object):
            If template object has not registered, template engine creates
            and registers template object automatically.
         """
-        filename, fullpath = self._relative_and_absolute_path(template_name)
-        assert filename and fullpath
+        filepath, fullpath = self._relative_and_absolute_path(template_name)
+        assert filepath and fullpath
         cache = self.cache
         template = cache and cache.get(fullpath, self.templateclass) or None
         mtime = None
@@ -1362,22 +1362,22 @@ class Engine(object):
         if template:
             assert template.timestamp is not None
             if not template.filename:
-                template.filename = filename   # or fullpath
+                template.filename = filepath   # or fullpath
             if now > getattr(template, '_last_checked_at', 0) + self.timestamp_interval:
-                mtime = _getmtime(filename)
+                mtime = _getmtime(filepath)
                 if template.timestamp != mtime:
-                    #if cache: cache.delete(path)
+                    #if cache: cache.delete(fullpath)
                     template = None
-                    if logger: logger.info("[tenjin.Engine] cache is old (filename=%r, template=%r)" % (filename, template, ))
+                    if logger: logger.info("[tenjin.Engine] cache is old (filepath=%r, template=%r)" % (filepath, template, ))
         if not template:
-            if not mtime: mtime = _getmtime(filename)
+            if not mtime: mtime = _getmtime(filepath)
             if self.preprocess:   ## required for preprocess
                 if _context is None: _context = {}
                 if _globals is None: _globals = sys._getframe(1).f_globals
-            template = self._create_template(filename, _context, _globals)
+            template = self._create_template(filepath, _context, _globals)
             template.timestamp = mtime
             template._last_checked_at = now
-            #template.filename = fullpath     ## set fullpath instead of filename
+            #template.filename = fullpath     ## set fullpath instead of filepath
             if cache:
                 if not template.bytecode: template.compile()
                 cache.set(fullpath, template)
