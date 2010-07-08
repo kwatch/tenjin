@@ -35,11 +35,11 @@ __license__  = "MIT License"
 __all__      = ['Template', 'Engine', 'helpers', 'html', ]
 
 
-import re, sys, os, time
+import re, sys, os, time, marshal
 from time import time as _time
 from os.path import getmtime as _getmtime
 from os.path import isfile as _isfile
-random = marshal = pickle = unquote = None   # lazy import
+random = pickle = unquote = None   # lazy import
 python3 = sys.version_info[0] == 3
 python2 = sys.version_info[0] == 2
 
@@ -950,15 +950,11 @@ class MarshalCacheStorage(FileCacheStorage):
         if not _isfile(cachepath): return None
         if logger: logger.info("[tenjin.MarshalCacheStorage] load cache (file=%r)" % (cachepath, ))
         dump = _read_binary_file(cachepath)
-        global marshal
-        if marshal is None: import marshal
         return marshal.loads(dump)
 
     def _store(self, fullpath, dict):
         cachepath = self._cachename(fullpath)
         if logger: logger.info("[tenjin.MarshalCacheStorage] store cache (file=%r)" % (cachepath, ))
-        global marshal
-        if marshal is None: import marshal
         _write_binary_file(cachepath, marshal.dumps(dict))
 
 
