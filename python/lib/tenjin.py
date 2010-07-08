@@ -1285,6 +1285,7 @@ class Engine(object):
         self.kwargs = kwargs
         self.encoding = kwargs.get('encoding')
         self._filepaths = {}   # template_name => relative path and absolute path
+        self._added_templates = {}   # templates added by add_template()
         #self.cache = cache
         self._set_cache_storage(cache)
 
@@ -1309,15 +1310,14 @@ class Engine(object):
             return self.prefix + template_name[1:] + self.postfix
         return template_name
 
-    def _relative_and_absolute_path(self, template_name):
-        pair = self._filepaths.get(template_name)
+    def _relative_and_absolute_path(self, filename):
+        pair = self._filepaths.get(filename)
         if pair: return pair
-        filename = self.to_filename(template_name)
         filepath = self._find_file(filename)
         if not filepath:
             raise IOError('%s: filename not found (path=%r).' % (filename, self.path, ))
         fullpath = os.path.abspath(filepath)
-        self._filepaths[template_name] = pair = (filepath, fullpath)
+        self._filepaths[filename] = pair = (filepath, fullpath)
         return pair
 
     def _find_file(self, filename):
@@ -1348,12 +1348,18 @@ class Engine(object):
         preprocessor = Preprocessor(filepath)
         return preprocessor.render(_context, globals=_globals)
 
+    def add_template(self, template):
+        self._added_templates[template.filename] = template
+
     def get_template(self, template_name, _context=None, _globals=None):
         """Return template object.
            If template object has not registered, template engine creates
            and registers template object automatically.
         """
-        filepath, fullpath = self._relative_and_absolute_path(template_name)
+        filename = self.to_filename(template_name)
+        if filename in self._added_templates:
+            return self._added_templates[filename]
+        filepath, fullpath = self._relative_and_absolute_path(filename)
         assert filepath and fullpath
         cache = self.cache
         template = cache and cache.get(fullpath, self.templateclass) or None

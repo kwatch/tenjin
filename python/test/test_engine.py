@@ -638,6 +638,19 @@ class EngineTest(unittest.TestCase):
             _remove_files(['index', 'sub'])
 
 
+    def test_add_template(self):
+        if "template is added then it can be got by get_template()":
+            input = """val=#{val}"""
+            template = tenjin.Template('foo.pyhtml', input=input)
+            engine = tenjin.Engine(postfix='.pyhtml')
+            engine.add_template(template)
+            ok (engine.get_template('foo.pyhtml')) == template
+            ok (engine.get_template(':foo')) == template
+        if "template is added then it should not create cache file":
+            ok (engine.render(':foo', {'val': 'ABC'})) == 'val=ABC'
+            not_ok ('foo.pyhtml').exists()
+
+
 remove_unmatched_test_methods(EngineTest)
 
 
