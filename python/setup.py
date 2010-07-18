@@ -1,6 +1,6 @@
 ###
-### $Release: 0.8.1 $
-### copyright(c) 2007-2009 kuwata-lab.com all rights reserved.
+### $Release: 0.9.0 $
+### copyright(c) 2007-2010 kuwata-lab.com all rights reserved.
 ###
 
 
@@ -16,7 +16,7 @@ else:
 
 
 name     = 'Tenjin'
-version  = '0.8.1'
+version  = '0.9.0'
 author   = 'makoto kuwata'
 email    = 'kwa@kuwata-lab.com'
 maintainer = author
@@ -45,8 +45,10 @@ classifiers = [
     'Programming Language :: Python :: 2.4',
     'Programming Language :: Python :: 2.5',
     'Programming Language :: Python :: 2.6',
+    'Programming Language :: Python :: 2.7',
     'Programming Language :: Python :: 3',
     'Programming Language :: Python :: 3.0',
+    'Programming Language :: Python :: 3.1',
     'Topic :: Software Development :: Libraries :: Python Modules',
     'Topic :: Internet :: WWW/HTTP :: Dynamic Content :: CGI Tools/Libraries',
 ]
@@ -66,5 +68,5 @@ setup(
     package_dir={'': 'lib'},
     scripts=['bin/pytenjin'],
     #packages=['tenjin'],
-    zip_safe = False,
+    #zip_safe = False,
 )
