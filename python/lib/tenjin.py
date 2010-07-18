@@ -24,9 +24,8 @@
 ##
 
 """Very fast and light-weight template engine based embedded Python.
-   See User's Guide, FAQ, and examples for details.
+   See User's Guide and examples for details.
    http://www.kuwata-lab.com/tenjin/pytenjin-users-guide.html
-   http://www.kuwata-lab.com/tenjin/pytenjin-faq.html
    http://www.kuwata-lab.com/tenjin/pytenjin-examples.html
 """
 
