@@ -27,6 +27,15 @@ library_files   = [ "tenjin.py" ]
 
 kook_default_product = 'test'
 
+python_bins = [
+    '/opt/local/bin/python2.4',
+    '/usr/local/python/2.5.5/bin/python',
+    '/usr/local/python/2.6.5/bin/python',
+    '/usr/local/python/2.7.0/bin/python',
+    '/usr/local/python/3.0.1/bin/python',
+    '/usr/local/python/3.1/bin/python',
+]
+
 
 @recipe
 @ingreds("examples")
@@ -134,9 +143,16 @@ def task_uninstall(c):
 
 
 @recipe
-def task_test(c):
-    with chdir('test'):
-        system("pykook test")
+@spices('-A: do test with all version of python')
+def task_test(c, *args, **kwargs):
+    if kwargs.get('A'):
+        with chdir('test'):
+            for bin in python_bins:
+                print('******************** ' + bin)
+                system("%s test_all.py" % bin)
+    else:
+        with chdir('test'):
+            system("pykook test")
 
 
 @recipe
