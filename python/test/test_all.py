@@ -21,7 +21,6 @@ def main(verbose):
         "test_store",
         "test_gae",
         "test_users_guide",
-        "test_faq",
         "test_examples",
     ]
     if python3:
