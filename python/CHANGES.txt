@@ -2,6 +2,82 @@
 CHANGES
 =======
 
+Release 0.9.0 (2010-07-19)
+
+* [Enhancements]
+
+  * Performance improved (about 5%).
+
+  * (IMPORTANT!!)
+    Fragment cache supported.
+    See
+      http://www.kuwata-lab.com/tenjin/pytenjin-users-guide.html#fragment-cache
+    for details.
+
+  * (IMPORTANT!!)
+    include() now takes keyword arguments as local variables.
+    ex.
+      <?py include('header.pyhtml', title='Example') ?>
+
+  * Add new module 'tenjin.gae'.
+
+  * Add 'input' argument to tenjin.Template() to create template object without file.
+    ex.
+      input = "<p>Hello ${name}</p>"
+      t = tenjin.Template(None, input=input)
+      print(t.render({'name': 'World'}))
+
+  * Add tenjin.Engine.add_template() to add template object explicitly.
+
+  * User's guide (doc/users-guide.html) is rewrited entirely.
+
+  * Add benchmark for Jinja2.
+
+
+* [Changes]
+
+  * (IMPORTANT!!)
+    It is strongly recommended to close 'if', 'for', 'while', ... by
+    corresponding '#endif', '#endfor', '#endwhile', and so on.
+    See
+      http://www.kuwata-lab.com/tenjin/pytenjin-users-guide.html#planned-changes
+    for details.
+
+  * (IMPORTANT!!)
+    Google App Engine support is changed. All you have to do is to call
+    tenjin.gae.init() at first.
+    See
+      http://www.kuwata-lab.com/tenjin/pytenjin-users-guide.html#google-appengine
+    for details.
+
+  * Now you can set default template class to tenjin.Engine.templateclass.
+    ex.
+      tenjin.Engine.templateclass = MyTemplate
+
+  * Now you can set default template cache object to tenjin.Engine.cache.
+    ex.
+      tenjin.Engine.cache = tenjin.MemoryCacheStorage()
+
+  * 'cache' argument of tenjin.Engine() is changed.
+     [old behaviour]
+       True:  cached into file (*.cache)
+       None:  cached into memory
+       False: don't cache
+     [new behaviour]
+       True:  cached into file (*.cache)
+       None:  cached into file (*.cache)
+       False: don't cache
+
+  * 'doc/faq.html' is integrated into 'doc/users-guide.html'.
+
+
+* [Bugfixes]
+
+  * Fixed to set correct file path of template object which is loaded from cache.
+
+  * Fixed a bug that 'pytenjin -sbN' didn't trim line number on the last line
+
+
 Release 0.8.1 (2009-06-14)
 --------------------------
 
