@@ -4,6 +4,11 @@
 .?stylesheet:   docstyle.css
 
 
+Table of Contents:
+
+.<<< users-guide.toc
+
+
 
 .$ Overview	| overview
 
@@ -121,6 +126,7 @@ Versions:
 .* Genshi 0.5.1
 .* Mako 0.2.5
 .* Templetor (web.py) 0.32
+.* Jinja2 2.2.1
 
 
 .#.? MacOS X 10.4 Tiger, Intel CoreDuo 1.83GHz, Memory 2GB
@@ -1042,14 +1048,14 @@ Module {{,tenjin.helpers.html,}} provides HTML specific helper functions.
 
 This section describes planned changes in next release (1.0.0).
 
-.% Indentation will be flexible.
+.* {{*Indentation will be flexible.*}}
 	In other words, {{<http://gist.github.com/129297>}} will be the default template class.
 	See {{<this section|#flexible-indentation>}} for details.
 
-.% 'if', 'for', 'while', ... should be closed by corresponding '#endif', '#endfor', '#endwhile', and so on.
+.* {{*'if', 'for', 'while', ... should be closed by corresponding '#endif', '#endfor', '#endwhile', and so on.*}}
 	This restriction is necessary to allow flexible indentation.
 
-.% (Maybe) '_buf.extend(...)' will be changed to '_extend = _buf.extend; _extend(...)'
+.* {{*(Maybe) '_buf.extend(...)' will be changed to '_extend = _buf.extend; _extend(...)'.*}}
 	This change will make Tenjin a little faster (about 2 or 3 %).
 	But this may not be introduced because performance gain is very small{{(In Tenjin, string concatenation is not a bottleneck.)}}.
 
@@ -2211,9 +2217,32 @@ NOTE: MyTemplate will be the default template class in next release (1.0.0).
 .$$ Webext	| tips-webext
 
 I have to say that {{*bottleneck of Tenjin is calling to_str() and escape(), not string concatenation*}}.
-Therefore if you want to make Tenjin much faster, you must make to_str() and escape() faster (or omit calling them) and {{<Webext|http://pypi.python.org/Webext/>}} can be a solution.
+Therefore if you want to make Tenjin much faster, you must make to_str() and escape() faster (or omit calling them).
 
-{{<Webext|http://pypi.python.org/Webext/>}} is an extension module which implement to_str() and escape() in C language.
+For example, using {{,str(),}} instead of {{,to_str(),}} will make Tenjin much faster. The following benchmark result shows that {{,str(),}}(= 'tenjin-str') is much faster than {{,to_str(),}}(= 'tenjin').
+
+.? {{,str(),}} is faster than {{,to_str(),}}
+.====================
+$ cd Tenjin-X.X.X/benchmark
+$ python -V
+Python 2.5.5
+$ python bench.py -q -n 10000 tenjin tenjin-str
+*** ntimes=10000
+                                    utime     stime     total      real
+tenjin                             3.7500    0.0400    3.7900    3.7936
+tenjin-str                         2.4500    0.0300    2.4800    2.4857
+.#$ python -V
+.#Python 2.7
+.#$ python bench.py -q -n 10000 tenjin tenjin-str
+.#*** ntimes=10000
+.#                                    utime     stime     total      real
+.#tenjin                             3.2600    0.0300    3.2900    3.3033
+.#tenjin-str                         1.8700    0.0300    1.9000    1.9006
+.====================
+
+But {{,str(),}} doesn't return empty string if argument is {{,None,}}. In addition {{,str(),}} raises UnicodeEncodeError frequently.
+
+Other solution is {{<Webext|http://pypi.python.org/Webext/>}}. {{<Webext|http://pypi.python.org/Webext/>}} is an extension module which implement {{,to_str(),}} and {{,escape(),}} in C language.
 
 .--------------------
 import tenjin
@@ -2221,33 +2250,27 @@ from tenjin.helpers import *
 {{*from webext import to_str, escape*}}    # use webext's functions instead of tenjin's
 .--------------------
 
-Benchmark script in Tenjin supports Webext. It shows that Webext makes Tenjin much faster especially html escaping.
+Benchmark script in Tenjin already supports Webext. It shows that Webext makes Tenjin much faster especially html escaping.
 
 .? Intel CoreDuo2 2GHz, Mac OS X 10.6, Python 2.5.5
 .====================
 ### without html escaping
 $ cd Tenjin-X.X.X/
 $ cd benchmark/
-$ python bench.py -n 10000 tenjin tenjin-webext
-import tenjin ... done. (0.001740 sec)
-import webext ... done. (0.000466 sec)
-*** loading context data (file=bench_context.py)...
-*** start benchmark
+$ python bench.py -q -n 10000 tenjin tenjin-str tenjin-webext
 *** ntimes=10000
                                     utime     stime     total      real
-tenjin                             3.8100    0.0400    3.8500    3.8584
-tenjin-webext                      2.5000    0.0300    2.5300    2.5367
+tenjin                             3.8100    0.0400    3.8500    3.8462
+tenjin-str                         2.4500    0.0200    2.4700    2.4815
+tenjin-webext                      2.4500    0.0300    2.4800    2.4825
 
 ## with html escaping
-$ python bench.py -e -n 10000 tenjin tenjin-webext
-import tenjin ... done. (0.001580 sec)
-import webext ... done. (0.000459 sec)
-*** loading context data (file=bench_context.py)...
-*** start benchmark
+$ python bench.py -e -q -n 10000 tenjin tenjin-str tenjin-webext
 *** ntimes=10000
                                     utime     stime     total      real
-tenjin                             7.2100    0.0500    7.2600    7.2935
-tenjin-webext                      2.9800    0.0400    3.0200    3.0476
+tenjin                             7.2900    0.0500    7.3400    7.4669
+tenjin-str                         5.7400    0.0400    5.7800    5.8202
+tenjin-webext                      2.9700    0.0400    3.0100    3.0079
 .====================
 
 
