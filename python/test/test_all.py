@@ -25,6 +25,7 @@ def main(verbose):
     ]
     if python3:
         basenames.remove("test_encoding")
+        basenames.remove("test_gae")
 
     if verbose:
 
