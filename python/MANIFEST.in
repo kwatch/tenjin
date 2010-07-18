@@ -1,7 +1,7 @@
 include README.txt MIT-LICENSE MANIFEST CHANGES.txt setup.py ez_setup.py
 include bin/pytenjin
 include lib/tenjin.py
-include doc/users-guide.html doc/faq.html doc/examples.html doc/docstyle.css
+include doc/users-guide.html doc/examples.html doc/docstyle.css
 include benchmark/bench.py benchmark/bench_context.* benchmark/Makefile benchmark/Kookbook.py
 include benchmark/templates/*.*
 include test/*.py test/*.yaml
