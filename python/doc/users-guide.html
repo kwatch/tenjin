@@ -19,7 +19,141 @@
       <div align="left">
         release: $Release$<br>
         last update: $Date$<br>
-      </div><a name="overview" id="overview"></a>
+      </div>
+
+      <p>Table of Contents:</p>
+
+      <ul>
+        <li>
+          <a href="#overview">Overview</a>
+
+          <ul>
+            <li><a href="#features">Features</a></li>
+
+            <li><a href="#install">Install</a></li>
+
+            <li><a href="#benchmark">Benchmark</a></li>
+          </ul>
+        </li>
+
+        <li>
+          <a href="#basic-examples">Basic Examples</a>
+
+          <ul>
+            <li><a href="#render-template">Render Template</a></li>
+
+            <li><a href="#template-syntax">Template Syntax</a></li>
+
+            <li><a href="#source-code">Show Converted Source Code</a></li>
+
+            <li><a href="#layout-template">Layout Template</a></li>
+
+            <li><a href="#context-variables">Context Variables</a></li>
+
+            <li><a href="#template-arguments">Template Arguments</a></li>
+
+            <li><a href="#partial-template">Include Partial Template</a></li>
+
+            <li><a href="#template-short-name">Template Short Name</a></li>
+
+            <li>
+              <a href="#template-encoding">Template Encoding</a>
+
+              <ul>
+                <li><a href="#template-encoding-py2">Python 2.x</a></li>
+
+                <li><a href="#template-encoding-py3">Python 3.0</a></li>
+              </ul>
+            </li>
+
+            <li>
+              <a href="#helper-functions">Helper Function</a>
+
+              <ul>
+                <li><a href="#tenjin-helpers">tenjin.helpers module</a></li>
+
+                <li><a href="#tenjin-helpers-html">tenjin.helpers.html module</a></li>
+              </ul>
+            </li>
+
+            <li><a href="#planned-changes">Planned Changes in Next Release (1.0.0)</a></li>
+          </ul>
+        </li>
+
+        <li>
+          <a href="#advanced-features">Advanced Features</a>
+
+          <ul>
+            <li><a href="#nested-layout-template">Nested Layout Template</a></li>
+
+            <li><a href="#capturing">Capturing</a></li>
+
+            <li><a href="#templace-cache">Template Cache</a></li>
+
+            <li><a href="#fragment-cache">Fragment Cache</a></li>
+
+            <li><a href="#logging">Logging</a></li>
+
+            <li><a href="#google-appengine">Using Tenjin with Google App Engine</a></li>
+
+            <li><a href="#function-names">Specify Function Names of escape() and to_str()</a></li>
+
+            <li>
+              <a href="#preprocessing">Preprocessing</a>
+
+              <ul>
+                <li><a href="#preprocessing-basics">Basics of Preprocessing</a></li>
+
+                <li><a href="#preprocessing-loop-expantion">Loop Expantion</a></li>
+
+                <li><a href="#preprocessing-parameters">Parameters</a></li>
+              </ul>
+            </li>
+          </ul>
+        </li>
+
+        <li>
+          <a href="#command"><code>pytenjin</code> Command</a>
+
+          <ul>
+            <li><a href="#command-syntax-check">Syntax Check</a></li>
+
+            <li><a href="#command-convert-script">Convert Template into Python Script</a></li>
+
+            <li><a href="#command-retrieve">Retrieve Embedded Code</a></li>
+
+            <li><a href="#command-execute-template">Execute Template File</a></li>
+
+            <li><a href="#command-context-data">Context Data</a></li>
+          </ul>
+        </li>
+
+        <li>
+          <a href="#shooting">Trouble shooting</a>
+
+          <ul>
+            <li><a href="#syntax-error">I got an SyntaxError exception.</a></li>
+
+            <li><a href="#encoding-syntaxerr">I got 'SyntaxError: encoding declaration in Unicode string'</a></li>
+
+            <li><a href="#encoding-unicodedecodeerror">I got UnicodeDecodeError, but I can't find what is wrong</a></li>
+          </ul>
+        </li>
+
+        <li>
+          <a href="#tips">Tips</a>
+
+          <ul>
+            <li><a href="#flexible-indentation">Flexible Indentation</a></li>
+
+            <li><a href="#tips-webext">Webext</a></li>
+
+            <li><a href="#tips-m17n">M17N Page</a></li>
+
+            <li><a href="#template-inheritance">Template Inheritance</a></li>
+          </ul>
+        </li>
+      </ul><a name="overview" id="overview"></a>
 
       <h2 class="section1">Overview</h2>
 
@@ -154,6 +288,8 @@ jinja2-create                    120.5900    0.6200  121.2100  122.0719
         <li>Mako 0.2.5</li>
 
         <li>Templetor (web.py) 0.32</li>
+
+        <li>Jinja2 2.2.1</li>
       </ul>
 
       <p>This shows the followings.</p>
@@ -1082,29 +1218,17 @@ u'hoge'
 
       <p>This section describes planned changes in next release (1.0.0).</p>
 
-      <dl class="dl2">
-        <dt class="dt2">Indentation will be flexible.</dt>
+      <ul type="disc">
+        <li><strong>Indentation will be flexible.</strong> In other words, <a href="http://gist.github.com/129297">http://gist.github.com/129297</a> will be the default template class. See <a href="#flexible-indentation">this section</a> for details.</li>
+      </ul>
 
-        <dd class="dd2">
-          <p>In other words, <a href="http://gist.github.com/129297">http://gist.github.com/129297</a> will be the default template class. See <a href="#flexible-indentation">this section</a> for details.</p>
-        </dd>
-      </dl>
+      <ul type="disc">
+        <li><strong>'if', 'for', 'while', ... should be closed by corresponding '#endif', '#endfor', '#endwhile', and so on.</strong> This restriction is necessary to allow flexible indentation.</li>
+      </ul>
 
-      <dl class="dl2">
-        <dt class="dt2">'if', 'for', 'while', ... should be closed by corresponding '#endif', '#endfor', '#endwhile', and so on.</dt>
-
-        <dd class="dd2">
-          <p>This restriction is necessary to allow flexible indentation.</p>
-        </dd>
-      </dl>
-
-      <dl class="dl2">
-        <dt class="dt2">(Maybe) '_buf.extend(...)' will be changed to '_extend = _buf.extend; _extend(...)'</dt>
-
-        <dd class="dd2">
-          <p>This change will make Tenjin a little faster (about 2 or 3 %). But this may not be introduced because performance gain is very small<sup>(<a href="#fnref:1" name="fnlink:1" id="fnlink:1">*1</a>)</sup>.</p>
-        </dd>
-      </dl>
+      <ul type="disc">
+        <li><strong>(Maybe) '_buf.extend(...)' will be changed to '_extend = _buf.extend; _extend(...)'.</strong> This change will make Tenjin a little faster (about 2 or 3 %). But this may not be introduced because performance gain is very small<sup>(<a href="#fnref:1" name="fnlink:1" id="fnlink:1">*1</a>)</sup>.</li>
+      </ul>
 
       <div class="footnote">
         <dl compact>
@@ -2226,16 +2350,34 @@ _buf.extend(('''    &lt;/div&gt;
 
       <h3 class="section2">Webext</h3>
 
-      <p>I have to say that <strong>bottleneck of Tenjin is calling to_str() and escape(), not string concatenation</strong>. Therefore if you want to make Tenjin much faster, you must make to_str() and escape() faster (or omit calling them) and <a href="http://pypi.python.org/Webext/">Webext</a> can be a solution.</p>
+      <p>I have to say that <strong>bottleneck of Tenjin is calling to_str() and escape(), not string concatenation</strong>. Therefore if you want to make Tenjin much faster, you must make to_str() and escape() faster (or omit calling them).</p>
 
-      <p><a href="http://pypi.python.org/Webext/">Webext</a> is an extension module which implement to_str() and escape() in C language.</p>
+      <p>For example, using <code>str()</code> instead of <code>to_str()</code> will make Tenjin much faster. The following benchmark result shows that <code>str()</code>(= 'tenjin-str') is much faster than <code>to_str()</code>(= 'tenjin').</p>
+
+      <div class="terminal_caption">
+        <code>str()</code> is faster than <code>to_str()</code>
+      </div>
+      <pre class="terminal">
+$ cd Tenjin-X.X.X/benchmark
+$ python -V
+Python 2.5.5
+$ python bench.py -q -n 10000 tenjin tenjin-str
+*** ntimes=10000
+                                    utime     stime     total      real
+tenjin                             3.7500    0.0400    3.7900    3.7936
+tenjin-str                         2.4500    0.0300    2.4800    2.4857
+</pre>
+
+      <p>But <code>str()</code> doesn't return empty string if argument is <code>None</code>. In addition <code>str()</code> raises UnicodeEncodeError frequently.</p>
+
+      <p>Other solution is <a href="http://pypi.python.org/Webext/">Webext</a>. <a href="http://pypi.python.org/Webext/">Webext</a> is an extension module which implement <code>to_str()</code> and <code>escape()</code> in C language.</p>
       <pre class="program">
 import tenjin
 from tenjin.helpers import *
 <strong>from webext import to_str, escape</strong>    # use webext's functions instead of tenjin's
 </pre>
 
-      <p>Benchmark script in Tenjin supports Webext. It shows that Webext makes Tenjin much faster especially html escaping.</p>
+      <p>Benchmark script in Tenjin already supports Webext. It shows that Webext makes Tenjin much faster especially html escaping.</p>
 
       <div class="terminal_caption">
         Intel CoreDuo2 2GHz, Mac OS X 10.6, Python 2.5.5
@@ -2244,26 +2386,20 @@ from tenjin.helpers import *
 ### without html escaping
 $ cd Tenjin-X.X.X/
 $ cd benchmark/
-$ python bench.py -n 10000 tenjin tenjin-webext
-import tenjin ... done. (0.001740 sec)
-import webext ... done. (0.000466 sec)
-*** loading context data (file=bench_context.py)...
-*** start benchmark
+$ python bench.py -q -n 10000 tenjin tenjin-str tenjin-webext
 *** ntimes=10000
                                     utime     stime     total      real
-tenjin                             3.8100    0.0400    3.8500    3.8584
-tenjin-webext                      2.5000    0.0300    2.5300    2.5367
+tenjin                             3.8100    0.0400    3.8500    3.8462
+tenjin-str                         2.4500    0.0200    2.4700    2.4815
+tenjin-webext                      2.4500    0.0300    2.4800    2.4825
 
 ## with html escaping
-$ python bench.py -e -n 10000 tenjin tenjin-webext
-import tenjin ... done. (0.001580 sec)
-import webext ... done. (0.000459 sec)
-*** loading context data (file=bench_context.py)...
-*** start benchmark
+$ python bench.py -e -q -n 10000 tenjin tenjin-str tenjin-webext
 *** ntimes=10000
                                     utime     stime     total      real
-tenjin                             7.2100    0.0500    7.2600    7.2935
-tenjin-webext                      2.9800    0.0400    3.0200    3.0476
+tenjin                             7.2900    0.0500    7.3400    7.4669
+tenjin-str                         5.7400    0.0400    5.7800    5.8202
+tenjin-webext                      2.9700    0.0400    3.0100    3.0079
 </pre><br>
       <a name="tips-m17n" id="tips-m17n"></a>
 
