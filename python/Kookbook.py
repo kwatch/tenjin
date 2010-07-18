@@ -39,7 +39,8 @@ python_bins = [
 
 @recipe
 @ingreds("examples")
-def task_package(c):
+@spices("-A: create all egg files for each version of python")
+def task_package(c, *args, **kwargs):
     """create package"""
     ## remove files
     pattern = c%"dist/$(package)-$(release)*"
@@ -76,10 +77,17 @@ def task_package(c):
         system(c%"tar -cf $(dir).tar $(dir)")
         system(c%"gzip -f9 $(dir).tar")
         ## create *.egg file
-        with chdir(dir):
-            system("python setup.py bdist_egg")
+        def bdist_egg(bin):
+            system("%s setup.py bdist_egg" % bin)
             mv("dist/*.egg", "..")
             rm_rf("build", "dist")
+        with chdir(dir):
+            if kwargs.get('A'):
+                bins = [ x for x in python_bins if re.search(r'2\.[567]', x) ]
+                for bin in bins:
+                    bdist_egg(bin)
+            else:
+                bdist_egg('python')
 
 
 @recipe
