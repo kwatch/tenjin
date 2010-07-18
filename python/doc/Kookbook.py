@@ -40,11 +40,10 @@ tidy_opts = 'tidy_opts', '-q -i -wrap 9999 --hide-comments yes'
 original_docdir = re.sub(r'/tenjin/.*$', r'/tenjin/common/doc/', os.getcwd())
 #users_guide_eruby = original_docdir + 'users-guide.eruby'
 users_guide_eruby = original_docdir + 'tutorial.txt.eruby'
-faq_eruby         = original_docdir + 'faq.eruby'
 examples_eruby    = original_docdir + 'examples.eruby'
 kook_default_product = 'all'
-testfiles = ['test_users_guide.py', 'test_faq.py']
-basenames = ['users-guide', 'faq', 'examples']
+testfiles = ['test_users_guide.py']
+basenames = ['users-guide', 'examples']
 textfiles = [ x+'.txt' for x in basenames]
 htmlfiles = [ x+'.html' for x in basenames]
 
@@ -145,16 +144,10 @@ def file_txt(c):
 
 @recipe
 @ingreds(testdir + '/test_users_guide.py',
-         testdir + '/test_faq.py',
          testdir + '/test_examples.py')
 def task_create_test(c):
     """create test script"""
     pass
-
-
-#@ingreds('users-guide.txt', 'faq.txt', 'examples.txt')
-#def task_retrieve(c):
-#    pass
 
 
 @recipe
@@ -163,7 +156,7 @@ def task_clean(c):
 
 
 @recipe
-@ingreds('test_users_guide', 'test_faq', 'test_examples')
+@ingreds('test_users_guide', 'test_examples')
 def task_test(c):
     pass
 
@@ -174,12 +167,6 @@ def task_test_users_guide(c):
     name = re.sub(r'^test_', '', c.product)
     with chdir(testdir) as d:
         system(c%'python $(ingred)')
-
-
-@recipe
-@ingreds(testdir+'/test_faq.py', 'faq.txt')
-def task_test_faq(c):
-    task_test_users_guide(c)
 
 
 @recipe
@@ -194,104 +181,6 @@ def task_test_examples(c):
 def file_test_users_guide_py(c):
     mv(c.ingred, c.product)
     #mv("data/users-guide", "data/users_guide")
-
-
-@recipe
-@product(testdir+'/test_*.py')
-def file_test_py(c):
-    ## base name
-    #base = c[1]
-    m = re.search(r'test_(.*)\.py$', c.product)
-    base = m.group(1)
-    name = base.replace('-', '_')
-    ## class name
-    classname = ''.join([x.capitalize() for x in re.split(r'[-_]', base)]) + 'Test'
-    ## header
-    buf = []
-    buf.append(c%"""
-#
-# auto generated
-#
-
-import unittest, os, re
-
-from testcase_helper import *
-
-class $(classname)(unittest.TestCase, TestCaseHelper):
-
-    basedir = '$(datadir)/$(name)'
-    DIR = (os.path.dirname(__file__) or '.') + '/' + basedir
-    CWD = os.getcwd()
-
-    def setUp(self):
-        os.chdir(self.__class__.DIR)
-
-    def tearDown(self):
-        os.chdir(self.__class__.CWD)
-
-    def _test(self):
-        filename = self.filename;
-        dirname = os.path.dirname(filename)
-        pwd = os.getcwd()
-        if dirname:
-            os.chdir(dirname)
-            filename = os.path.basename(filename)
-        s = open(filename).read()
-        pat = r'\\A\\$ (.*?)\\n'
-        m = re.match(pat, s)
-        command = m.group(1)
-        expected = re.sub(pat, '', s)
-        result = os.popen(command).read()
-        self.assertTextEqual(expected, result)
-
-""")
-
-    ## body
-    buf.append("""
-
-    from glob import glob
-    import os
-    filenames = []
-    filenames.extend(glob('%s/*.result' % basedir))
-    filenames.extend(glob('%s/*/*.result' % basedir))
-    filenames.extend(glob('%s/*.source' % basedir))
-    filenames.extend(glob('%s/*/*.source' % basedir))
-    for filename in filenames:
-        #name = os.path.basename(filename).replace('.result', '')
-        name = filename.replace(basedir+'/', '')
-        s = "\\n".join((
-             "def test_%s(self):" % re.sub('[^\w]', '_', name),
-             "    self.filename = '%s'" % name,
-             "    self._test()",
-             ))
-        exec(s)
-
-""")
-
-    files = glob(datadir + '/*.result')
-    for file in files:
-        name = re.sub(r'\.result$', '', os.path.basename(file))
-        buf.append(c%"""
-    def test_$(name)(self):
-        self.name = '$(name)'
-        self._test()
-
-""")
-
-    ## footer
-    buf.append(c%"""
-
-remove_unmatched_test_methods($(classname))
-
-
-if __name__ == '__main__':
-    unittest.main()
-""")
-
-    s = ''.join(buf)
-    open(c.product, 'w').write(''.join(buf))
-    print(c%"** '$(product)' created.")
-    #cp(c.product, c%"../test/$(product)")
 
 
 @recipe
