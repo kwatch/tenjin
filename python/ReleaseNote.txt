@@ -1,4 +1,125 @@
 .######################################################################
+.$ ANN: pyTenjin 0.9.0 - very fast and full-featured template engine
+
+I released pyTenjin 0.9.0
+http://www.kuwata-lab.com/tenjin/
+http://pypi.python.org/pypi/Tenjin/
+
+This release contains a lot of enhancements and changes.
+Also you should read planned changes in the next release (1.0.0).
+See
+  http://www.kuwata-lab.com/tenjin/pytenjin-users-guide.html#planned-changes
+for details.
+
+
+Overview
+--------
+
+pyTenjin is very fast and full-featured template engine for Python.
+
+  * Very fast (about 10 times faster than Django template engine)
+  * Easy to learn (no need to learn template-original language)
+  * Full-featured (nestable layout template, partial template, preprocessing, ...)
+  * Google App Engine supported
+
+
+Documents
+---------
+
+  * User's Guide
+      http://www.kuwata-lab.com/tenjin/pytenjin-users-guide.html
+  * Examples
+      http://www.kuwata-lab.com/tenjin/pytenjin-examples.html
+  * CHANGES
+      http://www.kuwata-lab.com/tenjin/pytenjin-CHANGES.txt
+
+
+Enhancements from 0.8.1
+-----------------------
+
+  * Performance improved (about 5%).
+
+  * (IMPORTANT!!)
+    Fragment cache supported.
+    See
+      http://www.kuwata-lab.com/tenjin/pytenjin-users-guide.html#fragment-cache
+    for details.
+
+  * (IMPORTANT!!)
+    include() now takes keyword arguments as local variables.
+    ex.
+      <?py include('header.pyhtml', title='Example') ?>
+
+  * Add new module 'tenjin.gae'.
+
+  * Add 'input' argument to tenjin.Template() to create template object without file.
+    ex.
+      input = "<p>Hello ${name}</p>"
+      t = tenjin.Template(None, input=input)
+      html = t.render({'name': 'World'})
+
+  * Add tenjin.Engine.add_template() to add template object explicitly.
+
+  * User's guide (doc/users-guide.html) is rewrited entirely.
+
+  * Add benchmark for Jinja2.
+
+
+Changes from 0.8.1
+------------------
+
+  * (IMPORTANT!!)
+    It is strongly recommended to close 'if', 'for', 'while', ... by
+    corresponding '#endif', '#endfor', '#endwhile', and so on.
+    See
+      http://www.kuwata-lab.com/tenjin/pytenjin-users-guide.html#planned-changes
+    for details.
+
+  * (IMPORTANT!!)
+    Google App Engine support is changed. All you have to do is to call
+    tenjin.gae.init() at first.
+    See
+      http://www.kuwata-lab.com/tenjin/pytenjin-users-guide.html#google-appengine
+    for details.
+
+  * (IMPORTANT!!)
+    tenjin.Engine is changed to share a cache storage between engines by default.
+    This improves performance of Tenjin but your test scripts may get errors.
+    If you get errors in your test scripts, clear cache storage for each test.
+
+        def setUp(self):
+	    tenjin.Engine.cache.clear()
+
+    If you prefer previous behaviour, set tenjin.Engine.cache to None.
+
+        ## create new MarshalCacheStorage object for each engine
+        tenjin.Engine.cache = None
+    
+  * Now you can set default template class to tenjin.Engine.templateclass.
+    ex.
+      tenjin.Engine.templateclass = MyTemplate
+
+  * 'cache' argument of tenjin.Engine() is changed.
+     [old behaviour] if 'cache' is None, cache template object into memory.
+     [new behaviour] if 'cache' is None, use default cache storage.
+
+  * Default preamble is changed from "print ''.join(_buf)" to
+    "print(''.join(_buf))".
+
+  * 'doc/faq.html' is integrated into 'doc/users-guide.html'.
+
+  * All test scripts are changed to import oktest instead of unittest.
+
+
+Bug fixes
+---------
+
+  * Fixed to set correct file path of template object which is loaded from cache.
+
+  * Fixed a bug that 'pytenjin -sbN' didn't trim line number on the last line
+
+
+.######################################################################
 .$ ANN: pyTenjin 0.8.1 - much faster template engine than Django
 
 I released pyTenjin 0.8.1.
