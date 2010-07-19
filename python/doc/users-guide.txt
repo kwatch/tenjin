@@ -359,7 +359,7 @@ for item in items:
   </tr>\n''', ));
 #endfor
 _buf.extend(('''</table>\n''', ));
-print ''.join(_buf)
+print(''.join(_buf))
 .====================
 
 If you specify '{{,-sb,}}' instead of '{{,-s,}}', neither preamble (= '{{,_buf = [];,}}') nor postamble (= '{{,print "".join(_buf),}}') are printed.
@@ -582,7 +582,7 @@ for item in items:
   </tr>\n''', ));
 #endfor
 _buf.extend(('''</table>\n''', ));
-print ''.join(_buf)
+print(''.join(_buf))
 .====================
 
 .? views/page.pyhtml
@@ -615,7 +615,7 @@ _buf.extend(('''<!DOCTYPE>
 ''', to_str(_content), '''
   </body>
 </html>\n''', ));
-print ''.join(_buf)
+print(''.join(_buf))
 .====================
 
 Tips: If you want to specify default value of context variable, try {{,_context.get('{{/varname/}}', {{/defaultvalue/}}),}}.
@@ -1564,7 +1564,7 @@ _buf = []; _buf.extend(('''## normal expression
 value = ${value}
 ## with preprocessing
 value = ''', escape(to_str(_decode_params(value))), '''\n''', ));
-print ''.join(_buf)
+print(''.join(_buf))
 .====================
 
 .#.? blog_config.py
@@ -1780,7 +1780,7 @@ for item in items:
     _buf.extend(('''  <li>''', escape(to_str(item)), '''</li>\n''', ));
 #endfor
 _buf.extend(('''</ul>\n''', ));
-print ''.join(_buf)
+print(''.join(_buf))
 .====================
 
 Option '-b' removes preamble ('_buf = []') and postamble ('print "".join(_buf)').

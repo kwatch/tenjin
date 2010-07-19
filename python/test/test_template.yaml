@@ -376,7 +376,7 @@
             _buf.extend(('''<li>''', to_str(i), '''</li>\n''', ));
         #end
         _buf.extend(('''</ul>\n''', ));
-        print ''.join(_buf)
+        print(''.join(_buf))
 
 
 ###
@@ -394,7 +394,7 @@
         for i in range(0,3):
             _buf.extend((to_str(i), '''\n''', ));
         #end
-        print ''.join(_buf)
+        print(''.join(_buf))
 
 
 ###
@@ -541,7 +541,7 @@
         _buf.extend(('''<span>hello ''', to_str(name), '''</span>
           <span>hello ''', to_str(name2), '''</span>
         </ul>\n''', ));
-        print ''.join(_buf)
+        print(''.join(_buf))
 
   context: { name: 'world' }
   exception:    NameError
