@@ -3,6 +3,7 @@ CHANGES
 =======
 
 Release 0.9.0 (2010-07-19)
+--------------------------
 
 * [Enhancements]
 
@@ -25,7 +26,7 @@ Release 0.9.0 (2010-07-19)
     ex.
       input = "<p>Hello ${name}</p>"
       t = tenjin.Template(None, input=input)
-      print(t.render({'name': 'World'}))
+      html = t.render({'name': 'World'})
 
   * Add tenjin.Engine.add_template() to add template object explicitly.
 
@@ -50,28 +51,33 @@ Release 0.9.0 (2010-07-19)
       http://www.kuwata-lab.com/tenjin/pytenjin-users-guide.html#google-appengine
     for details.
 
+  * (IMPORTANT!!)
+    tenjin.Engine is changed to share a cache storage between engines by default.
+    This improves performance of Tenjin but your test scripts may get errors.
+    If you get errors in your test scripts, clear cache storage for each test.
+
+        def setUp(self):
+	    tenjin.Engine.cache.clear()
+
+    If you prefer previous behaviour, set tenjin.Engine.cache to None.
+
+        ## create new MarshalCacheStorage object for each engine
+        tenjin.Engine.cache = None
+    
   * Now you can set default template class to tenjin.Engine.templateclass.
     ex.
       tenjin.Engine.templateclass = MyTemplate
 
-  * Now you can set default template cache object to tenjin.Engine.cache.
-    ex.
-      tenjin.Engine.cache = tenjin.MemoryCacheStorage()
-
   * 'cache' argument of tenjin.Engine() is changed.
-     [old behaviour]
-       True:  cached into file (*.cache)
-       None:  cached into memory
-       False: don't cache
-     [new behaviour]
-       True:  cached into file (*.cache)
-       None:  cached into file (*.cache)
-       False: don't cache
+     [old behaviour] if 'cache' is None, cache template object into memory.
+     [new behaviour] if 'cache' is None, use default cache storage.
 
   * Default preamble is changed from "print ''.join(_buf)" to
     "print(''.join(_buf))".
 
   * 'doc/faq.html' is integrated into 'doc/users-guide.html'.
+
+  * All test scripts are changed to import oktest instead of unittest.
 
 
 * [Bugfixes]
