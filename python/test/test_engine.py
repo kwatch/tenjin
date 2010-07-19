@@ -473,7 +473,7 @@ class EngineTest(object):
             try:
                 tenjin.Engine.cache = None
                 engine = tenjin.Engine(cache=True)
-                ok ('cache' in engine.__dict__) == True
+                ok (engine.__dict__).contains('cache')
                 ok (engine.cache).is_a(tenjin.MarshalCacheStorage)
                 not_ok (engine.cache).is_(tenjin.Engine(cache=True).cache)
             finally:
@@ -484,15 +484,15 @@ class EngineTest(object):
         #    ok (engine.cache).is_a(tenjin.MemoryCacheStorage)
         if "cache=None then do nothing":
             engine = tenjin.Engine(cache=None)
-            ok ('cache' in engine.__dict__) == False
+            not_ok (engine.__dict__).contains('cache')
         if "cache=False specified then don't use cache object":
             engine = tenjin.Engine(cache=False)
-            ok ('cache' in engine.__dict__) == True
+            ok (engine.__dict__).contains('cache')
             ok (engine.cache) == None
         if "CacheStorage instance is specified then use it as cache object":
             cache_storage = tenjin.MarshalCacheStorage()
             engine = tenjin.Engine(cache=cache_storage)
-            ok ('cache' in engine.__dict__) == True
+            ok (engine.__dict__).contains('cache')
             ok (engine.cache).is_(cache_storage)
         if "invalid object is specified as cache object then raise ValueError":
             def f():
