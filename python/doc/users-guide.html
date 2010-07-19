@@ -76,7 +76,7 @@
               </ul>
             </li>
 
-            <li><a href="#planned-changes">Planned Changes in Next Release (1.0.0)</a></li>
+            <li><a href="#planned-changes">Planned Changes in the Next Release (1.0.0)</a></li>
           </ul>
         </li>
 
@@ -159,7 +159,7 @@
 
       <p>Tenjin is a very fast and full-featured template engine implemented in pure Python.</p>
 
-      <p>ATTENTION: pyTenjin will change some featrues in next release. See <a href="#planned-changes">Planned Changes in Next Relase</a> section for details.</p><a name="features" id="features"></a>
+      <p>ATTENTION: pyTenjin will change some featrues in the next release. See <a href="#planned-changes">Planned Changes in the Next Relase</a> section for details.</p><a name="features" id="features"></a>
 
       <h3 class="section2">Features</h3>
 
@@ -1214,9 +1214,9 @@ u'hoge'
       <br>
       <a name="planned-changes" id="planned-changes"></a>
 
-      <h3 class="section2">Planned Changes in Next Release (1.0.0)</h3>
+      <h3 class="section2">Planned Changes in the Next Release (1.0.0)</h3>
 
-      <p>This section describes planned changes in next release (1.0.0).</p>
+      <p>This section describes planned changes in the next release (1.0.0).</p>
 
       <ul type="disc">
         <li><strong>Indentation will be flexible.</strong> In other words, <a href="http://gist.github.com/129297">http://gist.github.com/129297</a> will be the default template class. See <a href="#flexible-indentation">this section</a> for details.</li>
@@ -1224,6 +1224,10 @@ u'hoge'
 
       <ul type="disc">
         <li><strong>'if', 'for', 'while', ... should be closed by corresponding '#endif', '#endfor', '#endwhile', and so on.</strong> This restriction is necessary to allow flexible indentation.</li>
+      </ul>
+
+      <ul type="disc">
+        <li><strong>tenjin.GaeMemcacheCacheStorage will be moved to tenjin.gae module.</strong> Currently both tenjin.GaeMemcacheCacheStorage and tenjin.gae.GaeMemcacheCacheStorage are available. In the next release the former will be not available. Therefore it is recommended to use the latter instead the former.</li>
       </ul>
 
       <ul type="disc">
@@ -2345,7 +2349,7 @@ _buf.extend(('''    &lt;/div&gt;
 
 </pre>
 
-      <p>NOTE: MyTemplate will be the default template class in next release (1.0.0).</p><br>
+      <p>NOTE: MyTemplate will be the default template class in the next release (1.0.0).</p><br>
       <a name="tips-webext" id="tips-webext"></a>
 
       <h3 class="section2">Webext</h3>
