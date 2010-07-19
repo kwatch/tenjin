@@ -15,6 +15,7 @@ lang     = None
 quiet    = None
 template_dir = 'templates'
 use_str  = False
+no_str   = False
 flag_escape = False
 
 
@@ -156,7 +157,10 @@ class TenjinEntry(Entry):
 
     def _execute(self, context, ntimes):
         filename = self.template_filename
-        engine = tenjin.Engine(cache=True)
+        tostrfunc = None
+        if  use_str: tostrfunc = 'str'
+        elif no_str: tostrfunc = ''
+        engine = tenjin.Engine(cache=True, tostrfunc=tostrfunc)
         for i in xrange(ntimes):
             output = engine.render(filename, context)
         return output
@@ -815,7 +819,7 @@ def main(ntimes=1000):
 
     ## parse options
     try:
-        optlist, targets = getopt.getopt(sys.argv[1:], "hpf:n:t:x:Aqm:ek:l:C", ['str'])
+        optlist, targets = getopt.getopt(sys.argv[1:], "hpf:n:t:x:Aqm:ek:l:C", ['str', 'nostr'])
         options = dict([(key[1:], val == '' and True or val) for key, val in optlist])
     except Exception:
         ex = sys.exc_info()[1]
@@ -850,6 +854,9 @@ def main(ntimes=1000):
     if options.get('-str'):
         global use_str
         use_str = True
+    if options.get('-nostr'):
+        global no_str
+        no_str = True
     ## default targets
     target_list = []
     for cls in Entry.subclasses:
