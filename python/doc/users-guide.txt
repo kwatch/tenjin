@@ -14,7 +14,7 @@ Table of Contents:
 
 Tenjin is a very fast and full-featured template engine implemented in pure Python.
 
-ATTENTION: pyTenjin will change some featrues in next release. See {{<Planned Changes in Next Relase|#planned-changes>}} section for details.
+ATTENTION: pyTenjin will change some featrues in the next release. See {{<Planned Changes in the Next Relase|#planned-changes>}} section for details.
 
 
 
@@ -1044,9 +1044,9 @@ Module {{,tenjin.helpers.html,}} provides HTML specific helper functions.
 
 
 
-.$$ Planned Changes in Next Release (1.0.0)	| planned-changes
+.$$ Planned Changes in the Next Release (1.0.0)	| planned-changes
 
-This section describes planned changes in next release (1.0.0).
+This section describes planned changes in the next release (1.0.0).
 
 .* {{*Indentation will be flexible.*}}
 	In other words, {{<http://gist.github.com/129297>}} will be the default template class.
@@ -1054,6 +1054,9 @@ This section describes planned changes in next release (1.0.0).
 
 .* {{*'if', 'for', 'while', ... should be closed by corresponding '#endif', '#endfor', '#endwhile', and so on.*}}
 	This restriction is necessary to allow flexible indentation.
+
+.* {{*tenjin.GaeMemcacheCacheStorage will be moved to tenjin.gae module.*}}
+	Currently both tenjin.GaeMemcacheCacheStorage and tenjin.gae.GaeMemcacheCacheStorage are available. In the next release the former will be not available. Therefore it is recommended to use the latter instead the former.
 
 .* {{*(Maybe) '_buf.extend(...)' will be changed to '_extend = _buf.extend; _extend(...)'.*}}
 	This change will make Tenjin a little faster (about 2 or 3 %).
@@ -2210,7 +2213,7 @@ _buf.extend(('''    </div>
 
 .====================
 
-NOTE: MyTemplate will be the default template class in next release (1.0.0).
+NOTE: MyTemplate will be the default template class in the next release (1.0.0).
 
 
 
