@@ -444,9 +444,8 @@ helpers.escape = helpers.html.escape_xml
 
 class Template(object):
     """Convert and evaluate embedded python string.
-       See User's Guide, FAQ, and examples for details.
+       See User's Guide and examples for details.
        http://www.kuwata-lab.com/tenjin/pytenjin-users-guide.html
-       http://www.kuwata-lab.com/tenjin/pytenjin-faq.html
        http://www.kuwata-lab.com/tenjin/pytenjin-examples.html
     """
 
@@ -1232,9 +1231,8 @@ helpers.__all__.extend(('not_cached', 'echo_cached'))
 
 class Engine(object):
     """Template Engine class.
-       See User's Guide, FAQ, and examples for details.
+       See User's Guide and examples for details.
        http://www.kuwata-lab.com/tenjin/pytenjin-users-guide.html
-       http://www.kuwata-lab.com/tenjin/pytenjin-faq.html
        http://www.kuwata-lab.com/tenjin/pytenjin-examples.html
     """
 
