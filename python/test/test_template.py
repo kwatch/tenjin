@@ -3,8 +3,7 @@
 ### $Copyright$
 ###
 
-import unittest
-from oktest import ok, not_ok
+from oktest import ok, not_ok, run
 import sys, os, re
 
 from testcase_helper import *
@@ -12,16 +11,16 @@ import tenjin
 from tenjin.helpers import *
 
 
-class TemplateTest(unittest.TestCase):
+class TemplateTest(object):
 
     code = TestCaseHelper.generate_testcode(__file__)
     exec(code)
 
 
-    def setUp(self):
+    def before(self):
         pass
 
-    def tearDown(self):
+    def after(self):
         pass
 
     def _test(self):
@@ -235,8 +234,5 @@ _buf.extend(('''</ul>\n''', ));
             ok (t.timestamp) == False
 
 
-remove_unmatched_test_methods(TemplateTest)
-
-
 if __name__ == '__main__':
-    unittest.main()
+    run(TemplateTest)

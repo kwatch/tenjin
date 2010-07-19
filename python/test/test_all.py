@@ -33,19 +33,29 @@ def main(verbose):
         for basename in basenames:
             print('')
             print("************************************************* " + basename)
-            os.system("python %s.py" % basename)
+            os.system("%s %s.py" % (sys.executable, basename))
 
     else:
 
-        import unittest
-        from oktest import ok, not_ok
-        suite = unittest.TestSuite()
+        #import unittest
+        #from oktest import ok, not_ok
+        #suite = unittest.TestSuite()
+        #for basename in basenames:
+        #    test_module = __import__(basename)
+        #    suite.addTest(unittest.findTestCases(test_module))
+        #
+        #unittest.TextTestRunner(verbosity=1).run(suite)
+        ##unittest.TextTestRunner(verbosity=2).run(test_template.TemplateTest)
+        test_classes = []
         for basename in basenames:
             test_module = __import__(basename)
-            suite.addTest(unittest.findTestCases(test_module))
-
-        unittest.TextTestRunner(verbosity=1).run(suite)
-        #unittest.TextTestRunner(verbosity=2).run(test_template.TemplateTest)
+            for x in dir(test_module):
+                if x.endswith('Test'):
+                    klass = getattr(test_module, x)
+                    if type(klass) == type:
+                        test_classes.append(klass)
+        import oktest
+        oktest.run(*test_classes)
 
 
 

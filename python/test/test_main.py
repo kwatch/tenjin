@@ -4,8 +4,7 @@
 ### $Copyright$
 ###
 
-import unittest
-from oktest import ok, not_ok
+from oktest import ok, not_ok, run
 import os, traceback
 import yaml
 
@@ -120,12 +119,12 @@ items = ['aaa', 'bbb', 'ccc']
 """
 
 
-class MainTest(unittest.TestCase):
+class MainTest(object):
 
-    def setUp(self):
+    def before(self):
         pass
 
-    def tearDown(self):
+    def after(self):
         pass
 
     def _test(self):
@@ -822,8 +821,6 @@ class MainTest(unittest.TestCase):
             pass
 
 
-remove_unmatched_test_methods(MainTest)
-
-
 if __name__ == '__main__':
-    unittest.main()
+    run(MainTest)
+

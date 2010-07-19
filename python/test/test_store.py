@@ -3,8 +3,7 @@
 ### $Copyright$
 ###
 
-import unittest
-from oktest import ok, not_ok
+from oktest import ok, not_ok, run
 import sys, os, re, time, shutil
 from testcase_helper import *
 from oktest import *
@@ -28,9 +27,9 @@ elif python3:
             f.close()
 
 
-class MemoryBaseStoreTest(unittest.TestCase):
+class MemoryBaseStoreTest(object):
 
-    def setUp(self):
+    def before(self):
         self.data_cache = tenjin.MemoryBaseStore()
         self.key = 'values/foo'
         self.value = "FOOBAR"
@@ -89,16 +88,16 @@ class MemoryBaseStoreTest(unittest.TestCase):
             ok (key).not_in(data_cache.values)
 
 
-class FileBaseStoreTest(unittest.TestCase):
+class FileBaseStoreTest(object):
 
-    def setUp(self):
+    def before(self):
         self.root_dir = '_test.caches.d'
         os.mkdir(self.root_dir)
         self.data_cache = tenjin.FileBaseStore(self.root_dir)
         self.key = 'values/foo'
         self.value = "FOOBAR"
 
-    def tearDown(self):
+    def after(self):
         shutil.rmtree(self.root_dir)
 
     def test_set(self):
@@ -159,9 +158,9 @@ class FileBaseStoreTest(unittest.TestCase):
             not_ok (cache_fpath).is_file()
 
 
-class FragmentCacheTest(unittest.TestCase):
+class FragmentCacheTest(object):
 
-    def setUp(self):
+    def before(self):
         pat = re.compile(r'^\t', re.M)
         pyhtml = pat.sub("", """
 	<div>
@@ -190,7 +189,7 @@ class FragmentCacheTest(unittest.TestCase):
         tenjin.helpers.fragment_cache.store = tenjin.FileBaseStore(self.root_dir)
         tenjin.helpers.fragment_cache.prefix = 'fragment.'
 
-    def tearDown(self):
+    def after(self):
         os.unlink(self.tname)
         shutil.rmtree(self.root_dir)
         tenjin.helpers.fragment_cache.store  = self._orig_store
@@ -247,10 +246,5 @@ class FragmentCacheTest(unittest.TestCase):
         ok (tupl[1]) == fragment_cache.echo_cached
 
 
-remove_unmatched_test_methods(MemoryBaseStoreTest)
-remove_unmatched_test_methods(FileBaseStoreTest)
-remove_unmatched_test_methods(FragmentCacheTest)
-
-
 if __name__ == '__main__':
-    unittest.main()
+    run(MemoryBaseStoreTest, FileBaseStoreTest, FragmentCacheTest)

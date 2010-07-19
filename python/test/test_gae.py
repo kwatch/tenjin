@@ -4,8 +4,7 @@
 ### $License$
 ###
 
-import unittest
-from oktest import ok, not_ok
+from oktest import ok, not_ok, run
 import sys, os, re, time, shutil
 from testcase_helper import *
 from oktest import *
@@ -60,7 +59,7 @@ else:
         apiproxy.RegisterStub('memcache', MemcacheServiceStub())
 
     ##
-    class GaeModuleTest(unittest.TestCase):
+    class GaeModuleTest(object):
 
         def do_with_file(self, func, filename, content):
             f = open(filename, 'w')
@@ -72,7 +71,7 @@ else:
                 if os.path.exists(filename):
                     os.unlink(filename)
 
-        def setUp(self):
+        def before(self):
             app_id = 'helloworld'
             ver_id = 'dev123.1'
             os.environ.setdefault('CURRENT_VERSION_ID', ver_id)
@@ -181,8 +180,5 @@ else:
             self.do_with_file(func, filename, input)
 
 
-    remove_unmatched_test_methods(GaeModuleTest)
-
-
     if __name__ == '__main__':
-        unittest.main()
+        run(GaeModuleTest)

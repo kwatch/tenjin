@@ -3,8 +3,7 @@
 ### $Copyright$
 ###
 
-import unittest
-from oktest import ok, not_ok
+from oktest import ok, not_ok, run
 import sys, os, re
 
 from testcase_helper import *
@@ -12,7 +11,7 @@ import tenjin
 from tenjin.helpers import escape, to_str
 
 
-class HtmlHelperTest(unittest.TestCase):
+class HtmlHelperTest(object):
 
     def test_tagattr(self):
         tagattr = tenjin.helpers.html.tagattr
@@ -84,8 +83,5 @@ class HtmlHelperTest(unittest.TestCase):
         ok (cycle()) == 'C'
 
 
-remove_unmatched_test_methods(HtmlHelperTest)
-
-
 if __name__ == '__main__':
-    unittest.main()
+    run(HtmlHelperTest)

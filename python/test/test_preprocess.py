@@ -3,8 +3,7 @@
 ### $Copyright$
 ###
 
-import unittest
-from oktest import ok, not_ok
+from oktest import ok, not_ok, run
 import sys, os, re, time
 from glob import glob
 
@@ -14,7 +13,7 @@ import tenjin
 from tenjin.helpers import *
 
 
-class PreprocessTest(unittest.TestCase):
+class PreprocessTest(object):
 
     def test_preprocessor_class(self):
         input = r"""
@@ -58,8 +57,5 @@ class PreprocessTest(unittest.TestCase):
                 os.unlink(filename)
 
 
-remove_unmatched_test_methods(PreprocessTest)
-
-
 if __name__ == '__main__':
-    unittest.main()
+    run(PreprocessTest)
