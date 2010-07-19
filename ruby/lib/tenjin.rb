@@ -94,6 +94,28 @@ module Tenjin
       return nl2br(escape_xml(text.to_s).gsub(/  /, ' &nbsp;'))
     end
 
+    ## cycle values everytime when #to_s() is called
+    ## ex:
+    ##    cycle = Cycle.new('odd', 'even')
+    ##    "#{cycle}"   #=> 'odd'
+    ##    "#{cycle}"   #=> 'even'
+    ##    "#{cycle}"   #=> 'odd'
+    class Cycle
+      attr_reader :values
+      def initialize(*values)
+        @values = values.freeze
+        @count  = values.length
+        @index  = -1
+      end
+      def next
+        if (@index += 1) == @count
+          @index = 0
+        end
+        return @values[@index]
+      end
+      alias :to_s :next
+    end
+
   end
 
 

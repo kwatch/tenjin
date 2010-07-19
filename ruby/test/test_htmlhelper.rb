@@ -75,4 +75,12 @@ class TenjinHtmlHelperTest < Test::Unit::TestCase
     assert_equal(expected, actual)
   end
 
+  def test_Cycle
+    cycle = Tenjin::HtmlHelper::Cycle.new('odd', 'even')
+    assert_equal 'odd',  "#{cycle}"
+    assert_equal 'even', "#{cycle}"
+    assert_equal 'odd',  "#{cycle}"
+    assert_equal 'even', "#{cycle}"
+  end
+
 end
