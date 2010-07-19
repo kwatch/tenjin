@@ -5,8 +5,7 @@
 ### $Copyright$
 ###
 
-import unittest
-from oktest import ok, not_ok
+from oktest import ok, not_ok, run
 import sys, os, re
 
 from testcase_helper import *
@@ -14,7 +13,7 @@ import tenjin
 from tenjin.helpers import *
 
 
-class EncodingTest(unittest.TestCase):
+class EncodingTest(object):
 
 
     def _test_render(self, template=None, to_str=None,
@@ -157,7 +156,5 @@ class EncodingTest(unittest.TestCase):
         )
 
 
-
 if __name__ == '__main__':
-    unittest.main()
-
+    run(EncodingTest)

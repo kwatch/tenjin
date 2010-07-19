@@ -3,8 +3,7 @@
 ### $Copyright$
 ###
 
-import unittest
-from oktest import ok, not_ok
+from oktest import ok, not_ok, run
 import sys, os, re, time, marshal
 from glob import glob
 try:    import cPickle as pickle
@@ -41,7 +40,7 @@ def _remove_files(basenames=[]):
             os.unlink(filename)
 
 
-class EngineTest(unittest.TestCase):
+class EngineTest(object):
 
     #code = TestCaseHelper.generate_testcode(__file__)
     #exec(code)
@@ -56,13 +55,14 @@ class EngineTest(unittest.TestCase):
     contexts  = data['contexts']
 
 
-    #def setUp(self):
+    def before(self):
+        tenjin.Engine.cache.clear()
     #    testdata = EngineTest.testdata['basic']
     #    for hash in testdata['templates']:
     #        write_file(hash['filename'], hash['content'])
 
 
-    #def tearDown(self):
+    #def after(self):
     #    for hash in EngineTest.testdata['basic']['templates']:
     #        filename = hash['filename']
     #        for fname in [filename, filename+'.cache', filename+'.marshal']:
@@ -651,8 +651,5 @@ class EngineTest(unittest.TestCase):
             not_ok ('foo.pyhtml').exists()
 
 
-remove_unmatched_test_methods(EngineTest)
-
-
 if __name__ == '__main__':
-    unittest.main()
+    run(EngineTest)
