@@ -1538,9 +1538,9 @@ def init():
         from google.appengine.api import memcache
     ## avoid cache confliction between versions
     ver = os.environ.get('CURRENT_VERSION_ID').split('.')[0]
-    Engine.cache = GaeMemcacheCacheStorage(namespace=ver)
+    Engine.cache = gae.GaeMemcacheCacheStorage(namespace=ver)
     ## set fragment cache store
-    helpers.fragment_cache.store    = GaeMemcacheStore(namespace=ver)
+    helpers.fragment_cache.store    = gae.GaeMemcacheStore(namespace=ver)
     helpers.fragment_cache.lifetime = 60    #  1 minute
     helpers.fragment_cache.prefix   = 'fragment.'
 
@@ -1549,5 +1549,5 @@ gae = _create_module('tenjin.gae')
 gae.GaeMemcacheCacheStorage = GaeMemcacheCacheStorage
 gae.GaeMemcacheStore        = GaeMemcacheStore
 gae.init = init
-#del GaeMemcacheCacheStorage, GaeMemcacheStore, init   # will be activated from 1.0
-del init   # till 1.0
+del GaeMemcacheStore, init
+#del GaeMemcacheCacheStorage    # since 1.0.0
