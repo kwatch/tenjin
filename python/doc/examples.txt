@@ -55,7 +55,7 @@ _buf = []; _buf.extend(('''<html>
 _buf.extend(('''    </table>
   </body>
 </html>\n''', ));
-print ''.join(_buf)
+print(''.join(_buf))
 .====================
 
 .? Main program: 'table.py'

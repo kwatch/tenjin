@@ -68,6 +68,9 @@ Release 0.9.0 (2010-07-19)
        None:  cached into file (*.cache)
        False: don't cache
 
+  * Default preamble is changed from "print ''.join(_buf)" to
+    "print(''.join(_buf))".
+
   * 'doc/faq.html' is integrated into 'doc/users-guide.html'.
 
 

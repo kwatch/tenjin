@@ -488,7 +488,7 @@ for item in items:
   &lt;/tr&gt;\n''', ));
 #endfor
 _buf.extend(('''&lt;/table&gt;\n''', ));
-print ''.join(_buf)
+print(''.join(_buf))
 </pre>
 
       <p>If you specify '<code>-sb</code>' instead of '<code>-s</code>', neither preamble (= '<code>_buf = [];</code>') nor postamble (= '<code>print "".join(_buf)</code>') are printed. See <a href="#command-retrieve">Retrieve Embedded Code</a> section for more information.</p>
@@ -706,7 +706,7 @@ for item in items:
   &lt;/tr&gt;\n''', ));
 #endfor
 _buf.extend(('''&lt;/table&gt;\n''', ));
-print ''.join(_buf)
+print(''.join(_buf))
 </pre><a name="test_051/views/_layout.pyhtml"></a>
 
       <div class="program_caption">
@@ -743,7 +743,7 @@ _buf.extend(('''&lt;!DOCTYPE&gt;
 ''', to_str(_content), '''
   &lt;/body&gt;
 &lt;/html&gt;\n''', ));
-print ''.join(_buf)
+print(''.join(_buf))
 </pre>
 
       <p>Tips: If you want to specify default value of context variable, try <code>_context.get('<em>varname</em>', <em>defaultvalue</em>)</code>.</p>
@@ -1740,7 +1740,7 @@ _buf = []; _buf.extend(('''## normal expression
 value = ${value}
 ## with preprocessing
 value = ''', escape(to_str(_decode_params(value))), '''\n''', ));
-print ''.join(_buf)
+print(''.join(_buf))
 </pre><br>
       <a name="preprocessing-loop-expantion" id="preprocessing-loop-expantion"></a>
 
@@ -1880,7 +1880,7 @@ for item in items:
     _buf.extend(('''  &lt;li&gt;''', escape(to_str(item)), '''&lt;/li&gt;\n''', ));
 #endfor
 _buf.extend(('''&lt;/ul&gt;\n''', ));
-print ''.join(_buf)
+print(''.join(_buf))
 </pre>
 
       <p>Option '-b' removes preamble ('_buf = []') and postamble ('print "".join(_buf)').</p><a name="test_convert/result2.output"></a>

@@ -66,7 +66,7 @@ for item in ['<a&b>', '["c",'+"'d']"]:
       ''', escape(to_str(item)), '''</li>\n''', ));
 #end
 _buf.extend(('''</ul>\n''', ));
-print ''.join(_buf)
+print(''.join(_buf))
 """
 SOURCE2 = """_buf = []; _buf.extend(('''<ul>\\r\\n''', ));\n\
 for item in ['<a&b>', '["c",'+"'d']"]:\n\
@@ -74,7 +74,7 @@ for item in ['<a&b>', '["c",'+"'d']"]:\n\
       ''', escape(to_str(item)), '''</li>\\r\\n''', ));\n\
 #end\n\
 _buf.extend(('''</ul>\\r\\n''', ));\n\
-print ''.join(_buf)
+print(''.join(_buf))
 """
 SOURCE_N = r"""    1:  _buf = []; _buf.extend(('''<ul>\n''', ));
     2:  for item in ['<a&b>', '["c",'+"'d']"]:
@@ -82,7 +82,7 @@ SOURCE_N = r"""    1:  _buf = []; _buf.extend(('''<ul>\n''', ));
     4:        ''', escape(to_str(item)), '''</li>\n''', ));
     5:  #end
     6:  _buf.extend(('''</ul>\n''', ));
-    7:  print ''.join(_buf)
+    7:  print(''.join(_buf))
 """
 
 EXECUTED = r"""<ul>
@@ -255,7 +255,7 @@ class MainTest(unittest.TestCase):
         self.input    = INPUT[n1:-n2]
         buf = SOURCE.splitlines(True)[1:-2]
         buf.insert(0, "_buf = []\n")
-        buf.append("print ''.join(_buf)\n")
+        buf.append("print(''.join(_buf))\n")
         self.expected = ''.join(buf)
         self._test()
         self.options = "-aconvert"
@@ -265,7 +265,7 @@ class MainTest(unittest.TestCase):
         self.options  = "-sb"
         self.input    = INPUT
         n1 = len("_buf = []; ")
-        n2 = len("print ''.join(_buf)\n")
+        n2 = len("print(''.join(_buf))\n")
         self.expected = SOURCE[n1:-n2]
         self._test()
         self.options = "-baconvert"
@@ -364,7 +364,7 @@ class MainTest(unittest.TestCase):
         '',
         '',
         '#end',
-        'print \'\'.join(_buf)',
+        'print(\'\'.join(_buf))',
         ''))
 
     def test_retrieve(self):  # -S, -a retrieve
@@ -390,7 +390,7 @@ class MainTest(unittest.TestCase):
             '    #end',
             '',
             '#end',
-            'print \'\'.join(_buf)',
+            'print(\'\'.join(_buf))',
             ''))
         self.input = self.input_for_retrieve
         self.expected = expected
@@ -411,7 +411,7 @@ class MainTest(unittest.TestCase):
             '   17:      #end',
             '',
             '   20:  #end',
-            '   21:  print \'\'.join(_buf)',
+            '   21:  print(\'\'.join(_buf))',
             ''))
         self.expected = expected
         self.options = '-SNU'
@@ -429,7 +429,7 @@ class MainTest(unittest.TestCase):
             '            escape(to_str(item)); ',
             '    #end',
             '#end',
-            'print \'\'.join(_buf)',
+            'print(\'\'.join(_buf))',
             ''))
         self.input = self.input_for_retrieve
         self.expected = expected
@@ -447,7 +447,7 @@ class MainTest(unittest.TestCase):
             '   15:              escape(to_str(item)); ',
             '   17:      #end',
             '   20:  #end',
-            '   21:  print \'\'.join(_buf)',
+            '   21:  print(\'\'.join(_buf))',
             ''))
         self.expected = expected
         self.options = '-SNC'
@@ -475,7 +475,7 @@ class MainTest(unittest.TestCase):
             '',
             '',
             '#end',
-            'print \'\'.join(_buf)',
+            'print(\'\'.join(_buf))',
             ''))
         self.input = self.input_for_retrieve
         self.expected = expected
@@ -498,7 +498,7 @@ class MainTest(unittest.TestCase):
         try:
             self.filename = False
             self.input    = False
-            self.expected = SOURCE[len('_buf = []; '):-len("print ''.join(_buf)\n")]
+            self.expected = SOURCE[len('_buf = []; '):-len("print(''.join(_buf))\n")]
             #self.options = '-d %s' % cachename
             #self._test()
             self.options = '-a dump %s' % cachename
@@ -662,7 +662,7 @@ class MainTest(unittest.TestCase):
     def test_preamble(self):  # --preamble --postamble
         self.options  = ["-s", "--preamble=_buf=list()", "--postamble=return ''.join(_buf)"]
         self.input    = INPUT
-        self.expected = SOURCE.replace("_buf = []", "_buf=list()").replace("print ", "return ")
+        self.expected = re.sub(r'print\((.*?)\)', r'return \1', SOURCE).replace("_buf = []", "_buf=list()")
         self._test()
 
     def test_xencoding1(self):  # --encoding=encoding

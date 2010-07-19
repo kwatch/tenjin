@@ -486,7 +486,7 @@ class Template(object):
              If true, '_buf = []' is used insated.
            postamble:str or bool (=None)
              Postamble string which is appended to python code.
-             If true, 'print "".join(_buf)' is used instead.
+             If true, 'print("".join(_buf))' is used instead.
            smarttrim:bool (=None)
              If True then "<div>\\n#{_context}\\n</div>" is parsed as
              "<div>\\n#{_context}</div>".
@@ -500,7 +500,7 @@ class Template(object):
         if smarttrim  is not None:  self.smarttrim  = smarttrim
         #
         if preamble  is True:  self.preamble = "_buf = []"
-        if postamble is True:  self.postamble = "print ''.join(_buf)"
+        if postamble is True:  self.postamble = "print(''.join(_buf))"
         if input:
             self.convert(input, filename)
             self.timestamp = False      # False means 'file not exist' (= Engine should not check timestamp of file)
