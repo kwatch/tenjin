@@ -468,11 +468,21 @@ class EngineTest(object):
             ok ('cache' in engine.__dict__) == False
             ok (engine.cache).is_(tenjin.Engine.cache)
             ok (engine.cache).is_(tenjin.Engine(cache=True).cache)
+        if "cache=True and default cache is not set then create MarshalCacheStorage object for each engine":
+            bkup = tenjin.Engine.cache
+            try:
+                tenjin.Engine.cache = None
+                engine = tenjin.Engine(cache=True)
+                ok ('cache' in engine.__dict__) == True
+                ok (engine.cache).is_a(tenjin.MarshalCacheStorage)
+                not_ok (engine.cache).is_(tenjin.Engine(cache=True).cache)
+            finally:
+                tenjin.Engine.cache = bkup
         #if "cache=None specified then set MemoryCacheObject instance as cache object":
         #    engine = tenjin.Engine(cache=None)
         #    ok ('cache' in engine.__dict__) == True
         #    ok (engine.cache).is_a(tenjin.MemoryCacheStorage)
-        if "cache=None means same as cache=True":
+        if "cache=None then do nothing":
             engine = tenjin.Engine(cache=None)
             ok ('cache' in engine.__dict__) == False
         if "cache=False specified then don't use cache object":
