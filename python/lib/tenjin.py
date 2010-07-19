@@ -1261,7 +1261,8 @@ class Engine(object):
              List of directory names which contain template files.
            cache:bool or CacheStorage instance (=True)
              Cache storage object to store converted python code.
-             If True, default cache storage (=Engine.cache) is used and caches are saved as file.
+             If True, default cache storage (=Engine.cache) is used (if it is None
+             then create MarshalCacheStorage object for each engine object).
              If False, no cache storage is used nor no cache files are created.
            preprocess:bool(=False)
              Activate preprocessing or not.
@@ -1285,10 +1286,15 @@ class Engine(object):
         self._set_cache_storage(cache)
 
     def _set_cache_storage(self, cache):
-        if   cache is True:  pass  # or self.cache = MarshalCacheStorage() ?
-        elif cache is None:  pass  # or self.cache = MemoryCacheStorage() ?
-        elif cache is False: self.cache = None
-        elif isinstance(cache, CacheStorage):  self.cache = cache
+        if cache is True:
+            if not self.cache:
+                self.cache = MarshalCacheStorage()
+        elif cache is None:
+            pass
+        elif cache is False:
+            self.cache = None
+        elif isinstance(cache, CacheStorage):
+            self.cache = cache
         else:
             raise ValueError("%r: invalid cache object." % (cache, ))
 
