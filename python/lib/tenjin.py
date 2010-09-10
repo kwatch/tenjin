@@ -879,7 +879,7 @@ class Template(object):
     #    return ''.join(buf)
 
     def _join_block(self, block, buf, depth):
-        indent = '    ' * depth
+        indent = ' ' * (self.indent * depth)
         for line in block:
             if isinstance(line, list):
                 self._join_block(line, buf, depth+1)
