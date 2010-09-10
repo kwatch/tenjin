@@ -442,6 +442,10 @@ helpers.escape = helpers.html.escape_xml
 ## Template class
 ##
 
+class TemplateSyntaxError(SyntaxError):
+    pass
+
+
 class Template(object):
     """Convert and evaluate embedded python string.
        See User's Guide and examples for details.
@@ -522,7 +526,6 @@ class Template(object):
                 self.newline = "\r\n"
             else:
                 self.newline = "\n"
-        self._stmt_not_added_yet = True
 
     def before_convert(self, buf):
         #buf.append('_buf = []; ')
@@ -535,6 +538,9 @@ class Template(object):
             if not buf[-1].endswith("\n"):
                 buf.append("\n")
             buf.append(self.postamble + "\n")
+        block = self.parse_lines(buf)
+        buf[:] = []
+        self._join_block(block, buf, 0)
 
     def convert_file(self, filename):
         """Convert file into python script and return it.
@@ -610,18 +616,13 @@ class Template(object):
             ## add text, spaces, and statement
             self.parse_exprs(buf, text, is_bol)
             is_bol = rspace is not None
-            if lspace:
-                buf.append(lspace)
-            if mspace != " ":
-                #buf.append(mspace)
-                buf.append(mspace == "\t" and "\t" or "\n")  # don't append "\r\n"!
+            if mspace == "\n":
+                code = "\n" + (code or "")
+            if rspace == "\n":
+                code = (code or "") + "\n"
             if code:
                 code = self.statement_hook(code)
                 self.add_stmt(buf, code)
-            self._set_spaces(code, lspace, mspace)
-            if rspace:
-                #buf.append(rspace)
-                buf.append("\n")    # don't append "\r\n"!
         rest = input[index:]
         if rest:
             self.parse_exprs(buf, rest)
@@ -658,6 +659,12 @@ class Template(object):
         return match.group(2), match.group(1) == '$'
 
     def parse_exprs(self, buf, input, is_bol=False):
+        buf2 = []
+        self._parse_exprs(buf2, input, is_bol)
+        if buf2:
+            buf.append(''.join(buf2))
+
+    def _parse_exprs(self, buf, input, is_bol=False):
         if not input:
             return
         if self._spaces:
@@ -740,16 +747,11 @@ class Template(object):
             buf.extend((self.escapefunc, "(", self.tostrfunc, "(", code, ")), "))
 
     def add_stmt(self, buf, code):
-        if self._stmt_not_added_yet:
-            # insert dummy if-stmt between buf[-2] and buf[-1]
-            if buf and buf[-1] != "\n" and buf[-1].isspace():
-                buf[-1:-1] = ("if True: ## dummy\n", )
-            self._stmt_not_added_yet = False
-        if self.newline == "\r\n":
-            code = code.replace("\r\n", "\n")
-        buf.append(code)
-        #if code[-1] != '\n':
-        #    buf.append(self.newline)
+        if not code: return
+        lines = code.splitlines(True)   # keep "\n"
+        if lines[-1][-1] != "\n":
+            lines[-1] = lines[-1] + "\n"
+        buf.extend(lines)
 
     def _set_spaces(self, code, lspace, mspace):
         if lspace:
@@ -776,6 +778,113 @@ class Template(object):
             if code.rstrip()[-1] == ':':
                 indent += self.indent
             self._spaces = ' ' * indent
+
+    _START_WORDS = dict.fromkeys(('for', 'if', 'while', 'def', 'try:', 'with', 'class'), True)
+    _END_WORDS   = dict.fromkeys(('#endfor', '#endif', '#endwhile', '#enddef', '#endtry', '#endwith', '#endclass'), True)
+    _CONT_WORDS  = dict.fromkeys(('elif', 'else:', 'except', 'except:', 'finally:'), True)
+    _WORD_REXP   = re.compile(r'\S+')
+
+    depth = -1
+
+    ##
+    ## ex.
+    ##   input = r"""
+    ##   if items:
+    ##   _buf.extend(('<ul>\n', ))
+    ##   i = 0
+    ##   for item in items:
+    ##   i += 1
+    ##   _buf.extend(('<li>', to_str(item), '</li>\n', ))
+    ##   #endfor
+    ##   _buf.extend(('</ul>\n', ))
+    ##   #endif
+    ##   """[1:]
+    ##   lines = input.splitlines(True)
+    ##   block = self.parse_lines(lines)
+    ##      #=>  [ "if items:\n",
+    ##             [ "_buf.extend(('<ul>\n', ))\n",
+    ##               "i = 0\n",
+    ##               "for item in items:\n",
+    ##               [ "i += 1\n",
+    ##                 "_buf.extend(('<li>', to_str(item), '</li>\n', ))\n",
+    ##               ],
+    ##               "#endfor\n",
+    ##               "_buf.extend(('</ul>\n', ))\n",
+    ##             ],
+    ##             "#endif\n",
+    ##           ]
+    def parse_lines(self, lines):
+        block = []
+        try:
+            self._parse_lines(lines.__iter__(), False, block, 0)
+        except StopIteration:
+            if self.depth > 0:
+                raise TemplateSyntaxError("unexpected EOF.", (self.filename, len(lines), None, line))
+        else:
+            #raise TemplateSyntaxError("unexpected syntax.")
+            pass
+        return block
+
+    def _parse_lines(self, iter, end_block, block, linenum):
+        if block is None: block = []
+        _START_WORDS = self._START_WORDS
+        _END_WORDS   = self._END_WORDS
+        _CONT_WORDS  = self._CONT_WORDS
+        _WORD_REXP   = self._WORD_REXP
+        while True:
+            line = iter.next()
+            linenum += line.count("\n")
+            m = _WORD_REXP.search(line)
+            if not m:
+                block.append(line)
+                continue
+            word = m.group(0)
+            if word in _END_WORDS:
+                if word != end_block:
+                    msg = "'%s' expected buf got '%s'" % (end_block, word)
+                    colnum = m.start() + 1
+                    raise TemplateSyntaxError(msg, (self.filename, linenum, colnum, line))
+                return block, line, None, linenum
+            elif line.endswith(':\n'):
+                if word in _CONT_WORDS:
+                    return block, line, word, linenum
+                elif word in _START_WORDS:
+                    block.append(line)
+                    self.depth += 1
+                    cont_word = None
+                    try:
+                        child_block, line, cont_word, linenum = self._parse_lines(iter, '#end'+word, [], linenum)
+                        block.extend((child_block, line, ))
+                        while cont_word:   # 'elif' or 'else:'
+                            child_block, line, cont_word, linenum = self._parse_lines(iter, '#end'+word, [], linenum)
+                            block.extend((child_block, line, ))
+                    except StopIteration:
+                        msg = "'%s' is not closed." % (cont_word or word)
+                        colnum = m.start() + 1
+                        raise TemplateSyntaxError(msg, (self.filename, linenum, colnum, line))
+                    self.depth -= 1
+                else:
+                    block.append(line)
+            else:
+                block.append(line)
+        assert "unreachable"
+
+    #def join_block(self, block):
+    #    buf = []
+    #    depth = 0
+    #    self._join_block(block, buf, depth)
+    #    return ''.join(buf)
+
+    def _join_block(self, block, buf, depth):
+        indent = '    ' * depth
+        for line in block:
+            if isinstance(line, list):
+                self._join_block(line, buf, depth+1)
+            elif line.isspace():
+                buf.append(line)
+            else:
+                buf.append(indent + line.lstrip())
+
 
     def render(self, context=None, globals=None, _buf=None):
         """Evaluate python code with context dictionary.
