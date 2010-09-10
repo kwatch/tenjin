@@ -175,9 +175,9 @@
   source: |6
         
         users = [
-            {'name': 'Foo', 'email': 'foo@mail.com'},
-            {'name': 'Bar',},
-            {'name': 'Baz', 'email': 'baz@mail.org'},
+        {'name': 'Foo', 'email': 'foo@mail.com'},
+        {'name': 'Bar',},
+        {'name': 'Baz', 'email': 'baz@mail.org'},
         ]
         
         _buf.extend(('''<ul>\n''', ));
@@ -255,7 +255,7 @@
            ?>
 
   source: |6
-          
+        
         i = 0
         for item in ['a', 'b', 'c']:
             i += 1
@@ -265,7 +265,7 @@
                 _buf.extend(('''<span>''', to_str(item), '''</span>\n''', ));
             #endif
             _buf.extend(('''</p>\n''', ));
-          
+        
         #endfor
           
 
@@ -302,13 +302,13 @@
         <?py for value in range(0,3): ?>^
         #{value}^
         i = #{value}^
-        <?py #end ?>^
+        <?py #endfor ?>^
 
   source: |6
         for value in range(0,3):
             _buf.extend((to_str(value), '''^
         i = ''', to_str(value), '''\r\n''', ));
-        #end
+        #endfor
 
   expected: |
         0^
@@ -331,7 +331,7 @@
         i = #{value}^
         #{value}^
         <?py^
-        #end^
+        #endfor^
         ?>^
         </p>^
 
@@ -343,7 +343,7 @@
             _buf.extend(('''i = ''', to_str(value), '''^
         ''', to_str(value), '''\r\n''', ));
         
-        #end
+        #endfor
         
         _buf.extend(('''</p>\r\n''', ));
 
@@ -367,14 +367,14 @@
         <ul>
         <?py for i in range(0,3): ?>
         <li>#{i}</li>
-        <?py #end ?>
+        <?py #endfor ?>
         </ul>
 
   source: |
         _buf = []; _buf.extend(('''<ul>\n''', ));
         for i in range(0,3):
             _buf.extend(('''<li>''', to_str(i), '''</li>\n''', ));
-        #end
+        #endfor
         _buf.extend(('''</ul>\n''', ));
         print(''.join(_buf))
 
@@ -387,13 +387,13 @@
   input: |
         <?py for i in range(0,3): ?>
         #{i}
-        <?py #end ?>
+        <?py #endfor ?>
 
   source: |
         _buf = []
         for i in range(0,3):
             _buf.extend((to_str(i), '''\n''', ));
-        #end
+        #endfor
         print(''.join(_buf))
 
 
@@ -433,12 +433,12 @@
   input: |
         <?py for i in range(0,3): ?>
         i = #{value}
-        <?py #end ?>
+        <?py #endfor ?>
 
   source: |
         for i in range(0,3):
           _buf.extend(('''i = ''', to_str(value), '''\n''', ));
-        #end
+        #endfor
 
 
 ###
@@ -584,8 +584,8 @@
 
   source: |6
         states = { "CA": "California",
-                   "NY": "New York",
-                   "FL": "Florida", }
+        "NY": "New York",
+        "FL": "Florida", }
         #
         _buf.extend(('''<?py chk = { params[\'state\']: \' checked="checked"\' } ?>\n''', ));
         codes = list(states.keys())
@@ -615,7 +615,7 @@
         <?PY def link_to(label, url): ?>
         <?PY     import urllib ?>
         <?PY     return '<a href="%s">%s</a>' % (urllib.quote(url), label) ?>
-        <?PY # ?>
+        <?PY #enddef ?>
         #{{link_to('<b>Create</b>', '/items/create')}}
         #{{link_to('"Show '+_P("item['name']")+'"', '/items/show/'+_p("item['id']"))}}
         #{{escape('<b>'+_P('item["name"]')+'</b>')}}
@@ -624,7 +624,7 @@
         def link_to(label, url):
             import urllib
             return '<a href="%s">%s</a>' % (urllib.quote(url), label)
-        #
+        #enddef
         _buf.extend((to_str(_decode_params(link_to('<b>Create</b>', '/items/create'))), '''
         ''', to_str(_decode_params(link_to('"Show '+_P("item['name']")+'"', '/items/show/'+_p("item['id']")))), '''
         ''', to_str(_decode_params(escape('<b>'+_P('item["name"]')+'</b>'))), '''\n''', ));
@@ -657,7 +657,7 @@
         #{"H"}
         #{"I"}
         #{"J"}
-        <?py #end ?>
+        <?py #endif ?>
         ${"K"}
         ${"L"}
         #{"M"}
@@ -673,7 +673,7 @@
             _buf.extend((to_str("H"), 
         to_str("I"), 
         to_str("J"), ));
-        #end
+        #endif
         _buf.extend((escape(to_str("K")), '''
         ''', escape(to_str("L")), '''
         ''', to_str("M"), ));
