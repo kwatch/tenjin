@@ -616,9 +616,11 @@ class Template(object):
             ## add text, spaces, and statement
             self.parse_exprs(buf, text, is_bol)
             is_bol = rspace is not None
-            if mspace == "\n":
+            #if mspace == "\n":
+            if mspace and mspace.endswith("\n"):
                 code = "\n" + (code or "")
-            if rspace == "\n":
+            #if rspace == "\n":
+            if rspace and rspace.endswith("\n"):
                 code = (code or "") + "\n"
             if code:
                 code = self.statement_hook(code)
@@ -629,6 +631,7 @@ class Template(object):
 
     def statement_hook(self, stmt):
         """expand macros and parse '#@ARGS' in a statement."""
+        stmt = stmt.replace("\r\n", "\n")   # Python can't handle "\r\n" in code
         if self.args is None:
             args_pattern = r'^ *#@ARGS(?:[ \t]+(.*?))?$'
             m = re.match(args_pattern, stmt)
@@ -845,7 +848,7 @@ class Template(object):
                     colnum = m.start() + 1
                     raise TemplateSyntaxError(msg, (self.filename, linenum, colnum, line))
                 return block, line, None, linenum
-            elif line.endswith(':\n'):
+            elif line.endswith((':\n', ':\r\n')):
                 if word in _CONT_WORDS:
                     return block, line, word, linenum
                 elif word in _START_WORDS:
