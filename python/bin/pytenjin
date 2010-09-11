@@ -14,6 +14,7 @@ import tenjin
 #from tenjin.helpers import escape, to_str
 from tenjin.helpers import *
 from tenjin.helpers.html import *
+from tenjin import TemplateSyntaxError
 
 python2 = sys.version_info[0] == 2
 python3 = sys.version_info[0] == 3
@@ -89,6 +90,11 @@ class Main(object):
         except CommandOptionError:
             ex = sys.exc_info()[1]
             sys.stderr.write(str(ex) + "\n")
+            sys.exit(1)
+        except TemplateSyntaxError:
+            ex = sys.exc_info()[1]
+            #sys.stderr.write(str(ex) + "\n")
+            sys.stderr.write(ex.build_error_message())
             sys.exit(1)
     main = staticmethod(main)
 
@@ -239,8 +245,12 @@ class Main(object):
                 #    template.convert_file(template.filename)
                 output = ''
             elif action == 'syntax':
-                template = engine.get_template(template_name)
-                output = self.check_syntax(template.script, template.filename)
+                try:
+                    template = engine.get_template(template_name)
+                    output = self.check_syntax(template.script, template.filename)
+                except TemplateSyntaxError:
+                    ex = sys.exc_info()[1]
+                    output = ex.build_error_message()
                 if output is None:
                     output = not options.get('q') and "%s - ok.\n" % template.filename or ''
             elif action == 'dump':
