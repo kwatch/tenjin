@@ -471,8 +471,9 @@ class Template(object):
     smarttrim  = None    # "print ''.join(_buf)"
     args       = None
     timestamp  = None
+    trace      = False   # if True then '<!-- begin: file -->' and '<!-- end: file -->' are printed
 
-    def __init__(self, filename=None, encoding=None, input=None, escapefunc=None, tostrfunc=None, indent=None, preamble=None, postamble=None, smarttrim=None):
+    def __init__(self, filename=None, encoding=None, input=None, escapefunc=None, tostrfunc=None, indent=None, preamble=None, postamble=None, smarttrim=None, trace=None):
         """Initailizer of Template class.
 
            filename:str (=None)
@@ -508,6 +509,7 @@ class Template(object):
         if preamble   is not None:  self.preamble   = preamble
         if postamble  is not None:  self.postamble  = postamble
         if smarttrim  is not None:  self.smarttrim  = smarttrim
+        if trace      is not None:  self.trace      = trace
         #
         if preamble  is True:  self.preamble = "_buf = []"
         if postamble is True:  self.postamble = "print(''.join(_buf))"
@@ -931,7 +933,12 @@ class Template(object):
         locals['_buf'] = _buf
         if not self.bytecode:
             self.compile()
-        exec(self.bytecode, globals, locals)
+        if self.trace:
+            _buf.append("<!-- ***** begin: %s ***** -->\n" % self.filename)
+            exec(self.bytecode, globals, locals)
+            _buf.append("<!-- ***** end: %s ***** -->\n" % self.filename)
+        else:
+            exec(self.bytecode, globals, locals)
         if bufarg is not None:
             return bufarg
         elif not logger:

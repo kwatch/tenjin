@@ -234,5 +234,17 @@ _buf.extend(('''</ul>\n''', ));
             ok (t.timestamp) == False
 
 
+    def test_trace(self):
+        if "trace is on then prints template filename as HTML comments":
+            filename = "test.trace.pyhtml"
+            input = "<p>hello #{name}!</p>\n"
+            expected = ( "<!-- ***** begin: %s ***** -->\n"
+                         "<p>hello world!</p>\n"
+                         "<!-- ***** end: %s ***** -->\n" ) % (filename, filename)
+            t = tenjin.Template(filename, input=input, trace=True)
+            output = t.render({'name':'world'})
+            ok (output) == expected
+
+
 if __name__ == '__main__':
     run(TemplateTest)
