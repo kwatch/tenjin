@@ -302,13 +302,13 @@
         <?py for value in range(0,3): ?>^
         #{value}^
         i = #{value}^
-        <?py #endfor ?>^
+        <?py #end ?>^
 
   source: |6
         for value in range(0,3):
             _buf.extend((to_str(value), '''^
         i = ''', to_str(value), '''\r\n''', ));
-        #endfor
+        #end
 
   expected: |
         0^
@@ -331,7 +331,7 @@
         i = #{value}^
         #{value}^
         <?py^
-        #endfor^
+        #end^
         ?>^
         </p>^
 
@@ -343,7 +343,7 @@
             _buf.extend(('''i = ''', to_str(value), '''^
         ''', to_str(value), '''\r\n''', ));
         
-        #endfor
+        #end
         
         _buf.extend(('''</p>\r\n''', ));
 
@@ -367,14 +367,14 @@
         <ul>
         <?py for i in range(0,3): ?>
         <li>#{i}</li>
-        <?py #endfor ?>
+        <?py #end ?>
         </ul>
 
   source: |
         _buf = []; _buf.extend(('''<ul>\n''', ));
         for i in range(0,3):
             _buf.extend(('''<li>''', to_str(i), '''</li>\n''', ));
-        #endfor
+        #end
         _buf.extend(('''</ul>\n''', ));
         print(''.join(_buf))
 
@@ -387,13 +387,13 @@
   input: |
         <?py for i in range(0,3): ?>
         #{i}
-        <?py #endfor ?>
+        <?py #end ?>
 
   source: |
         _buf = []
         for i in range(0,3):
             _buf.extend((to_str(i), '''\n''', ));
-        #endfor
+        #end
         print(''.join(_buf))
 
 
@@ -433,12 +433,12 @@
   input: |
         <?py for i in range(0,3): ?>
         i = #{value}
-        <?py #endfor ?>
+        <?py #end ?>
 
   source: |
         for i in range(0,3):
           _buf.extend(('''i = ''', to_str(value), '''\n''', ));
-        #endfor
+        #end
 
 
 ###
@@ -450,9 +450,9 @@
   input: |
         こんにちは${user}!
         <ul>
-         <?py for ch in [u'日', u'本', u'語', u'']: ?>
+        <?py for ch in [u'日', u'本', u'語', u'']: ?>
           <li>#{ch}</li>
-         <?py #end ?>
+        <?py #end ?>
         </ul>
 
   source: |
@@ -629,7 +629,7 @@
         <?PY def link_to(label, url): ?>
         <?PY     import urllib ?>
         <?PY     return '<a href="%s">%s</a>' % (urllib.quote(url), label) ?>
-        <?PY #enddef ?>
+        <?PY #end ?>
         #{{link_to('<b>Create</b>', '/items/create')}}
         #{{link_to('"Show '+_P("item['name']")+'"', '/items/show/'+_p("item['id']"))}}
         #{{escape('<b>'+_P('item["name"]')+'</b>')}}
@@ -638,7 +638,7 @@
         def link_to(label, url):
             import urllib
             return '<a href="%s">%s</a>' % (urllib.quote(url), label)
-        #enddef
+        #end
         _buf.extend((to_str(_decode_params(link_to('<b>Create</b>', '/items/create'))), '''
         ''', to_str(_decode_params(link_to('"Show '+_P("item['name']")+'"', '/items/show/'+_p("item['id']")))), '''
         ''', to_str(_decode_params(escape('<b>'+_P('item["name"]')+'</b>'))), '''\n''', ));
@@ -671,7 +671,7 @@
         #{"H"}
         #{"I"}
         #{"J"}
-        <?py #endif ?>
+        <?py #end ?>
         ${"K"}
         ${"L"}
         #{"M"}
@@ -687,7 +687,7 @@
             _buf.extend((to_str("H"), 
         to_str("I"), 
         to_str("J"), ));
-        #endif
+        #end
         _buf.extend((escape(to_str("K")), '''
         ''', escape(to_str("L")), '''
         ''', to_str("M"), ));
