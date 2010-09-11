@@ -1369,6 +1369,7 @@ class Engine(object):
     cache      = MarshalCacheStorage()  # save converted Python code into file by marshal-format
     preprocess = False
     timestamp_interval = 1  # seconds
+    prefer_fullpath = False    # if True then use fullpath when template error is reported
 
     def __init__(self, prefix=None, postfix=None, layout=None, path=None, cache=True, preprocess=None, templateclass=None, **kwargs):
         """Initializer of Engine class.
@@ -1491,7 +1492,7 @@ class Engine(object):
         if template:
             assert template.timestamp is not None
             if not template.filename:
-                template.filename = filepath   # or fullpath
+                template.filename = self.prefer_fullpath and fullpath or filepath
             if now > getattr(template, '_last_checked_at', 0) + self.timestamp_interval:
                 mtime = _getmtime(filepath)
                 if template.timestamp != mtime:
@@ -1506,7 +1507,7 @@ class Engine(object):
             template = self._create_template(filepath, _context, _globals)
             template.timestamp = mtime
             template._last_checked_at = now
-            #template.filename = fullpath     ## set fullpath instead of filepath
+            template.filename = self.prefer_fullpath and fullpath or filepath
             if cache:
                 if not template.bytecode: template.compile()
                 cache.set(fullpath, template)
