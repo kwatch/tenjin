@@ -1696,7 +1696,7 @@ Assume that link_to() is a helper method which takes label and url and generate 
 <?PY def link_to(label, url): ?>
 <?PY     import urllib ?>
 <?PY     return '<a href="%s">%s</a>' % (urllib.quote(url), label) ?>
-<?PY # ?>
+<?PY #enddef ?>
 #{{link_to('Show '+{{*_P(*}}'params["name"]'{{*)*}}, '/items/show/'+{{*_p(*}}'params["id"]'{{*)*}})}}
 .--------------------
 
@@ -1741,7 +1741,7 @@ Command-line option '{{,-z,}}' checks syntax of template files.
 <ul>
 <?py for item in items: ?>
  <li>${item}</li>
-<?py   {{*#endfor*}} ?>
+<?py {{*#endif*}} ?>
 </ul>
 .--------------------
 
@@ -1749,9 +1749,9 @@ Command-line option '{{,-z,}}' checks syntax of template files.
 .? Result:
 .==================== test_syntax_check/result.output
 $ pytenjin {{*-z*}} example.pyhtml
-example.pyhtml:4:3: unindent does not match any outer indentation level
-  4:   #endfor
-       ^
+example.pyhtml:4:1: '#endfor' expected but got '#endif'.
+   4: #endif
+      ^
 .====================
 
 
@@ -1832,8 +1832,8 @@ i = 0
 for item in items:
     i += 1
 
-        to_str(i); 
-        escape(to_str(item)); 
+    to_str(i); 
+    escape(to_str(item)); 
 
 #endfor
 
@@ -2019,16 +2019,16 @@ File 'syntaxerr.pyhtml':
 #{i} is even.
 <?py     else ?>
 #{i} is odd.
-<?py     #end ?>
-<?py #end ?>
+<?py     #endif ?>
+<?py #endfor ?>
 .--------------------
 
 Result:
 .==================== test_syntaxerr/result.output
 $ pytenjin -z syntaxerr.pyhtml
-syntaxerr.pyhtml:4:9: invalid syntax
-  4:     else
-             ^
+syntaxerr.pyhtml:4:12: invalid syntax
+  4:         else
+                ^
 .====================
 
 

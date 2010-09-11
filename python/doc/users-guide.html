@@ -1804,7 +1804,7 @@ $ pytenjin -P views/pp-example2.pyhtml
 &lt;?PY def link_to(label, url): ?&gt;
 &lt;?PY     import urllib ?&gt;
 &lt;?PY     return '&lt;a href="%s"&gt;%s&lt;/a&gt;' % (urllib.quote(url), label) ?&gt;
-&lt;?PY # ?&gt;
+&lt;?PY #enddef ?&gt;
 #{{link_to('Show '+<strong>_P(</strong>'params["name"]'<strong>)</strong>, '/items/show/'+<strong>_p(</strong>'params["id"]'<strong>)</strong>)}}
 </pre>
 
@@ -1840,7 +1840,7 @@ $ pytenjin -P views/pp-example3.pyhtml
 &lt;ul&gt;
 &lt;?py for item in items: ?&gt;
  &lt;li&gt;${item}&lt;/li&gt;
-&lt;?py   <strong>#endfor</strong> ?&gt;
+&lt;?py <strong>#endif</strong> ?&gt;
 &lt;/ul&gt;
 </pre><a name="test_syntax_check/result.output"></a>
 
@@ -1849,9 +1849,9 @@ $ pytenjin -P views/pp-example3.pyhtml
       </div>
       <pre class="terminal">
 $ pytenjin <strong>-z</strong> example.pyhtml
-example.pyhtml:4:3: unindent does not match any outer indentation level
-  4:   #endfor
-       ^
+example.pyhtml:4:1: '#endfor' expected but got '#endif'.
+   4: #endif
+      ^
 </pre>
 
       <p>Error message is the same format as gcc compiler or java compiler. Error jump in Emacs or other editor is available.</p>
@@ -1938,8 +1938,8 @@ i = 0
 for item in items:
     i += 1
 
-        to_str(i); 
-        escape(to_str(item)); 
+    to_str(i); 
+    escape(to_str(item)); 
 
 #endfor
 
@@ -2147,16 +2147,16 @@ $ pytenjin <strong>-f context.yaml</strong> example.pyhtml
 #{i} is even.
 &lt;?py     else ?&gt;
 #{i} is odd.
-&lt;?py     #end ?&gt;
-&lt;?py #end ?&gt;
+&lt;?py     #endif ?&gt;
+&lt;?py #endfor ?&gt;
 </pre>
 
       <p>Result:</p><a name="test_syntaxerr/result.output"></a>
       <pre class="terminal">
 $ pytenjin -z syntaxerr.pyhtml
-syntaxerr.pyhtml:4:9: invalid syntax
-  4:     else
-             ^
+syntaxerr.pyhtml:4:12: invalid syntax
+  4:         else
+                ^
 </pre><br>
       <a name="encoding-syntaxerr" id="encoding-syntaxerr"></a>
 
