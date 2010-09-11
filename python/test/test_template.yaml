@@ -11,18 +11,18 @@
         <html>
          <body>
           <table>
-        <?py i = 0 ?>
-        <?py for item in ['<foo>', 'bar&bar', '"baz"']: ?>
-        <?py     i += 1 ?>
-        <?py     if i % 2 == 0: ?>
-        <?py         color = '#FCF' ?>
-        <?py     else: ?>
-        <?py         color = '#FFF' ?>
-        <?py     #endif ?>
+          <?py i = 0 ?>
+          <?py for item in ['<foo>', 'bar&bar', '"baz"']: ?>
+          <?py     i += 1 ?>
+          <?py     if i % 2 == 0: ?>
+          <?py         color = '#FCF' ?>
+          <?py     else: ?>
+          <?py         color = '#FFF' ?>
+          <?py     #endif ?>
            <tr bgcolor="#{color}">
             <td>${item}</td>
            </tr>
-        <?py #endfor ?>
+          <?py #endfor ?>
           </table>
          </body>
         </html>
@@ -72,18 +72,18 @@
         <html>
          <body>
           <table>
-        <?py i = 0 ?>
-        <?py for item in ['<foo>', 'bar&bar', '"baz"']: ?>
-            <?py i += 1 ?>
-            <?py if i % 2 == 0: ?>
-                <?py color = '#FCF' ?>
-            <?py else: ?>
-                <?py color = '#FFF' ?>
-            <?py #endif ?>
+          <?py i = 0 ?>
+          <?py for item in ['<foo>', 'bar&bar', '"baz"']: ?>
+              <?py i += 1 ?>
+              <?py if i % 2 == 0: ?>
+                  <?py color = '#FCF' ?>
+              <?py else: ?>
+                  <?py color = '#FFF' ?>
+              <?py #endif ?>
            <tr bgcolor="#{color}">
             <td>${item}</td>
            </tr>
-        <?py #endfor ?>
+          <?py #endfor ?>
           </table>
          </body>
         </html>
@@ -101,20 +101,20 @@
          <body>
           <table>
         <?py
-        i = 0
-        for item in ['<foo>', 'bar&bar', '"baz"']:
-            i += 1
-            if i % 2 == 0:
-                color = '#FCF'
-            else:
-                color = '#FFF'
-            #endif
+          i = 0
+          for item in ['<foo>', 'bar&bar', '"baz"']:
+              i += 1
+              if i % 2 == 0:
+                  color = '#FCF'
+              else:
+                  color = '#FFF'
+              #endif
         ?>
            <tr bgcolor="#{color}">
             <td>${item}</td>
            </tr>
         <?py
-        #endfor
+          #endfor
         ?>
           </table>
          </body>
@@ -159,9 +159,9 @@
         ]
         ?>
         <ul>
-        <?py i = 0 ?>
-        <?py for user in users: ?>
-        <?py     i += 1 ?>
+          <?py i = 0 ?>
+          <?py for user in users: ?>
+          <?py     i += 1 ?>
           <li><?py
             if user.get('email'):
         ?><a href="mailto:${user['email']}">${user['name']}</a><?py
@@ -450,9 +450,9 @@
   input: |
         こんにちは${user}!
         <ul>
-        <?py for ch in [u'日', u'本', u'語', u'']: ?>
+         <?py for ch in [u'日', u'本', u'語', u'']: ?>
           <li>#{ch}</li>
-        <?py #end ?>
+         <?py #end ?>
         </ul>
 
   source: |
