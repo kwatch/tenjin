@@ -68,6 +68,19 @@ class NoTextTemplate(tenjin.Template):
         tenjin.Template.parse_exprs(self, buf, input, is_bol)
         self._spaces = spaces
 
+    def after_convert(self, buf):
+        if self.postamble:
+            if not buf[-1].endswith("\n"):
+                buf.append("\n")
+            buf.append(self.postamble + "\n")
+        #block = self.parse_lines(buf)
+        buf2 = []
+        for x in buf:
+            buf2.extend(x.splitlines(True))
+        block = self.parse_lines(buf2)
+        buf[:] = []
+        self._join_block(block, buf, 0)
+
 
 class CommandOptionError(Exception):
     pass
