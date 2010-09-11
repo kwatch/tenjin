@@ -675,11 +675,14 @@ class EngineTest(object):
             engine.cache.clear()
             t = engine.get_template(fname)
             ok (t.filename) == expected
-            ex = None
-            try:    engine.render(fname, context)
-            except: ex = sys.exc_info()[1]
+            ex = error_file = None
+            try:
+                engine.render(fname, context)
+            except:
+                ex = sys.exc_info()[1]
+                error_file = _filename_on_where_error_raised()
             ok (ex) != None
-            ok (_filename_on_where_error_raised()) == expected
+            ok (error_file) == expected
             # read from cache
             engine.cache.clear()
             engine = tenjin.Engine()
