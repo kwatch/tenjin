@@ -790,7 +790,7 @@ class Template(object):
             self._spaces = ' ' * indent
 
     _START_WORDS = dict.fromkeys(('for', 'if', 'while', 'def', 'try:', 'with', 'class'), True)
-    _END_WORDS   = dict.fromkeys(('#endfor', '#endif', '#endwhile', '#enddef', '#endtry', '#endwith', '#endclass'), True)
+    _END_WORDS   = dict.fromkeys(('#end', '#endfor', '#endif', '#endwhile', '#enddef', '#endtry', '#endwith', '#endclass'), True)
     _CONT_WORDS  = dict.fromkeys(('elif', 'else:', 'except', 'except:', 'finally:'), True)
     _WORD_REXP   = re.compile(r'\S+')
 
@@ -850,7 +850,7 @@ class Template(object):
                 continue
             word = m.group(0)
             if word in _END_WORDS:
-                if word != end_block:
+                if word != end_block and word != '#end':
                     if end_block is False:
                         msg = "'%s' found but corresponding statement is missing." % (word, )
                     else:
