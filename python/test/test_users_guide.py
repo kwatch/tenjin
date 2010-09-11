@@ -7,6 +7,20 @@ import sys, os, re
 from glob import glob
 from oktest import ok, run
 
+python3 = sys.version_info[0] == 3
+
+try:    # 2.6 or later
+    from subprocess import Popen, PIPE
+    def _popen3(command):
+        p = Popen(command, shell=True, close_fds=True,
+                  stdin=PIPE, stdout=PIPE, stderr=PIPE)
+        t = (p.stdin, p.stdout, p.stderr)
+        return (p.stdin, p.stdout, p.stderr)
+except ImportError:
+    def _popen3(command):
+        return os.popen3(command)
+
+
 class UsersGuideTest(object):
 
     DIR = os.path.dirname(os.path.abspath(__file__)) + '/data/users_guide'
@@ -35,11 +49,13 @@ class UsersGuideTest(object):
             command, expected = re.split(r'\n', result, 1)
             command = re.sub('^\$ ', '', command)
             if self.__name__ == 'logging':
-                sin, sout, serr = os.popen3(command)
+                sin, sout, serr = _popen3(command)
                 sin.close()
                 actual = sout.read() + serr.read()
                 sout.close()
                 serr.close()
+                if python3:
+                    actual = actual.decode('utf-8')
                 actual = re.sub(r'file=.*?/test_logging/', "file='/home/user/", actual)
             else:
                 actual = os.popen(command).read()

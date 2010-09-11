@@ -7,6 +7,18 @@ import sys, os, re
 from glob import glob
 from oktest import ok, run
 
+python3 = sys.version_info[0] == 3
+
+try:    # 2.6 or later
+    from subprocess import Popen, PIPE
+    def _popen(command):
+        sout = Popen(command, shell=True, stdout=PIPE).stdout
+        return sout
+except ImportError:
+    def _popen(command):
+        return os.popen(command)
+
+
 class ExamplesTest(object):
 
     DIR = os.path.dirname(os.path.abspath(__file__)) + '/data/examples'
@@ -27,7 +39,9 @@ class ExamplesTest(object):
             result = open(fname).read()
             command, expected = re.split(r'\n', result, 1)
             command = re.sub('^\$ ', '', command)
-            actual = os.popen(command).read()
+            actual = _popen(command).read()
+            if python3:
+                actual = actual.decode('utf-8')
             ok (actual) == expected
         sys.stdout.write(' )')
 
