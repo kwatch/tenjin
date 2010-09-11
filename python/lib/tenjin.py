@@ -843,8 +843,9 @@ class Template(object):
         _END_WORDS   = self._END_WORDS
         _CONT_WORDS  = self._CONT_WORDS
         _WORD_REXP   = self._WORD_REXP
+        get_line = python2 and iter.next or iter.__next__
         while True:
-            line = iter.next()
+            line = get_line()
             linenum += line.count("\n")
             m = _WORD_REXP.search(line)
             if not m:
