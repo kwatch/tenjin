@@ -861,7 +861,7 @@ class Template(object):
                     colnum = m.start() + 1
                     raise TemplateSyntaxError(msg, (self.filename, linenum, colnum, line))
                 return block, line, None, linenum
-            elif line.endswith((':\n', ':\r\n')):
+            elif line.endswith(':\n') or line.endswith(':\r\n'):
                 if word in _CONT_WORDS:
                     return block, line, word, linenum
                 elif word in _START_WORDS:
