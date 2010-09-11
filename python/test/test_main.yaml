@@ -30,84 +30,16 @@
 	<?py     i += 1 ?>
 	<?py     color = i % 2 == 0 and 'FFF' or 'FCF' ?>
 	 <li>${item}</li>
-	<?py #end ?>
+	<?py #endfor ?>
 	</ul>
   expected: |
-	.test.pyhtml:3:18: invalid syntax
-	  3: for item in items
-	                      ^
-###
-- name:		lint3
-  desc:		"invalid indent of '#end'"
-  options: '-z'
-  input: |
-	<ul>
-	<?py i = 0 ?>
-	<?py for item in items: ?>
-	<?py     i += 1 ?>
-	<?py     color = i % 2 == 0 and 'FFF' or 'FCF' ?>
-	 <li>${item}</li>
-	<?py   #end ?>
-	</ul>
-  expected: |
-	.test.pyhtml:7:3: unindent does not match any outer indentation level
-	  7:   #end
-	       ^
-###
-- name:		lint4
-  desc:		invalid indent of pass statement
-  options: '-z'
-  input: |
-	<ul>
-	<?py i = 0 ?>
-	<?py for item in items: ?>
-	<?py     i += 1 ?>
-	<?py     color = i % 2 == 0 and 'FFF' or 'FCF' ?>
-	 <li>${item}</li>
-	<?py   pass ?>
-	</ul>
-  expected: |
-	.test.pyhtml:7:3: unindent does not match any outer indentation level
-	  7:   pass
-	       ^
-###
-- name:		lint5
-  desc:		invalid indent of statement
-  options: '-z'
-  input: |
-	<ul>
-	<?py i = 0 ?>
-	<?py for item in items: ?>
-	<?py     i += 1 ?>
-	<?py        color = i % 2 == 0 and 'FFF' or 'FCF' ?>
-	 <li>${item}</li>
-	<?py #end ?>
-	</ul>
-  expected: |
-	.test.pyhtml:5:7: unexpected indent
-	  5:        color = i % 2 == 0 and 'FFF' or 'FCF'
-	           ^
-###
-- name:		lint6
-  desc:		invalid indent of statement
-  options: '-z'
-  input: |
-	<ul>
-	<?py i = 0 ?>
-	<?py for item in items: ?>
-	<?py     i += 1 ?>
-	<?py   color = i % 2 == 0 and 'FFF' or 'FCF' ?>
-	 <li>${item}</li>
-	<?py #end ?>
-	</ul>
-  expected: |
-	.test.pyhtml:5:3: unindent does not match any outer indentation level
-	  5:   color = i % 2 == 0 and 'FFF' or 'FCF'
-	       ^
+	.test.pyhtml:7:1: '#endfor' found but corresponding statement is missing.
+	   7: #endfor
+	      ^
 
 ###
-- name:		lint7
-  desc:		invalid indent of statement
+- name:		lint3
+  desc:		uncorresponding end
   options: '-z'
   input: |
 	<ul>
@@ -116,9 +48,45 @@
 	<?py      i += 1 ?>
 	<?py      color = i % 2 == 0 and 'FFF' or 'FCF' ?>
 	 <li>${item}</li>
-	<?py  #end ?>
+	<?py  #endif ?>
 	</ul>
   expected: |
-	.test.pyhtml:2:1: unexpected indent
-	  2:  i = 0
-	     ^
+	.test.pyhtml:7:2: '#endfor' expected but got '#endif'.
+	   7:  #endif
+	       ^
+
+###
+- name:		lint4
+  desc:		block is not closed
+  options: '-z'
+  input: |
+	<ul>
+	<?py  i = 0 ?>
+	<?py  for item in items: ?>
+	<?py      i += 1 ?>
+	<?py      color = i % 2 == 0 and 'FFF' or 'FCF' ?>
+	 <li>${item}</li>
+	<?py  ### ?>
+	</ul>
+  expected: |
+	.test.pyhtml:3:2: 'for' is not closed.
+	   3:  for item in items:
+	       ^
+
+###
+- name:		lint5
+  desc:		invalid python syntax
+  options: '-z'
+  input: |
+	<ul>
+	<?py  x = 0 ?>
+	<?py  if x > 0: ?>
+	   positivie
+	<?py  else ?>
+	   negative
+	<?py  #endif ?>
+	</ul>
+  expected: |
+	.test.pyhtml:5:8: invalid syntax
+	  5:     else
+	            ^

@@ -328,16 +328,16 @@ class MainTest(object):
         '        <th>#</th><th>item</th>\n'
         '      </tr>\n'
         '    </thead>\n'
-        '    </tbody>\n'
         '    <?py i = 0 ?>\n'
         '    <?py for item in list: ?>\n'
         '\t<?py i += 1 ?>\n'
+        '    <tbody>\n'
         '      <tr bgcolor="#{i % 2 and "#FFCCCC" or "#CCCCFF"}">\n'
         '\t<td>${i}</td>\n'
         '        <td>${item}</td>\n'
         '      </tr>\n'
-        '    <?py #end ?>\n'
         '    </tbody>\n'
+        '    <?py #end ?>\n'
         '  </table>\n'
         '<?py #end ?>'
         '</div>\n'
@@ -351,18 +351,19 @@ class MainTest(object):
         '',
         '',
         '',
-        '',
         '    i = 0',
         '    for item in list:',
-        '\ti += 1',
-        '                   to_str(i % 2 and "#FFCCCC" or "#CCCCFF"); ',
-        '\t    escape(to_str(i)); ',
-        '            escape(to_str(item)); ',
+        '        i += 1',
+        '',
+        '        to_str(i % 2 and "#FFCCCC" or "#CCCCFF"); ',
+        '        escape(to_str(i)); ',
+        '        escape(to_str(item)); ',
+        '',
         '',
         '    #end',
         '',
-        '',
         '#end',
+        '',
         'print(\'\'.join(_buf))',
         ''))
 
@@ -381,14 +382,16 @@ class MainTest(object):
             '',
             '    i = 0',
             '    for item in list:',
-            '\ti += 1',
-            '                   to_str(i % 2 and "#FFCCCC" or "#CCCCFF"); ',
-            '\t    escape(to_str(i)); ',
-            '            escape(to_str(item)); ',
+            '        i += 1',
+            '',
+            '        to_str(i % 2 and "#FFCCCC" or "#CCCCFF"); ',
+            '        escape(to_str(i)); ',
+            '        escape(to_str(item)); ',
             '',
             '    #end',
             '',
             '#end',
+            '',
             'print(\'\'.join(_buf))',
             ''))
         self.input = self.input_for_retrieve
@@ -400,17 +403,19 @@ class MainTest(object):
             '    1:  _buf = []; ',
             '    2:  if list:',
             '',
-            '   10:      i = 0',
-            '   11:      for item in list:',
-            '   12:  \ti += 1',
-            '   13:                     to_str(i % 2 and "#FFCCCC" or "#CCCCFF"); ',
-            '   14:  \t    escape(to_str(i)); ',
-            '   15:              escape(to_str(item)); ',
+            '    9:      i = 0',
+            '   10:      for item in list:',
+            '   11:          i += 1',
             '',
-            '   17:      #end',
+            '   13:          to_str(i % 2 and "#FFCCCC" or "#CCCCFF"); ',
+            '   14:          escape(to_str(i)); ',
+            '   15:          escape(to_str(item)); ',
+            '',
+            '   18:      #end',
             '',
             '   20:  #end',
-            '   21:  print(\'\'.join(_buf))',
+            '',
+            '   22:  print(\'\'.join(_buf))',
             ''))
         self.expected = expected
         self.options = '-SNU'
@@ -422,10 +427,10 @@ class MainTest(object):
             'if list:',
             '    i = 0',
             '    for item in list:',
-            '\ti += 1',
-            '                   to_str(i % 2 and "#FFCCCC" or "#CCCCFF"); ',
-            '\t    escape(to_str(i)); ',
-            '            escape(to_str(item)); ',
+            '        i += 1',
+            '        to_str(i % 2 and "#FFCCCC" or "#CCCCFF"); ',
+            '        escape(to_str(i)); ',
+            '        escape(to_str(item)); ',
             '    #end',
             '#end',
             'print(\'\'.join(_buf))',
@@ -438,15 +443,15 @@ class MainTest(object):
         expected = '\n'.join((
             '    1:  _buf = []; ',
             '    2:  if list:',
-            '   10:      i = 0',
-            '   11:      for item in list:',
-            '   12:  \ti += 1',
-            '   13:                     to_str(i % 2 and "#FFCCCC" or "#CCCCFF"); ',
-            '   14:  \t    escape(to_str(i)); ',
-            '   15:              escape(to_str(item)); ',
-            '   17:      #end',
+            '    9:      i = 0',
+            '   10:      for item in list:',
+            '   11:          i += 1',
+            '   13:          to_str(i % 2 and "#FFCCCC" or "#CCCCFF"); ',
+            '   14:          escape(to_str(i)); ',
+            '   15:          escape(to_str(item)); ',
+            '   18:      #end',
             '   20:  #end',
-            '   21:  print(\'\'.join(_buf))',
+            '   22:  print(\'\'.join(_buf))',
             ''))
         self.expected = expected
         self.options = '-SNC'
@@ -462,18 +467,19 @@ class MainTest(object):
             '',
             '',
             '',
-            '',
             '    i = 0',
             '    for item in list:',
-            '\ti += 1',
+            '        i += 1',
+            '',
+            '',
             '',
             '',
             '',
             '',
             '    #end',
             '',
-            '',
             '#end',
+            '',
             'print(\'\'.join(_buf))',
             ''))
         self.input = self.input_for_retrieve
