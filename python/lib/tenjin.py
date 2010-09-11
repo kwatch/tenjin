@@ -443,7 +443,14 @@ helpers.escape = helpers.html.escape_xml
 ##
 
 class TemplateSyntaxError(SyntaxError):
-    pass
+
+    def build_error_message(self):
+        ex = self
+        return ''.join([
+            "%s:%s:%s: %s\n" % (ex.filename, ex.lineno, ex.offset, ex.msg, ),
+            "%4d: %s\n"      % (ex.lineno, ex.text.rstrip(), ),
+            "     %s^\n"     % (' ' * ex.offset, ),
+        ])
 
 
 class Template(object):
@@ -844,7 +851,10 @@ class Template(object):
             word = m.group(0)
             if word in _END_WORDS:
                 if word != end_block:
-                    msg = "'%s' expected buf got '%s'" % (end_block, word)
+                    if end_block is False:
+                        msg = "'%s' found but corresponding statement is missing." % (word, )
+                    else:
+                        msg = "'%s' expected but got '%s'." % (end_block, word)
                     colnum = m.start() + 1
                     raise TemplateSyntaxError(msg, (self.filename, linenum, colnum, line))
                 return block, line, None, linenum
