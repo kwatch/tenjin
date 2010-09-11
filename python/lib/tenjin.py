@@ -653,6 +653,8 @@ class Template(object):
                     args.append(arg)
                     declares.append("%s = _context.get('%s'); " % (arg, arg))
                 self.args = args
+                nl = stmt[m.end():]
+                if nl: declares.append(nl)
                 return ''.join(declares)
         ##
         return stmt

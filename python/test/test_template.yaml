@@ -549,6 +549,20 @@
 
 
 ##
+- name:         template_args2
+  desc:         empty '#@ARGS'
+  input: |
+        <!DOCTYPE>
+        <?py #@ARGS ?>
+        <p>hello</p>
+
+  source: |6
+        _buf.extend(('''<!DOCTYPE>\n''', ));
+        
+        _buf.extend(('''<p>hello</p>\n''', ));
+
+
+##
 - name:         arraybuffertemplate1
   desc:         ArrayBufferTemplate class
   disabled:     true
