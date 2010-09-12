@@ -1040,6 +1040,82 @@ Module {{,tenjin.helpers.html,}} provides HTML specific helper functions.
 
 
 
+.$$ Safe Template		| safe-template
+
+Tenjin provides SafeTemplate class which enforces HTML escape.
+
+.* With SafeTemplate class, {{,#{},}} is not allowed. Only {{,${},}} is available.
+.* Use {{,${SafeStr(x)},}} instead of {{,#{x},}}.
+
+.? safe-test.pyhtml
+.-------------------- test_safe/safe-test.pyhtml
+<?py #@ARGS var1, var2 ?>
+var1 = ${var1}
+var2 = ${var2}
+SafeStr(var1) = ${{{*SafeStr(*}}var1{{*)*}}}
+.--------------------
+
+.? main.py
+.-------------------- test_safe/main.py
+## import safe_escape() and SafeStr class
+import tenjin
+from tenjin.helpers import to_str, {{*safe_escape*}}, {{*SafeStr*}}
+
+## set SafeTemplaet class as default template class
+## (or pass templateclass=tenjin.SafeTemplate to Engine())
+{{*tenjin.Engine.templateclass = tenjin.SafeTemplate*}}
+
+## if you want NOT escape a certain value, wrap by SafeStr
+context = {
+  'var1': '<b>Hello</b>',
+  'var2': {{*SafeStr(*}}'<b>Hello</b>'{{*)*}},
+}
+
+## render template
+engine = tenjin.Engine()
+output = engine.render('safe-test.pyhtml', context)
+print(output)
+.--------------------
+
+.? Result
+.==================== test_safe/result.output
+$ python main.py
+var1 = &lt;b&gt;Hello&lt;/b&gt;
+var2 = {{*<b>Hello</b>*}}
+SafeStr(var1) = {{*<b>Hello</b>*}}
+
+.====================
+
+tenjin.SafePreprocessor is also provided.
+If you want to use it, pass {{,preprocessor=tenjin.SafePreprocessor,}} to {{,tenjin.Engine(),}} as keyword argument, or set SafePreprocessor as default preprocessor class.
+
+.--------------------
+## set default preprocessor class
+tenjin.Engine.preprocess = tenjin.SafePreprocessor
+.--------------------
+
+SafeTemplate class uses safe_escape() instead of escape().
+You can see it by {{,--safe,}} option for pytenjin command.
+
+.==================== test_safe/result2.output
+$ pytenjin -sb {{*--safe*}} safe-test.pyhtml
+var1 = _context.get('var1'); var2 = _context.get('var2'); 
+_buf.extend(('''var1 = ''', {{*safe_escape*}}(to_str(var1)), '''
+var2 = ''', {{*safe_escape*}}(to_str(var2)), '''
+SafeStr(var1) = ''', {{*safe_escape*}}(to_str(SafeStr(var1))), '''\n''', ));
+.====================
+
+Here is the definition of safe_escape(). It is very simple and you can customize it freely.
+
+.--------------------
+def safe_escape(s):
+    if isinstance(s, SafeStr):
+        return s.value
+    return escape(s)
+.--------------------
+
+
+
 .$$ Nested Layout Template	| nested-layout-template
 
 It is able to nest several layout template files.

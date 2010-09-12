@@ -82,6 +82,8 @@
           <a href="#advanced-features">Advanced Features</a>
 
           <ul>
+            <li><a href="#safe-template">Safe Template</a></li>
+
             <li><a href="#nested-layout-template">Nested Layout Template</a></li>
 
             <li><a href="#capturing">Capturing</a></li>
@@ -1209,7 +1211,86 @@ u'hoge'
       <br>
       <a name="advanced-features" id="advanced-features"></a>
 
-      <h2 class="section1">Advanced Features</h2><a name="nested-layout-template" id="nested-layout-template"></a>
+      <h2 class="section1">Advanced Features</h2><a name="safe-template" id="safe-template"></a>
+
+      <h3 class="section2">Safe Template</h3>
+
+      <p>Tenjin provides SafeTemplate class which enforces HTML escape.</p>
+
+      <ul type="disc">
+        <li>With SafeTemplate class, <code>#{}</code> is not allowed. Only <code>${}</code> is available.</li>
+
+        <li>Use <code>${SafeStr(x)}</code> instead of <code>#{x}</code>.</li>
+      </ul><a name="test_safe/safe-test.pyhtml"></a>
+
+      <div class="program_caption">
+        safe-test.pyhtml
+      </div>
+      <pre class="program">
+&lt;?py #@ARGS var1, var2 ?&gt;
+var1 = ${var1}
+var2 = ${var2}
+SafeStr(var1) = ${<strong>SafeStr(</strong>var1<strong>)</strong>}
+</pre><a name="test_safe/main.py"></a>
+
+      <div class="program_caption">
+        main.py
+      </div>
+      <pre class="program">
+## import safe_escape() and SafeStr class
+import tenjin
+from tenjin.helpers import to_str, <strong>safe_escape</strong>, <strong>SafeStr</strong>
+
+## set SafeTemplaet class as default template class
+## (or pass templateclass=tenjin.SafeTemplate to Engine())
+<strong>tenjin.Engine.templateclass = tenjin.SafeTemplate</strong>
+
+## if you want NOT escape a certain value, wrap by SafeStr
+context = {
+  'var1': '&lt;b&gt;Hello&lt;/b&gt;',
+  'var2': <strong>SafeStr(</strong>'&lt;b&gt;Hello&lt;/b&gt;'<strong>)</strong>,
+}
+
+## render template
+engine = tenjin.Engine()
+output = engine.render('safe-test.pyhtml', context)
+print(output)
+</pre><a name="test_safe/result.output"></a>
+
+      <div class="terminal_caption">
+        Result
+      </div>
+      <pre class="terminal">
+$ python main.py
+var1 = &amp;lt;b&amp;gt;Hello&amp;lt;/b&amp;gt;
+var2 = <strong>&lt;b&gt;Hello&lt;/b&gt;</strong>
+SafeStr(var1) = <strong>&lt;b&gt;Hello&lt;/b&gt;</strong>
+
+</pre>
+
+      <p>tenjin.SafePreprocessor is also provided. If you want to use it, pass <code>preprocessor=tenjin.SafePreprocessor</code> to <code>tenjin.Engine()</code> as keyword argument, or set SafePreprocessor as default preprocessor class.</p>
+      <pre class="program">
+## set default preprocessor class
+tenjin.Engine.preprocess = tenjin.SafePreprocessor
+</pre>
+
+      <p>SafeTemplate class uses safe_escape() instead of escape(). You can see it by <code>--safe</code> option for pytenjin command.</p><a name="test_safe/result2.output"></a>
+      <pre class="terminal">
+$ pytenjin -sb <strong>--safe</strong> safe-test.pyhtml
+var1 = _context.get('var1'); var2 = _context.get('var2'); 
+_buf.extend(('''var1 = ''', <strong>safe_escape</strong>(to_str(var1)), '''
+var2 = ''', <strong>safe_escape</strong>(to_str(var2)), '''
+SafeStr(var1) = ''', <strong>safe_escape</strong>(to_str(SafeStr(var1))), '''\n''', ));
+</pre>
+
+      <p>Here is the definition of safe_escape(). It is very simple and you can customize it freely.</p>
+      <pre class="program">
+def safe_escape(s):
+    if isinstance(s, SafeStr):
+        return s.value
+    return escape(s)
+</pre><br>
+      <a name="nested-layout-template" id="nested-layout-template"></a>
 
       <h3 class="section2">Nested Layout Template</h3>
 
