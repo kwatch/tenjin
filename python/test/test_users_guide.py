@@ -125,6 +125,9 @@ class UsersGuideTest(object):
     def test_retrieve(self):
         self._test()
 
+    def test_safe(self):
+        self._test()
+
     def test_syntax_check(self):
         self._test()
 
