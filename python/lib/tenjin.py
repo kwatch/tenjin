@@ -738,15 +738,10 @@ class Template(object):
         if not rexp:   # make re.compile() to be lazy (because it is heavy weight)
             rexp = Template._quote_rexp = re.compile(r"(['\\\\])")
         text = rexp.sub(r"\\\1", text)
-        if not encode_newline or text[-1] != "\n":
-            buf.append(text)
-            buf.append("''', ")
-        elif len(text) >= 2 and text[-2] == "\r":
-            buf.append(text[0:-2])
-            buf.append("\\r\\n''', ")
-        else:
-            buf.append(text[0:-1])
-            buf.append("\\n''', ")
+        if   not encode_newline:    buf.extend((text,       "''', "))
+        elif text.endswith("\r\n"): buf.extend((text[0:-2], "\\r\\n''', "))
+        elif text.endswith("\n"):   buf.extend((text[0:-1], "\\n''', "))
+        else:                       buf.extend((text,       "''', "))
 
     _add_text = add_text
 
