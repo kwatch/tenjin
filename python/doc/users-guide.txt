@@ -933,7 +933,7 @@ Module {{,tenjin.helpers,}} provides basic helper functions.
 
 Module {{,tenjin.helpers.html,}} provides HTML specific helper functions.
 
-.: escape({{/str/}}), escape_xml({{/str/}})
+.: escape({{/str/}}), escape_html({{/str/}})
 	Escapes HTML special characters. Same as {{,tejin.helpers.escape(),}}.
 
 .: checked({{/value/}})
