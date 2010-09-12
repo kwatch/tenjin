@@ -581,9 +581,9 @@ class Template(object):
     def compile_stmt_pattern(pi):
         return re.compile(r'<\?%s( |\t|\r?\n)(.*?) ?\?>([ \t]*\r?\n)?' % pi, re.S)
 
-    STMT_PATTERN = None
-
     compile_stmt_pattern = staticmethod(compile_stmt_pattern)
+
+    STMT_PATTERN = None
 
     def stmt_pattern(self):
         pat = Template.STMT_PATTERN
@@ -592,8 +592,7 @@ class Template(object):
         return pat
 
     def parse_stmts(self, buf, input):
-        if not input:
-            return
+        if not input: return
         rexp = self.stmt_pattern()
         is_bol = True
         index = 0
@@ -679,8 +678,7 @@ class Template(object):
             buf.append(''.join(buf2))
 
     def _parse_exprs(self, buf, input, is_bol=False):
-        if not input:
-            return
+        if not input: return
         if self._spaces:
             buf.append(self._spaces)
         self.start_text_part(buf)
@@ -734,8 +732,7 @@ class Template(object):
         return rexp.sub(r"\\\1", text)
 
     def add_text(self, buf, text, encode_newline=False):
-        if not text:
-            return;
+        if not text: return
         if self.encoding and python2:
             buf.append("u'''")
         else:
@@ -749,8 +746,7 @@ class Template(object):
     _add_text = add_text
 
     def add_expr(self, buf, code, flag_escape=None):
-        if not code or code.isspace():
-            return
+        if not code or code.isspace(): return
         if flag_escape is None:
             buf.append(code); buf.append(", ");
         elif flag_escape is False:
