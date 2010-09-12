@@ -929,6 +929,28 @@ class Template(object):
 
 
 ##
+## secure template class
+##
+class SafeTemplate(Template):
+    """Deny '#{}' and allow only '${}'. Use '${SafeStr(x)}' instead of '#{x}'.
+       usage.
+         import tenjin
+         from tenjin.helpers import *
+         from tenjin.helpers.html import SafeTemplate, to_html
+         tenjin.Engine.templateclass = SafeTemplate
+         engine = tenjin.Engine()
+         output = engine.render('hello.pyhtml', {'value':'<>&"'})
+    """
+    escapefunc = 'safe_escape'
+
+    def get_expr_and_escapeflag(self, match):
+        if match.group(1) == '#':
+            msg = "'#{%s}': '#{}' is not available in %s."
+            raise TemplateSyntaxError(msg % (match.group(2), self.__class__.__name__))
+        return match.group(2), True
+
+
+##
 ## preprocessor class
 ##
 
@@ -959,6 +981,19 @@ class Preprocessor(Template):
             return
         code = "_decode_params(%s)" % code
         Template.add_expr(self, buf, code, flag_escape)
+
+
+class SafePreprocessor(Preprocessor):
+    """ex.
+         tenjin.Engine.preprocessor = tenjin.SafePreprocessor
+    """
+    escapefunc = 'safe_escape'
+
+    def get_expr_and_escapeflag(self, match):
+        if match.group(1) == '#':
+            msg = "'#{%s}': '#{{}}' is not available in %s."
+            raise TemplateSyntaxError(msg % (match.group(2), self.__class__.__name__))
+        return match.group(2), True
 
 
 ##
