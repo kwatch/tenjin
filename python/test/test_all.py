@@ -15,6 +15,7 @@ def main(verbose):
         "test_template",
         "test_engine",
         "test_preprocess",
+        "test_safe",
         "test_htmlhelper",
         "test_main",
         "test_encoding",
