@@ -229,7 +229,7 @@ from oktest import ok, run
 
 python3 = sys.version_info[0] == 3
 
-try:    # 2.6 or later
+try:    # Python 2.6 or later
     from subprocess import Popen, PIPE
     def _popen3(command):
         p = Popen(command, shell=True, close_fds=True,
@@ -317,7 +317,7 @@ from oktest import ok, run
 
 python3 = sys.version_info[0] == 3
 
-try:    # 2.6 or later
+try:    # Python 2.6 or later
     from subprocess import Popen, PIPE
     def _popen(command):
         sout = Popen(command, shell=True, stdout=PIPE).stdout

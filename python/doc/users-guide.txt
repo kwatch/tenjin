@@ -1095,14 +1095,15 @@ tenjin.Engine.preprocess = tenjin.SafePreprocessor
 .--------------------
 
 SafeTemplate class uses safe_escape() instead of escape().
-You can see it by {{,--safe,}} option for pytenjin command.
+You can see it by {{,--safe,}} option for pytenjin command.{{({{,${SafeStr(var1)},}} is converted into Python code which does't use safe_escape() for performance reason.)}}
 
 .==================== test_safe/result2.output
 $ pytenjin -sb {{*--safe*}} safe-test.pyhtml
 var1 = _context.get('var1'); var2 = _context.get('var2'); 
 _buf.extend(('''var1 = ''', {{*safe_escape*}}(to_str(var1)), '''
 var2 = ''', {{*safe_escape*}}(to_str(var2)), '''
-SafeStr(var1) = ''', {{*safe_escape*}}(to_str(SafeStr(var1))), '''\n''', ));
+SafeStr(var1) = ''', to_str(var1), '''\n''', ));
+.#SafeStr(var1) = ''', {{*safe_escape*}}(to_str(SafeStr(var1))), '''\n''', ));
 .====================
 
 Here is the definition of safe_escape(). It is very simple and you can customize it freely.

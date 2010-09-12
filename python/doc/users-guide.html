@@ -1274,13 +1274,13 @@ SafeStr(var1) = <strong>&lt;b&gt;Hello&lt;/b&gt;</strong>
 tenjin.Engine.preprocess = tenjin.SafePreprocessor
 </pre>
 
-      <p>SafeTemplate class uses safe_escape() instead of escape(). You can see it by <code>--safe</code> option for pytenjin command.</p><a name="test_safe/result2.output"></a>
+      <p>SafeTemplate class uses safe_escape() instead of escape(). You can see it by <code>--safe</code> option for pytenjin command.<sup>(<a href="#fnref:1" name="fnlink:1" id="fnlink:1">*1</a>)</sup></p><a name="test_safe/result2.output"></a>
       <pre class="terminal">
 $ pytenjin -sb <strong>--safe</strong> safe-test.pyhtml
 var1 = _context.get('var1'); var2 = _context.get('var2'); 
 _buf.extend(('''var1 = ''', <strong>safe_escape</strong>(to_str(var1)), '''
 var2 = ''', <strong>safe_escape</strong>(to_str(var2)), '''
-SafeStr(var1) = ''', <strong>safe_escape</strong>(to_str(SafeStr(var1))), '''\n''', ));
+SafeStr(var1) = ''', to_str(var1), '''\n''', ));
 </pre>
 
       <p>Here is the definition of safe_escape(). It is very simple and you can customize it freely.</p>
@@ -1289,7 +1289,15 @@ def safe_escape(s):
     if isinstance(s, SafeStr):
         return s.value
     return escape(s)
-</pre><br>
+</pre>
+
+      <div class="footnote">
+        <dl compact>
+          <dt>(<a name="fnref:1" href="#fnlink:1" id="fnref:1">*1</a>)</dt>
+
+          <dd><code>${SafeStr(var1)}</code> is converted into Python code which does't use safe_escape() for performance reason.</dd>
+        </dl>
+      </div><br>
       <a name="nested-layout-template" id="nested-layout-template"></a>
 
       <h3 class="section2">Nested Layout Template</h3>
@@ -2435,11 +2443,11 @@ _buf.extend(('''&lt;div&gt;
 
       <h3 class="section2">Template Inheritance</h3>
 
-      <p>Tenjin doesn't support Template Inheritance which Django template engine does. But you can emulate it by capturing<sup>(<a href="#fnref:1" name="fnlink:1" id="fnlink:1">*1</a>)</sup>. See <a href="#capturing">this section</a> for details.</p>
+      <p>Tenjin doesn't support Template Inheritance which Django template engine does. But you can emulate it by capturing<sup>(<a href="#fnref:2" name="fnlink:2" id="fnlink:2">*2</a>)</sup>. See <a href="#capturing">this section</a> for details.</p>
 
       <div class="footnote">
         <dl compact>
-          <dt>(<a name="fnref:1" href="#fnlink:1" id="fnref:1">*1</a>)</dt>
+          <dt>(<a name="fnref:2" href="#fnlink:2" id="fnref:2">*2</a>)</dt>
 
           <dd>Notice that capturing is useful but not so powerful than template inheritance.</dd>
         </dl>
