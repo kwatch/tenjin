@@ -376,7 +376,8 @@ if True:
         if 'checked'  in kwargs: kwargs['checked']  = kwargs.pop('checked')  and 'checked'  or None
         if 'selected' in kwargs: kwargs['selected'] = kwargs.pop('selected') and 'selected' or None
         if 'disabled' in kwargs: kwargs['disabled'] = kwargs.pop('disabled') and 'disabled' or None
-        return ''.join([' %s="%s"' % (k, helpers.html.escape_html(to_str(v))) for k, v in kwargs.items() if v])
+        escape_html = helpers.html.escape_html
+        return ''.join([ ' %s="%s"' % (k, escape_html(to_str(v))) for k, v in kwargs.items() if v ])
 
     def checked(expr):
         """return ' checked="checked"' if expr is true."""
