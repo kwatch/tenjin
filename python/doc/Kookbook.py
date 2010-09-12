@@ -291,7 +291,7 @@ class UsersGuideTest(object):
 """ % tname)
     buf.append(r"""
 if __name__ == '__main__':
-    run(UsersGuideTest)
+    run()
 """)
     return "".join(buf)
 
@@ -362,6 +362,6 @@ class ExamplesTest(object):
 """ % tname)
     buf.append(r"""
 if __name__ == '__main__':
-    run(ExamplesTest)
+    run()
 """)
     return "".join(buf)

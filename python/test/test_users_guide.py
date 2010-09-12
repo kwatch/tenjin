@@ -9,7 +9,7 @@ from oktest import ok, run
 
 python3 = sys.version_info[0] == 3
 
-try:    # 2.6 or later
+try:    # Python 2.6 or later
     from subprocess import Popen, PIPE
     def _popen3(command):
         p = Popen(command, shell=True, close_fds=True,
@@ -138,4 +138,4 @@ class UsersGuideTest(object):
         self._test()
 
 if __name__ == '__main__':
-    run(UsersGuideTest)
+    run()

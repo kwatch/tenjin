@@ -55,4 +55,4 @@ class ExamplesTest(object):
         self._test()
 
 if __name__ == '__main__':
-    run(ExamplesTest)
+    run()

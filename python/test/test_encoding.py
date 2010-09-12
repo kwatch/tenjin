@@ -157,4 +157,4 @@ class EncodingTest(object):
 
 
 if __name__ == '__main__':
-    run(EncodingTest)
+    run()

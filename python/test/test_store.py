@@ -247,4 +247,4 @@ class FragmentCacheTest(object):
 
 
 if __name__ == '__main__':
-    run(MemoryBaseStoreTest, FileBaseStoreTest, FragmentCacheTest)
+    run()

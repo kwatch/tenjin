@@ -713,4 +713,4 @@ class EngineTest(object):
 
 
 if __name__ == '__main__':
-    run(EngineTest)
+    run()

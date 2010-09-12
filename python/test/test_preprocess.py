@@ -58,4 +58,4 @@ class PreprocessTest(object):
 
 
 if __name__ == '__main__':
-    run(PreprocessTest)
+    run()
