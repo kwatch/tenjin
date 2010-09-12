@@ -55,6 +55,10 @@ class SafeTemplateTest(object):
             def f(): t.get_expr_and_escapeflag(m)
             ok (f).raises(tenjin.TemplateSyntaxError,
                           "'#{item}': '#{}' is not available in SafeTemplate.")
+        if "expr is 'SafeStr(x)' then returns 'x' instead of expr":
+            m = t.expr_pattern().search("<p>${SafeStr(foo())}</p>")
+            ret = t.get_expr_and_escapeflag(m)
+            ok (ret) == ('foo()', False)
 
     def test_FUNCTEST_of_convert(self):
         if "input contains '#{}' then raises error":
@@ -64,6 +68,9 @@ class SafeTemplateTest(object):
         if "converted then use 'safe_escape()' instead of 'escape()'":
             t = tenjin.SafeTemplate(input="<p>${item}</p>")
             ok (t.script) == "_buf.extend(('''<p>''', safe_escape(to_str(item)), '''</p>''', ));"
+        if "${SafeStr(...)} exists then skips to escape by safe_escape()":
+            t = tenjin.SafeTemplate(input="<p>${SafeStr(foo())}</p>")
+            ok (t.script) == "_buf.extend(('''<p>''', to_str(foo()), '''</p>''', ));"
 
     def test_FUNCTEST_of_render(self):
         if "rendered then avoid escape of SafeStr object":

@@ -953,10 +953,22 @@ class SafeTemplate(Template):
     escapefunc = 'safe_escape'
 
     def get_expr_and_escapeflag(self, match):
+        expr = match.group(2)
         if match.group(1) == '#':
             msg = "'#{%s}': '#{}' is not available in %s."
-            raise TemplateSyntaxError(msg % (match.group(2), self.__class__.__name__))
-        return match.group(2), True
+            raise TemplateSyntaxError(msg % (expr, self.__class__.__name__))
+        #return expr, True      # always escapes expresion value
+        global _safe_str_rexp
+        if not _safe_str_rexp:
+            _safe_str_rexp = re.compile(r'^\s*SafeStr\((.*)\)\s*$')  # or r'^SafeStr\([^\)]*\)$'
+        m = _safe_str_rexp.match(expr)
+        if m:
+            expr = m.group(1)
+            return expr, False    # skip escape
+        else:
+            return expr, True     # escapes by safe_escape()
+
+_safe_str_rexp = None
 
 
 ##
