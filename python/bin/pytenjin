@@ -65,12 +65,7 @@ class NoTextTemplate(tenjin.Template):
             return
         tenjin.Template.parse_exprs(self, buf, input, is_bol)
 
-    def after_convert(self, buf):
-        if self.postamble:
-            if not buf[-1].endswith("\n"):
-                buf.append("\n")
-            buf.append(self.postamble + "\n")
-        #block = self.parse_lines(buf)
+    def _arrange_indent(self, buf):
         buf2 = []
         for x in buf:
             buf2.extend(x.splitlines(True))

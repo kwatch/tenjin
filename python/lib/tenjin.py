@@ -566,9 +566,6 @@ class Template(object):
             if buf and not buf[-1].endswith("\n"):
                 buf.append("\n")
             buf.append(self.postamble + "\n")
-        block = self.parse_lines(buf)
-        buf[:] = []
-        self._join_block(block, buf, 0)
 
     def convert_file(self, filename):
         """Convert file into python script and return it.
@@ -653,6 +650,7 @@ class Template(object):
         rest = input[index:]
         if rest:
             self.parse_exprs(buf, rest)
+        self._arrange_indent(buf)
 
     def statement_hook(self, stmt):
         """expand macros and parse '#@ARGS' in a statement."""
@@ -876,6 +874,12 @@ class Template(object):
                 buf.append(line)
             else:
                 buf.append(indent + line.lstrip())
+
+    def _arrange_indent(self, buf):
+        """arrange indentation of statements in buf"""
+        block = self.parse_lines(buf)
+        buf[:] = []
+        self._join_block(block, buf, 0)
 
 
     def render(self, context=None, globals=None, _buf=None):
