@@ -107,9 +107,6 @@ class UsersGuideTest(object):
     def test_execute(self):
         self._test()
 
-    def test_flexibleindent(self):
-        self._test()
-
     def test_fragmentcache(self):
         self._test()
 
@@ -132,6 +129,9 @@ class UsersGuideTest(object):
         self._test()
 
     def test_syntaxerr(self):
+        self._test()
+
+    def test_trace(self):
         self._test()
 
 if __name__ == '__main__':

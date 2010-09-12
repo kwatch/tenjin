@@ -14,8 +14,6 @@ Table of Contents:
 
 Tenjin is a very fast and full-featured template engine implemented in pure Python.
 
-ATTENTION: pyTenjin will change some featrues in the next release. See {{<Planned Changes in the Next Relase|#planned-changes>}} section for details.
-
 
 
 .$$ Features	| features
@@ -42,7 +40,7 @@ ATTENTION: pyTenjin will change some featrues in the next release. See {{<Planne
 
 .$$ Install	| install
 
-pyTenjin supports Python 2.3 or later. Python 3 is also supported.
+pyTenjin supports Python 2.4 or later. Python 3 is also supported.
 
 You can install Tenjin by easy_install command.
 
@@ -226,14 +224,14 @@ Notation:
 .-------------------- test_010/views/page.pyhtml
 <h2>{{*${title}*}}</h2>
 <table>
-{{*<?py i = 0 ?>*}}
-{{*<?py for item in items: ?>*}}
-{{*<?py     i += 1 ?>*}}
-{{*<?py     klass = i % 2 and 'odd' or 'even' ?> *}}
+  {{*<?py i = 0 ?>*}}
+  {{*<?py for item in items: ?>*}}
+  {{*<?py     i += 1 ?>*}}
+  {{*<?py     klass = i % 2 and 'odd' or 'even' ?> *}}
   <tr class="{{*#{klass}*}}">
     <td>{{*${item}*}}</td>
   </tr>
-{{*<?py #endfor ?>*}}
+  {{*<?py #endfor ?>*}}
 </table>
 .--------------------
 
@@ -289,43 +287,38 @@ views/page.pyhtml - ok.
 
 You can write any Python statements or expression in yor template file, but there are several restrictions.
 
-.* {{*It is strongly recommended to close 'for', 'if', 'while', ... by corresponding '#endfor', '#endif', '#endwhile', and so on.*}} This restriction is not enabled in current release, but it will be enabled in the next release (1.0).
-.* Statement should be indented with 4 spaces. (This restriction will be removed in the next release. See {{<Flexible Indentation|#flexible-indentation>}} section for details.)
+.* {{*It is necessary to close 'for', 'if', 'while', ... by corresponding '#endfor', '#endif', '#endwhile', and so on.*}}
+   Notice that '#end' is almighty closer.
+.* {{*Indentation is not necessary*}} since version 1.0.
 .* Conditional expression of 'if', 'while', ... should be in a line.
 .* '#' (comment) after ':' or '#endXXX' are not allowed.
 
-.? NG examples
+.? Examples
 .--------------------
-## NG because 'for' is not closed by '#endfor'
-<ul>
-<?py for item in items: ?>
-  <li>${item}</li>
-<?py #end ?>
-</ul>
-
-## NG because indent is 2 spaces
+## [OK] Indentation is not necessary.
+<?py for x in nums: ?>
 <?py if x > 0: ?>
-<?py   if y > 0: ?>
-<?py     if z > 0: ?>
-<?py     #endif ?>
-<?py   #endif ?>
+<p>Positive.</p>
+<?py elif x < 0: ?>
+<p>Negative.</p>
+<?py else: ?>
+<p>Zero.</p>
 <?py #endif ?>
+<?py #endfor ?>
 
-## NG because conditional expression of 'if' is not in a line
+## [NG] conditional expression of 'if' is not in a line
 <?py if re.search(r'^\[(\w+)\]',?>
 <?py              line, re.M): ?>
 <p>matched.</p>
 <?py #endif ?>
 
-## NG because there is a comment after ':' and '#endfor'
+## [NG] there is a comment after ':' and '#endfor'
 <ul>
 <?py if item in items:   ## beginning of loop ?>
   <li>${item}</li>
 <?py #endfor             ## end of loop ?>
 </ul>
 .--------------------
-
-You may feel that indent restriction of Tenjin is strong and not convenient. If you feel so, see {{<Flexible Indentation|#flexible-indentation>}} section.
 
 
 
@@ -480,9 +473,9 @@ Tenjin supports nested layout template. See {{<Nested Layout Template|#nested-la
 
 .$$ Context Variables	| context-variables
 
-'{{,_context,}}' variable contains context dictionary which is passed from main program to template file.
+'{{,_context,}}' dictionary contains context data which are passed from main program into template file.
 
-Using '{{,_context,}}' dictionary, you can pass any data from template file to main program and layout template file.
+Using '{{,_context,}}' dictionary, you can pass any data from template file to main program or layout template file.
 
 .? views/_layout.pyhtml
 .-------------------- test_040/views/_layout.pyhtml
@@ -546,7 +539,7 @@ $ python main.py
 
 .$$ Template Arguments		| template-arguments
 
-It is recommended to declare context variables in your template files for readability reason.
+For readability, it is recommended to declare context variables in your template files.
 
 .? views/page.pyhtml
 .-------------------- test_050/views/page.pyhtml
@@ -554,14 +547,14 @@ It is recommended to declare context variables in your template files for readab
 <?py _context['page_title'] = 'Tenjin: Layout Template Example' ?>
 <h2>${title}</h2>
 <table>
-<?py i = 0 ?>
-<?py for item in items: ?>
-<?py     i += 1 ?>
-<?py     klass = i % 2 and 'odd' or 'even' ?> 
+  <?py i = 0 ?>
+  <?py for item in items: ?>
+  <?py     i += 1 ?>
+  <?py     klass = i % 2 and 'odd' or 'even' ?> 
   <tr class="#{klass}">
     <td>${item}</td>
   </tr>
-<?py #endfor ?>
+  <?py #endfor ?>
 </table>
 .--------------------
 
@@ -1043,28 +1036,6 @@ Module {{,tenjin.helpers.html,}} provides HTML specific helper functions.
 
 
 
-
-.$$ Planned Changes in the Next Release (1.0.0)	| planned-changes
-
-This section describes planned changes in the next release (1.0.0).
-
-.* {{*Indentation will be flexible.*}}
-	In other words, {{<http://gist.github.com/129297>}} will be the default template class.
-	See {{<this section|#flexible-indentation>}} for details.
-
-.* {{*'if', 'for', 'while', ... should be closed by corresponding '#endif', '#endfor', '#endwhile', and so on.*}}
-	This restriction is necessary to allow flexible indentation.
-
-.* {{*tenjin.GaeMemcacheCacheStorage will be moved to tenjin.gae module.*}}
-	Currently both tenjin.GaeMemcacheCacheStorage and tenjin.gae.GaeMemcacheCacheStorage are available. In the next release the former will be not available. Therefore it is recommended to use the latter instead the former.
-
-.* {{*(Maybe) '_buf.extend(...)' will be changed to '_extend = _buf.extend; _extend(...)'.*}}
-	This change will make Tenjin a little faster (about 2 or 3 %).
-	But this may not be introduced because performance gain is very small{{(In Tenjin, string concatenation is not a bottleneck.)}}.
-
-
-
-
 .$ Advanced Features		| advanced-features
 
 
@@ -1165,21 +1136,21 @@ It is able to capture parital of template. It can be poor-man's alternative of D
 <html>
   <body>
     <div id="header-part">
-{{*<?py if not captured_as('header'): ?>*}}
+    {{*<?py if not captured_as('header'): ?>*}}
       <h1>My Great Blog</h1>
-{{*<?py #endif ?>*}}
+    {{*<?py #endif ?>*}}
     </div>
     <div id="main-content">
 #{_content}
     </div>
     <div id="sidebar-part">
-{{*<?py if not captured_as('sidebar'): ?>*}}
+    {{*<?py if not captured_as('sidebar'): ?>*}}
       <h3>Links</h3>
       <ul>
         <a href="http://google.com/">Google</a>
         <a href="http://yahoo.com/">Yahoo!</a>
       </ul>
-{{*<?py #endif ?>*}}
+    {{*<?py #endif ?>*}}
     </div>
   </body>
 </html>
@@ -1297,15 +1268,15 @@ You can cache a certain part of HTML to improve performance. This is called as F
 .-------------------- test_fragmentcache/views/items.pyhtml
 <?py #@ARGS get_items ?>
 <div>
-{{*<?py # fragment cache with key ('items/1') and lifetime (60sec) ?>*}}
-{{*<?py if not_cached('items/1', 60): ?>*}}
+  {{*<?py # fragment cache with key ('items/1') and lifetime (60sec) ?>*}}
+  {{*<?py if not_cached('items/1', 60): ?>*}}
   <ul>
-<?py     for item in get_items(): ?>
+    <?py     for item in get_items(): ?>
     <li>${item}</li>
-<?py     #endfor ?>
+    <?py     #endfor ?>
   </ul>
-{{*<?py #endif ?>*}}
-{{*<?py echo_cached() ?>*}}
+  {{*<?py #endif ?>*}}
+  {{*<?py echo_cached() ?>*}}
 </div>
 .--------------------
 
@@ -1642,9 +1613,9 @@ For example, you can expand loop in advance to improve performance.
 {{*<?PY codes.sort() ?>*}}
 <select name="state">
   <option value="">-</option>
-{{*<?PY for code in codes: ?>*}}
+  {{*<?PY for code in codes: ?>*}}
   <option value="{{*#{{code}}*}}"#{chk.get('{{*#{{code}}*}}', '')}>{{*${{states[code]}}*}}</option>
-{{*<?PY #endfor ?>*}}
+  {{*<?PY #endfor ?>*}}
 </select>
 .--------------------
 
@@ -1769,9 +1740,9 @@ Command-line option '-s' converts template file into Python script code.
 .? example.pyhtml
 .-------------------- test_convert/example.pyhtml
 <ul>
-<?py for item in items: ?>
+  <?py for item in items: ?>
   <li>${item}</li>
-<?py #endfor ?>
+  <?py #endfor ?>
 </ul>
 .--------------------
 
@@ -1811,14 +1782,14 @@ Assume the following template file.
 .? example.pyhtml
 .-------------------- test_retrieve/example.pyhtml
 <table>
-<?py i = 0 ?>
-<?py for item in items: ?>
-<?py     i += 1 ?>
+  <?py i = 0 ?>
+  <?py for item in items: ?>
+  <?py     i += 1 ?>
   <tr>
     <td>#{i}</td>
     <td>${item}</td>
   </tr>
-<?py #endfor ?>
+  <?py #endfor ?>
 </table>
 .--------------------
 
@@ -1908,9 +1879,9 @@ You can execute template file in command-line.
 .-------------------- test_execute/example.pyhtml
 <?py items = ['<AAA>', 'B&B', '"CCC"'] ?>
 <ul>
-<?py for item in items: ?>
+  <?py for item in items: ?>
   <li>${item}</li>
-<?py #endfor ?>
+  <?py #endfor ?>
 </ul>
 .--------------------
 
@@ -1933,9 +1904,9 @@ You can specify context data with command-line option '{{,-c,}}'.
 .? example.pyhtml
 .-------------------- test_context/example.pyhtml
 <ul>
-<?py for item in items: ?>
+  <?py for item in items: ?>
   <li>${item}</li>
-<?py #endfor ?>
+  <?py #endfor ?>
 </ul>
 .--------------------
 
@@ -2025,7 +1996,7 @@ File 'syntaxerr.pyhtml':
 
 Result:
 .==================== test_syntaxerr/result.output
-$ pytenjin -z syntaxerr.pyhtml
+$ pytenjin {{*-z*}} syntaxerr.pyhtml
 syntaxerr.pyhtml:4:12: invalid syntax
   4:         else
                 ^
@@ -2071,149 +2042,135 @@ If you got UnicodeDecodeError, you should do the following solutions.
    .--------------------
 
 
+.$$ NameError: global name 'values' is not defined
+
+Assume the following template file.
+
+.--------------------
+<?py
+
+values = {'A': 10, 'B': 20}
+
+def getval(key):
+  return values.get(key, None)
+#end
+
+?>
+<p>getval('A') = ${getval('A')}</p>
+.--------------------
+
+This will raise NameError, such as:
+
+.====================
+$ py ex.py
+Traceback (most recent call last):
+  File "ex.py", line 5, in <module>
+    output = engine.render('ex.pyhtml', context)
+  File "tenjin.py", line 1582, in render
+    content  = template.render(context, globals)
+  File "tenjin.py", line 941, in render
+    exec(self.bytecode, globals, locals)
+  File "ex.pyhtml", line 10, in <module>
+    <p>getval('A') = ${getval('A')}</p>
+  File "ex.pyhtml", line 6, in getval
+    return values.get(key, None)
+NameError: global name 'values' is not defined
+.====================
+
+This is a restriction of Tenjin.
+
+Workaround is to pass values as default value of argument.
+
+.--------------------
+<?py
+
+values = {'A': 10, 'B': 20}
+
+def getval(key, {{*_values=values*}}):
+  return {{*_values*}}.get(key, None)
+#end
+
+?>
+<p>getval('A') = ${getval('A')}</p>
+.--------------------
+
+This works very well.
+
+
 
 .$ Tips		    | tips
 
 
+.$$ Trace Templates	    | tips-trace
 
-.$$ Flexible Indentation	| flexible-indentation
+If you pass '{{,trace=True,}}' to tenjin.Template class or tenjin.Engine class, Template class will print template file name at the beginning and end of output.
 
-You may want Tenjin to be more flexible about indentation of statements.
-For example, You may not like such as:
+For example:
 
-.--------------------
-<html>
-  <body>
-    <div id="main-content">
-{{*<?py if items: ?>*}}
-      <table>
-        <tbody>
-    {{*<?py i = 0 ?>*}}
-    {{*<?py for item in items: ?>*}}
-    {{*<?py     i += 1 ?>*}}
-          <tr>
-            <td>${i}</td>
-        {{*<?py if item: ?>*}}
-            <td>${item}</td>
-        {{*<?py else: ?>*}}
-            <td>-</td>
-        {{*<?py #endif ?>*}}
-          </tr>
-    {{*<?py #endfor ?>*}}
-        </tbody>
-      </table>
-{{*<?py #endif ?>*}}
-    </div>
-  </body>
-</html>
-.--------------------
-
-And you may prefer the following:
-
-.? File 'flexibleindent.pyhtml':
-.-------------------- test_flexibleindent/flexibleindent.pyhtml
-<html>
-  <body>
-    <div id="main-content">
-      {{*<?py if items: ?>*}}
-      <table>
-        <tbody>
-          {{*<?py i = 0 ?>*}}
-          {{*<?py for item in items: ?>*}}
-          {{*<?py   i += 1 ?>*}}
-          <tr>
-            <td>${i}</td>
-            {{*<?py if item: ?>*}}
-            <td>${item}</td>
-            {{*<?py else: ?>*}}
-            <td>-</td>
-            {{*<?py #endif ?>*}}
-          </tr>
-        {{*<?py #endfor ?>*}}
-        </tbody>
-      </table>
-      {{*<?py #endif ?>*}}
-    </div>
-  </body>
-</html>
-.--------------------
-
-If you want Tenjin to be more flexible about indentation, try {{<http://gist.github.com/129297>}}.
-Save this code as 'my_template.py' and try the following:
-
-.? File 'flexibleindent.py':
-.-------------------- test_flexibleindent/flexibleindent.py
+.? trace-example.py
+.-------------------- test_trace/trace-example.py
 import tenjin
 from tenjin.helpers import *
-{{*from my_template import MyTemplate*}}
-{{*tenjin.Engine.templateclass = MyTemplate*}}
-
-import sys
-template_name = len(sys.argv) > 1 and sys.argv[1] or 'flexibleindent.pyhtml'
-engine = tenjin.Engine()
-print("-------------------- script")
-print(engine.get_template(template_name).script)
-print("-------------------- html")
-html = engine.render(template_name, {'items': ['AAA', None, 'CCC']})
-print(html)
+engine = tenjin.Engine(layout='layout.pyhtml', {{*trace=True*}})
+output = engine.render('main.pyhtml', {'items': ['A','B','C']})
+print(output)
 .--------------------
 
-.? Result:
-.==================== test_flexibleindent/result.output
-$ python flexibleindent.py flexibleindent.pyhtml
--------------------- script
-_buf.extend(('''<html>
-  <body>
-    <div id="main-content">\n''', ));
-{{*if items:*}}
-    _buf.extend(('''      <table>
-        <tbody>\n''', ));
-    {{*i = 0*}}
-    {{*for item in items:*}}
-        {{*i += 1*}}
-        _buf.extend(('''          <tr>
-            <td>''', escape(to_str(i)), '''</td>\n''', ));
-        {{*if item:*}}
-            _buf.extend(('''            <td>''', escape(to_str(item)), '''</td>\n''', ));
-        {{*else:*}}
-            _buf.extend(('''            <td>-</td>\n''', ));
-        {{*#endif*}}
-        _buf.extend(('''          </tr>\n''', ));
-    {{*#endfor*}}
-    _buf.extend(('''        </tbody>
-      </table>\n''', ));
-{{*#endif*}}
-_buf.extend(('''    </div>
-  </body>
-</html>\n''', ));
+Will print:
 
--------------------- html
+.==================== test_trace/result.output
+$ python trace-example.py
+{{*<!-- ***** begin: layout.pyhtml ***** -->*}}
 <html>
   <body>
-    <div id="main-content">
-      <table>
-        <tbody>
-          <tr>
-            <td>1</td>
-            <td>AAA</td>
-          </tr>
-          <tr>
-            <td>2</td>
-            <td>-</td>
-          </tr>
-          <tr>
-            <td>3</td>
-            <td>CCC</td>
-          </tr>
-        </tbody>
-      </table>
+    <div class="content">
+{{*<!-- ***** begin: main.pyhtml ***** -->*}}
+<ul>
+  <li>A</li>
+  <li>B</li>
+  <li>C</li>
+</ul>
+{{*<!-- ***** end: main.pyhtml ***** -->*}}
     </div>
   </body>
 </html>
+{{*<!-- ***** end: layout.pyhtml ***** -->*}}
 
 .====================
 
-NOTE: MyTemplate will be the default template class in the next release (1.0.0).
+This feature is very useful to specify template file from HTML output.
+
+If you want to enable this always, set tenjin.Engine.trace to True.
+
+.--------------------
+## trace is alwasy enabled
+tenjin.Engine.trace = True
+.--------------------
+
+
+.#+++
+
+.-------------------- test_trace/layout.pyhtml
+<?py #@ARGS _content ?>
+<html>
+  <body>
+    <div class="content">
+    <?py echo(_content) ?>
+    </div>
+  </body>
+</html>
+.--------------------
+
+.-------------------- test_trace/main.pyhtml
+<?py #@ARGS items ?>
+<ul>
+  <?py for item in items: ?>
+  <li>${item}</li>
+  <?py #end ?>
+</ul>
+.--------------------
+
+.#---
 
 
 
@@ -2423,12 +2380,22 @@ _buf.extend(('''<div>
 
 
 
-.$$ Template Inheritance	| template-inheritance
+.$$ Template Inheritance	| tips-template-inheritance
 
 Tenjin doesn't support Template Inheritance which Django template engine does.
 But you can emulate it by capturing{{(Notice that capturing is useful but not so powerful than template inheritance.)}}.
 See {{<this section|#capturing>}} for details.
 
+
+.$$ Report Full Path Name of Template File  | tips-fullpath
+
+If you set tenjin.Engine.prefer_fullpath to True, Tenjin will use full-path name of template file.
+This affects to error reporting. You can get full path name of template file on error.
+
+.--------------------
+## report full-path name of template file when error raised
+tenjin.Engine.prefer_fullpath = True
+.--------------------
 
 
 .#.$ References
