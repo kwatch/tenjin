@@ -1633,5 +1633,4 @@ gae = _create_module('tenjin.gae')
 gae.GaeMemcacheCacheStorage = GaeMemcacheCacheStorage
 gae.GaeMemcacheStore        = GaeMemcacheStore
 gae.init = init
-del GaeMemcacheStore, init
-#del GaeMemcacheCacheStorage    # since 1.0.0
+del GaeMemcacheStore, GaeMemcacheCacheStorage, init
