@@ -179,3 +179,10 @@ def oktest(c):
     """copy oktest.py into test directory"""
     original = os.path.expanduser("~/src/oktest/python/lib/oktest.py")
     cp_p(original, 'test')
+
+
+@recipe
+def follow(c):
+    system("git co exp-extend")
+    system("git rebase python")
+    system("git co python")
