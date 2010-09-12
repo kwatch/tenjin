@@ -57,6 +57,8 @@ class HtmlHelperTest(object):
         s = """FOO\n    BAR\nBA     Z\n"""
         expected = "FOO<br />\n &nbsp; &nbsp;BAR<br />\nBA &nbsp; &nbsp; Z<br />\n"
         ok (text2html(s)) == expected
+        expected = "FOO<br />\n    BAR<br />\nBA     Z<br />\n"
+        ok (text2html(s, False)) == expected
 
     def test_nv(self):
         nv = tenjin.helpers.html.nv

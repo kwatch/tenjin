@@ -397,11 +397,13 @@ if True:
             return ''
         return text.replace('\n', '<br />\n')
 
-    def text2html(text, _nl2br=nl2br):
+    def text2html(text, use_nbsp=True):
         """(experimental) escape xml characters, replace "\n" to "<br />\n", and return it."""
         if not text:
             return ''
-        return _nl2br(helpers.html.escape_html(text).replace('  ', ' &nbsp;'))
+        s = helpers.html.escape_html(text)
+        if use_nbsp: s = s.replace('  ', ' &nbsp;')
+        return helpers.html.nl2br(s)
 
     def nv(name, value, sep=None, **kwargs):
         """(experimental) Build name and value attributes.
