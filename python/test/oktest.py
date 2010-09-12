@@ -3,7 +3,7 @@
 ###
 ### oktest.py -- new style test utility
 ###
-### $Release: 0.4.0 $
+### $Release: 0.5.0 $
 ### $Copyright: copyright(c) 2010 kuwata-lab.com all rights reserved $
 ### $License: MIT License $
 ###
@@ -22,6 +22,11 @@ if python2:
         return isinstance(obj, (types.TypeType, types.ClassType))
     def _func_firstlineno(func):
         return func.im_func.func_code.co_firstlineno
+    def _read_file(fname):
+        f = open(fname)
+        s = f.read()
+        f.close()
+        return s
 if python3:
     def _is_string(val):
         return isinstance(val, (str, bytes))
@@ -29,6 +34,13 @@ if python3:
         return isinstance(obj, (type, ))
     def _func_firstlineno(func):
         return func.__code__.co_firstlineno
+    def _read_file(fname, encoding='utf-8'):
+        #with open(fname, encoding=encoding) as f:
+        #    s = f.read()
+        f = open(fname, encoding=encoding)
+        s = f.read()
+        f.close()
+        return s
 
 def _get_location(depth=0):
     frame = sys._getframe(depth+1)
@@ -467,9 +479,7 @@ class BaseReporter(Reporter):
             self._lines = {}
         if file not in self._lines:
             if not os.path.isfile(file): return None
-            f = open(file)
-            s = f.read()
-            f.close()
+            s = _read_file(file)
             self._lines[file] = s.splitlines(True)
         return self._lines[file][line-1]
 
@@ -783,28 +793,23 @@ def using(klass):
     return Using(klass)
 
 
-if __name__ == '__main__':
+##
+## undocumented
+##
 
-    class MyTest(object):
-        def before(self):
-            self.L = [10, 20, 30]
-        def test_ex1(self):
-            ok (len(self.L)) == 3
-            ok (sum(self.L)) == 60
-        def test_ex2(self):
-            ok (self.L[-1]) > 31
+def flatten(arr, type=(list, tuple)):
+    L = []
+    for x in arr:
+        if isinstance(x, type):
+            L.extend(flatten(x))
+        else:
+            L.append(x)
+    return L
 
-    run(MyTest)
-
-    import unittest
-    class MyTestCase(unittest.TestCase):
-        def setUp(self):
-            self.L = [10, 20, 30]
-        def test_ex1(self):
-            ok (len(self.L)) == 3
-            ok (sum(self.L)) == 60
-        def test_ex2(self):
-            ok (self.L[-1]) > 31
-
-    #unittest.main()
-    run(MyTestCase)
+def rm_rf(*fnames):
+    for fname in flatten(fnames):
+        if os.path.isfile(fname):
+            os.unlink(fname)
+        elif os.path.isdir(fname):
+            from shutil import rmtree
+            rmtree(fname)
