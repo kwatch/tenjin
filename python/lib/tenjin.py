@@ -726,6 +726,13 @@ class Template(object):
 
     _quote_rexp = None
 
+    def _quote_text(self, text):
+        #return re.sub(r"(['\\\\])", r"\\\1", text)
+        rexp = Template._quote_rexp
+        if not rexp:   # make re.compile() to be lazy (because it is heavy weight)
+            rexp = Template._quote_rexp = re.compile(r"(['\\\\])")
+        return rexp.sub(r"\\\1", text)
+
     def add_text(self, buf, text, encode_newline=False):
         if not text:
             return;
@@ -733,11 +740,7 @@ class Template(object):
             buf.append("u'''")
         else:
             buf.append("'''")
-        #text = re.sub(r"(['\\\\])", r"\\\1", text)
-        rexp = Template._quote_rexp
-        if not rexp:   # make re.compile() to be lazy (because it is heavy weight)
-            rexp = Template._quote_rexp = re.compile(r"(['\\\\])")
-        text = rexp.sub(r"\\\1", text)
+        text = self._quote_text(text)
         if   not encode_newline:    buf.extend((text,       "''', "))
         elif text.endswith("\r\n"): buf.extend((text[0:-2], "\\r\\n''', "))
         elif text.endswith("\n"):   buf.extend((text[0:-1], "\\n''', "))
