@@ -225,6 +225,14 @@ class Main(object):
             properties['templateclass'] = NoTextTemplate
             properties['noexpr'] = True
 
+        ## '--safe' option
+        if properties.get('safe') == True:
+            properties.pop('safe')
+            tenjin.Engine.templateclass = tenjin.SafeTemplate
+            #if action == 'preprocess' or options.get('P'):
+            if properties.get('templateclass') == tenjin.Preprocessor:
+                properties['templateclass'] = tenjin.SafePreprocessor
+
         ## create engine
         engine = tenjin.Engine(**properties)
 
@@ -398,6 +406,7 @@ Usage: %(command)s [..options..] [file1 [file2...]]
   --path=dir1,dir2,.. :  template lookup path
   --preprocess        :  activate preprocessing
   --templateclass=name:  template class (default: tenjin.Template)
+  --safe              :  use SafeTemplate class instead of Template
 Examples:
  ex1. render template
    $ %(command)s file.pyhtml

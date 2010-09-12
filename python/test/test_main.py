@@ -826,6 +826,13 @@ class MainTest(object):
         finally:
             pass
 
+    def test_safe(self):  # --safe
+        self.options  = "-s --safe"
+        self.input    = INPUT.replace(r'#{', '${')
+        self.expected = SOURCE.replace('escape', 'safe_escape')\
+                              .replace(", to_str(item),", ", safe_escape(to_str(item)),")
+        self._test()
+
 
 if __name__ == '__main__':
     run(MainTest)
