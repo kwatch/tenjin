@@ -2051,129 +2051,6 @@ $ pytenjin {{*-f context.yaml*}} example.pyhtml
 
 
 
-.$ Trouble shooting 	      | shooting
-
-
-
-.$$ I got an SyntaxError exception.	| syntax-error
-
-Command-line option '-z' checks syntax of template file. You should check template by it. 
-
-File 'syntaxerr.pyhtml':
-.-------------------- test_syntaxerr/syntaxerr.pyhtml
-<?py for i in range(0, 10): ?>
-<?py     if i % 2 == 0: ?>
-#{i} is even.
-<?py     else ?>
-#{i} is odd.
-<?py     #endif ?>
-<?py #endfor ?>
-.--------------------
-
-Result:
-.==================== test_syntaxerr/result.output
-$ pytenjin {{*-z*}} syntaxerr.pyhtml
-syntaxerr.pyhtml:4:12: invalid syntax
-  4:         else
-                ^
-.====================
-
-
-
-.$$ I got 'SyntaxError: encoding declaration in Unicode string'	| encoding-syntaxerr
-
-This is because you added encoding declaration in template file AND you specified encoding option to tenjin.Engine() or tenjin.Template().
-
-Solution:
-
-.* If you specify encoding option to tenjin.Engine() or tenjin.Template(), remove encoding declaration from your template file.
-.* If you want to add encoding declaration into your template file, don't specify encoding option to tenjin.Engine() or tenjin.Template().
-
-
-
-.$$ I got UnicodeDecodeError, but I can't find what is wrong  | encoding-unicodedecodeerror
-
-If you got UnicodeDecodeError, you should do the following solutions.
-
-.* Set logger to {{,tenjin.logger,}}. If you set, Tenjin will report the content of {{,_buf,}}.
-   .--------------------
-   {{*import logging*}}
-   {{*logging.basicConfig(level=logging.DEBUG)*}}
-   {{*tenjin.logger = logging*}}
-   .--------------------
-
-.* Render tempalte with specifying {{,_buf,}} and check it directly.
-   .--------------------
-   {{*_buf = []*}}
-   try:
-       engine.get_template("index.pyhtml").render(context, {{*_buf=_buf*}})
-       print(''.join(_buf))
-   except UnicodeDecodeError:
-       for item in _buf:
-           if isinstance(item, str):
-               try:
-                   str.decode('ascii')
-               except UnicodeDecodeError:
-                   print("*** failed to decode: %s" % repr(item))
-   .--------------------
-
-
-.$$ NameError: global name 'values' is not defined
-
-Assume the following template file.
-
-.--------------------
-<?py
-
-values = {'A': 10, 'B': 20}
-
-def getval(key):
-  return values.get(key, None)
-#end
-
-?>
-<p>getval('A') = ${getval('A')}</p>
-.--------------------
-
-This will raise NameError, such as:
-
-.====================
-$ py ex.py
-Traceback (most recent call last):
-  File "ex.py", line 5, in <module>
-    output = engine.render('ex.pyhtml', context)
-  File "tenjin.py", line 1582, in render
-    content  = template.render(context, globals)
-  File "tenjin.py", line 941, in render
-    exec(self.bytecode, globals, locals)
-  File "ex.pyhtml", line 10, in <module>
-    <p>getval('A') = ${getval('A')}</p>
-  File "ex.pyhtml", line 6, in getval
-    return values.get(key, None)
-NameError: global name 'values' is not defined
-.====================
-
-This is a restriction of Tenjin.
-
-Workaround is to pass values as default value of argument.
-
-.--------------------
-<?py
-
-values = {'A': 10, 'B': 20}
-
-def getval(key, {{*_values=values*}}):
-  return {{*_values*}}.get(key, None)
-#end
-
-?>
-<p>getval('A') = ${getval('A')}</p>
-.--------------------
-
-This works very well.
-
-
-
 .$ Tips		    | tips
 
 
@@ -2472,6 +2349,130 @@ This affects to error reporting. You can get full path name of template file on 
 ## report full-path name of template file when error raised
 tenjin.Engine.prefer_fullpath = True
 .--------------------
+
+
+
+.$ Trouble shooting 	      | shooting
+
+
+
+.$$ I got an SyntaxError exception.	| syntax-error
+
+Command-line option '-z' checks syntax of template file. You should check template by it. 
+
+File 'syntaxerr.pyhtml':
+.-------------------- test_syntaxerr/syntaxerr.pyhtml
+<?py for i in range(0, 10): ?>
+<?py     if i % 2 == 0: ?>
+#{i} is even.
+<?py     else ?>
+#{i} is odd.
+<?py     #endif ?>
+<?py #endfor ?>
+.--------------------
+
+Result:
+.==================== test_syntaxerr/result.output
+$ pytenjin {{*-z*}} syntaxerr.pyhtml
+syntaxerr.pyhtml:4:12: invalid syntax
+  4:         else
+                ^
+.====================
+
+
+
+.$$ I got 'SyntaxError: encoding declaration in Unicode string'	| encoding-syntaxerr
+
+This is because you added encoding declaration in template file AND you specified encoding option to tenjin.Engine() or tenjin.Template().
+
+Solution:
+
+.* If you specify encoding option to tenjin.Engine() or tenjin.Template(), remove encoding declaration from your template file.
+.* If you want to add encoding declaration into your template file, don't specify encoding option to tenjin.Engine() or tenjin.Template().
+
+
+
+.$$ I got UnicodeDecodeError, but I can't find what is wrong  | encoding-unicodedecodeerror
+
+If you got UnicodeDecodeError, you should do the following solutions.
+
+.* Set logger to {{,tenjin.logger,}}. If you set, Tenjin will report the content of {{,_buf,}}.
+   .--------------------
+   {{*import logging*}}
+   {{*logging.basicConfig(level=logging.DEBUG)*}}
+   {{*tenjin.logger = logging*}}
+   .--------------------
+
+.* Render tempalte with specifying {{,_buf,}} and check it directly.
+   .--------------------
+   {{*_buf = []*}}
+   try:
+       engine.get_template("index.pyhtml").render(context, {{*_buf=_buf*}})
+       print(''.join(_buf))
+   except UnicodeDecodeError:
+       for item in _buf:
+           if isinstance(item, str):
+               try:
+                   str.decode('ascii')
+               except UnicodeDecodeError:
+                   print("*** failed to decode: %s" % repr(item))
+   .--------------------
+
+
+.$$ NameError: global name 'xxxx' is not defined
+
+Assume the following template file.
+
+.--------------------
+<?py
+
+values = {'A': 10, 'B': 20}
+
+def getval(key):
+  return values.get(key, None)
+#end
+
+?>
+<p>getval('A') = ${getval('A')}</p>
+.--------------------
+
+This will raise NameError, such as:
+
+.====================
+$ py ex.py
+Traceback (most recent call last):
+  File "ex.py", line 5, in <module>
+    output = engine.render('ex.pyhtml', context)
+  File "tenjin.py", line 1582, in render
+    content  = template.render(context, globals)
+  File "tenjin.py", line 941, in render
+    exec(self.bytecode, globals, locals)
+  File "ex.pyhtml", line 10, in <module>
+    <p>getval('A') = ${getval('A')}</p>
+  File "ex.pyhtml", line 6, in getval
+    return values.get(key, None)
+NameError: global name 'values' is not defined
+.====================
+
+This is a restriction of Tenjin.
+
+Workaround:
+
+.* Pass values as default value of argument.
+
+.--------------------
+<?py
+
+values = {'A': 10, 'B': 20}
+
+def getval(key, {{*_values=values*}}):   # works very well!
+  return {{*_values*}}.get(key, None)
+#end
+
+?>
+<p>getval('A') = ${getval('A')}</p>
+.--------------------
+
 
 
 .#.$ References

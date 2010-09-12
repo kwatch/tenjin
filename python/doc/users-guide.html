@@ -129,20 +129,6 @@
         </li>
 
         <li>
-          <a href="#shooting">Trouble shooting</a>
-
-          <ul>
-            <li><a href="#syntax-error">I got an SyntaxError exception.</a></li>
-
-            <li><a href="#encoding-syntaxerr">I got 'SyntaxError: encoding declaration in Unicode string'</a></li>
-
-            <li><a href="#encoding-unicodedecodeerror">I got UnicodeDecodeError, but I can't find what is wrong</a></li>
-
-            <li><a href="#NameError:%20global%20name%20'values'%20is%20not%20defined">NameError: global name 'values' is not defined</a></li>
-          </ul>
-        </li>
-
-        <li>
           <a href="#tips">Tips</a>
 
           <ul>
@@ -155,6 +141,20 @@
             <li><a href="#tips-template-inheritance">Template Inheritance</a></li>
 
             <li><a href="#tips-fullpath">Report Full Path Name of Template File</a></li>
+          </ul>
+        </li>
+
+        <li>
+          <a href="#shooting">Trouble shooting</a>
+
+          <ul>
+            <li><a href="#syntax-error">I got an SyntaxError exception.</a></li>
+
+            <li><a href="#encoding-syntaxerr">I got 'SyntaxError: encoding declaration in Unicode string'</a></li>
+
+            <li><a href="#encoding-unicodedecodeerror">I got UnicodeDecodeError, but I can't find what is wrong</a></li>
+
+            <li><a href="#NameError:%20global%20name%20'xxxx'%20is%20not%20defined">NameError: global name 'xxxx' is not defined</a></li>
           </ul>
         </li>
       </ul><a name="overview" id="overview"></a>
@@ -2178,131 +2178,6 @@ $ pytenjin <strong>-f context.yaml</strong> example.pyhtml
 &lt;/ul&gt;
 </pre><br>
       <br>
-      <a name="shooting" id="shooting"></a>
-
-      <h2 class="section1">Trouble shooting</h2><a name="syntax-error" id="syntax-error"></a>
-
-      <h3 class="section2">I got an SyntaxError exception.</h3>
-
-      <p>Command-line option '-z' checks syntax of template file. You should check template by it.</p>
-
-      <p>File 'syntaxerr.pyhtml':</p><a name="test_syntaxerr/syntaxerr.pyhtml"></a>
-      <pre class="program">
-&lt;?py for i in range(0, 10): ?&gt;
-&lt;?py     if i % 2 == 0: ?&gt;
-#{i} is even.
-&lt;?py     else ?&gt;
-#{i} is odd.
-&lt;?py     #endif ?&gt;
-&lt;?py #endfor ?&gt;
-</pre>
-
-      <p>Result:</p><a name="test_syntaxerr/result.output"></a>
-      <pre class="terminal">
-$ pytenjin <strong>-z</strong> syntaxerr.pyhtml
-syntaxerr.pyhtml:4:12: invalid syntax
-  4:         else
-                ^
-</pre><br>
-      <a name="encoding-syntaxerr" id="encoding-syntaxerr"></a>
-
-      <h3 class="section2">I got 'SyntaxError: encoding declaration in Unicode string'</h3>
-
-      <p>This is because you added encoding declaration in template file AND you specified encoding option to tenjin.Engine() or tenjin.Template().</p>
-
-      <p>Solution:</p>
-
-      <ul type="disc">
-        <li>If you specify encoding option to tenjin.Engine() or tenjin.Template(), remove encoding declaration from your template file.</li>
-
-        <li>If you want to add encoding declaration into your template file, don't specify encoding option to tenjin.Engine() or tenjin.Template().</li>
-      </ul><br>
-      <a name="encoding-unicodedecodeerror" id="encoding-unicodedecodeerror"></a>
-
-      <h3 class="section2">I got UnicodeDecodeError, but I can't find what is wrong</h3>
-
-      <p>If you got UnicodeDecodeError, you should do the following solutions.</p>
-
-      <ul type="disc">
-        <li>Set logger to <code>tenjin.logger</code>. If you set, Tenjin will report the content of <code>_buf</code>.
-          <pre class="program">
-<strong>import logging</strong>
-<strong>logging.basicConfig(level=logging.DEBUG)</strong>
-<strong>tenjin.logger = logging</strong>
-</pre>
-        </li>
-      </ul>
-
-      <ul type="disc">
-        <li>Render tempalte with specifying <code>_buf</code> and check it directly.
-          <pre class="program">
-<strong>_buf = []</strong>
-try:
-    engine.get_template("index.pyhtml").render(context, <strong>_buf=_buf</strong>)
-    print(''.join(_buf))
-except UnicodeDecodeError:
-    for item in _buf:
-        if isinstance(item, str):
-            try:
-                str.decode('ascii')
-            except UnicodeDecodeError:
-                print("*** failed to decode: %s" % repr(item))
-</pre>
-        </li>
-      </ul><br>
-      <a name="NameError: global name 'values' is not defined"></a>
-
-      <h3 class="section2">NameError: global name 'values' is not defined</h3>
-
-      <p>Assume the following template file.</p>
-      <pre class="program">
-&lt;?py
-
-values = {'A': 10, 'B': 20}
-
-def getval(key):
-  return values.get(key, None)
-#end
-
-?&gt;
-&lt;p&gt;getval('A') = ${getval('A')}&lt;/p&gt;
-</pre>
-
-      <p>This will raise NameError, such as:</p>
-      <pre class="terminal">
-$ py ex.py
-Traceback (most recent call last):
-  File "ex.py", line 5, in &lt;module&gt;
-    output = engine.render('ex.pyhtml', context)
-  File "tenjin.py", line 1582, in render
-    content  = template.render(context, globals)
-  File "tenjin.py", line 941, in render
-    exec(self.bytecode, globals, locals)
-  File "ex.pyhtml", line 10, in &lt;module&gt;
-    &lt;p&gt;getval('A') = ${getval('A')}&lt;/p&gt;
-  File "ex.pyhtml", line 6, in getval
-    return values.get(key, None)
-NameError: global name 'values' is not defined
-</pre>
-
-      <p>This is a restriction of Tenjin.</p>
-
-      <p>Workaround is to pass values as default value of argument.</p>
-      <pre class="program">
-&lt;?py
-
-values = {'A': 10, 'B': 20}
-
-def getval(key, <strong>_values=values</strong>):
-  return <strong>_values</strong>.get(key, None)
-#end
-
-?&gt;
-&lt;p&gt;getval('A') = ${getval('A')}&lt;/p&gt;
-</pre>
-
-      <p>This works very well.</p><br>
-      <br>
       <a name="tips" id="tips"></a>
 
       <h2 class="section1">Tips</h2><a name="tips-trace" id="tips-trace"></a>
@@ -2577,6 +2452,133 @@ _buf.extend(('''&lt;div&gt;
       <pre class="program">
 ## report full-path name of template file when error raised
 tenjin.Engine.prefer_fullpath = True
+</pre><br>
+      <br>
+      <a name="shooting" id="shooting"></a>
+
+      <h2 class="section1">Trouble shooting</h2><a name="syntax-error" id="syntax-error"></a>
+
+      <h3 class="section2">I got an SyntaxError exception.</h3>
+
+      <p>Command-line option '-z' checks syntax of template file. You should check template by it.</p>
+
+      <p>File 'syntaxerr.pyhtml':</p><a name="test_syntaxerr/syntaxerr.pyhtml"></a>
+      <pre class="program">
+&lt;?py for i in range(0, 10): ?&gt;
+&lt;?py     if i % 2 == 0: ?&gt;
+#{i} is even.
+&lt;?py     else ?&gt;
+#{i} is odd.
+&lt;?py     #endif ?&gt;
+&lt;?py #endfor ?&gt;
+</pre>
+
+      <p>Result:</p><a name="test_syntaxerr/result.output"></a>
+      <pre class="terminal">
+$ pytenjin <strong>-z</strong> syntaxerr.pyhtml
+syntaxerr.pyhtml:4:12: invalid syntax
+  4:         else
+                ^
+</pre><br>
+      <a name="encoding-syntaxerr" id="encoding-syntaxerr"></a>
+
+      <h3 class="section2">I got 'SyntaxError: encoding declaration in Unicode string'</h3>
+
+      <p>This is because you added encoding declaration in template file AND you specified encoding option to tenjin.Engine() or tenjin.Template().</p>
+
+      <p>Solution:</p>
+
+      <ul type="disc">
+        <li>If you specify encoding option to tenjin.Engine() or tenjin.Template(), remove encoding declaration from your template file.</li>
+
+        <li>If you want to add encoding declaration into your template file, don't specify encoding option to tenjin.Engine() or tenjin.Template().</li>
+      </ul><br>
+      <a name="encoding-unicodedecodeerror" id="encoding-unicodedecodeerror"></a>
+
+      <h3 class="section2">I got UnicodeDecodeError, but I can't find what is wrong</h3>
+
+      <p>If you got UnicodeDecodeError, you should do the following solutions.</p>
+
+      <ul type="disc">
+        <li>Set logger to <code>tenjin.logger</code>. If you set, Tenjin will report the content of <code>_buf</code>.
+          <pre class="program">
+<strong>import logging</strong>
+<strong>logging.basicConfig(level=logging.DEBUG)</strong>
+<strong>tenjin.logger = logging</strong>
+</pre>
+        </li>
+      </ul>
+
+      <ul type="disc">
+        <li>Render tempalte with specifying <code>_buf</code> and check it directly.
+          <pre class="program">
+<strong>_buf = []</strong>
+try:
+    engine.get_template("index.pyhtml").render(context, <strong>_buf=_buf</strong>)
+    print(''.join(_buf))
+except UnicodeDecodeError:
+    for item in _buf:
+        if isinstance(item, str):
+            try:
+                str.decode('ascii')
+            except UnicodeDecodeError:
+                print("*** failed to decode: %s" % repr(item))
+</pre>
+        </li>
+      </ul><br>
+      <a name="NameError: global name 'xxxx' is not defined"></a>
+
+      <h3 class="section2">NameError: global name 'xxxx' is not defined</h3>
+
+      <p>Assume the following template file.</p>
+      <pre class="program">
+&lt;?py
+
+values = {'A': 10, 'B': 20}
+
+def getval(key):
+  return values.get(key, None)
+#end
+
+?&gt;
+&lt;p&gt;getval('A') = ${getval('A')}&lt;/p&gt;
+</pre>
+
+      <p>This will raise NameError, such as:</p>
+      <pre class="terminal">
+$ py ex.py
+Traceback (most recent call last):
+  File "ex.py", line 5, in &lt;module&gt;
+    output = engine.render('ex.pyhtml', context)
+  File "tenjin.py", line 1582, in render
+    content  = template.render(context, globals)
+  File "tenjin.py", line 941, in render
+    exec(self.bytecode, globals, locals)
+  File "ex.pyhtml", line 10, in &lt;module&gt;
+    &lt;p&gt;getval('A') = ${getval('A')}&lt;/p&gt;
+  File "ex.pyhtml", line 6, in getval
+    return values.get(key, None)
+NameError: global name 'values' is not defined
+</pre>
+
+      <p>This is a restriction of Tenjin.</p>
+
+      <p>Workaround:</p>
+
+      <ul type="disc">
+        <li>Pass values as default value of argument.</li>
+      </ul>
+      <pre class="program">
+&lt;?py
+
+values = {'A': 10, 'B': 20}
+
+def getval(key, <strong>_values=values</strong>):   # works very well!
+  return <strong>_values</strong>.get(key, None)
+#end
+
+?&gt;
+&lt;p&gt;getval('A') = ${getval('A')}&lt;/p&gt;
 </pre><br>
       <br>
     </div>
