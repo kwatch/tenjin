@@ -484,9 +484,9 @@ class Template(object):
     escapefunc = 'escape'
     tostrfunc  = 'to_str'
     indent     = 4
-    preamble   = None
-    postamble  = None    # "_buf = []"
-    smarttrim  = None    # "print ''.join(_buf)"
+    preamble   = None    # "_buf = []"
+    postamble  = None    # "print ''.join(_buf)"
+    smarttrim  = None
     args       = None
     timestamp  = None
     trace      = False   # if True then '<!-- begin: file -->' and '<!-- end: file -->' are printed
