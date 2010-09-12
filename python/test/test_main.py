@@ -827,11 +827,15 @@ class MainTest(object):
             pass
 
     def test_safe(self):  # --safe
-        self.options  = "-s --safe"
-        self.input    = INPUT.replace(r'#{', '${')
-        self.expected = SOURCE.replace('escape', 'safe_escape')\
-                              .replace(", to_str(item),", ", safe_escape(to_str(item)),")
-        self._test()
+        _backup = tenjin.Engine.templateclass
+        try:
+            self.options  = "-s --safe"
+            self.input    = INPUT.replace(r'#{', '${')
+            self.expected = SOURCE.replace('escape', 'safe_escape')\
+                                  .replace(", to_str(item),", ", safe_escape(to_str(item)),")
+            self._test()
+        finally:
+            tenjin.Engine.templateclass = _backup
 
 
 if __name__ == '__main__':
