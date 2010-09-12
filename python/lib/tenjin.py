@@ -361,7 +361,7 @@ if True:
            If value is not specified, expr is used as value instead."""
         if not expr: return ''
         if value is None: value = expr
-        if escape: value = escape_xml(to_str(value))
+        if escape: value = helpers.html.escape_xml(to_str(value))
         return ' %s="%s"' % (name, value)
 
     def tagattrs(**kwargs):
@@ -376,7 +376,7 @@ if True:
         if 'checked'  in kwargs: kwargs['checked']  = kwargs.pop('checked')  and 'checked'  or None
         if 'selected' in kwargs: kwargs['selected'] = kwargs.pop('selected') and 'selected' or None
         if 'disabled' in kwargs: kwargs['disabled'] = kwargs.pop('disabled') and 'disabled' or None
-        return ''.join([' %s="%s"' % (k, escape_xml(to_str(v))) for k, v in kwargs.items() if v])
+        return ''.join([' %s="%s"' % (k, helpers.html.escape_xml(to_str(v))) for k, v in kwargs.items() if v])
 
     def checked(expr):
         """return ' checked="checked"' if expr is true."""
@@ -400,7 +400,7 @@ if True:
         """(experimental) escape xml characters, replace "\n" to "<br />\n", and return it."""
         if not text:
             return ''
-        return _nl2br(escape_xml(text).replace('  ', ' &nbsp;'))
+        return _nl2br(helpers.html.escape_xml(text).replace('  ', ' &nbsp;'))
 
     def nv(name, value, sep=None, _tagattrs=tagattrs, **kwargs):
         """(experimental) Build name and value attributes.
@@ -415,7 +415,7 @@ if True:
            'name="rank" value="A" id="rank.A" class="error" style="color:red"'
         """
         s = sep and 'name="%s" value="%s" id="%s"' % (name, value, name+sep+value) \
-                or  'name="%s" value="%s"'         % (name, escape_xml(value))
+                or  'name="%s" value="%s"'         % (name, helpers.html.escape_xml(value))
         return kwargs and s + _tagattrs(**kwargs) or s
 
     def new_cycle(*values):
@@ -452,8 +452,7 @@ if True:
 
 helpers.html = mod
 helpers.escape = escape_xml
-#del escape_xml
-del tagattr, tagattrs, checked, selected, disabled, nl2br, text2html, nv, new_cycle
+del escape_xml, tagattr, tagattrs, checked, selected, disabled, nl2br, text2html, nv, new_cycle
 del mod
 
 
