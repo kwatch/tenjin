@@ -402,7 +402,7 @@ if True:
             return ''
         return _nl2br(helpers.html.escape_html(text).replace('  ', ' &nbsp;'))
 
-    def nv(name, value, sep=None, _tagattrs=tagattrs, **kwargs):
+    def nv(name, value, sep=None, **kwargs):
         """(experimental) Build name and value attributes.
            ex.
            >>> nv('rank', 'A')
@@ -416,7 +416,7 @@ if True:
         """
         s = sep and 'name="%s" value="%s" id="%s"' % (name, value, name+sep+value) \
                 or  'name="%s" value="%s"'         % (name, helpers.html.escape_html(value))
-        return kwargs and s + _tagattrs(**kwargs) or s
+        return kwargs and s + helpers.html.tagattrs(**kwargs) or s
 
     def new_cycle(*values):
         """Generate cycle object.
