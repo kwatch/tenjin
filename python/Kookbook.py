@@ -172,3 +172,10 @@ def task_clean(c):
             with chdir(dir) as d:
                 system("make clean")
     rm_f("test/test.log", "test/kook.log")
+
+
+@recipe
+def oktest(c):
+    """copy oktest.py into test directory"""
+    original = os.path.expanduser("~/src/oktest/python/lib/oktest.py")
+    cp_p(original, 'test')
