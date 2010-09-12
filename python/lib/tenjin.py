@@ -275,6 +275,22 @@ if True:
         s = re.sub(r'<`\$(.*?)\$`>', r'${\1}', s)
         return s
 
+    class SafeStr(str):
+        """string class to avoid escape in template"""
+        def __init__(self, s):
+            if not isinstance(s, basestring):
+                raise TypeError("%r is not a string." % (s, ))
+            self.value = s
+        def __str__(self):
+            return self
+        def __unicode__(self):
+            return self
+
+    def safe_escape(s):
+        if isinstance(s, SafeStr):
+            return s.value
+        return escape(s)
+
     mod = _create_module('tenjin.helpers')
     mod.to_str             = to_str
     mod.generate_tostrfunc = generate_tostrfunc
@@ -285,14 +301,16 @@ if True:
     mod._p                 = _p
     mod._P                 = _P
     mod._decode_params     = _decode_params
+    mod.SafeStr            = SafeStr
+    mod.safe_escape        = safe_escape
     mod.__all__ = ['escape', 'to_str', 'echo', 'generate_tostrfunc',
                    'start_capture', 'stop_capture', 'captured_as',
-                   '_p', '_P', '_decode_params',
+                   '_p', '_P', '_decode_params', 'SafeStr', 'safe_escape',
                    ]
 
 helpers = mod
-del echo, start_capture, stop_capture, captured_as, _p, _P, _decode_params
-#del to_str, generate_tostrfunc
+del echo, start_capture, stop_capture, captured_as, _p, _P, _decode_params, safe_escape
+#del to_str, generate_tostrfunc, SafeStr
 del mod
 
 
@@ -431,10 +449,10 @@ if True:
     mod.new_cycle  = new_cycle
 
 helpers.html = mod
+escape = helpers.escape = escape_xml
 #del escape_xml
 del tagattr, tagattrs, checked, selected, disabled, nl2br, text2html, nv, new_cycle
 del mod
-helpers.escape = helpers.html.escape_xml
 
 
 
