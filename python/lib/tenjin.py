@@ -466,6 +466,8 @@ class TemplateSyntaxError(SyntaxError):
 
     def build_error_message(self):
         ex = self
+        if not ex.text:
+            return self.args[0]
         return ''.join([
             "%s:%s:%s: %s\n" % (ex.filename, ex.lineno, ex.offset, ex.msg, ),
             "%4d: %s\n"      % (ex.lineno, ex.text.rstrip(), ),
