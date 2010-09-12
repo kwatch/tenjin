@@ -361,7 +361,7 @@ if True:
            If value is not specified, expr is used as value instead."""
         if not expr: return ''
         if value is None: value = expr
-        if escape: value = helpers.html.escape_html(to_str(value))
+        if escape: value = helpers.safe_escape(to_str(value))
         return ' %s="%s"' % (name, value)
 
     def tagattrs(**kwargs):
@@ -376,7 +376,7 @@ if True:
         if 'checked'  in kwargs: kwargs['checked']  = kwargs.pop('checked')  and 'checked'  or None
         if 'selected' in kwargs: kwargs['selected'] = kwargs.pop('selected') and 'selected' or None
         if 'disabled' in kwargs: kwargs['disabled'] = kwargs.pop('disabled') and 'disabled' or None
-        escape_html = helpers.html.escape_html
+        escape_html = helpers.safe_escape
         return ''.join([ ' %s="%s"' % (k, escape_html(to_str(v))) for k, v in kwargs.items() if v ])
 
     def checked(expr):
@@ -401,7 +401,7 @@ if True:
         """(experimental) escape xml characters, replace "\n" to "<br />\n", and return it."""
         if not text:
             return ''
-        s = helpers.html.escape_html(text)
+        s = helpers.safe_escape(text)
         if use_nbsp: s = s.replace('  ', ' &nbsp;')
         return helpers.html.nl2br(s)
 
@@ -418,7 +418,7 @@ if True:
            'name="rank" value="A" id="rank.A" class="error" style="color:red"'
         """
         s = sep and 'name="%s" value="%s" id="%s"' % (name, value, name+sep+value) \
-                or  'name="%s" value="%s"'         % (name, helpers.html.escape_html(value))
+                or  'name="%s" value="%s"'         % (name, helpers.safe_escape(value))
         return kwargs and s + helpers.html.tagattrs(**kwargs) or s
 
     def new_cycle(*values):
