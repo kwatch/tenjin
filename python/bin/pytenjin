@@ -63,10 +63,7 @@ class NoTextTemplate(tenjin.Template):
     def parse_exprs(self, buf, input, is_bol=False):
         if not input:
             return
-        spaces = self._spaces
-        self._spaces = ''
         tenjin.Template.parse_exprs(self, buf, input, is_bol)
-        self._spaces = spaces
 
     def after_convert(self, buf):
         if self.postamble:

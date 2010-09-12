@@ -522,7 +522,6 @@ class Template(object):
             self._reset()
 
     def _reset(self, input=None, filename=None):
-        self._spaces  = ''
         self.script   = None
         self.bytecode = None
         self.input    = input
@@ -679,8 +678,6 @@ class Template(object):
 
     def _parse_exprs(self, buf, input, is_bol=False):
         if not input: return
-        if self._spaces:
-            buf.append(self._spaces)
         self.start_text_part(buf)
         rexp = self.expr_pattern()
         smarttrim = self.smarttrim
@@ -695,10 +692,6 @@ class Template(object):
             #
             if text:
                 self.add_text(buf, text)
-                #if text[-1] == "\n":
-                #    buf.append("\n")
-                #    if self._spaces:
-                #        buf.append(self._spaces)
             self.add_expr(buf, expr, flag_escape)
             #
             if smarttrim:
@@ -761,31 +754,6 @@ class Template(object):
             lines[-1] = lines[-1] + "\n"
         buf.extend(lines)
 
-    def _set_spaces(self, code, lspace, mspace):
-        if lspace:
-            if mspace == " ":
-                code = lspace + code
-            elif mspace == "\t":
-                code = lspace + "\t" + code
-        #i = code.rstrip().rfind("\n")
-        #if i < 0:   # i == -1
-        #    i = 0
-        #else:
-        #    i += 1
-        i = code.rstrip().rfind("\n") + 1
-        indent = 0
-        n = len(code)
-        ch = None
-        while i < n:
-            ch = code[i]
-            if   ch == " ":   indent += 1
-            elif ch == "\t":  indent += 8
-            else:  break
-            i += 1
-        if ch:
-            if code.rstrip()[-1] == ':':
-                indent += self.indent
-            self._spaces = ' ' * indent
 
     _START_WORDS = dict.fromkeys(('for', 'if', 'while', 'def', 'try:', 'with', 'class'), True)
     _END_WORDS   = dict.fromkeys(('#end', '#endfor', '#endif', '#endwhile', '#enddef', '#endtry', '#endwith', '#endclass'), True)
