@@ -612,13 +612,11 @@ class Template(object):
                 rindex = text.rfind('\n')
                 if rindex < 0:
                     if is_bol and text.isspace():
-                        lspace = text
-                        text = ''
+                        lspace, text = text, ''
                 else:
                     s = text[rindex+1:]
                     if s.isspace():
-                        lspace = s
-                        text = text[:rindex+1]
+                        lspace, text = s, text[:rindex+1]
             #is_bol = rspace is not None
             ## add text, spaces, and statement
             self.parse_exprs(buf, text, is_bol)
@@ -685,9 +683,9 @@ class Template(object):
         nl_len  = len(nl)
         pos = 0
         for m in rexp.finditer(input):
-            start  = m.start()
-            text   = input[pos:start]
-            pos    = m.end()
+            start = m.start()
+            text  = input[pos:start]
+            pos   = m.end()
             expr, flag_escape = self.get_expr_and_escapeflag(m)
             #
             if text:
@@ -726,10 +724,8 @@ class Template(object):
 
     def add_text(self, buf, text, encode_newline=False):
         if not text: return
-        if self.encoding and python2:
-            buf.append("u'''")
-        else:
-            buf.append("'''")
+        use_unicode = self.encoding and python2
+        buf.append(use_unicode and "u'''" or "'''")
         text = self._quote_text(text)
         if   not encode_newline:    buf.extend((text,       "''', "))
         elif text.endswith("\r\n"): buf.extend((text[0:-2], "\\r\\n''', "))
@@ -741,7 +737,7 @@ class Template(object):
     def add_expr(self, buf, code, flag_escape=None):
         if not code or code.isspace(): return
         if flag_escape is None:
-            buf.append(code); buf.append(", ");
+            buf.extend((code, ", "))
         elif flag_escape is False:
             buf.extend((self.tostrfunc, "(", code, "), "))
         else:
@@ -797,17 +793,16 @@ class Template(object):
             if self.depth > 0:
                 raise TemplateSyntaxError("unexpected EOF.", (self.filename, len(lines), None, line))
         else:
-            #raise TemplateSyntaxError("unexpected syntax.")
             pass
         return block
 
-    def _parse_lines(self, iter, end_block, block, linenum):
+    def _parse_lines(self, lines_iter, end_block, block, linenum):
         if block is None: block = []
         _START_WORDS = self._START_WORDS
         _END_WORDS   = self._END_WORDS
         _CONT_WORDS  = self._CONT_WORDS
         _WORD_REXP   = self._WORD_REXP
-        get_line = python2 and iter.next or iter.__next__
+        get_line = python2 and lines_iter.next or lines_iter.__next__
         while True:
             line = get_line()
             linenum += line.count("\n")
@@ -833,10 +828,12 @@ class Template(object):
                     self.depth += 1
                     cont_word = None
                     try:
-                        child_block, line, cont_word, linenum = self._parse_lines(iter, '#end'+word, [], linenum)
+                        child_block, line, cont_word, linenum = \
+                            self._parse_lines(lines_iter, '#end'+word, [], linenum)
                         block.extend((child_block, line, ))
                         while cont_word:   # 'elif' or 'else:'
-                            child_block, line, cont_word, linenum = self._parse_lines(iter, '#end'+word, [], linenum)
+                            child_block, line, cont_word, linenum = \
+                                self._parse_lines(lines_iter, '#end'+word, [], linenum)
                             block.extend((child_block, line, ))
                     except StopIteration:
                         msg = "'%s' is not closed." % (cont_word or word)
@@ -848,12 +845,6 @@ class Template(object):
             else:
                 block.append(line)
         assert "unreachable"
-
-    #def join_block(self, block):
-    #    buf = []
-    #    depth = 0
-    #    self._join_block(block, buf, depth)
-    #    return ''.join(buf)
 
     def _join_block(self, block, buf, depth):
         indent = ' ' * (self.indent * depth)
