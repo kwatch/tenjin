@@ -289,9 +289,9 @@ if True:
             return self
 
     def safe_escape(s):
-        if isinstance(s, SafeStr):
+        if isinstance(s, helpers.SafeStr):
             return s.value
-        return escape(s)
+        return helpers.escape(s)
 
     mod = _create_module('tenjin.helpers')
     mod.to_str             = to_str
@@ -311,8 +311,8 @@ if True:
                    ]
 
 helpers = mod
-del echo, start_capture, stop_capture, captured_as, _p, _P, _decode_params, safe_escape
-#del to_str, generate_tostrfunc, SafeStr
+del echo, start_capture, stop_capture, captured_as, _p, _P, _decode_params, SafeStr, safe_escape
+#del to_str, generate_tostrfunc
 del mod
 
 
@@ -451,7 +451,7 @@ if True:
     mod.new_cycle  = new_cycle
 
 helpers.html = mod
-escape = helpers.escape = escape_xml
+helpers.escape = escape_xml
 #del escape_xml
 del tagattr, tagattrs, checked, selected, disabled, nl2br, text2html, nv, new_cycle
 del mod
