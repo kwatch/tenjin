@@ -72,6 +72,8 @@ def _read_binary_file(filename):
 
 if python2:
 
+    codecs = None    # lazy import
+
     def _read_text_file(filename, encoding=None):
         global codecs
         if not codecs: import codecs
@@ -491,7 +493,8 @@ class Template(object):
     timestamp  = None
     trace      = False   # if True then '<!-- begin: file -->' and '<!-- end: file -->' are printed
 
-    def __init__(self, filename=None, encoding=None, input=None, escapefunc=None, tostrfunc=None, indent=None, preamble=None, postamble=None, smarttrim=None, trace=None):
+    def __init__(self, filename=None, encoding=None, input=None, escapefunc=None, tostrfunc=None,
+                       indent=None, preamble=None, postamble=None, smarttrim=None, trace=None):
         """Initailizer of Template class.
 
            filename:str (=None)
@@ -554,14 +557,13 @@ class Template(object):
                 self.newline = "\n"
 
     def before_convert(self, buf):
-        #buf.append('_buf = []; ')
         if self.preamble:
             buf.append(self.preamble)
             buf.append(self.input.startswith('<?py') and "\n" or "; ")
 
     def after_convert(self, buf):
         if self.postamble:
-            if not buf[-1].endswith("\n"):
+            if buf and not buf[-1].endswith("\n"):
                 buf.append("\n")
             buf.append(self.postamble + "\n")
         block = self.parse_lines(buf)
@@ -809,7 +811,8 @@ class Template(object):
             self._parse_lines(lines.__iter__(), False, block, 0)
         except StopIteration:
             if self.depth > 0:
-                raise TemplateSyntaxError("unexpected EOF.", (self.filename, len(lines), None, line))
+                fname, linenum, colnum, linetext = self.filename, len(lines), None, None
+                raise TemplateSyntaxError("unexpected EOF.", (fname, linenum, colnum, linetext))
         else:
             pass
         return block
