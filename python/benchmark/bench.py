@@ -151,7 +151,8 @@ class TenjinEntry(Entry):
     def _execute_create(self, context, ntimes):
         filename = self.template_filename
         for i in xrange(ntimes):
-            engine = tenjin.Engine(cache=True)
+            cache = tenjin.MarshalCacheStorage()
+            engine = tenjin.Engine(cache=cache)
             output = engine.render(filename, context)
         return output
 
