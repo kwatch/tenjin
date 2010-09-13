@@ -88,6 +88,8 @@ if python2:
         if encoding: s = s.decode(encoding)      ## binary(=str) to unicode
         return s
 
+    _basestring = basestring
+
     def _is_unicode(val):
         return isinstance(val, unicode)
 
@@ -106,6 +108,8 @@ elif python3:
     def _read_template_file(filename, encoding=None):
         s = _read_binary_file(filename)          ## binary
         return s.decode(encoding or 'utf-8')     ## binary to unicode(=str)
+
+    _basestring = str
 
     def _is_unicode(val):
         return isinstance(val, str)
@@ -280,7 +284,7 @@ if True:
     class SafeStr(str):
         """string class to avoid escape in template"""
         def __init__(self, s):
-            if not isinstance(s, basestring):
+            if not isinstance(s, _basestring):
                 raise TypeError("%r is not a string." % (s, ))
             self.value = s
         def __str__(self):
