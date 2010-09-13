@@ -9,6 +9,8 @@ import sys, os, re
 import tenjin
 from tenjin.helpers import *
 
+python3 = sys.version_info[0] == 3
+
 
 class SafeStrTest(object):
 
@@ -29,10 +31,13 @@ class SafeStrTest(object):
             ok (str(hs)).is_(hs)
 
     def test___unicode__(str):
+        if python3:
+            return
         if "called then returns itself":
             hs = SafeStr('foo')
             ok (hs.__unicode__()).is_(hs)
-            ok (unicode(hs)) == u'foo'
+            #ok (unicode(hs)) == u'foo'
+            ok (unicode(hs)) == 'foo'.decode('utf-8')
 
 
 class SafeTemplateTest(object):
