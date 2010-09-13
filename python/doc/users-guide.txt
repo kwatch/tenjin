@@ -71,7 +71,46 @@ $ cd pytenjin-X.X.X/benchmark
 $ python -V
 Python 2.5.5
 $ python bench.py -q -n 10000
+.#import tenjin ... done. (0.002428 sec)
+.#import webext ... done. (0.000326 sec)
+.#import django ... done. (0.001339 sec)
+.#import django.conf ... done. (0.002574 sec)
+.#import django.template ... done. (0.127777 sec)
+.#import django.template.defaultfilters ... done. (0.000004 sec)
+.#import Cheetah ... done. (0.000896 sec)
+compiling bench_cheetah.tmpl ... Compiling bench_cheetah.tmpl -> bench_cheetah.py (backup bench_cheetah.py.bak)
+.#done. (0.313203 sec)
+.#import bench_cheetah ... done. (0.057802 sec)
+.#import kid ... done. (0.029752 sec)
+.#compling bench_kid.kid ... ... done. (0.013473 sec)
+.#import genshi.template ... done. (0.041529 sec)
+.#import mako.template ... done. (0.017066 sec)
+.#import mako.lookup ... done. (0.000406 sec)
+.#import web ... done. (0.055211 sec)
+.#import jinja2 ... done. (0.117231 sec)
+*** loading context data (file=bench_context.py)...
+*** start benchmark
 *** ntimes=10000
+                                    utime     stime     total      real
+tenjin                             3.7200    0.0300    3.7500    3.7593
+tenjin-create                      4.7400    0.5800    5.3200    5.3128
+tenjin-str                         2.4100    0.0300    2.4400    2.4326
+tenjin-webext                      2.3700    0.0300    2.4000    2.4010
+django                            87.3400    0.0700   87.4100   87.5328
+django-create                    100.9000    0.3900  101.2900  101.4446
+cheetah                           17.7300    0.0200   17.7500   17.7837
+cheetah-create                    18.1300    0.0200   18.1500   18.2052
+kid                              288.7300    0.3000  289.0300  289.3852
+kid-create                       289.6800    0.4300  290.1100  290.5570
+genshi                           179.2200    0.1700  179.3900  179.5859
+genshi-create                    323.8500    0.9900  324.8400  325.2915
+mako                               7.0000    0.0100    7.0100    7.0107
+mako-create                        9.8100    0.8100   10.6200   10.6372
+mako-nocache                     113.0900    0.5900  113.6800  113.7866
+templetor                         10.6600    0.0100   10.6700   11.0737
+templetor-create                 302.3700    1.8300  304.2000  304.6179
+jinja2                             7.8900    0.0600    7.9500    7.9514
+jinja2-create                    129.1300    0.7200  129.8500  130.6778
 .#import tenjin ... done. (0.022363 sec)
 .#import webext ... done. (0.000316 sec)
 .#import django ... done. (0.000795 sec)
@@ -79,7 +118,7 @@ $ python bench.py -q -n 10000
 .#import django.template ... done. (0.126980 sec)
 .#import django.template.defaultfilters ... done. (0.000005 sec)
 .#import Cheetah ... done. (0.000848 sec)
-compiling bench_cheetah.tmpl ... Compiling bench_cheetah.tmpl -> bench_cheetah.py (backup bench_cheetah.py.bak)
+.#compiling bench_cheetah.tmpl ... Compiling bench_cheetah.tmpl -> bench_cheetah.py (backup bench_cheetah.py.bak)
 .#done. (0.426166 sec)
 .#import bench_cheetah ... done. (0.068413 sec)
 .#import kid ... done. (0.032077 sec)
@@ -89,29 +128,29 @@ compiling bench_cheetah.tmpl ... Compiling bench_cheetah.tmpl -> bench_cheetah.p
 .#import mako.lookup ... done. (0.000442 sec)
 .#import web ... done. (0.043058 sec)
 .#import jinja2 ... done. (0.020984 sec)
-*** loading context data (file=bench_context.py)...
-*** start benchmark
-*** ntimes=10000
-                                    utime     stime     total      real
-tenjin                             3.8700    0.0000    3.8700    3.8858
-tenjin-create                      4.9600    0.5600    5.5200    5.5457
-tenjin-str                         2.4900    0.0000    2.4900    2.4967
-tenjin-webext                      2.3500    0.0000    2.3500    2.3703
-django                            70.5100    0.0500   70.5600   70.8199
-django-create                     83.7900    0.3500   84.1400   84.5050
-cheetah                           15.6900    0.0200   15.7100   15.7504
-cheetah-create                    16.6700    0.0100   16.6800   16.7545
-kid                              287.4500    0.2900  287.7400  289.1525
-kid-create                       288.6500    0.4800  289.1300  290.7973
-genshi                           208.2000    0.2400  208.4400  209.4677
-genshi-create                    452.4900    1.5200  454.0100  456.4957
-mako                               7.0500    0.0400    7.0900    7.1348
-mako-create                        9.7300    0.8100   10.5400   10.5842
-mako-nocache                     110.9300    0.6200  111.5500  112.1807
-templetor                         47.5300    0.0700   47.6000   47.8334
-templetor-create                 362.8200    2.0100  364.8300  367.4523
-jinja2                             7.6800    0.0600    7.7400    8.1972
-jinja2-create                    120.5900    0.6200  121.2100  122.0719
+.#*** loading context data (file=bench_context.py)...
+.#*** start benchmark
+.#*** ntimes=10000
+.#                                    utime     stime     total      real
+.#tenjin                             3.8700    0.0000    3.8700    3.8858
+.#tenjin-create                      4.9600    0.5600    5.5200    5.5457
+.#tenjin-str                         2.4900    0.0000    2.4900    2.4967
+.#tenjin-webext                      2.3500    0.0000    2.3500    2.3703
+.#django                            70.5100    0.0500   70.5600   70.8199
+.#django-create                     83.7900    0.3500   84.1400   84.5050
+.#cheetah                           15.6900    0.0200   15.7100   15.7504
+.#cheetah-create                    16.6700    0.0100   16.6800   16.7545
+.#kid                              287.4500    0.2900  287.7400  289.1525
+.#kid-create                       288.6500    0.4800  289.1300  290.7973
+.#genshi                           208.2000    0.2400  208.4400  209.4677
+.#genshi-create                    452.4900    1.5200  454.0100  456.4957
+.#mako                               7.0500    0.0400    7.0900    7.1348
+.#mako-create                        9.7300    0.8100   10.5400   10.5842
+.#mako-nocache                     110.9300    0.6200  111.5500  112.1807
+.#templetor                         47.5300    0.0700   47.6000   47.8334
+.#templetor-create                 362.8200    2.0100  364.8300  367.4523
+.#jinja2                             7.6800    0.0600    7.7400    8.1972
+.#jinja2-create                    120.5900    0.6200  121.2100  122.0719
 .====================
 
 Versions:
@@ -1686,7 +1725,7 @@ For example, you can expand loop in advance to improve performance.
 {{*<?PY            "HI": "Hawaii", } ?>*}}
 {{*<?PY # ?>*}}
 <?py chk = { params['state']: ' selected="selected"' } ?>
-{{*<?PY codes = states.keys() ?>*}}
+{{*<?PY codes = list(states.keys()) ?>*}}
 {{*<?PY codes.sort() ?>*}}
 <select name="state">
   <option value="">-</option>
@@ -1742,8 +1781,9 @@ Assume that link_to() is a helper method which takes label and url and generate 
 .-------------------- test_preprocessing/views/pp-example3.pyhtml
 <?PY ## ex. link_to('Show', '/show/1')  => <a href="/show/1">Show</a> ?>
 <?PY def link_to(label, url): ?>
-<?PY     import urllib ?>
-<?PY     return '<a href="%s">%s</a>' % (urllib.quote(url), label) ?>
+<?PY     try:    from urllib.parse import quote ?>
+<?PY     except: from urllib import quote ?>
+<?PY     return '<a href="%s">%s</a>' % (quote(url), label) ?>
 <?PY #enddef ?>
 #{{link_to('Show '+{{*_P(*}}'params["name"]'{{*)*}}, '/items/show/'+{{*_p(*}}'params["id"]'{{*)*}})}}
 .--------------------
@@ -2247,7 +2287,7 @@ def create_m18n_func(lang):
         return dct.get(message_key)
     return _
     # or return dct.get
-    
+
 ##
 ## cache storage class to cache template object for each language
 ##
@@ -2257,10 +2297,10 @@ class M17nCacheStorage(tenjin.MarshalCacheStorage):
 
     def __init__(self, *args, **kwargs):
         if 'lang' in kwargs:
-	    lang = kwargs.pop('lang')
-	    if lang: 
-	        self.lang = lang
-	tenjin.MarshalCacheStorage.__init__(self, *args, **kwargs)
+            lang = kwargs.pop('lang')
+            if lang:
+                self.lang = lang
+        tenjin.MarshalCacheStorage.__init__(self, *args, **kwargs)
 
     ## change cache filename to 'file.pyhtml.lang.cache'
     {{*def _cachename(self, fullpath):*}}
@@ -2281,7 +2321,7 @@ if __name__ == '__main__':
     html = engine_en.render('m18n.pyhtml', context)
     print("--- lang: en ---")
     print(html)
-    
+
     ## create cache storage and engine for French
     {{*m17ncache = M17nCacheStorage(lang='fr')*}}
     engine_fr = tenjin.Engine(preprocess=True, {{*cache=m17ncache*}})

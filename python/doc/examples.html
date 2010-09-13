@@ -92,7 +92,7 @@ from tenjin.helpers import *
 context = { 'title': 'Bordered Table Example',
             'items': [ '&lt;AAA&gt;', 'B&amp;B', '"CCC"' ] }
 <strong>output = engine.render('table.pyhtml', context)</strong>
-print output,
+print(output)
 </pre><a name="table/table.result"></a>
 
       <div class="terminal_caption">
@@ -119,6 +119,7 @@ $ python table.py
     &lt;/table&gt;
   &lt;/body&gt;
 &lt;/html&gt;
+
 </pre><br>
       <a name="form" id="form"></a>
 
@@ -192,7 +193,7 @@ from tenjin.helpers import *
 params = { 'name': 'Foo', 'gender': 'M' }
 context = { 'params': params }
 <strong>output = engine.render(':update', context)</strong>   # ':update' == 'update'+postfix
-print output,
+print(output)
 </pre><a name="form/main.result"></a>
 
       <div class="terminal_caption">
@@ -220,6 +221,7 @@ $ python main.py
   &lt;/div&gt;
  &lt;/body&gt;
 &lt;/html&gt;
+
 </pre><br>
       <a name="preprocessing" id="preprocessing"></a>
 
@@ -239,11 +241,16 @@ languages = [
 ]
 
 import urllib
+try:
+    from urllib import unquote
+except:
+    from urllib.parse import unquote
+
 def link_to(label, action=None, id=None):
     buf = ['/app']
     if action: buf.append(action)
     if id: buf.append(id)
-    return '&lt;a href="%s"&gt;%s&lt;/a&gt;' % (urllib.quote('/'.join(buf)), label)
+    return '&lt;a href="%s"&gt;%s&lt;/a&gt;' % (unquote('/'.join(buf)), label)
 </pre><a name="preprocessing/select.pyhtml"></a>
 
       <div class="program_caption">
@@ -307,7 +314,7 @@ engine = tenjin.Engine(postfix='.pyhtml', <strong>preprocess=True</strong>)
 params = { 'id': 1234, 'name': 'Foo', 'lang': 'ch' }
 context = { 'params': params }
 output = engine.render(':select', context);
-print output,
+print(output)
 </pre><a name="preprocessing/main.result"></a>
 
       <div class="terminal_caption">
@@ -331,6 +338,7 @@ $ python main.py
   &lt;a href="/app/index"&gt;Back&lt;/a&gt; |
   &lt;a href="/app/show/1234"&gt;Show Foo&lt;/a&gt;
 &lt;/p&gt;
+
 </pre><br>
     </div>
   </blockquote>

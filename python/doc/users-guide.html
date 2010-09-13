@@ -245,31 +245,30 @@ $ cd pytenjin-X.X.X/benchmark
 $ python -V
 Python 2.5.5
 $ python bench.py -q -n 10000
-*** ntimes=10000
 compiling bench_cheetah.tmpl ... Compiling bench_cheetah.tmpl -&gt; bench_cheetah.py (backup bench_cheetah.py.bak)
 *** loading context data (file=bench_context.py)...
 *** start benchmark
 *** ntimes=10000
                                     utime     stime     total      real
-tenjin                             3.8700    0.0000    3.8700    3.8858
-tenjin-create                      4.9600    0.5600    5.5200    5.5457
-tenjin-str                         2.4900    0.0000    2.4900    2.4967
-tenjin-webext                      2.3500    0.0000    2.3500    2.3703
-django                            70.5100    0.0500   70.5600   70.8199
-django-create                     83.7900    0.3500   84.1400   84.5050
-cheetah                           15.6900    0.0200   15.7100   15.7504
-cheetah-create                    16.6700    0.0100   16.6800   16.7545
-kid                              287.4500    0.2900  287.7400  289.1525
-kid-create                       288.6500    0.4800  289.1300  290.7973
-genshi                           208.2000    0.2400  208.4400  209.4677
-genshi-create                    452.4900    1.5200  454.0100  456.4957
-mako                               7.0500    0.0400    7.0900    7.1348
-mako-create                        9.7300    0.8100   10.5400   10.5842
-mako-nocache                     110.9300    0.6200  111.5500  112.1807
-templetor                         47.5300    0.0700   47.6000   47.8334
-templetor-create                 362.8200    2.0100  364.8300  367.4523
-jinja2                             7.6800    0.0600    7.7400    8.1972
-jinja2-create                    120.5900    0.6200  121.2100  122.0719
+tenjin                             3.7200    0.0300    3.7500    3.7593
+tenjin-create                      4.7400    0.5800    5.3200    5.3128
+tenjin-str                         2.4100    0.0300    2.4400    2.4326
+tenjin-webext                      2.3700    0.0300    2.4000    2.4010
+django                            87.3400    0.0700   87.4100   87.5328
+django-create                    100.9000    0.3900  101.2900  101.4446
+cheetah                           17.7300    0.0200   17.7500   17.7837
+cheetah-create                    18.1300    0.0200   18.1500   18.2052
+kid                              288.7300    0.3000  289.0300  289.3852
+kid-create                       289.6800    0.4300  290.1100  290.5570
+genshi                           179.2200    0.1700  179.3900  179.5859
+genshi-create                    323.8500    0.9900  324.8400  325.2915
+mako                               7.0000    0.0100    7.0100    7.0107
+mako-create                        9.8100    0.8100   10.6200   10.6372
+mako-nocache                     113.0900    0.5900  113.6800  113.7866
+templetor                         10.6600    0.0100   10.6700   11.0737
+templetor-create                 302.3700    1.8300  304.2000  304.6179
+jinja2                             7.8900    0.0600    7.9500    7.9514
+jinja2-create                    129.1300    0.7200  129.8500  130.6778
 </pre>
 
       <p>Versions:</p>

@@ -69,7 +69,7 @@ from tenjin.helpers import *
 context = { 'title': 'Bordered Table Example',
             'items': [ '<AAA>', 'B&B', '"CCC"' ] }
 {{*output = engine.render('table.pyhtml', context)*}}
-print output,
+print(output)
 .--------------------
 
 
@@ -97,6 +97,7 @@ $ python table.py
     </table>
   </body>
 </html>
+
 .====================
 
 
@@ -165,7 +166,7 @@ from tenjin.helpers import *
 params = { 'name': 'Foo', 'gender': 'M' }
 context = { 'params': params }
 {{*output = engine.render(':update', context)*}}   # ':update' == 'update'+postfix
-print output,
+print(output)
 .--------------------
 
 
@@ -195,6 +196,7 @@ $ python main.py
   </div>
  </body>
 </html>
+
 .====================
 
 
@@ -216,11 +218,16 @@ languages = [
 ]
 
 import urllib
+try:
+    from urllib import unquote
+except:
+    from urllib.parse import unquote
+
 def link_to(label, action=None, id=None):
     buf = ['/app']
     if action: buf.append(action)
     if id: buf.append(id)
-    return '<a href="%s">%s</a>' % (urllib.quote('/'.join(buf)), label)
+    return '<a href="%s">%s</a>' % (unquote('/'.join(buf)), label)
 .--------------------
 
 .? Template: 'select.pyhtml'
@@ -278,7 +285,7 @@ engine = tenjin.Engine(postfix='.pyhtml', {{*preprocess=True*}})
 params = { 'id': 1234, 'name': 'Foo', 'lang': 'ch' }
 context = { 'params': params }
 output = engine.render(':select', context);
-print output,
+print(output)
 .--------------------
 
 
@@ -303,4 +310,5 @@ $ python main.py
   <a href="/app/index">Back</a> |
   <a href="/app/show/1234">Show Foo</a>
 </p>
+
 .====================
