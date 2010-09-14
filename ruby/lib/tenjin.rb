@@ -900,13 +900,13 @@ module Tenjin
     ## create template object from file
     def create_template(filename, _context=nil)
       template = @templateclass.new(nil, @init_opts_for_template)
-      template.timestamp = Time.now()
+      template.timestamp = File.mtime(filename)  # not use Time.now() !
       cache_filename = cachename(filename)
       _context = hook_context(Context.new) if _context.nil?
       if !@cache
         input = read_template_file(filename, _context)
         template.convert(input, filename)
-      elsif !test(?f, cache_filename) || File.mtime(cache_filename) < File.mtime(filename)
+      elsif !test(?f, cache_filename) || File.mtime(cache_filename) != template.timestamp
         #$stderr.puts "*** debug: load original"
         input = read_template_file(filename, _context)
         template.convert(input, filename)
@@ -926,6 +926,7 @@ module Tenjin
       tmp_filename = "#{cache_filename}.#{rand()}"
       File.open(tmp_filename, 'w') {|f| f.write(s) }
       File.rename(tmp_filename, cache_filename)
+      File.utime(template.timestamp, template.timestamp, cache_filename)
     end
 
     ## load template from cache file
@@ -941,7 +942,7 @@ module Tenjin
     def get_template(template_name, _context=nil)
       template = @templates[template_name]
       t = template
-      unless t && t.timestamp && t.filename && t.timestamp >= File.mtime(t.filename)
+      unless t && t.timestamp && t.filename && t.timestamp == File.mtime(t.filename)
         filename = find_template_file(template_name)
         template = create_template(filename, _context)  # _context is passed only for preprocessor
         register_template(template_name, template)
