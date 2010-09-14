@@ -63,6 +63,14 @@ class MemoryBaseStoreTest < Test::Unit::TestCase
     end
   end
 
+  def test_has?
+    if :"key exists then return true else return false"
+      assert_equal(false, @store.has?(@key))
+      @store.set(@key, @value)
+      assert_equal(true, @store.has?(@key))
+    end
+  end
+
   self.select_target_test()
 
 end
@@ -175,6 +183,14 @@ class FileBaseStoreTest < Test::Unit::TestCase
       assert_nothing_raised do
         store.del(key)
       end
+    end
+  end
+
+  def test_has?
+    if :"key exists then return true else return false"
+      assert_equal(false, @store.has?(@key))
+      @store.set(@key, @value)
+      assert_equal(true, @store.has?(@key))
     end
   end
 

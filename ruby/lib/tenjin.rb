@@ -850,7 +850,7 @@ module Tenjin
       raise NotImplementedError.new("#{self.class.name}#del(): not implemented yet.")
     end
 
-    def has(key, *options)
+    def has?(key, *options)
       raise NotImplementedError.new("#{self.class.name}#has(): not implemented yet.")
     end
 
@@ -897,6 +897,11 @@ module Tenjin
       ## remove data
       ## don't raise error even if key doesn't exist
       @values.delete(key)
+    end
+
+    def has?(key)
+      ## if key exists then return true else return false
+      return @values.key?(key)
     end
 
   end
@@ -972,6 +977,11 @@ module Tenjin
       fpath = filepath(key)
       _ignore_not_found_error { File.unlink(fpath) }
       nil
+    end
+
+    def has?(key)
+      ## if key exists then return true else return false
+      return File.exist?(filepath(key))
     end
 
     private
