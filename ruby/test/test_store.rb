@@ -70,12 +70,6 @@ end
 
 class FileBaseStoreTest < Test::Unit::TestCase
 
-  def _change_mtime(fname, sec)
-    atime = File.atime(fname)
-    mtime = File.mtime(fname)
-    File.utime(atime, mtime + sec, fname)
-  end
-
   def setup
     @klass = Tenjin::FileBaseStore
     @cachedir = '.test.store'
@@ -116,32 +110,6 @@ class FileBaseStoreTest < Test::Unit::TestCase
     end
   end
 
-  def test_get
-    store, key, data, fpath = @store, @key, @data, @fpath
-    now = Time.now
-    store.set(key, data)
-    assert_file_exist(store.filepath(key))
-    if :"cache file is not found, return nil"
-      assert_nil(store.get("kkkk"))
-    end
-    if :"called then returns cache file content"
-      assert_equal(data, store.get(key))
-    end
-    if :"if cache file is older than original data, remove it and return nil"
-      assert_equal(data, store.get(key, now-1)) # cache is newer than original
-      assert_file_exist(fpath)
-      assert_equal(nil,  store.get(key, now+1)) # cache is older than original
-      assert_not_exist(fpath)
-    end
-    if :"if cache file is expired then remove it and return nil"
-      store.set(key, data)
-      assert_equal(data, store.get(key))   # not expired
-      ts = Time.now - 1
-      File.utime(ts, ts, fpath)            # expire cache file
-      assert_equal(nil,  store.get(key))
-    end
-  end
-
   def test_set
     store, key, data, fpath = @store, @key, @data, @fpath
     if :"create directory for cache"
@@ -169,6 +137,32 @@ class FileBaseStoreTest < Test::Unit::TestCase
     end
   end
 
+  def test_get
+    store, key, data, fpath = @store, @key, @data, @fpath
+    now = Time.now
+    store.set(key, data)
+    assert_file_exist(store.filepath(key))
+    if :"cache file is not found, return nil"
+      assert_nil(store.get("kkkk"))
+    end
+    if :"called then returns cache file content"
+      assert_equal(data, store.get(key))
+    end
+    if :"if cache file is older than original data, remove it and return nil"
+      assert_equal(data, store.get(key, now-1)) # cache is newer than original
+      assert_file_exist(fpath)
+      assert_equal(nil,  store.get(key, now+1)) # cache is older than original
+      assert_not_exist(fpath)
+    end
+    if :"if cache file is expired then remove it and return nil"
+      store.set(key, data)
+      assert_equal(data, store.get(key))   # not expired
+      ts = Time.now - 1
+      File.utime(ts, ts, fpath)            # expire cache file
+      assert_equal(nil,  store.get(key))
+    end
+  end
+
   def test_del
     store, key, data, fpath = @store, @key, @data, @fpath
     if :"called then delete data file"
@@ -183,5 +177,7 @@ class FileBaseStoreTest < Test::Unit::TestCase
       end
     end
   end
+
+  self.select_target_test()
 
 end

@@ -927,6 +927,25 @@ module Tenjin
       return "#{@root}/#{key.gsub(/[^-.\w\/]/, '_')}"
     end
 
+    def set(key, value, lifetime=nil)
+      ## create directory for cache
+      fpath = filepath(key)
+      dir = File.dirname(fpath)
+      unless File.exist?(dir)
+        require 'fileutils' #unless defined?(FileUtils)
+        FileUtils.mkdir_p(dir)
+      end
+      ## create temporary file and rename it to cache file (in order not to flock)
+      tmppath = "#{fpath}#{rand().to_s[1,8]}"
+      _write_binary(tmppath, value)
+      File.rename(tmppath, fpath)
+      ## set mtime (which is regarded as cache expired timestamp)
+      timestamp = Time.now + (lifetime || @lifetime)
+      File.utime(timestamp, timestamp, fpath)
+      ## return value
+      return value
+    end
+
     def get(key, original_timestamp=nil)
       ## if cache file is not found, return nil
       fpath = filepath(key)
@@ -945,25 +964,6 @@ module Tenjin
       end
       ## return cache file content
       return _ignore_not_found_error { _read_binary(fpath) }
-    end
-
-    def set(key, value, lifetime=nil)
-      ## create directory for cache
-      fpath = filepath(key)
-      dir = File.dirname(fpath)
-      unless File.exist?(dir)
-        require 'fileutils' #unless defined?(FileUtils)
-        FileUtils.mkdir_p(dir)
-      end
-      ## create temporary file and rename it to cache file (in order not to flock)
-      tmppath = "#{fpath}#{rand().to_s[1,8]}"
-      _write_binary(tmppath, value)
-      File.rename(tmppath, fpath)
-      ## set mtime (which is regarded as cache expired timestamp)
-      timestamp = Time.now + (lifetime || @lifetime)
-      File.utime(timestamp, timestamp, fpath)
-      ## return value
-      return value
     end
 
     def del(key, *options)
