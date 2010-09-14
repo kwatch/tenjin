@@ -114,11 +114,11 @@ module Oktest::ClassMethodHelper
       table[ident] = ydoc
     end
     #
-    target = $target || ENV['TEST']
-    if target
-       table[target] or raise "*** target '#{target}' not found."
-       list = [ table[target] ]
-    end
+    #target = $target || ENV['TEST']
+    #if target
+    #   table[target] or raise "*** target '#{target}' not found."
+    #   list = [ table[target] ]
+    #end
     #
     list.each do |ydoc| yield(ydoc) end if block_given?
     #
