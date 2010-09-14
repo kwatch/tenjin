@@ -53,10 +53,11 @@ end
 
 
 
-class Test::Unit::TestCase   # :nodoc:
+#class Test::Unit::TestCase   # :nodoc:
+module Oktest::ClassMethodHelper
 
 
-  def self.select_target_test(target_name=ENV['TEST'])
+  def select_target_test(target_name=ENV['TEST'])
     if target_name
       self.instance_methods.each do |method|
         private method if method =~ /^test_(.*)/ && $1 != target_name
@@ -65,7 +66,7 @@ class Test::Unit::TestCase   # :nodoc:
   end
 
 
-  def self._untabify(str, width=8)         # :nodoc:
+  def _untabify(str, width=8)         # :nodoc:
     list = str.split(/\t/, -1)
     return list.first if list.length == 1
     last = list.pop
@@ -87,7 +88,7 @@ class Test::Unit::TestCase   # :nodoc:
   end
 
 
-  def self.load_yaml_documents(filename, options={})   # :nodoc:
+  def load_yaml_documents(filename, options={})   # :nodoc:
     str = File.read(filename)
     if filename =~ /\.rb$/
       str =~ /^__END__$/   or raise "*** error: __END__ is not found in '#{filename}'."
@@ -127,7 +128,7 @@ class Test::Unit::TestCase   # :nodoc:
 
   SPECIAL_KEYS = %[exception errormsg]
 
-  def self.load_yaml_testdata(filename, options={})   # :nodoc:
+  def load_yaml_testdata(filename, options={})   # :nodoc:
     identkey   = options[:identkey]   || 'name'
     testmethod = options[:testmethod] || '_test'
     lang       = options[:lang]
@@ -150,24 +151,24 @@ class Test::Unit::TestCase   # :nodoc:
       end
       s  <<  "  #{testmethod}\n"
       s  <<  "end\n"
-      $stderr.puts "*** #{method_name()}(): eval_str=<<'END'\n#{s}END" if $DEBUG
+      $stderr.puts "*** #{_method_name()}(): eval_str=<<'END'\n#{s}END" if $DEBUG
     end
     #module_eval s   # not eval!
     return s
   end
 
 
-  def self.method_name   # :nodoc:
+  def _method_name   # :nodoc:
     return (caller[0] =~ /in `(.*?)'/) && $1
   end
 
 
-  def self.load_yaml_testdata_with_each_lang(filename, options={})   # :nodoc:
+  def load_yaml_testdata_with_each_lang(filename, options={})   # :nodoc:
     identkey   = options[:identkey]   || 'name'
     testmethod = options[:testmethod] || '_test'
     special_keys = options[:special_keys] || SPECIAL_KEYS
     langs = defined?($lang) && $lang ? [ $lang ] : options[:langs]
-    langs or raise "*** #{method_name()}(): option ':langs' is required."
+    langs or raise "*** #{_method_name()}(): option ':langs' is required."
 
     load_yaml_documents(filename, options) do |ydoc|
       ident = ydoc[identkey]
@@ -184,7 +185,7 @@ class Test::Unit::TestCase   # :nodoc:
         end
         s  <<  "  #{testmethod}\n"
         s  <<  "end\n"
-        #$stderr.puts "*** #{method_name()}(): eval_str=<<'END'\n#{s}END" if $DEBUG
+        #$stderr.puts "*** #{_method_name()}(): eval_str=<<'END'\n#{s}END" if $DEBUG
         module_eval s   # not eval!
       end
     end
