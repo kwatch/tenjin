@@ -124,7 +124,7 @@ module Tenjin
   ##
   module ContextHelper
 
-    attr_accessor :_buf, :_engine, :_layout
+    attr_accessor :_buf, :_engine, :_layout, :_callback, :_template
 
     ## escape value. this method should be overrided in subclass.
     def escape(val)
@@ -243,6 +243,26 @@ module Tenjin
       s.gsub!(/<`\#(.*?)\#`>/m, '#{\1}')
       s.gsub!(/<`\$(.*?)\$`>/m, '${\1}')
       return s
+    end
+
+    ##
+    ## cache fragment data
+    ##
+    def cache_with(cache_key, lifetime=nil)
+      datacache = self._engine.datacache  or
+        raise ArgumentError.new("datacache object is not set for engine object.")
+      data = datacache.get(cache_key, self._template.timestamp)
+      if data
+        echo data
+      else
+        values = self._callback && self._callback.call(cache_key) || {}
+        values.each_pair {|k, v| self.instance_variable_set("@#{k}", v) } if values.is_a?(Hash)
+        pos = self._buf.length
+        yield(values)
+        data = self._buf[pos..-1]
+        datacache.set(cache_key, data, lifetime)
+      end
+      nil
     end
 
   end
@@ -794,6 +814,134 @@ module Tenjin
 
 
   ##
+  ## abstract class for data cache (= html fragment cache)
+  ##
+  class DataCache
+
+    def get(cache_key, *options)
+      raise NotImplementedError.new("#{self.class.name}#get(): not implemented yet.")
+    end
+
+    def set(cache_key, value, *options)
+      raise NotImplementedError.new("#{self.class.name}#set(): not implemented yet.")
+    end
+
+    def del(cache_key, *options)
+      raise NotImplementedError.new("#{self.class.name}#del(): not implemented yet.")
+    end
+
+    def has(cache_key, *options)
+      raise NotImplementedError.new("#{self.class.name}#has(): not implemented yet.")
+    end
+
+  end
+
+
+  ##
+  ## file base data cache
+  ##
+  ## ex.
+  ##   root_path = "/var/tmp/myapp"
+  ##   Dir.mkdir(root_path) unless File.exist?(root_path)
+  ##   datacache = FileBaseDataCache.new(root_path)
+  ##   engine = Tenjin::Engine.new(:datacache=>datacache)
+  ##   context = { :user => "Haruhi" }
+  ##   html = engine.render("index.rbhtml", context) {|cache_key|
+  ##     case cache_key
+  ##     when "entries/index"
+  ##       values = { :entries => Entry.find(:all) }
+  ##     end
+  ##     values
+  ##   }
+  ##
+  ## index.rbhtml:
+  ##   <html>
+  ##     <body>
+  ##       <p>Hello ${@user || 'guiest'}!</p>
+  ##       <?rb cache_with("entries/index", 5*60) do |values| ?>
+  ##         <ul>
+  ##         <?rb for entry in values[:entries] ?>
+  ##           <li>${entry.title}</li>
+  ##         <?rb end ?>
+  ##         </ul>
+  ##       <?rb end ?>
+  ##     </body>
+  ##   </html>
+  ##
+  class FileBaseDataCache < DataCache
+
+    def initialize(root)
+      self.root = root
+    end
+    attr_accessor :root
+
+    def root=(path)
+      unless File.directory?(path)
+        raise ArgumentError.new("#{path}: not found.") unless File.exist?(path)
+        raise ArgumentError.new("#{path}: not a directory.")
+      end
+      path = path.chop if path[-1] == ?/
+      @root = path
+    end
+
+    def filepath(cache_key)
+      #return File.join(@root, cache_key.gsub(/[^-\w\/]/, '_'))
+      return "#{@root}/#{cache_key.gsub(/[^-\w\/]/, '_')}"
+    end
+
+    if RUBY_PLATFORM =~ /mswin(?!ce)|mingw|cygwin|bccwin/i
+      def _read_binary(fpath)
+        File.open(fpath, 'rb') {|f| f.read }
+      end
+    else
+      def _read_binary(fpath)
+        File.read(fpath)
+      end
+    end
+
+    def get(cache_key, timestamp=nil)
+      ## if cache file is not found, return nil
+      fpath = filepath(cache_key)
+      return nil unless File.exist?(fpath)
+      ## if cache file is created before timestamp, return nil
+      return nil if timestamp && File.ctime(fpath) < timestamp
+      ## if cache file is expired, return nil
+      return nil if File.mtime(fpath) <= Time.now
+      ## return cache file content
+      return _read_binary(fpath)
+    end
+
+    MAX_TIMESTAMP = Time.mktime(2038, 1, 1)
+
+    def set(cache_key, value, lifetime=nil)
+      ## create directory for cache
+      fpath = filepath(cache_key)
+      dir = File.dirname(fpath)
+      unless File.exist?(dir)
+        require 'fileutils' #unless defined?(FileUtils)
+        FileUtils.mkdir_p(dir)
+      end
+      ## create temporary file and rename it to cache file (in order not to flock)
+      tmppath = "#{fpath}#{rand().to_s[1,6]}"
+      File.open(tmppath, 'wb') {|f| f.write(value) }
+      File.rename(tmppath, fpath)
+      ## set mtime (which is regarded as cache expired timestamp)
+      timestamp = lifetime && lifetime > 0 ? Time.now + lifetime : MAX_TIMESTAMP
+      File.utime(timestamp, timestamp, fpath)
+      ## return data
+      return value
+    end
+
+    def del(cache_key, *options)
+      fpath = filepath(cache_key)
+      File.unlink(fpath) if File.exist?(fpath)
+    end
+
+  end
+
+
+
+  ##
   ## engine class for templates
   ##
   ## Engine class supports the followings.
@@ -848,9 +996,21 @@ module Tenjin
       @cache   = options.fetch(:cache, true)
       @path    = options[:path]
       @preprocess = options.fetch(:preprocess, nil)
+      @datacache = options[:datacache] || @@default_datacache
       @templateclass = options.fetch(:templateclass, Template)
       @init_opts_for_template = options
       @templates = {}   # filename->template
+    end
+    attr_accessor :datacache
+
+    @@default_datacache = nil
+
+    def self.default_datacache
+      @@default_datacache
+    end
+
+    def self.default_datacache=(datacache)
+      @@default_datacache = datacache
     end
 
     ## convert short name into filename (ex. ':list' => 'template/list.rb.html')
@@ -955,13 +1115,17 @@ module Tenjin
     ## initializer) is used as layout template, else if false then no layout
     ## template is used.
     ## if argument 'layout' is string, it is regarded as layout template name.
-    def render(template_name, context=Context.new, layout=true)
+    def render(template_name, context=Context.new, layout=true, &callback)
       #context = Context.new(context) if context.is_a?(Hash)
       context = hook_context(context)
+      context._callback = callback
       while true
         template = get_template(template_name, context)  # context is passed only for preprocessor
+        _tmpl = context._template
+        context._template = template
         _buf = context._buf
         output = template.render(context)
+        context._template = _tmpl
         context._buf = _buf
         unless context._layout.nil?
           layout = context._layout
