@@ -8,6 +8,66 @@ require "#{File.dirname(__FILE__)}/test_all"
 require 'fileutils'
 
 
+class MemoryBaseStoreTest < Test::Unit::TestCase
+
+  def setup
+    @store = Tenjin::MemoryBaseStore.new()
+    @key   = "foo/123[456]"
+    @value = "FOOOOOO"
+  end
+
+  def test_set
+    if :"store key and value with current and expired timestamp"
+      now = Time.now
+      @store.set(@key, @value)
+      assert_equal(1, @store.values.length)
+      #assert_equal([@value, now, now + @store.lifetime], @store.values[@key])
+      assert_equal([@value, now, now + @store.lifetime].inspect, @store.values[@key].inspect)
+    end
+  end
+
+  def test_get
+    now = Time.now
+    @store.set(@key, @value)
+    if :"called then return cache data"
+      assert_equal(@value, @store.get(@key))
+    end
+    if :"cache data is not found, return nil"
+      assert_nil(@store.get('hogehoge'))
+    end
+    if :"cache data is older than original data, remove it and return nil"
+      assert_equal(@value, @store.get(@key, now - 1))  # cache data is newer than original
+      assert_equal(1, @store.values.length)
+      assert_equal(nil,   @store.get(@key, now + 1))  # cache data is older than original
+      assert_equal(0, @store.values.length)
+    end
+    if :"cache data is expired then remove it and return nil"
+      @store.set(@key, @value)
+      @store.values[@key][-1] = now - 1
+      assert_equal(nil, @store.get(@key))
+      assert_equal(0, @store.values.length)
+    end
+  end
+
+  def test_del
+    @store.set(@key, @value)
+    if :"called then remove data"
+      assert_equal(1, @store.values.length)
+      @store.del(@key)
+      assert_equal(0, @store.values.length)
+    end
+    if :"don't raise error even if key doesn't exist"
+      assert_nothing_raised do
+        @store.del(@key)
+      end
+    end
+  end
+
+  self.select_target_test()
+
+end
+
+
 class FileBaseStoreTest < Test::Unit::TestCase
 
   def _change_mtime(fname, sec)
@@ -123,6 +183,5 @@ class FileBaseStoreTest < Test::Unit::TestCase
       end
     end
   end
-
 
 end

@@ -858,7 +858,52 @@ module Tenjin
 
 
   ##
-  ## file base data cache
+  ## memory base data store
+  ##
+  class MemoryBaseStore < KeyValueStore
+
+    def initialize(lifetime=604800)
+      @values = {}
+      @lifetime = lifetime
+    end
+    attr_accessor :values, :lifetime
+
+    def set(key, value, lifetime=nil)
+      ## store key and value with current and expired timestamp
+      now = Time.now
+      @values[key] = [value, now, now + (lifetime || @lifetime)]
+    end
+
+    def get(key, original_timestamp=nil)
+      ## if cache data is not found, return nil
+      arr = @values[key]
+      return nil if arr.nil?
+      ## if cache data is older than original data, remove it and return nil
+      value, created_at, timestamp = arr
+      if original_timestamp && created_at < original_timestamp
+        del(key)
+        return nil
+      end
+      ## if cache data is expired then remove it and return nil
+      if timestamp < Time.now
+        del(key)
+        return nil
+      end
+      ## return cache data
+      return value
+    end
+
+    def del(key)
+      ## remove data
+      ## don't raise error even if key doesn't exist
+      @values.delete(key)
+    end
+
+  end
+
+
+  ##
+  ## file base data store
   ##
   class FileBaseStore < KeyValueStore
 
