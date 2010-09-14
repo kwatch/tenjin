@@ -58,6 +58,7 @@ class FileBaseStoreTest < Test::Unit::TestCase
 
   def test_get
     store, key, data, fpath = @store, @key, @data, @fpath
+    now = Time.now
     store.set(key, data)
     assert_file_exist(store.filepath(key))
     if :"cache file is not found, return nil"
@@ -66,15 +67,18 @@ class FileBaseStoreTest < Test::Unit::TestCase
     if :"called then returns cache file content"
       assert_equal(data, store.get(key))
     end
-    if :"cache file is older than max_timestamp, return nil"
-      ts = File.mtime(fpath)
-      assert_nil(store.get(key, ts-1))
-      assert_equal(data, store.get(key, ts))
+    if :"if cache file is older than original data, remove it and return nil"
+      assert_equal(data, store.get(key, now-1)) # cache is newer than original
+      assert_file_exist(fpath)
+      assert_equal(nil,  store.get(key, now+1)) # cache is older than original
+      assert_not_exist(fpath)
     end
-    if :"cache file is expired, return nil"
+    if :"if cache file is expired then remove it and return nil"
+      store.set(key, data)
+      assert_equal(data, store.get(key))   # not expired
       ts = Time.now - 1
-      File.utime(ts, ts, fpath)
-      assert_nil(store.get(key))
+      File.utime(ts, ts, fpath)            # expire cache file
+      assert_equal(nil,  store.get(key))
     end
   end
 

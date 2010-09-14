@@ -882,17 +882,19 @@ module Tenjin
       return "#{@root}/#{key.gsub(/[^-.\w\/]/, '_')}"
     end
 
-    def get(key, max_timestamp=nil)
+    def get(key, original_timestamp=nil)
       ## if cache file is not found, return nil
       fpath = filepath(key)
       #return nil unless File.exist?(fpath)
-      mtime = _ignore_not_found_error { File.mtime(fpath) }
-      return nil if mtime.nil?
-      ## if cache file is older than max_timestamp, return nil
-      timestamp = mtime
-      return nil if max_timestamp && max_timestamp < timestamp
+      stat = _ignore_not_found_error { File.stat(fpath) }
+      return nil if stat.nil?
+      ## if cache file is older than original data, remove it and return nil
+      if original_timestamp && stat.ctime < original_timestamp
+        del(key)
+        return nil
+      end
       ## if cache file is expired then remove it and return nil
-      if timestamp < Time.now
+      if stat.mtime < Time.now
         del(key)
         return nil
       end
@@ -915,7 +917,7 @@ module Tenjin
       ## set mtime (which is regarded as cache expired timestamp)
       timestamp = Time.now + (lifetime || @lifetime)
       File.utime(timestamp, timestamp, fpath)
-      ## return data
+      ## return value
       return value
     end
 
