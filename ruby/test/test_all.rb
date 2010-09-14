@@ -23,6 +23,7 @@ if __FILE__ == $0
   load 'test_engine.rb'
   load 'test_main.rb'
   load 'test_htmlhelper.rb'
+  load 'test_store.rb'
   load 'test_users_guide.rb'
   load 'test_faq.rb'
   load 'test_examples.rb'
