@@ -882,20 +882,6 @@ module Tenjin
       return "#{@root}/#{key.gsub(/[^-.\w\/]/, '_')}"
     end
 
-    if RUBY_PLATFORM =~ /mswin(?!ce)|mingw|cygwin|bccwin/i
-      def _read_binary(fpath)  #:nodoc:
-        File.open(fpath, 'rb') {|f| f.read }
-      end
-    else
-      def _read_binary(fpath)  #:nodoc:
-        File.read(fpath)
-      end
-    end
-
-    def _write_binary(fpath, data)  #:nodoc:
-      File.open(fpath, 'wb') {|f| f.write(data) }
-    end
-
     def get(key, max_timestamp=nil)
       ## if cache file is not found, return nil
       fpath = filepath(key)
@@ -942,6 +928,20 @@ module Tenjin
     end
 
     private
+
+    if RUBY_PLATFORM =~ /mswin(?!ce)|mingw|cygwin|bccwin/i
+      def _read_binary(fpath)
+        File.open(fpath, 'rb') {|f| f.read }
+      end
+    else
+      def _read_binary(fpath)
+        File.read(fpath)
+      end
+    end
+
+    def _write_binary(fpath, data)
+      File.open(fpath, 'wb') {|f| f.write(data) }
+    end
 
     def _ignore_not_found_error(default=nil)
       begin
