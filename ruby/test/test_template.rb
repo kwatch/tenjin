@@ -129,6 +129,27 @@ END
     ok_(t.script) == ' _buf << %Q`<p>Hello #{escape((name).to_s)}</p>`; ' + "\n"
   end
 
+  def test_trace
+    input = <<'END'
+<ul>
+<?rb for item in @items ?>
+  <li>#{item}<li>
+<?rb end ?>
+</ul>
+END
+    t = Tenjin::Template.new('example.rbhtml', :input=>input, :trace=>true)
+    output = t.render({:items=>['A','B','C']})
+    ok_(output) == <<'END'
+<!-- ***** begin: example.rbhtml ***** -->
+<ul>
+  <li>A<li>
+  <li>B<li>
+  <li>C<li>
+</ul>
+<!-- ***** end: example.rbhtml ***** -->
+END
+  end
+
 
 end
 

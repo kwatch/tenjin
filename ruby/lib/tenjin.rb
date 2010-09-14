@@ -406,6 +406,7 @@ module Tenjin
       @preamble   = options[:preamble]  == true ? "_buf = #{init_buf_expr()}; " : options[:preamble]
       @postamble  = options[:postamble] == true ? "_buf.to_s"   : options[:postamble]
       @input      = options[:input]
+      @trace      = options[:trace]
       @args       = nil  # or array of argument names
       if @input
         convert(@input, filename)
@@ -689,7 +690,15 @@ module Tenjin
     def render(_context=Context.new)
       _context = Context.new(_context) if _context.is_a?(Hash)
       @proc ||= _render()
-      return _context.instance_eval(&@proc)
+      if @trace
+        s = ""
+        s << "<!-- ***** begin: #{@filename} ***** -->\n"
+        s << _context.instance_eval(&@proc)
+        s << "<!-- ***** end: #{@filename} ***** -->\n"
+        return s
+      else
+        return _context.instance_eval(&@proc)
+      end
     end
 
   end
