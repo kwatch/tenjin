@@ -838,19 +838,19 @@ module Tenjin
   ##
   class KeyValueStore
 
-    def get(cache_key, *options)
+    def get(key, *options)
       raise NotImplementedError.new("#{self.class.name}#get(): not implemented yet.")
     end
 
-    def set(cache_key, value, *options)
+    def set(key, value, *options)
       raise NotImplementedError.new("#{self.class.name}#set(): not implemented yet.")
     end
 
-    def del(cache_key, *options)
+    def del(key, *options)
       raise NotImplementedError.new("#{self.class.name}#del(): not implemented yet.")
     end
 
-    def has(cache_key, *options)
+    def has(key, *options)
       raise NotImplementedError.new("#{self.class.name}#has(): not implemented yet.")
     end
 
@@ -877,9 +877,9 @@ module Tenjin
       @root = path
     end
 
-    def filepath(cache_key)
-      #return File.join(@root, cache_key.gsub(/[^-.\w\/]/, '_'))
-      return "#{@root}/#{cache_key.gsub(/[^-.\w\/]/, '_')}"
+    def filepath(key)
+      #return File.join(@root, key.gsub(/[^-.\w\/]/, '_'))
+      return "#{@root}/#{key.gsub(/[^-.\w\/]/, '_')}"
     end
 
     if RUBY_PLATFORM =~ /mswin(?!ce)|mingw|cygwin|bccwin/i
@@ -896,9 +896,9 @@ module Tenjin
       File.open(fpath, 'wb') {|f| f.write(data) }
     end
 
-    def get(cache_key, max_timestamp=nil)
+    def get(key, max_timestamp=nil)
       ## if cache file is not found, return nil
-      fpath = filepath(cache_key)
+      fpath = filepath(key)
       #return nil unless File.exist?(fpath)
       mtime = _ignore_not_found_error { File.mtime(fpath) }
       return nil if mtime.nil?
@@ -907,16 +907,16 @@ module Tenjin
       return nil if max_timestamp && max_timestamp < timestamp
       ## if cache file is expired then remove it and return nil
       if timestamp < Time.now
-        del(cache_key)
+        del(key)
         return nil
       end
       ## return cache file content
       return _ignore_not_found_error { _read_binary(fpath) }
     end
 
-    def set(cache_key, value, lifetime=nil)
+    def set(key, value, lifetime=nil)
       ## create directory for cache
-      fpath = filepath(cache_key)
+      fpath = filepath(key)
       dir = File.dirname(fpath)
       unless File.exist?(dir)
         require 'fileutils' #unless defined?(FileUtils)
@@ -933,10 +933,10 @@ module Tenjin
       return value
     end
 
-    def del(cache_key, *options)
+    def del(key, *options)
       ## delete data file
       ## if data file doesn't exist, don't raise error
-      fpath = filepath(cache_key)
+      fpath = filepath(key)
       _ignore_not_found_error { File.unlink(fpath) }
       nil
     end
