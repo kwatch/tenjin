@@ -816,7 +816,7 @@ module Tenjin
   ##
   ## abstract class for data cache (= html fragment cache)
   ##
-  class DataCache
+  class KeyValueStore
 
     def get(cache_key, *options)
       raise NotImplementedError.new("#{self.class.name}#get(): not implemented yet.")
@@ -843,7 +843,7 @@ module Tenjin
   ## ex.
   ##   root_path = "/var/tmp/myapp"
   ##   Dir.mkdir(root_path) unless File.exist?(root_path)
-  ##   datacache = FileBaseDataCache.new(root_path)
+  ##   datacache = FileBaseStore.new(root_path)
   ##   engine = Tenjin::Engine.new(:datacache=>datacache)
   ##   context = { :user => "Haruhi" }
   ##   html = engine.render("index.rbhtml", context) {|cache_key|
@@ -868,7 +868,7 @@ module Tenjin
   ##     </body>
   ##   </html>
   ##
-  class FileBaseDataCache < DataCache
+  class FileBaseStore < KeyValueStore
 
     def initialize(root)
       self.root = root

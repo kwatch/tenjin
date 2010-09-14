@@ -8,7 +8,7 @@ require "#{File.dirname(__FILE__)}/test_all"
 require 'fileutils'
 
 
-class DataCacheTest < Test::Unit::TestCase
+class FragmentCacheTest < Test::Unit::TestCase
 
   TEMPLATE = <<'END'
 <html>
@@ -116,7 +116,7 @@ END
       FileUtils.rm_f Dir.glob("#{filename}*")
       File.open(filename, "w") {|f| f.write(TEMPLATE) }
       #
-      datacache = Tenjin::FileBaseDataCache.new(root_dir)
+      datacache = Tenjin::FileBaseStore.new(root_dir)
       cache_path = datacache.filepath("entries/index")
       engine = Tenjin::Engine.new(:datacache=>datacache)
       entries = [
