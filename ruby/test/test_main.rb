@@ -4,12 +4,8 @@
 ### $Copyright$
 ###
 
-require 'test/unit'
-#require 'testutil'
-require 'testcase-helper'
-require 'testunit-assertions'
+require "#{File.dirname(__FILE__)}/test_all"
 
-require 'tenjin'
 DONT_INVOKE = true
 load File.dirname(File.dirname(File.expand_path(__FILE__))) + '/bin/rbtenjin'
 

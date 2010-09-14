@@ -4,10 +4,7 @@
 ### $Copyright$
 ###
 
-require 'test/unit'
-#require 'testutil'
-require 'testcase-helper'
-require 'testunit-assertions'
+require "#{File.dirname(__FILE__)}/test_all"
 if defined?(RBX_VERSION)
   require 'kwalify'
   def load_yaml_str(s)
@@ -20,7 +17,6 @@ else
   end
 end
 
-require 'tenjin'
 
 
 class TenjinEngineTest < Test::Unit::TestCase

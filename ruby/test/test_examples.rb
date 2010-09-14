@@ -4,10 +4,7 @@
 ### $Copyright$
 ###
 
-require 'test/unit'
-#require 'testutil'
-#require 'testcase-helper'
-require 'testunit-assertions'
+require "#{File.dirname(__FILE__)}/test_all"
 
 #class Symbol
 #  def <=>(other)
@@ -24,7 +21,6 @@ require 'testunit-assertions'
 #  end
 #end
 
-require 'tenjin'
 
 class TenjinExamplesTest < Test::Unit::TestCase
 

@@ -4,11 +4,7 @@
 ### $Copyright$
 ###
 
-require 'test/unit'
-#require 'testutil'
-require 'testcase-helper'
-require 'testunit-assertions'
-require 'tenjin'
+require "#{File.dirname(__FILE__)}/test_all"
 
 
 class TenjinHtmlHelperTest < Test::Unit::TestCase
