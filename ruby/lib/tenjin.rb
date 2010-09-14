@@ -862,10 +862,11 @@ module Tenjin
   ##
   class FileBaseStore < KeyValueStore
 
-    def initialize(root)
+    def initialize(root, lifetime=604800)  # = 60*60*24*7
       self.root = root
+      self.lifetime = lifetime
     end
-    attr_accessor :root
+    attr_accessor :root, :lifetime
 
     def root=(path)
       unless File.directory?(path)
@@ -877,33 +878,41 @@ module Tenjin
     end
 
     def filepath(cache_key)
-      #return File.join(@root, cache_key.gsub(/[^-\w\/]/, '_'))
-      return "#{@root}/#{cache_key.gsub(/[^-\w\/]/, '_')}"
+      #return File.join(@root, cache_key.gsub(/[^-.\w\/]/, '_'))
+      return "#{@root}/#{cache_key.gsub(/[^-.\w\/]/, '_')}"
     end
 
     if RUBY_PLATFORM =~ /mswin(?!ce)|mingw|cygwin|bccwin/i
-      def _read_binary(fpath)
+      def _read_binary(fpath)  #:nodoc:
         File.open(fpath, 'rb') {|f| f.read }
       end
     else
-      def _read_binary(fpath)
+      def _read_binary(fpath)  #:nodoc:
         File.read(fpath)
       end
     end
 
-    def get(cache_key, timestamp=nil)
-      ## if cache file is not found, return nil
-      fpath = filepath(cache_key)
-      return nil unless File.exist?(fpath)
-      ## if cache file is created before timestamp, return nil
-      return nil if timestamp && File.ctime(fpath) < timestamp
-      ## if cache file is expired, return nil
-      return nil if File.mtime(fpath) <= Time.now
-      ## return cache file content
-      return _read_binary(fpath)
+    def _write_binary(fpath, data)  #:nodoc:
+      File.open(fpath, 'wb') {|f| f.write(data) }
     end
 
-    MAX_TIMESTAMP = Time.mktime(2038, 1, 1)
+    def get(cache_key, max_timestamp=nil)
+      ## if cache file is not found, return nil
+      fpath = filepath(cache_key)
+      #return nil unless File.exist?(fpath)
+      mtime = _ignore_not_found_error { File.mtime(fpath) }
+      return nil if mtime.nil?
+      ## if cache file is older than max_timestamp, return nil
+      timestamp = mtime
+      return nil if max_timestamp && max_timestamp < timestamp
+      ## if cache file is expired then remove it and return nil
+      if timestamp < Time.now
+        del(cache_key)
+        return nil
+      end
+      ## return cache file content
+      return _ignore_not_found_error { _read_binary(fpath) }
+    end
 
     def set(cache_key, value, lifetime=nil)
       ## create directory for cache
@@ -914,11 +923,11 @@ module Tenjin
         FileUtils.mkdir_p(dir)
       end
       ## create temporary file and rename it to cache file (in order not to flock)
-      tmppath = "#{fpath}#{rand().to_s[1,6]}"
-      File.open(tmppath, 'wb') {|f| f.write(value) }
+      tmppath = "#{fpath}#{rand().to_s[1,8]}"
+      _write_binary(tmppath, value)
       File.rename(tmppath, fpath)
       ## set mtime (which is regarded as cache expired timestamp)
-      timestamp = lifetime && lifetime > 0 ? Time.now + lifetime : MAX_TIMESTAMP
+      timestamp = Time.now + (lifetime || @lifetime)
       File.utime(timestamp, timestamp, fpath)
       ## return data
       return value
@@ -926,8 +935,20 @@ module Tenjin
 
     def del(cache_key, *options)
       ## delete data file
+      ## if data file doesn't exist, don't raise error
       fpath = filepath(cache_key)
-      File.unlink(fpath) if File.exist?(fpath)
+      _ignore_not_found_error { File.unlink(fpath) }
+      nil
+    end
+
+    private
+
+    def _ignore_not_found_error(default=nil)
+      begin
+        return yield
+      rescue Errno::ENOENT => ex
+        return default
+      end
     end
 
   end

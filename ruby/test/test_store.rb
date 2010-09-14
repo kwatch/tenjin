@@ -64,16 +64,17 @@ class FileBaseStoreTest < Test::Unit::TestCase
       assert_nil(store.get("kkkk"))
     end
     if :"called then returns cache file content"
-      assert_equal(store.get(key), data)
-      assert_equal(store.get(key, Time.now - 1), data)
+      assert_equal(data, store.get(key))
     end
-    if :"cache file is created before timestamp, return nil"
-      _change_mtime(store.filepath(key), -2)
-      assert_nil(store.get(key, Time.now))
+    if :"cache file is older than max_timestamp, return nil"
+      ts = File.mtime(fpath)
+      assert_nil(store.get(key, ts-1))
+      assert_equal(data, store.get(key, ts))
     end
     if :"cache file is expired, return nil"
-      _change_mtime(store.filepath(key), -5*60-1)
-      assert_nil(store.get(key, Time.now))
+      ts = Time.now - 1
+      File.utime(ts, ts, fpath)
+      assert_nil(store.get(key))
     end
   end
 
@@ -89,7 +90,9 @@ class FileBaseStoreTest < Test::Unit::TestCase
     end
     if :"set mtime (which is regarded as cache expired timestamp)"
       store.set(key, data)
-      assert_equal(Tenjin::FileBaseStore::MAX_TIMESTAMP, File.mtime(fpath))
+      ts = Time.now + store.lifetime
+      #assert_equal(ts, File.mtime(fpath))
+      assert_equal(ts.to_s, File.mtime(fpath).to_s)
       now = Time.now
       store.set(key, data, 30)
       now2 = Time.now
@@ -109,6 +112,11 @@ class FileBaseStoreTest < Test::Unit::TestCase
       assert_file_exist(fpath)
       store.del(key)
       assert_not_exist(fpath)
+    end
+    if :"data file doesn't exist, don't raise error"
+      assert_nothing_raised do
+        store.del(key)
+      end
     end
   end
 
