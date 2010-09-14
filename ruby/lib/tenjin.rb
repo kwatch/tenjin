@@ -405,8 +405,13 @@ module Tenjin
       @escapefunc = options[:escapefunc] || ESCAPE_FUNCTION
       @preamble   = options[:preamble]  == true ? "_buf = #{init_buf_expr()}; " : options[:preamble]
       @postamble  = options[:postamble] == true ? "_buf.to_s"   : options[:postamble]
+      @input      = options[:input]
       @args       = nil  # or array of argument names
-      convert_file(filename) if filename
+      if @input
+        convert(@input, filename)
+      elsif filename
+        convert_file(filename)
+      end
     end
     attr_accessor :filename, :escapefunc, :initbuf, :newline
     attr_accessor :timestamp, :args

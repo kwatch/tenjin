@@ -120,6 +120,15 @@ END
 
   #def test_import_module2()
 
+  def test_input
+    t = Tenjin::Template.new(:input=>"<p>Hello ${name}</p>")
+    ok_(t.script) == ' _buf << %Q`<p>Hello #{escape((name).to_s)}</p>`; ' + "\n"
+    ok_(t.filename) == nil
+    t = Tenjin::Template.new('example.rbhtml', :input=>"<p>Hello ${name}</p>")
+    ok_(t.filename) == 'example.rbhtml'
+    ok_(t.script) == ' _buf << %Q`<p>Hello #{escape((name).to_s)}</p>`; ' + "\n"
+  end
+
 
 end
 
