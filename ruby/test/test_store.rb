@@ -8,6 +8,26 @@ require "#{File.dirname(__FILE__)}/test_all"
 require 'fileutils'
 
 
+class KeyValueStoreTest < Test::Unit::TestCase
+
+  def setup
+    @store = Tenjin::MemoryBaseStore.new()
+  end
+
+  def test_setter
+    @store['key1'] = 'value1'
+    assert_equal('value1', @store.get('key1'))
+  end
+
+  def test_getter
+    @store.set('key1', 'value1')
+    assert_equal('value1', @store['key1'])
+    assert_equal(nil,      @store['key9'])
+  end
+
+end
+
+
 class MemoryBaseStoreTest < Test::Unit::TestCase
 
   def setup

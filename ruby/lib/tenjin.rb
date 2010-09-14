@@ -854,6 +854,14 @@ module Tenjin
       raise NotImplementedError.new("#{self.class.name}#has(): not implemented yet.")
     end
 
+    def [](key)
+      return get(key)
+    end
+
+    def []=(key, value)
+      return set(key, value)
+    end
+
   end
 
 
