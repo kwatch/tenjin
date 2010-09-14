@@ -14,7 +14,7 @@ ENV['PATH'] = File.join(basedir, "bin") + File::PATH_SEPARATOR + ENV['PATH']
 require 'test/unit'
 #require 'testutil'
 require 'testcase-helper'
-require 'assert-text-equal'
+require 'testunit-assertions'
 require 'tenjin'
 
 if __FILE__ == $0

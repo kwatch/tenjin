@@ -7,7 +7,7 @@
 require 'test/unit'
 #require 'testutil'
 require 'testcase-helper'
-require 'assert-text-equal'
+require 'testunit-assertions'
 if defined?(RBX_VERSION)
   require 'kwalify'
   def load_yaml_str(s)

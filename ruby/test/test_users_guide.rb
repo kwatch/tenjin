@@ -7,7 +7,7 @@
 require 'test/unit'
 #require 'testutil'
 #require 'testcase-helper'
-require 'assert-text-equal'
+require 'testunit-assertions'
 
 #class Symbol
 #  def <=>(other)
