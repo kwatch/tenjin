@@ -11,10 +11,11 @@ $:.unshift testdir
 $:.unshift libdir
 ENV['PATH'] = File.join(basedir, "bin") + File::PATH_SEPARATOR + ENV['PATH']
 
-require 'test/unit'
+#require 'test/unit'
 #require 'testutil'
+require 'oktest'
 require 'testcase-helper'
-require 'testunit-assertions'
+#require 'testunit-assertions'
 require 'tenjin'
 
 if __FILE__ == $0

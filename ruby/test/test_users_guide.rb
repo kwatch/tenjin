@@ -23,18 +23,19 @@ require "#{File.dirname(__FILE__)}/test_all"
 #end
 
 
-class TenjinUsersGuideTest < Test::Unit::TestCase
+class TenjinUsersGuideTest
+  include Oktest::TestCase
 
   DIR = File.expand_path(File.dirname(__FILE__) + '/data/users_guide')
   CWD = Dir.pwd()
 
 
-  def setup
+  def before
     Dir.chdir DIR
   end
 
 
-  def teardown
+  def after
     Dir.chdir CWD
   end
 
@@ -46,7 +47,7 @@ class TenjinUsersGuideTest < Test::Unit::TestCase
     command = $1
     expected = $'
     result = `#{command}`
-    assert_text_equal(expected, result)
+    ok_(result) == expected
   end
 
 
@@ -69,4 +70,9 @@ class TenjinUsersGuideTest < Test::Unit::TestCase
   end
 
 
+end
+
+
+if __FILE__ == $0
+  Oktest.run_all()
 end

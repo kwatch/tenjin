@@ -121,7 +121,8 @@ CONTEXT2 = <<'END'
 END
 
 
-class TenjinMainTest < Test::Unit::TestCase
+class TenjinMainTest
+  include Oktest::TestCase
 
   filename = __FILE__.sub(/\.\w+$/, '.yaml')
   #load_yaml_testdata(filename)
@@ -161,15 +162,13 @@ class TenjinMainTest < Test::Unit::TestCase
       if @exception.is_a?(@exception)
         @exception = Kernel.const_get(@exception)
       end
-      ex = assert_raise(@exception) do
-        output = main.execute()
-      end
+      ex = ok_(proc { output = main.execute() }).raise?(@exception)
       if @errormsg
-        assert_text_equal(@errormsg, ex.to_s)
+        ok_(ex.to_s) == @errormsg
       end
     else
       output = main.execute()
-      assert_text_equal(@expected, output)
+      ok_(output) == @expected
     end
   ensure
     to_list(@filename).each { |fname| File.unlink(fname) } if @filename
@@ -738,7 +737,9 @@ END
   end
 
 
-  self.select_target_test()
+end
 
 
+if __FILE__ == $0
+  Oktest.run_all()
 end

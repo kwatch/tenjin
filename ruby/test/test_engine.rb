@@ -21,7 +21,8 @@ end
 
 
 
-class TenjinEngineTest < Test::Unit::TestCase
+class TenjinEngineTest
+  include Oktest::TestCase
 
   s = File.read(__FILE__.sub(/\.\w+$/, '.yaml'))
   s.gsub!(/^\t/, ' ' * 8)
@@ -83,7 +84,7 @@ class TenjinEngineTest < Test::Unit::TestCase
       filename = 'user_%s.rbhtml' % action
       tplname  = shortp ? action.intern : filename
       output   = engine.render(tplname, context, layoutp)
-      assert_text_equal(expected, output)
+      ok_(output) == expected
 
     ## teardown
     ensure
@@ -183,7 +184,7 @@ class TenjinEngineTest < Test::Unit::TestCase
       engine = Tenjin::Engine.new(:prefix=>'user_', :postfix=>'.rbhtml', :layout=>:layout, :templateclass=>_template_class())
       context = { :items => %w[AAA BBB CCC] }
       result = engine.render(:content, context)
-      assert_text_equal(expected, result)
+      ok_(result) == expected
     ensure
       [layout_filename, layout_filename + '.cache',
        content_filename, content_filename + '.cache'].each do |filename|
@@ -208,7 +209,7 @@ class TenjinEngineTest < Test::Unit::TestCase
       end
       engine = Tenjin::Engine.new(:postfix=>'.rbhtml', :templateclass=>_template_class())
       result = engine.render(:content, context)
-      assert_text_equal(expected, result)
+      ok_(result) == expected
     ensure
       for filename, content in files
         for fname in Dir.glob("#{filename}*")
@@ -233,19 +234,19 @@ class TenjinEngineTest < Test::Unit::TestCase
       content_html = hash['content_html']
       File.write(fname.call('content_html'), content_html)
       actual = engine.render(:content_html, context)
-      assert_text_equal(hash['expected_html'], actual)
+      ok_(actual) == hash['expected_html']
       ##
       sleep(1)
       content_html = hash['content_html'] + "<?rb @_layout = :layout_xhtml ?>\n"
       File.write(fname.call('content_html'), content_html)
       actual = engine.render(:content_html, context)
-      assert_text_equal(hash['expected_xhtml'], actual)
+      ok_(actual) == hash['expected_xhtml']
       ##
       sleep(1)
       content_html = hash['content_html'] + "<?rb @_layout = false ?>\n"
       File.write(fname.call('content_html'), content_html)
       actual = engine.render(:content_html, context)
-      assert_text_equal(hash['expected_nolayout'], actual)
+      ok_(actual) == hash['expected_nolayout']
     ensure
       names.collect {|name| fname.call(name)}.each do |filename|
         File.unlink(filename) if test(?f, filename)
@@ -275,29 +276,29 @@ class TenjinEngineTest < Test::Unit::TestCase
       args[:cache] = false
       engine = Tenjin::Engine.new(args)
       output = engine.render(:create, context)
-      assert_text_equal(expected, output)
-      assert !test(?f, 'account_create.rbhtml.cache')
-      #assert !test(?f, 'account_create.rbhtml.pstore')
-      assert !test(?f, 'account_form.rbhtml.cache')
-      #assert !test(?f, 'account_form.rbhtml.pstore')
+      ok_(output) == expected
+      not_ok_('account_create.rbhtml.cache').exist?
+      #not_ok_('account_create.rbhtml.pstore').exist?
+      not_ok_('account_form.rbhtml.cache').exist?
+      not_ok_('account_form.rbhtml.pstore').exist?
       ## ruby code caching
       args[:cache] = true
       engine = Tenjin::Engine.new(args)
       output = engine.render(:create, context)
-      assert test(?f, 'account_create.rbhtml.cache')
-      #assert !test(?f, 'account_create.rbhtml.pstore')
-      assert test(?f, 'account_form.rbhtml.cache')
-      #assert !test(?f, 'account_form.rbhtml.pstore')
+      ok_('account_create.rbhtml.cache').file?
+      #not_ok_('account_create.rbhtml.cache').exist?
+      ok_('account_form.rbhtml.cache').file?
+      #not_ok_('account_form.rbhtml.pstore').exist?
       File.unlink('account_create.rbhtml.cache')
       File.unlink('account_form.rbhtml.cache')
       ## pstore caching
       #args[:cache] = true
       #engine = Tenjin::Engine(args)
       #output = engine.render(:create, context)
-      #assert !test(?f, 'account_create.rbhtml.cache')
-      #assert !test(?f, 'account_create.rbhtml.pstore')
-      #assert !test(?f, 'account_form.rbhtml.cache')
-      #assert !test(?f, 'account_form.rbhtml.pstore')
+      #not_ok_('account_create.rbhtml.cache').file?
+      #not_ok_('account_create.rbhtml.pstore').file?
+      #not_ok_('account_form.rbhtml.cache').file?
+      #not_ok_('account_form.rbhtml.pstore').file?
     ensure
       for key, filename in filenames
         for fname in [filename, filename+'.cache', filename+'.pstore']
@@ -322,30 +323,30 @@ class TenjinEngineTest < Test::Unit::TestCase
     end
     # when no cache file
     args1 = nil;
-    ex = assert_raise(exception) do
-      assert(!test(?f, 'content.rbhtml.cache'))
-      engine = Tenjin::Engine.new(:cache=>true)
-      args1 = engine.get_template('content.rbhtml').args
-      assert_not_nil(args1)
-      output = engine.render('content.rbhtml', context)
-    end
+    ex = ok_(proc {
+               not_ok_('content.rbhtml.cache').file?
+               engine = Tenjin::Engine.new(:cache=>true)
+               args1 = engine.get_template('content.rbhtml').args
+               not_ok_(args1) == nil
+               output = engine.render('content.rbhtml', context)
+             }).raise?(exception)
     msg = ex.to_s.sub(/:0x[0-9a-fA-F]\w+/, ':0x12345')
     msg = msg[0, errormsg.length-1]+'>' if defined?(RBX_VERSION)
-    assert_equal(errormsg, msg)
+    ok_(msg) == errormsg
     # when cache file exist
-    ex = assert_raise(NameError) do
-      #File.unlink('content.rbhtml');
-      assert(test(?f, 'content.rbhtml.cache'))
-      engine = Tenjin::Engine.new(:cache=>true)
-      args2 = engine.get_template('content.rbhtml').args
-      assert_not_nil(args2)
-      assert_equal(args1, args2)
-      output = engine.render('content.rbhtml', context)
-    end
-    #assert_equal(errormsg, ex.to_s.sub(/:0x\w+>/, '>'))
+    ex = ok_(proc {
+               #File.unlink('content.rbhtml');
+               ok_('content.rbhtml.cache').file?
+               engine = Tenjin::Engine.new(:cache=>true)
+               args2 = engine.get_template('content.rbhtml').args
+               not_ok_(args2) == nil
+               ok_(args2) == args1
+               output = engine.render('content.rbhtml', context)
+             }).raise?(NameError)
+    #ok_(ex.to_s.sub(/:0x\w+>/, '>')) == errormsg
     msg = ex.to_s.sub(/:0x[0-9a-fA-F]\w+/, ':0x12345')
     msg = msg[0, errormsg.length-1]+'>' if defined?(RBX_VERSION)
-    assert_equal(errormsg, msg)
+    ok_(msg) == errormsg
   ensure
     _remove_files(['content'])
   end
@@ -363,25 +364,25 @@ class TenjinEngineTest < Test::Unit::TestCase
       cachename = filename+'.cache'
       engine = Tenjin::Engine.new(:cache=>cacheflag)
       t = engine.get_template(filename)
-      assert_equal(args, t.args)
-      assert_text_equal(script, t.script)
+      ok_(t.args) == args
+      ok_(t.script) == script
       cache_actual = File.read(engine.cachename(filename))
-      assert_text_equal(cache, cache_actual)
+      ok_(cache_actual) == cache
     end
     #
     ## args=[x,y,z], cache=1
     for f in Dir.glob(filename+'*') do File.unlink(f) end
     File.write(filename, data["input1"])
-    assert(!test(?f, cachename))
+    not_ok_(cachename).file?
     _testproc.call(cacheflag=true, n=1)
-    assert(test(?f, cachename))
+    ok_(cachename).file?
     _testproc.call(cacheflag=true, n=1)
     ## args=[], cache=1
     sleep(1)
     File.write(filename, data["input2"])
-    #assert(test(?f, cachename))
+    #ok_(cachename).file?
     _testproc.call(cacheflag=true, n=2)
-    #assert(test(?f, cachename))
+    #ok_(cachename).file?
     _testproc.call(cacheflag=true, n=2)
   ensure
     _remove_files(['input.pyhtml'])
@@ -412,7 +413,7 @@ class TenjinEngineTest < Test::Unit::TestCase
       output = engine.render(:body, context)
       #
       expected = data["expected_#{keys.join('_')}"]
-      assert_text_equal(expected, output)
+      ok_(output) == expected
     ensure
       FileUtils.rm_rf(basedir)
     end
@@ -463,19 +464,19 @@ class TenjinEngineTest < Test::Unit::TestCase
     #
     context = { :title=>'Create', :action=>'create', :params=>{'state'=>:NY} }
     actual = engine.render(:create, context)  # 1st
-    assert_text_equal(data['expected1'], actual)
+    ok_(actual) == data['expected1']
     context[:params] = {'state'=>:xx}
     actual = engine.render(:create, context)  # 2nd
-    #assert_text_equal(data['expected1'], actual)
-    assert_text_equal(data['expected1'].sub(/ checked="checked"/, ''), actual)
+    #ok_(actual) == data['expected1']
+    ok_(actual) == data['expected1'].sub(/ checked="checked"/, '')
     #
     context = { :title=>'Update', :action=>'update', :params=>{'state'=>:NY} }
     actual = engine.render(:update, context)  # 1st
-    assert_text_equal(data['expected2'], actual)
+    ok_(actual) == data['expected2']
     context[:params] = {'state'=>:xx}
     actual = engine.render(:update, context)  # 2nd
-    assert_text_equal(data['expected2'], actual)  # not changed!
-    #assert_text_equal(data['expected2'].sub(/ checked="checked"/, ''), actual)
+    ok_(actual) == data['expected2']  # not changed!
+    #ok_(actual) == data['expected2'].sub(/ checked="checked"/, '')
   ensure
     _remove_files(Dir.glob('prep_*'))
   end
@@ -493,11 +494,11 @@ class TenjinEngineTest < Test::Unit::TestCase
     #
     engine = Tenjin::Engine.new(:cache=>false, :preprocess=>false)
     actual = engine.render("index.rbhtml")
-    assert_text_equal(expected, actual)
+    ok_(actual) == expected
     #
     engine = Tenjin::Engine.new(:cache=>false, :preprocess=>true)
     actual = engine.render("index.rbhtml")
-    assert_text_equal(expected, actual)
+    ok_(actual) == expected
   ensure
     %w[index.rbhtml show.rbhtml].each {|x| File.unlink(x) if File.exist?(x) }
   end
@@ -557,23 +558,23 @@ END
       Tenjin::Engine.datacache = datacache
       engine = Tenjin::Engine.new
           # or engine = Tenjin::Engine.new(:datacache=>datacache)
-      if :"called first time then calls block and save output to cache store"
+      spec "if called first time then calls block and save output to cache store" do
         called = false
         entries = proc { called = true; ['Haruhi', 'Mikuru', 'Yuki'] }
         html = engine.render(fname, {:entries => entries})
-        assert_equal(true, called)
-        assert_file_exist(fragcache_fpath)
-        assert_text_equal(expected_output1, html)
-        assert_text_equal(expected_cache1, _read_file(fragcache_fpath))
+        ok_(called) == true
+        ok_(fragcache_fpath).exist?
+        ok_(html) == expected_output1
+        ok_(_read_file(fragcache_fpath)) == expected_cache1
       end
-      if :"called second time then don't call block and reuse cached data"
+      spec "if called second time then don't call block and reuse cached data" do
         called = false
         entries = proc { called = true; ['Haruhi', 'Mikuru', 'Yuki'] }
         html = engine.render(fname, {:entries => entries})
-        assert_equal(false, called)
-        assert_text_equal(expected_output1, html)
+        ok_(called) == false
+        ok_(html) == expected_output1
       end
-      if :"called after cache is expired then block is called again"
+      spec "if called after cache is expired then block is called again" do
         called = false
         entries = proc { called = true; ['Haruhi', 'Mikuru', 'Yuki', 'Kyon'] }
         ## expire cache
@@ -583,12 +584,12 @@ END
         mtime = File.mtime(fragcache_fpath)
         ##
         html = engine.render(fname, {:entries => entries})
-        assert_equal(true, called)
-        assert(File.mtime(fragcache_fpath) > mtime+5*60-1)
-        assert_text_equal(expected_output2, html)
-        assert_text_equal(expected_cache2, _read_file(fragcache_fpath))
+        ok_(called) == true
+        ok_(File.mtime(fragcache_fpath)) > mtime+5*60-1
+        ok_(html) == expected_output2
+        ok_(_read_file(fragcache_fpath)) == expected_cache2
       end
-      if :'template file is updated then block is called again'
+      spec "if template file is updated then block is called again" do
         ## update template timestamp
         t = Time.now + 1
         File.utime(t, t, fname)
@@ -596,9 +597,9 @@ END
         called = false
         entries = proc { called = true; ['Haruhi', 'Mikuru', 'Yuki', 'Kyon', 'Itsuki'] }
         html = engine.render(fname, {:entries => entries})
-        assert_equal(true, called)
-        assert_text_equal(expected_output3, html)
-        assert_text_equal(expected_cache3, _read_file(fragcache_fpath))
+        ok_(called) == true
+        ok_(html) == expected_output3
+        ok_(_read_file(fragcache_fpath)) == expected_cache3
       end
     ensure
       FileUtils.rm_rf(cachedir)
@@ -609,20 +610,17 @@ END
   end
 
   def test_default_datacache
-    if :"datastore is not speicified then @@datastore is used instead"
+    spec "if datastore is not speicified then @@datastore is used instead" do
       begin
         backup = Tenjin::Engine.datacache
         Tenjin::Engine.datacache = store = Tenjin::FileBaseStore.new('/tmp')
         engine = Tenjin::Engine.new
-        assert_same(store, engine.datacache)
+        ok_(engine.datacache).same?(store)
       ensure
         Tenjin::Engine.datacache = backup
       end
     end
   end
-
-
-  self.select_target_test()
 
 
 end
@@ -635,3 +633,8 @@ end
 #    end
 #  end
 #end
+
+
+if __FILE__ == $0
+  Oktest.run_all()
+end

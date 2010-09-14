@@ -7,7 +7,8 @@
 require "#{File.dirname(__FILE__)}/test_all"
 
 
-class TenjinTemplateTest < Test::Unit::TestCase
+class TenjinTemplateTest
+  include Oktest::TestCase
 
   filename = __FILE__.sub(/\.\w+$/, '.yaml')
   #load_yaml_testdata(filename)
@@ -63,28 +64,30 @@ class TenjinTemplateTest < Test::Unit::TestCase
       if @exception.is_a?(String)
         @exception = @exception.split('::').inject(Object) {|klass, s| klass = klass.const_get(s) }
       end
-      ex = assert_raise(@exception) do
-        template = @templateclass.new(@options)
-        template.convert(@input, @filename)
-        template.render(@context)
-      end
-      #assert_equal(@exception, ex.class.name)
+      ex = ok_(proc {
+                 template = @templateclass.new(@options)
+                 template.convert(@input, @filename)
+                 template.render(@context)
+               }).raise?(@exception)
+      #ok_(ex.class.name) == @exception
       if @errormsg
         errmsg = ex.to_s.sub(/:0x[0-9a-fA-F]+/, ':0x12345')
         if defined?(RBX_VERSION)
-          assert_equal(@errormsg, errmsg[0, @errormsg.length-1] + '>')
+          ok_(errmsg[0, @errormsg.length-1] + '>') == @errormsg
         else
-          assert_equal(@errormsg, errmsg)
+          ok_(errmsg) == @errormsg
         end
       end
-      assert_equal(@filename, ex.filename) if @filename
+      if @filename
+        ok_(ex.filename, @filename)
+      end
     else
       template = @templateclass.new(@options)
       script = template.convert(@input, @filename)
-      assert_text_equal(@source, script)
+      ok_(script) == @source
       if @expected
         output = template.render(@context)
-        assert_text_equal(@expected, output)
+        ok_(output) == @expected
       end
     end
 
@@ -105,8 +108,8 @@ END
       File.open(filename, 'w') { |f| f.write(input) }
       template1 = Tenjin::Template.new(filename)
       template2 = Tenjin::Template.new()
-      assert_text_equal(template1.script, template2.convert(input))
-      assert_text_equal(template1.render(), template2.render())
+      ok_(template2.convert(input)) == template1.script
+      ok_(template2.render()) == template1.render()
     ensure
       File.unlink(filename)
     end
@@ -118,7 +121,9 @@ END
   #def test_import_module2()
 
 
-  self.select_target_test()
+end
 
 
+if __FILE__ == $0
+  Oktest.run_all()
 end
