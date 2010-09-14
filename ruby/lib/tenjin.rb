@@ -124,7 +124,7 @@ module Tenjin
   ##
   module ContextHelper
 
-    attr_accessor :_buf, :_engine, :_layout, :_callback, :_template
+    attr_accessor :_buf, :_engine, :_layout, :_template
 
     ## escape value. this method should be overrided in subclass.
     def escape(val)
@@ -248,6 +248,28 @@ module Tenjin
     ##
     ## cache fragment data
     ##
+    ## ex.
+    ##   datacache = Tenjin::FileBaseStore.new("/var/tmp/myapp/dacache")
+    ##   Tenjin::Engine.datacache = datacache
+    ##   engine = Tenjin::Engine.new
+    ##       # or engine = Tenjin::Engine.new(:datacache=>datacache)
+    ##   entries = proc { Entry.find(:all) }
+    ##   html = engine.render("index.rbhtml", {:entries => entries})
+    ##
+    ## index.rbhtml:
+    ##   <html>
+    ##     <body>
+    ##       <?rb cache_with("entries/index", 5*60) do ?>
+    ##       <?rb   entries = @entries.call ?>
+    ##       <ul>
+    ##         <?rb for entry in entries ?>
+    ##         <li>${entry.title}</li>
+    ##         <?rb end ?>
+    ##       </ul>
+    ##       <?rb end ?>
+    ##     </body>
+    ##   </html>
+    ##
     def cache_with(cache_key, lifetime=nil)
       datacache = self._engine.datacache  or
         raise ArgumentError.new("datacache object is not set for engine object.")
@@ -255,10 +277,8 @@ module Tenjin
       if data
         echo data
       else
-        values = self._callback && self._callback.call(cache_key) || {}
-        values.each_pair {|k, v| self.instance_variable_set("@#{k}", v) } if values.is_a?(Hash)
         pos = self._buf.length
-        yield(values)
+        yield
         data = self._buf[pos..-1]
         datacache.set(cache_key, data, lifetime)
       end
@@ -840,34 +860,6 @@ module Tenjin
   ##
   ## file base data cache
   ##
-  ## ex.
-  ##   root_path = "/var/tmp/myapp"
-  ##   Dir.mkdir(root_path) unless File.exist?(root_path)
-  ##   datacache = FileBaseStore.new(root_path)
-  ##   engine = Tenjin::Engine.new(:datacache=>datacache)
-  ##   context = { :user => "Haruhi" }
-  ##   html = engine.render("index.rbhtml", context) {|cache_key|
-  ##     case cache_key
-  ##     when "entries/index"
-  ##       values = { :entries => Entry.find(:all) }
-  ##     end
-  ##     values
-  ##   }
-  ##
-  ## index.rbhtml:
-  ##   <html>
-  ##     <body>
-  ##       <p>Hello ${@user || 'guiest'}!</p>
-  ##       <?rb cache_with("entries/index", 5*60) do |values| ?>
-  ##         <ul>
-  ##         <?rb for entry in values[:entries] ?>
-  ##           <li>${entry.title}</li>
-  ##         <?rb end ?>
-  ##         </ul>
-  ##       <?rb end ?>
-  ##     </body>
-  ##   </html>
-  ##
   class FileBaseStore < KeyValueStore
 
     def initialize(root)
@@ -933,6 +925,7 @@ module Tenjin
     end
 
     def del(cache_key, *options)
+      ## delete data file
       fpath = filepath(cache_key)
       File.unlink(fpath) if File.exist?(fpath)
     end
@@ -1115,10 +1108,9 @@ module Tenjin
     ## initializer) is used as layout template, else if false then no layout
     ## template is used.
     ## if argument 'layout' is string, it is regarded as layout template name.
-    def render(template_name, context=Context.new, layout=true, &callback)
+    def render(template_name, context=Context.new, layout=true)
       #context = Context.new(context) if context.is_a?(Hash)
       context = hook_context(context)
-      context._callback = callback
       while true
         template = get_template(template_name, context)  # context is passed only for preprocessor
         _tmpl = context._template

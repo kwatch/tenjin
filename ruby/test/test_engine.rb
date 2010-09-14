@@ -5,6 +5,8 @@
 ###
 
 require "#{File.dirname(__FILE__)}/test_all"
+require 'fileutils'
+
 if defined?(RBX_VERSION)
   require 'kwalify'
   def load_yaml_str(s)
@@ -44,6 +46,10 @@ class TenjinEngineTest < Test::Unit::TestCase
         File.unlink(fname) if test(?f, fname)
       end
     end
+  end
+
+  def _read_file(fname)
+    File.open(fname, 'rb') {|f| f.read() }
   end
 
   def _remove_files(*filenames)
@@ -408,7 +414,6 @@ class TenjinEngineTest < Test::Unit::TestCase
       expected = data["expected_#{keys.join('_')}"]
       assert_text_equal(expected, output)
     ensure
-      require 'fileutils'
       FileUtils.rm_rf(basedir)
     end
   end
@@ -495,6 +500,125 @@ class TenjinEngineTest < Test::Unit::TestCase
     assert_text_equal(expected, actual)
   ensure
     %w[index.rbhtml show.rbhtml].each {|x| File.unlink(x) if File.exist?(x) }
+  end
+
+
+  def test_fragmentcache
+    input = <<'END'
+<html>
+  <body>
+    <?rb cache_with("entries/index", 5*60) do ?>
+    <?rb   entries = @entries.call ?>
+    <ul>
+      <?rb for entry in entries ?>
+      <li>${entry}</li>
+      <?rb end ?>
+    </ul>
+    <?rb end ?>
+  </body>
+</html>
+END
+    expected_output = <<'END'
+<html>
+  <body>
+    <ul>
+      <li>Haruhi</li>
+      <li>Mikuru</li>
+      <li>Yuki</li>
+      <li>Kyon</li>
+      <li>Itsuki</li>
+    </ul>
+  </body>
+</html>
+END
+    expected_cache = <<'END'
+    <ul>
+      <li>Haruhi</li>
+      <li>Mikuru</li>
+      <li>Yuki</li>
+      <li>Kyon</li>
+      <li>Itsuki</li>
+    </ul>
+END
+    expected_output1 = expected_output.gsub(/^.*(Kyon|Itsuki).*\n/, '')
+    expected_cache1  = expected_cache .gsub(/^.*(Kyon|Itsuki).*\n/, '')
+    expected_output2 = expected_output.gsub(/^.*(Itsuki).*\n/, '')
+    expected_cache2  = expected_cache .gsub(/^.*(Itsuki).*\n/, '')
+    expected_output3 = expected_output
+    expected_cache3  = expected_cache
+    #
+    begin
+      fname = "fragtest.rbhtml"
+      File.open(fname, 'wb') {|f| f.write(input) }
+      cachedir = ".test.fragcache"
+      Dir.mkdir(cachedir)
+      fragcache_fpath = "#{cachedir}/entries/index"
+      datacache = Tenjin::FileBaseStore.new(cachedir)
+      Tenjin::Engine.datacache = datacache
+      engine = Tenjin::Engine.new
+          # or engine = Tenjin::Engine.new(:datacache=>datacache)
+      if :"called first time then calls block and save output to cache store"
+        called = false
+        entries = proc { called = true; ['Haruhi', 'Mikuru', 'Yuki'] }
+        html = engine.render(fname, {:entries => entries})
+        assert_equal(called, true)
+        assert_file_exist(fragcache_fpath)
+        assert_text_equal(expected_output1, html)
+        assert_text_equal(expected_cache1, _read_file(fragcache_fpath))
+      end
+      if :"called second time then don't call block and reuse cached data"
+        called = false
+        entries = proc { called = true; ['Haruhi', 'Mikuru', 'Yuki'] }
+        html = engine.render(fname, {:entries => entries})
+        assert_equal(called, false)
+        assert_text_equal(expected_output1, html)
+      end
+      if :"called after cache is expired then block is called again"
+        called = false
+        entries = proc { called = true; ['Haruhi', 'Mikuru', 'Yuki', 'Kyon'] }
+        ## expire cache
+        atime = File.atime(fragcache_fpath)
+        mtime = File.mtime(fragcache_fpath)
+        File.utime(atime, mtime-5*60, fragcache_fpath)
+        mtime = File.mtime(fragcache_fpath)
+        ##
+        html = engine.render(fname, {:entries => entries})
+        assert_equal(called, true)
+        assert(File.mtime(fragcache_fpath) > mtime+5*60-1)
+        assert_text_equal(expected_output2, html)
+        assert_text_equal(expected_cache2, _read_file(fragcache_fpath))
+      end
+      if :'template file is updated then block is called again'
+        ## update template timestamp
+        t = Time.now + 1
+        File.utime(t, t, fname)
+        ##
+        called = false
+        entries = proc { called = true; ['Haruhi', 'Mikuru', 'Yuki', 'Kyon', 'Itsuki'] }
+        html = engine.render(fname, {:entries => entries})
+        assert_equal(called, true)
+        assert_text_equal(expected_output3, html)
+        assert_text_equal(expected_cache3, _read_file(fragcache_fpath))
+      end
+    ensure
+      FileUtils.rm_rf(cachedir)
+      [fname, "#{fname}.cache"].each do |x|
+        File.unlink(x) if File.file?(x)
+      end
+    end
+  end
+
+  def test_default_datacache
+    if :"datastore is not speicified then @@datastore is used instead"
+      begin
+        backup = Tenjin::Engine.datacache
+        Tenjin::Engine.datacache = store = Tenjin::FileBaseStore.new('/tmp')
+        engine = Tenjin::Engine.new
+        assert_same(store, engine.datacache)
+      ensure
+        Tenjin::Engine.datacache = backup
+      end
+    end
   end
 
 
