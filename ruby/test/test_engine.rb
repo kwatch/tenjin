@@ -561,7 +561,7 @@ END
         called = false
         entries = proc { called = true; ['Haruhi', 'Mikuru', 'Yuki'] }
         html = engine.render(fname, {:entries => entries})
-        assert_equal(called, true)
+        assert_equal(true, called)
         assert_file_exist(fragcache_fpath)
         assert_text_equal(expected_output1, html)
         assert_text_equal(expected_cache1, _read_file(fragcache_fpath))
@@ -570,7 +570,7 @@ END
         called = false
         entries = proc { called = true; ['Haruhi', 'Mikuru', 'Yuki'] }
         html = engine.render(fname, {:entries => entries})
-        assert_equal(called, false)
+        assert_equal(false, called)
         assert_text_equal(expected_output1, html)
       end
       if :"called after cache is expired then block is called again"
@@ -583,7 +583,7 @@ END
         mtime = File.mtime(fragcache_fpath)
         ##
         html = engine.render(fname, {:entries => entries})
-        assert_equal(called, true)
+        assert_equal(true, called)
         assert(File.mtime(fragcache_fpath) > mtime+5*60-1)
         assert_text_equal(expected_output2, html)
         assert_text_equal(expected_cache2, _read_file(fragcache_fpath))
@@ -596,7 +596,7 @@ END
         called = false
         entries = proc { called = true; ['Haruhi', 'Mikuru', 'Yuki', 'Kyon', 'Itsuki'] }
         html = engine.render(fname, {:entries => entries})
-        assert_equal(called, true)
+        assert_equal(true, called)
         assert_text_equal(expected_output3, html)
         assert_text_equal(expected_cache3, _read_file(fragcache_fpath))
       end
