@@ -996,21 +996,21 @@ module Tenjin
       @cache   = options.fetch(:cache, true)
       @path    = options[:path]
       @preprocess = options.fetch(:preprocess, nil)
-      @datacache = options[:datacache] || @@default_datacache
+      @datacache = options[:datacache] || @@datacache
       @templateclass = options.fetch(:templateclass, Template)
       @init_opts_for_template = options
       @templates = {}   # filename->template
     end
     attr_accessor :datacache
 
-    @@default_datacache = nil
+    @@datacache = nil
 
-    def self.default_datacache
-      @@default_datacache
+    def self.datacache
+      @@datacache
     end
 
-    def self.default_datacache=(datacache)
-      @@default_datacache = datacache
+    def self.datacache=(datacache)
+      @@datacache = datacache
     end
 
     ## convert short name into filename (ex. ':list' => 'template/list.rb.html')

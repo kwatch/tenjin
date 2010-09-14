@@ -212,4 +212,17 @@ END
 
   end
 
+  def test_default_datacache
+    if :"datastore is not speicified then @@datastore is used instead"
+      begin
+        backup = Tenjin::Engine.datacache
+        Tenjin::Engine.datacache = store = Tenjin::FileBaseStore.new('/tmp')
+        engine = Tenjin::Engine.new
+        assert_same(store, engine.datacache)
+      ensure
+        Tenjin::Engine.datacache = backup
+      end
+    end
+  end
+
 end
