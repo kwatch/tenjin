@@ -1082,7 +1082,7 @@ module Tenjin
     end
     attr_accessor :datacache
 
-    @@datacache = nil
+    @@datacache = MemoryBaseStore.new()
 
     def self.datacache
       @@datacache
