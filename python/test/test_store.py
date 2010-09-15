@@ -36,7 +36,7 @@ class MemoryBaseStoreTest(object):
 
     def test_set(self):
         data_cache, key, value = self.data_cache, self.key, self.value
-        if "called then cachees value":
+        if "called then caches value":
             ok (key).not_in(data_cache.values)
             data_cache.set(key, value, 1)
             ok (key).in_(data_cache.values)
@@ -46,10 +46,15 @@ class MemoryBaseStoreTest(object):
             t = data_cache.values[key]
             ok (t).is_a(tuple)
             ok (t[0]) == value
-            ok (int(t[1])) == int(now+10)
+            ok (int(t[1])) == int(now)
+            ok (int(t[2])) == int(now+10)
         if "called without lifetime then set cache file's mtime as 1 week ahead":
             data_cache.set(key, value)
-            ok (data_cache.values[key]) == (value, 0)
+            now = time.time()
+            t = data_cache.values[key]
+            ok (t[0]) == value
+            ok (int(t[1])) == int(now)
+            ok (t[2]) == 0
 
     def test_get(self):
         data_cache, key, value = self.data_cache, self.key, self.value

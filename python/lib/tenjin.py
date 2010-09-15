@@ -1110,7 +1110,7 @@ class FileCacheStorage(CacheStorage):
 
     def _delete(self, fullpath):
         cachepath = self._cachename(fullpath)
-        if _isfile(cachepath): os.unlink(cachepath)
+        _ignore_not_found_error(lambda: os.unlink(cachepath))
 
 
 class MarshalCacheStorage(FileCacheStorage):
@@ -1232,19 +1232,23 @@ class MemoryBaseStore(KeyValueStore):
     def __init__(self):
         self.values = {}
 
-    def get(self, key):
-        pair = self.values.get(key)
-        if not pair:
+    def get(self, key, original_timestamp=None):
+        tupl = self.values.get(key)
+        if not tupl:
             return None
-        value, timestamp = pair
-        if timestamp and timestamp < _time():
-            self.values.pop(key)
+        value, created_at, expires_at = tupl
+        if original_timestamp is not None and created_at < original_timestamp:
+            self.delete(key)
+            return None
+        if expires_at < _time():
+            self.delete(key)
             return None
         return value
 
     def set(self, key, value, lifetime=0):
-        ts = lifetime and _time() + lifetime or 0
-        self.values[key] = (value, ts)
+        created_at = _time()
+        expires_at = lifetime and created_at + lifetime or 0
+        self.values[key] = (value, created_at, expires_at)
         return True
 
     def delete(self, key):
@@ -1258,9 +1262,9 @@ class MemoryBaseStore(KeyValueStore):
         pair = self.values.get(key)
         if not pair:
             return False
-        value, timestamp = pair
-        if timestamp and timestamp < _time():
-            self.values.pop(key)
+        value, created_at, expires_at = pair
+        if expires_at and expires_at < _time():
+            self.delete(key)
             return False
         return True
 
@@ -1269,6 +1273,8 @@ class MemoryBaseStore(KeyValueStore):
 ## file base data cache
 ##
 class FileBaseStore(KeyValueStore):
+
+    lifetime = 604800   # = 60*60*24*7
 
     def __init__(self, root_path, encoding=None):
         if not os.path.isdir(root_path):
@@ -1283,17 +1289,25 @@ class FileBaseStore(KeyValueStore):
     def filepath(self, key, _pat1=_pat):
         return os.path.join(self.root_path, _pat1.sub('_', key))
 
-    def get(self, key):
+    def get(self, key, original_timestamp=None):
         fpath = self.filepath(key)
-        if not _isfile(fpath):
-            return
-        if _getmtime(fpath) < _time():
-            os.unlink(fpath)
-            return
+        #if not _isfile(fpath): return None
+        stat = _ignore_not_found_error(lambda: os.stat(fpath), None)
+        if stat is None:
+            return None
+        created_at = stat.st_ctime
+        expires_at = stat.st_mtime
+        if original_timestamp is not None and created_at < original_timestamp:
+            self.delete(key)
+            return None
+        if expires_at < _time():
+            self.delete(key)
+            return None
         if self.encoding:
-            return _read_text_file(fpath, self.encoding)
+            f = lambda: _read_text_file(fpath, self.encoding)
         else:
-            return _read_binary_file(fpath)
+            f = lambda: _read_binary_file(fpath)
+        return _ignore_not_found_error(f, None)
 
     def set(self, key, value, lifetime=0):
         fpath = self.filepath(key)
@@ -1304,23 +1318,21 @@ class FileBaseStore(KeyValueStore):
         if _is_unicode(value):
             value = value.encode(self.encoding or 'utf-8')
         _write_binary_file(fpath, value)
-        ts = now + (lifetime or 604800)   # 60*60*24*7 = 604800
-        os.utime(fpath, (ts, ts))
+        expires_at = now + (lifetime or self.lifetime)  # timestamp
+        os.utime(fpath, (expires_at, expires_at))
         return True
 
     def delete(self, key):
         fpath = self.filepath(key)
-        if _isfile(fpath):
-            os.unlink(fpath)
-            return True
-        return False
+        ret = _ignore_not_found_error(lambda: os.unlink(fpath), False)
+        return ret != False
 
     def has(self, key):
         fpath = self.filepath(key)
         if not _isfile(fpath):
             return False
         if _getmtime(fpath) < _time():
-            os.unlink(fpath)
+            self.delete(key)
             return False
         return True
 
