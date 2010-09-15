@@ -140,6 +140,11 @@ module Oktest
       check2(@actual.include?(expected)) { "#{@actual.inspect}.include?(#{expected.inspect})" }
     end
 
+    def is_a?(expected)
+      check2(@actual.is_a?(expected)) { "#{@actual.inspect}.is_a?(#{expected})" }
+    end
+    alias kind_of? is_a?
+
     def nil?
       check2(@actual.nil?) { "#{@actual.inspect}.nil?" }
     end
@@ -289,7 +294,7 @@ module Oktest
     def target(desc); yield; end
 
     ## marker method to describe specification
-    def spec(desc); yield; end
+    def spec(desc); yield if block_given?; end
 
   end
 
