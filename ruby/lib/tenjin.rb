@@ -853,16 +853,11 @@ module Tenjin
   ##
   class TemplateCache
 
-    def cachename(filepath)
-      #: return cache file name which is untainted.
-      return "#{filepath}.cache".untaint
-    end
-
-    def save(filepath, template)
+    def save(cachepath, template)
       raise NotImplementedError.new("#{self.class.name}#save(): not implemented yet.")
     end
 
-    def load(filepath, timestamp)
+    def load(cachepath, timestamp)
       raise NotImplementedError.new("#{self.class.name}#load(): not implemented yet.")
     end
 
@@ -874,11 +869,11 @@ module Tenjin
   ##
   class NullTemplateCache < TemplateCache
 
-    def save(filepath, template)
+    def save(cachepath, template)
       ## do nothing.
     end
 
-    def load(filepath, timestamp)
+    def load(cachepath, timestamp)
       ## do nothing.
     end
 
@@ -890,31 +885,30 @@ module Tenjin
   ##
   class FileBaseTemplateCache < TemplateCache
 
-    def save(filepath, template)
+    def save(cachepath, template)
       #: save template script and args into cache file.
-      cache_filepath = cachename(filepath)
       t = template
-      tmppath = "#{cache_filepath}#{rand().to_s[1,8]}"
+      tmppath = "#{cachepath}#{rand().to_s[1,8]}"
       s = t.args ? "\#@ARGS #{t.args.join(',')}\n" : ''
       File.open(tmppath, 'wb') {|f| f.write(s); f.write(t.script) }
       #: set cache file's mtime to template timestamp.
       File.utime(t.timestamp, t.timestamp, tmppath)
-      File.rename(tmppath, cache_filepath)
+      File.rename(tmppath, cachepath)
     end
 
-    def load(filepath, timestamp)
+    def load(cachepath, timestamp)
+      # 'timestamp' argument has mtime of template file
       #: load template data from cache file.
-      cache_filepath = cachename(filepath)
       begin
         #: if timestamp of cache file is different from template file, return nil
-        mtime = File.mtime(cache_filepath)
+        mtime = File.mtime(cachepath)
         if mtime != timestamp
-          #File.unlink(filepath)
+          #File.unlink(cachepath)
           return nil
         end
-        script = File.open(cache_filepath, 'rb') {|f| f.read }
+        script = File.open(cachepath, 'rb') {|f| f.read }
       rescue Errno::ENOENT => ex
-        #: if template file is not found, return nil.
+        #: if cache file is not found, return nil.
         return nil
       end
       #: get template args data from cached data.
@@ -1195,6 +1189,12 @@ module Tenjin
     def self.datacache;     @@datacache;     end
     def self.datacache=(x); @@datacache = x; end
 
+    ## returns cache file path of template file
+    def cachename(filepath)
+      #: return cache file name which is untainted.
+      return "#{filepath}.cache".untaint
+    end
+
     ## convert short name into filename (ex. ':list' => 'template/list.rb.html')
     def to_filename(template_name)
       #: if template_name is a Symbol, add prefix and postfix to it.
@@ -1299,7 +1299,8 @@ module Tenjin
       end
       #: if template object is not found in memory cache, load from file cache.
       filepath, timestamp = find_template_file(template_name)
-      template = @cache.load(filepath, timestamp)
+      cachepath = cachename(filepath)
+      template = @cache.load(cachepath, timestamp)
       #: if file cache data is a pair of script and args, create template object from them.
       if template.is_a?(Array)
         script, args = template
@@ -1309,7 +1310,7 @@ module Tenjin
       #: if template is not found in file cache, create it and save to file cache.
       if ! template
         template = create_template(filepath, timestamp, _context)
-        @cache.save(filepath, template)
+        @cache.save(cachepath, template)
       end
       #: save template object into memory cache with file path.
       @_templates[template_name] = [template, filepath]

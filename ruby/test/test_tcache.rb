@@ -7,20 +7,6 @@
 require "#{File.dirname(__FILE__)}/test_all"
 
 
-class TemplateCacheTest
-  include Oktest::TestCase
-
-  def test_cachename
-    cache = Tenjin::TemplateCache.new()
-    fpath = 'foobar.rbhtml'.taint
-    ok_(fpath.tainted?) == true
-    ret = cache.cachename(fpath)
-    ok_(ret) == fpath + '.cache'
-    ok_(ret.tainted?) == false
-  end
-end
-
-
 class FileBaseTemplateCacheTest
   include Oktest::TestCase
 
@@ -53,23 +39,23 @@ END
   end
 
   def test_save
-    cachefile = @filepath + '.cache'
+    cachepath = @filepath + '.cache'
     spec "save template script and args into cache file." do
-      not_ok_(cachefile).exist?
-      @cache.save(@filepath, @template)
-      ok_(cachefile).exist?
-      ok_(File.open(cachefile, 'rb') {|f| f.read }) == @cached
+      not_ok_(cachepath).exist?
+      @cache.save(cachepath, @template)
+      ok_(cachepath).exist?
+      ok_(File.open(cachepath, 'rb') {|f| f.read }) == @cached
     end
     spec "set cache file's mtime to template timestamp." do
       t = Time.now - 30
       @template.timestamp = t
-      @cache.save(@filepath, @template)
-      ok_(File.mtime(cachefile).inspect) == t.inspect
+      @cache.save(cachepath, @template)
+      ok_(File.mtime(cachepath).inspect) == t.inspect
     end
   end
 
   def test_load
-    filepath = @filepath
+    filepath  = @filepath
     cachepath = @filepath + '.cache'
     File.open(filepath, 'wb') {|f| f.write(@input) }
     File.open(cachepath, 'wb') {|f| f.write(@cached) }
@@ -77,7 +63,7 @@ END
     spec "load template data from cache file." do
       ts = File.mtime(cachepath)
       File.utime(ts-9, ts-9, filepath)
-      ret = @cache.load(filepath, ts)
+      ret = @cache.load(cachepath, ts)
       ok_(ret).is_a?(Array)
       args = ['name', 'items']
       spec "get template args data from cached data."
@@ -90,10 +76,10 @@ END
       File.utime(ts, ts, cachepath)
       ok_(@cache.load(filepath, ts + 1)) == nil
     end
-    spec "if template file is not found, return nil." do
+    spec "if cache file is not found, return nil." do
       File.rename(cachepath, cachepath + '.bkup')
       begin
-        ok_(@cache.load(filepath, ts)) == nil
+        ok_(@cache.load(cachepath, ts)) == nil
       ensure
         File.rename(cachepath + '.bkup', cachepath)
       end

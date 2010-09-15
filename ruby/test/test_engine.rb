@@ -366,7 +366,7 @@ class TenjinEngineTest
       t = engine.get_template(filename)
       ok_(t.args) == args
       ok_(t.script) == script
-      cache_actual = File.read(engine.cache.cachename(filename))
+      cache_actual = File.read(engine.cachename(filename))
       ok_(cache_actual) == cache
     end
     #
@@ -646,6 +646,15 @@ END
     end
   end
 
+  def test_cachename
+    engine = Tenjin::Engine.new
+    fpath = 'foobar.rbhtml'.taint
+    ok_(fpath.tainted?) == true
+    ret = engine.cachename(fpath)
+    ok_(ret) == fpath + '.cache'
+    ok_(ret.tainted?) == false
+  end
+
   def test_to_filename
     engine = Tenjin::Engine.new(:prefix=>'views/', :postfix=>'.rbhtml')
     spec "if template_name is a Symbol, add prefix and postfix to it." do
@@ -821,7 +830,7 @@ END
       end
       spec "if file cache data is a pair of script and args, create template object from them." do
         ts = File.mtime(cachefile)
-        ret = e.cache.load(filepath, ts)
+        ret = e.cache.load(cachefile, ts)
         ok_(ret).is_a?(Array)
         ok_(ret) == [" _buf << %Q`xxx`; \n", []]
       end
