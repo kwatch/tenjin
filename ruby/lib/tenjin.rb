@@ -1331,35 +1331,50 @@ module Tenjin
     ## template is used.
     ## if argument 'layout' is string, it is regarded as layout template name.
     def render(template_name, context=Context.new, layout=true)
-      # if context is a Hash object, convert it into Context object.
+      #: if context is a Hash object, convert it into Context object.
       context = hook_context(context)
       while true
+        # get template
         template = get_template(template_name, context)  # context is passed only for preprocessor
+        #: set template object into context (required for cache_with() helper)
         _tmpl = context._template
         context._template = template
+        # render template
         output = template.render(context)
+        # back template
         context._template = _tmpl
+        #: if @_layout is specified, use it as layoute template name
         unless context._layout.nil?
           layout = context._layout
           context._layout = nil
         end
+        #: use default layout template if layout is true or nil
         layout = @layout if layout == true or layout.nil?
+        #: if layout is false then don't use layout template
         break unless layout
+        #: set layout name as next template name
         template_name = layout
         layout = false
+        #: set output into @_content for layout template
         context.instance_variable_set('@_content', output)
       end
       return output
     end
 
     def hook_context(context)
+      #: if context is nil then create new Context object
       if !context
         context = Context.new
+      #: if context is a Hash object then convert it into Context object
       elsif context.is_a?(Hash)
         context = Context.new(context)
+      #: if context is an object then use it as context object
       end
+      #: set _engine attribute
       context._engine = self
+      #: set _layout attribute
       context._layout = nil
+      #: return context object
       return context
     end
 

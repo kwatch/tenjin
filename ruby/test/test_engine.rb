@@ -843,6 +843,90 @@ END
     end
   end
 
+  def test_render
+    input1 = '<p>Hello #{@name}!</p>'
+    input2 = '<p>_context.class=#{_context.class}</p>'
+    input3 = '<p>@_template.class=#{@_template.class}</p>'
+    input4 = "<?rb @_layout = :_layout2 ?>\n" + input1
+    layout1 = '<div>#{@_content}</div>'
+    layout2 = '<body>#{@_content}</body>'
+    layout3 = "<?rb @_layout = :_layout2 ?>\n" +
+              '<section>#{@_content}</section>'
+    layout4 = '<b>@_content=#{@_content.inspect}</b>'
+    engine = Tenjin::Engine.new(:path=>['_views/blog', '_views'],
+                                :postfix=>'.rbhtml', :layout=>:_layout1)
+    context = {:name=>'SOS'}
+    _with_dummy_files do
+      File.open('_views/blog/ex1.rbhtml', 'wb') {|f| f.write(input1) }
+      File.open('_views/blog/ex2.rbhtml', 'wb') {|f| f.write(input2) }
+      File.open('_views/blog/ex3.rbhtml', 'wb') {|f| f.write(input3) }
+      File.open('_views/blog/ex4.rbhtml', 'wb') {|f| f.write(input4) }
+      File.open('_views/_layout1.rbhtml', 'wb') {|f| f.write(layout1) }
+      File.open('_views/_layout2.rbhtml', 'wb') {|f| f.write(layout2) }
+      File.open('_views/blog/_layout3.rbhtml', 'wb') {|f| f.write(layout3) }
+      File.open('_views/_layout4.rbhtml', 'wb') {|f| f.write(layout4) }
+      spec "if context is a Hash object, convert it into Context object." do
+        output = engine.render(:ex2, {:foo=>1})
+        ok_(output) == "<div><p>_context.class=Tenjin::Context</p></div>"
+      end
+      spec "set template object into context (required for cache_with() helper)" do
+        output = engine.render(:ex3)
+        ok_(output) == "<div><p>@_template.class=Tenjin::Template</p></div>"
+      end
+      spec "if @_layout is specified, use it as layoute template name" do
+        output = engine.render(:ex4, context)
+        ok_(output) == "<body><p>Hello SOS!</p></body>"
+        output = engine.render(:ex1, context, :_layout2)
+        ok_(output) == "<body><p>Hello SOS!</p></body>"
+      end
+      spec "use default layout template if layout is true or nil" do
+        expected = "<div><p>Hello SOS!</p></div>"
+        output = 
+        ok_(engine.render(:ex1, context))       == expected
+        ok_(engine.render(:ex1, context, true)) == expected
+        ok_(engine.render(:ex1, context, nil))  == expected
+      end
+      spec "if layout is false then don't use layout template" do
+        output = engine.render(:ex1, context, false)
+        ok_(output) == "<p>Hello SOS!</p>"
+      end
+      spec "set layout name as next template name" do
+        output = engine.render(:ex1, context, :_layout3)
+        ok_(output) == "<body><section><p>Hello SOS!</p></section></body>"
+      end
+      spec "set output into @_content for layout template" do
+        output = engine.render(:ex1, context, :_layout4)
+        ok_(output) == '<b>@_content="<p>Hello SOS!</p>"</b>'
+      end
+    end
+  end
+
+  def test_hook_context
+    engine = Tenjin::Engine.new
+    ctx = nil
+    spec "return context object"
+    spec "if context is nil then create new Context object" do
+      ctx = engine.hook_context(nil)
+      ok_(ctx).is_a?(Tenjin::Context)
+    end
+    spec "if context is a Hash object then convert it into Context object" do
+      ctx = engine.hook_context({:x=>10})
+      ok_(ctx).is_a?(Tenjin::Context)
+      ok_(ctx[:x]) == 10
+    end
+    spec "if context is an object then use it as context object" do
+      obj = Object.new
+      obj.extend(Tenjin::ContextHelper)
+      ok_(engine.hook_context(obj)).same?(obj)
+    end
+    spec "set _engine attribute" do
+      ok_(ctx._engine).same?(engine)
+    end
+    spec "set _engine attribute" do
+      ok_(ctx._layout) == nil
+    end
+  end
+
 end
 
 
