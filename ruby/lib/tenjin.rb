@@ -1164,49 +1164,79 @@ module Tenjin
       @prefix  = options[:prefix]  || ''
       @postfix = options[:postfix] || ''
       @layout  = options[:layout]
-      @cache   = options.fetch(:cache, true)
       @path    = options[:path]
+      @cache   = _template_cache(options[:cache])
       @preprocess = options.fetch(:preprocess, nil)
       @datacache = options[:datacache] || @@datacache
       @templateclass = options.fetch(:templateclass, Template)
       @init_opts_for_template = options
-      @templates = {}   # filename->template
+      @_templates = {}   # template_name => [template_obj, filepath]
     end
-    attr_accessor :datacache
+    attr_accessor :datacache, :cache
+
+    def _template_cache(cache)  #:nodoc:
+      #: if cache is nil or true then return @@template_cache
+      return @@template_cache if cache.nil? || cache == true
+      #: if cache is false tehn return NullemplateCache object
+      return NullTemplateCache.new if cache == false
+      #: if cache is an instnce of TemplateClass then return it
+      return cache if cache.is_a?(TemplateCache)
+      #: if else then raises error
+      raise ArgumentError.new(":cache is expected true, false, or TemplateCache object")
+    end
+    private :_template_cache
+
+    @@template_cache = FileBaseTemplateCache.new()
+    def self.template_cache;     @@template_cache;     end
+    def self.template_cache=(x); @@template_cache = x; end
 
     @@datacache = MemoryBaseStore.new()
-
-    def self.datacache
-      @@datacache
-    end
-
-    def self.datacache=(datacache)
-      @@datacache = datacache
-    end
+    def self.datacache;     @@datacache;     end
+    def self.datacache=(x); @@datacache = x; end
 
     ## convert short name into filename (ex. ':list' => 'template/list.rb.html')
     def to_filename(template_name)
+      #: if template_name is a Symbol, add prefix and postfix to it.
+      #: if template_name is not a Symbol, just return it.
       name = template_name
       return name.is_a?(Symbol) ? "#{@prefix}#{name}#{@postfix}" : name
     end
 
-    ## find template filename
-    def find_template_file(template_name)
-      filename = to_filename(template_name)
+    ## find template file path
+    def find_template_path(filename)
+      #: if @path is provided then search template file from it.
       if @path
         for dir in @path
-          filepath = "#{dir}#{File::SEPARATOR}#{filename}"
+          filepath = File.join(dir, filename)
           return filepath if test(?f, filepath.untaint)
         end
+      #: if @path is not provided then just return filename if file exists.
       else
         return filename if test(?f, filename.dup.untaint)  # dup is required for frozen string
       end
-      raise Errno::ENOENT.new("#{filename} (path=#{@path.inspect})")
+      #: return nil if template file is not found.
+      return nil
+    end
+
+    ## return file path and mtime of template file
+    def find_template_file(template_name)
+      #: accept template_name such as :index
+      filename = to_filename(template_name)
+      #: if template file is not found then raises Errno::ENOENT.
+      filepath = find_template_path(filename)  or
+        raise Errno::ENOENT.new("#{filename} (path=#{@path.inspect})")
+      #: return file path and mtime of template file.
+      return filepath, File.mtime(filepath)
+      #/: return full path and mtime of template file.
+      #fullpath = File.expand_path(filepath)
+      #return fullpath, File.mtime(filepath)
     end
 
     ## read template file and preprocess it
-    def read_template_file(filename, _context)
+    def read_template_file(filename, _context=nil)
+      #: if preprocessing is not enabled, just read template file and return it.
       return File.read(filename) if !@preprocess
+      #: if preprocessing is enabled, read template file and preprocess it.
       _context ||= {}
       _context = hook_context(_context) if _context.is_a?(Hash) || _context._engine.nil?
       _buf = _context._buf
@@ -1220,64 +1250,69 @@ module Tenjin
 
     ## register template object
     def register_template(template_name, template)
-      #template.timestamp = Time.new unless template.timestamp
-      @templates[template_name] = template
-    end
-
-    def cachename(filename)
-      return (filename + '.cache').untaint
+      #: register template object without file path.
+      @_templates[template_name] = [template, nil]
     end
 
     ## create template object from file
-    def create_template(filename, _context=nil)
+    def create_template(filepath, timestamp=nil, _context=nil)
+      #: if filepath is specified then create template from it.
+      #: if filepath is not specified then just create empty template object.
       template = @templateclass.new(nil, @init_opts_for_template)
-      template.timestamp = File.mtime(filename)  # not use Time.now() !
-      cache_filename = cachename(filename)
-      _context = hook_context(Context.new) if _context.nil?
-      if !@cache
-        input = read_template_file(filename, _context)
-        template.convert(input, filename)
-      elsif !test(?f, cache_filename) || File.mtime(cache_filename) != template.timestamp
-        #$stderr.puts "*** debug: load original"
-        input = read_template_file(filename, _context)
-        template.convert(input, filename)
-        store_cachefile(cache_filename, template)
+      if filepath
+        _context ||= hook_context(Context.new)
+        input = read_template_file(filepath, _context)
+        template.convert(input, filepath)
+        #: if filepath is specified but not timestamp then use file's mtime as timestamp
+        template.timestamp = timestamp || File.mtime(filepath)
       else
-        #$stderr.puts "*** debug: load cache"
-        template.filename = filename
-        load_cachefile(cache_filename, template)
+        #: set timestamp of template object.
+        template.timestamp = timestamp
       end
+      #: return template object
       return template
     end
 
-    ## store template into cache file
-    def store_cachefile(cache_filename, template)
-      s = template.script
-      s = "\#@ARGS #{template.args.join(',')}\n#{s}" if template.args
-      tmp_filename = "#{cache_filename}.#{rand()}"
-      File.open(tmp_filename, 'w') {|f| f.write(s) }
-      File.rename(tmp_filename, cache_filename)
-      File.utime(template.timestamp, template.timestamp, cache_filename)
+    def _set_template_attrs(template, filepath, script, args)
+      #: set template attributes.
+      template.filename = filepath
+      template.script   = script
+      template.args     = args
     end
-
-    ## load template from cache file
-    def load_cachefile(cache_filename, template)
-      s = File.read(cache_filename)
-      if s.sub!(/\A\#\@ARGS (.*?)\r?\n/, '')
-        template.args = $1.split(',')
-      end
-      template.script = s
-    end
+    private :_set_template_attrs
 
     ## get template object
     def get_template(template_name, _context=nil)
-      template = @templates[template_name]
-      t = template
-      unless t && t.timestamp && t.filename && t.timestamp == File.mtime(t.filename)
-        filename = find_template_file(template_name)
-        template = create_template(filename, _context)  # _context is passed only for preprocessor
-        register_template(template_name, template)
+      #: if template object is in memory cache...
+      template, filepath = @_templates[template_name]
+      if template
+        if filepath
+          #: ... and it's timestamp is same as file, return it.
+          template.timestamp != nil  or raise "** assertion afiled"
+          return template if template.timestamp == File.mtime(filepath)
+          @_templates[template_name] = nil
+        else
+          #: ... but it doesn't have file path, don't check timestamp.
+          return template unless filepath
+        end
       end
+      #: if template object is not found in memory cache, load from file cache.
+      filepath, timestamp = find_template_file(template_name)
+      template = @cache.load(filepath, timestamp)
+      #: if file cache data is a pair of script and args, create template object from them.
+      if template.is_a?(Array)
+        script, args = template
+        template = create_template(nil, timestamp, _context)
+        _set_template_attrs(template, filepath, script, args)
+      end
+      #: if template is not found in file cache, create it and save to file cache.
+      if ! template
+        template = create_template(filepath, timestamp, _context)
+        @cache.save(filepath, template)
+      end
+      #: save template object into memory cache with file path.
+      @_templates[template_name] = [template, filepath]
+      #: return template object.
       return template
     end
 
@@ -1287,7 +1322,7 @@ module Tenjin
     ## template is used.
     ## if argument 'layout' is string, it is regarded as layout template name.
     def render(template_name, context=Context.new, layout=true)
-      #context = Context.new(context) if context.is_a?(Hash)
+      # if context is a Hash object, convert it into Context object.
       context = hook_context(context)
       while true
         template = get_template(template_name, context)  # context is passed only for preprocessor
