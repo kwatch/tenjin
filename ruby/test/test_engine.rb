@@ -649,10 +649,16 @@ END
   def test_cachename
     engine = Tenjin::Engine.new
     fpath = 'foobar.rbhtml'.taint
-    ok_(fpath.tainted?) == true
-    ret = engine.cachename(fpath)
-    ok_(ret) == fpath + '.cache'
-    ok_(ret.tainted?) == false
+    spec "return cache file name which is untainted." do
+      ok_(fpath.tainted?) == true
+      ret = engine.cachename(fpath)
+      ok_(ret) == fpath + '.cache'
+      ok_(ret.tainted?) == false
+    end
+    spec "if lang is provided then add it to cache filename." do
+      engine.lang = 'en'
+      ok_(engine.cachename(fpath)) == 'foobar.rbhtml.en.cache'
+    end
   end
 
   def test_to_filename

@@ -1160,6 +1160,7 @@ module Tenjin
       @postfix = options[:postfix] || ''
       @layout  = options[:layout]
       @path    = options[:path]
+      @lang    = options[:lang]
       @cache   = _template_cache(options[:cache])
       @preprocess = options.fetch(:preprocess, nil)
       @datacache = options[:datacache] || @@datacache
@@ -1167,7 +1168,7 @@ module Tenjin
       @init_opts_for_template = options
       @_templates = {}   # template_name => [template_obj, filepath]
     end
-    attr_accessor :datacache, :cache
+    attr_accessor :datacache, :cache, :lang
 
     def _template_cache(cache)  #:nodoc:
       #: if cache is nil or true then return @@template_cache
@@ -1191,8 +1192,13 @@ module Tenjin
 
     ## returns cache file path of template file
     def cachename(filepath)
+      #: if lang is provided then add it to cache filename.
+      if @lang
+        return "#{filepath}.#{@lang}.cache".untaint
       #: return cache file name which is untainted.
-      return "#{filepath}.cache".untaint
+      else
+        return "#{filepath}.cache".untaint
+      end
     end
 
     ## convert short name into filename (ex. ':list' => 'template/list.rb.html')
