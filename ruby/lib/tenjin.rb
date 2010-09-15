@@ -1168,7 +1168,8 @@ module Tenjin
       @init_opts_for_template = options
       @_templates = {}   # template_name => [template_obj, filepath]
     end
-    attr_accessor :datacache, :cache, :lang
+    attr_accessor :prefix, :postfix, :layout, :path, :lang, :cache
+    attr_accessor :preprocess, :datacache, :templateclass
 
     def _template_cache(cache)  #:nodoc:
       #: if cache is nil or true then return @@template_cache
