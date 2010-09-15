@@ -848,6 +848,84 @@ module Tenjin
 
 
   ##
+  ## abstract class for template cache
+  ##
+  class TemplateCache
+
+    def cachename(filepath)
+      #: return cache file name which is untainted.
+      return "#{filepath}.cache".untaint
+    end
+
+    def save(filepath, template)
+      raise NotImplementedError.new("#{self.class.name}#save(): not implemented yet.")
+    end
+
+    def load(filepath, timestamp)
+      raise NotImplementedError.new("#{self.class.name}#load(): not implemented yet.")
+    end
+
+  end
+
+
+  ##
+  ## dummy template cache
+  ##
+  class NullTemplateCache < TemplateCache
+
+    def save(filepath, template)
+      ## do nothing.
+    end
+
+    def load(filepath, timestamp)
+      ## do nothing.
+    end
+
+  end
+
+
+  ##
+  ## file base template cache which saves template script into file
+  ##
+  class FileBaseTemplateCache < TemplateCache
+
+    def save(filepath, template)
+      #: save template script and args into cache file.
+      cache_filepath = cachename(filepath)
+      t = template
+      tmppath = "#{cache_filepath}#{rand().to_s[1,8]}"
+      s = t.args ? "\#@ARGS #{t.args.join(',')}\n" : ''
+      File.open(tmppath, 'wb') {|f| f.write(s); f.write(t.script) }
+      #: set cache file's mtime to template timestamp.
+      File.utime(t.timestamp, t.timestamp, tmppath)
+      File.rename(tmppath, cache_filepath)
+    end
+
+    def load(filepath, timestamp)
+      #: load template data from cache file.
+      cache_filepath = cachename(filepath)
+      begin
+        #: if timestamp of cache file is different from template file, return nil
+        mtime = File.mtime(cache_filepath)
+        if mtime != timestamp
+          #File.unlink(filepath)
+          return nil
+        end
+        script = File.open(cache_filepath, 'rb') {|f| f.read }
+      rescue Errno::ENOENT => ex
+        #: if template file is not found, return nil.
+        return nil
+      end
+      #: get template args data from cached data.
+      args = script.sub!(/\A\#@ARGS (.*)\r?\n/, '') ? $1.split(/,/) : []
+      #: return script and template args.
+      return [script, args]
+    end
+
+  end
+
+
+  ##
   ## abstract class for data cache (= html fragment cache)
   ##
   class KeyValueStore
