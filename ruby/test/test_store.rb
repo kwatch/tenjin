@@ -205,7 +205,7 @@ class FileBaseStoreTest
   def test_has?
     spec "if key exists then return true else return false" do
       ok_(@store.has?(@key)) == false
-      @store.set(@key, @value)
+      @store.set(@key, @data)
       ok_(@store.has?(@key)) == true
     end
   end
