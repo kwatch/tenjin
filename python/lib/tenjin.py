@@ -117,6 +117,15 @@ elif python3:
     def _is_binary(val):
         return isinstance(val, bytes)
 
+def _ignore_not_found_error(f, default=None):
+    try:
+        return f()
+    except OSError:
+        ex = sys.exc_info()[1]
+        if ex.errno == 2:   # error: No such file or directory
+            return default
+        raise
+
 def _create_module(module_name):
     """ex. mod = _create_module('tenjin.util')"""
     mod = type(sys)(module_name)    # or type(sys)(module_name.split('.')[-1]) ?
