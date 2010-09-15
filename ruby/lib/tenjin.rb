@@ -135,6 +135,7 @@ module Tenjin
     def import(template_name, _append_to_buf=true)
       _buf = self._buf
       output = self._engine.render(template_name, context=self, layout=false)
+      self._buf = _buf
       _buf << output if _append_to_buf
       return output
     end
@@ -1328,10 +1329,8 @@ module Tenjin
         template = get_template(template_name, context)  # context is passed only for preprocessor
         _tmpl = context._template
         context._template = template
-        _buf = context._buf
         output = template.render(context)
         context._template = _tmpl
-        context._buf = _buf
         unless context._layout.nil?
           layout = context._layout
           context._layout = nil
