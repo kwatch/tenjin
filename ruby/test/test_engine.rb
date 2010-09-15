@@ -625,6 +625,20 @@ END
 
   ###
 
+  def self.before_all
+    Tenjin::Engine.class_eval do
+      @_methods = [ :cachename, :to_filename, :find_template_path, :find_template_file,
+                    :read_template_file, :create_template, :_set_template_attrs, :hook_context ]
+      public *@_methods
+    end
+  end
+
+  def self.after_all
+    Tenjin::Engine.class_eval do
+      private *@_methods
+    end
+  end
+
   def test__template_cache
     engine = Tenjin::Engine.new()
     spec "if cache is nil or true then return @@template_cache" do

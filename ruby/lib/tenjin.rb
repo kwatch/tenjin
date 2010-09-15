@@ -1191,104 +1191,6 @@ module Tenjin
     def self.datacache;     @@datacache;     end
     def self.datacache=(x); @@datacache = x; end
 
-    ## returns cache file path of template file
-    def cachename(filepath)
-      #: if lang is provided then add it to cache filename.
-      if @lang
-        return "#{filepath}.#{@lang}.cache".untaint
-      #: return cache file name which is untainted.
-      else
-        return "#{filepath}.cache".untaint
-      end
-    end
-
-    ## convert short name into filename (ex. ':list' => 'template/list.rb.html')
-    def to_filename(template_name)
-      #: if template_name is a Symbol, add prefix and postfix to it.
-      #: if template_name is not a Symbol, just return it.
-      name = template_name
-      return name.is_a?(Symbol) ? "#{@prefix}#{name}#{@postfix}" : name
-    end
-
-    ## find template file path
-    def find_template_path(filename)
-      #: if @path is provided then search template file from it.
-      if @path
-        for dir in @path
-          filepath = File.join(dir, filename)
-          return filepath if test(?f, filepath.untaint)
-        end
-      #: if @path is not provided then just return filename if file exists.
-      else
-        return filename if test(?f, filename.dup.untaint)  # dup is required for frozen string
-      end
-      #: return nil if template file is not found.
-      return nil
-    end
-
-    ## return file path and mtime of template file
-    def find_template_file(template_name)
-      #: accept template_name such as :index
-      filename = to_filename(template_name)
-      #: if template file is not found then raises Errno::ENOENT.
-      filepath = find_template_path(filename)  or
-        raise Errno::ENOENT.new("#{filename} (path=#{@path.inspect})")
-      #: return file path and mtime of template file.
-      return filepath, File.mtime(filepath)
-      #/: return full path and mtime of template file.
-      #fullpath = File.expand_path(filepath)
-      #return fullpath, File.mtime(filepath)
-    end
-
-    ## read template file and preprocess it
-    def read_template_file(filename, _context=nil)
-      #: if preprocessing is not enabled, just read template file and return it.
-      return File.read(filename) if !@preprocess
-      #: if preprocessing is enabled, read template file and preprocess it.
-      _context ||= {}
-      _context = hook_context(_context) if _context.is_a?(Hash) || _context._engine.nil?
-      _buf = _context._buf
-      _context._buf = ""
-      begin
-        return Preprocessor.new(filename).render(_context)
-      ensure
-        _context._buf = _buf
-      end
-    end
-
-    ## register template object
-    def register_template(template_name, template)
-      #: register template object without file path.
-      @_templates[template_name] = [template, nil]
-    end
-
-    ## create template object from file
-    def create_template(filepath, timestamp=nil, _context=nil)
-      #: if filepath is specified then create template from it.
-      #: if filepath is not specified then just create empty template object.
-      template = @templateclass.new(nil, @init_opts_for_template)
-      if filepath
-        _context ||= hook_context(Context.new)
-        input = read_template_file(filepath, _context)
-        template.convert(input, filepath)
-        #: if filepath is specified but not timestamp then use file's mtime as timestamp
-        template.timestamp = timestamp || File.mtime(filepath)
-      else
-        #: set timestamp of template object.
-        template.timestamp = timestamp
-      end
-      #: return template object
-      return template
-    end
-
-    def _set_template_attrs(template, filepath, script, args)
-      #: set template attributes.
-      template.filename = filepath
-      template.script   = script
-      template.args     = args
-    end
-    private :_set_template_attrs
-
     ## get template object
     def get_template(template_name, _context=nil)
       #: if template object is in memory cache...
@@ -1359,6 +1261,105 @@ module Tenjin
         context.instance_variable_set('@_content', output)
       end
       return output
+    end
+
+    ## register template object
+    def register_template(template_name, template)
+      #: register template object without file path.
+      @_templates[template_name] = [template, nil]
+    end
+
+    private
+
+    ## returns cache file path of template file
+    def cachename(filepath)
+      #: if lang is provided then add it to cache filename.
+      if @lang
+        return "#{filepath}.#{@lang}.cache".untaint
+      #: return cache file name which is untainted.
+      else
+        return "#{filepath}.cache".untaint
+      end
+    end
+
+    ## convert short name into filename (ex. ':list' => 'template/list.rb.html')
+    def to_filename(template_name)
+      #: if template_name is a Symbol, add prefix and postfix to it.
+      #: if template_name is not a Symbol, just return it.
+      name = template_name
+      return name.is_a?(Symbol) ? "#{@prefix}#{name}#{@postfix}" : name
+    end
+
+    ## find template file path
+    def find_template_path(filename)
+      #: if @path is provided then search template file from it.
+      if @path
+        for dir in @path
+          filepath = File.join(dir, filename)
+          return filepath if test(?f, filepath.untaint)
+        end
+      #: if @path is not provided then just return filename if file exists.
+      else
+        return filename if test(?f, filename.dup.untaint)  # dup is required for frozen string
+      end
+      #: return nil if template file is not found.
+      return nil
+    end
+
+    ## return file path and mtime of template file
+    def find_template_file(template_name)
+      #: accept template_name such as :index
+      filename = to_filename(template_name)
+      #: if template file is not found then raises Errno::ENOENT.
+      filepath = find_template_path(filename)  or
+        raise Errno::ENOENT.new("#{filename} (path=#{@path.inspect})")
+      #: return file path and mtime of template file.
+      return filepath, File.mtime(filepath)
+      #/: return full path and mtime of template file.
+      #fullpath = File.expand_path(filepath)
+      #return fullpath, File.mtime(filepath)
+    end
+
+    ## read template file and preprocess it
+    def read_template_file(filename, _context=nil)
+      #: if preprocessing is not enabled, just read template file and return it.
+      return File.read(filename) if !@preprocess
+      #: if preprocessing is enabled, read template file and preprocess it.
+      _context ||= {}
+      _context = hook_context(_context) if _context.is_a?(Hash) || _context._engine.nil?
+      _buf = _context._buf
+      _context._buf = ""
+      begin
+        return Preprocessor.new(filename).render(_context)
+      ensure
+        _context._buf = _buf
+      end
+    end
+
+    ## create template object from file
+    def create_template(filepath, timestamp=nil, _context=nil)
+      #: if filepath is specified then create template from it.
+      #: if filepath is not specified then just create empty template object.
+      template = @templateclass.new(nil, @init_opts_for_template)
+      if filepath
+        _context ||= hook_context(Context.new)
+        input = read_template_file(filepath, _context)
+        template.convert(input, filepath)
+        #: if filepath is specified but not timestamp then use file's mtime as timestamp
+        template.timestamp = timestamp || File.mtime(filepath)
+      else
+        #: set timestamp of template object.
+        template.timestamp = timestamp
+      end
+      #: return template object
+      return template
+    end
+
+    def _set_template_attrs(template, filepath, script, args)
+      #: set template attributes.
+      template.filename = filepath
+      template.script   = script
+      template.args     = args
     end
 
     def hook_context(context)
