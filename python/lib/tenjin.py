@@ -1040,27 +1040,26 @@ class SafePreprocessor(Preprocessor):
 class CacheStorage(object):
     """[abstract] Template object cache class (in memory and/or file)"""
 
-    def __init__(self, postfix='.cache'):
-        self.postfix = postfix
+    def __init__(self):
         self.items = {}    # key: full path, value: template object
 
     def get(self, cachepath, create_template):
         """get template object. if not found, load attributes from cache file and restore  template object."""
         template = self.items.get(cachepath)
         if not template:
-            dict = self._load(cachepath)
-            if dict:
+            dct = self._load(cachepath)
+            if dct:
                 template = create_template()
-                for k, v in dict.items():
-                    setattr(template, k, v)
+                for k in dct:
+                    setattr(template, k, dct[k])
                 self.items[cachepath] = template
         return template
 
     def set(self, cachepath, template):
         """set template object and save template attributes into cache file."""
         self.items[cachepath] = template
-        dict = self._save_data_of(template)
-        return self._store(cachepath, dict)
+        dct = self._save_data_of(template)
+        return self._store(cachepath, dct)
 
     def _save_data_of(self, template):
         return { 'args'  : template.args,   'bytecode' : template.bytecode,
@@ -1111,15 +1110,15 @@ class FileCacheStorage(CacheStorage):
         data = _read_binary_file(cachepath)
         return self._restore(data)
 
+    def _store(self, cachepath, dct):
+        if logger: logger.info("[tenjin.%s] store cache (file=%r)" % (self.__class__.__name__, cachepath))
+        data = self._dump(dct)
+        _write_binary_file(cachepath, data)
+
     def _restore(self, data):
         raise NotImplementedError("%s._restore(): not implemented yet." % self.__class__.__name__)
 
-    def _store(self, cachepath, dict):
-        if logger: logger.info("[tenjin.%s] store cache (file=%r)" % (self.__class__.__name__, cachepath))
-        data = self._dump(dict)
-        _write_binary_file(cachepath, data)
-
-    def _dump(self, data):
+    def _dump(self, dct):
         raise NotImplementedError("%s._dump(): not implemented yet." % self.__class__.__name__)
 
     def _delete(self, cachepath):
@@ -1128,31 +1127,28 @@ class FileCacheStorage(CacheStorage):
 
 class MarshalCacheStorage(FileCacheStorage):
 
-    def __init__(self, postfix='.cache'):
-        FileCacheStorage.__init__(self, postfix)
-
     def _restore(self, data):
         return marshal.loads(data)
 
-    def _dump(self, dict):
-        return marshal.dumps(dict)
+    def _dump(self, dct):
+        return marshal.dumps(dct)
 
 
 class PickleCacheStorage(FileCacheStorage):
 
-    def __init__(self, postfix='.cache'):
+    def __init__(self, *args, **kwargs):
         global pickle
         if pickle is None:
             try:    import cPickle as pickle
             except: import pickle
-        FileCacheStorage.__init__(self, postfix)
+        FileCacheStorage.__init__(self, *args, **kwargs)
 
     def _restore(self, data):
         return pickle.loads(data)
 
-    def _dump(self, dict):
-        dict.pop('bytecode', None)
-        return pickle.dumps(dict)
+    def _dump(self, dct):
+        dct.pop('bytecode', None)
+        return pickle.dumps(dct)
 
 
 class TextCacheStorage(FileCacheStorage):
@@ -1175,29 +1171,29 @@ class TextCacheStorage(FileCacheStorage):
             script = script.decode(encoding or 'utf-8')     ## binary to unicode(=str)
         return {'args': args, 'script': script, 'timestamp': timestamp}
 
-    def _dump(self, dict):
-        s = dict['script']
+    def _dump(self, dct):
+        s = dct['script']
         if python2:
-            if dict.get('encoding') and isinstance(s, unicode):
-                s = s.encode(dict['encoding'])           ## unicode to binary(=str)
+            if dct.get('encoding') and isinstance(s, unicode):
+                s = s.encode(dct['encoding'])           ## unicode to binary(=str)
         sb = []
-        sb.append("timestamp: %s\n" % dict['timestamp'])
-        if dict.get('encoding'):
-            sb.append("encoding: %s\n" % dict['encoding'])
-        if dict.get('args') is not None:
-            sb.append("args: %s\n" % ', '.join(dict['args']))
+        sb.append("timestamp: %s\n" % dct['timestamp'])
+        if dct.get('encoding'):
+            sb.append("encoding: %s\n" % dct['encoding'])
+        if dct.get('args') is not None:
+            sb.append("args: %s\n" % ', '.join(dct['args']))
         sb.append("\n")
         sb.append(s)
         s = ''.join(sb)
         if python3:
             if isinstance(s, str):
-                s = s.encode(dict.get('encoding') or 'utf-8')   ## unicode(=str) to binary
+                s = s.encode(dct.get('encoding') or 'utf-8')   ## unicode(=str) to binary
         return s
 
     def _save_data_of(self, template):
-        dict = FileCacheStorage._save_data_of(self, template)
-        dict['encoding'] = template.encoding
-        return dict
+        dct = FileCacheStorage._save_data_of(self, template)
+        dct['encoding'] = template.encoding
+        return dct
 
 
 
@@ -1672,8 +1668,8 @@ class GaeMemcacheCacheStorage(CacheStorage):
 
     lifetime = 0     # 0 means unlimited
 
-    def __init__(self, lifetime=None, postfix='.cache', namespace=None):
-        CacheStorage.__init__(self, postfix)
+    def __init__(self, lifetime=None, namespace=None):
+        CacheStorage.__init__(self)
         if lifetime is not None:  self.lifetime = lifetime
         self.namespace = namespace
 
@@ -1682,11 +1678,11 @@ class GaeMemcacheCacheStorage(CacheStorage):
         if logger: logger.info("[tenjin.gae.GaeMemcacheCacheStorage] load cache (key=%r)" % (key, ))
         return memcache.get(key, namespace=self.namespace)
 
-    def _store(self, cachepath, dict):
-        dict.pop('bytecode', None)
+    def _store(self, cachepath, dct):
+        dct.pop('bytecode', None)
         key = cachepath
         if logger: logger.info("[tenjin.gae.GaeMemcacheCacheStorage] store cache (key=%r)" % (key, ))
-        ret = memcache.set(key, dict, self.lifetime, namespace=self.namespace)
+        ret = memcache.set(key, dct, self.lifetime, namespace=self.namespace)
         if not ret:
             if logger: logger.info("[tenjin.gae.GaeMemcacheCacheStorage] failed to store cache (key=%r)" % (key, ))
 
