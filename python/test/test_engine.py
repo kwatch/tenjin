@@ -3,8 +3,8 @@
 ### $Copyright$
 ###
 
-from oktest import ok, not_ok, run
-import sys, os, re, time, marshal
+from oktest import ok, not_ok, run, spec
+import sys, os, re, time, marshal, shutil
 from glob import glob
 try:    import cPickle as pickle
 except: import pickle
@@ -38,6 +38,27 @@ def _remove_files(basenames=[]):
     for basename in basenames:
         for filename in glob("%s*" % basename):
             os.unlink(filename)
+
+
+class DebugLogger(object):
+
+    def __init__(self):
+        self.messages = []
+
+    def __str__(self):
+        return "\n".join(self.messages)
+
+    def f(name):
+        def func(self, format, *args):
+            msg = args and (format % args) or format
+            self.messages.append("[%s] %s" % (name.upper(), msg))
+        func.func_name = func.__name__ = name
+        return func
+
+    fatal, error, warn, info, debug, trace = \
+        f('fatal'), f('error'), f('warn'), f('info'), f('debug'), f('trace')
+
+    del f
 
 
 class EngineTest(object):
@@ -711,6 +732,193 @@ class EngineTest(object):
                 tenjin.Engine.prefer_fullpath = False
                 _remove_files([fname, fname + '.cache'])
 
+
+    ##################
+
+    def _with_dummy_files(func):
+        """decorator for test functions"""
+        def deco(self):
+            isdir = os.path.isdir
+            mkdir = os.mkdir
+            try:
+                if not isdir('_views'): mkdir('_views')
+                if not isdir('_views/blog'): mkdir('_views/blog')
+                pairs = [ ('_views/blog/index.pyhtml', 'xxx'),
+                          ('_views/index.pyhtml', '<<#{{_DUMMY_VALUE}}>>'),
+                          ('_views/layout.pyhtml', '<div>#{_content}</div>'), ]
+                for fname, cont in pairs:
+                    f = open(fname, 'w')
+                    f.write(cont)
+                    f.close()
+                func(self)
+            finally:
+                shutil.rmtree('_views')
+        for x in ('func_name', '__name__', '__doc__'):
+            if hasattr(func, x):
+                setattr(deco, x, getattr(func, x))
+        return deco
+
+    def test_cachename(self):
+        engine = tenjin.Engine()
+        if spec("return cache file path"):
+            ok (engine.cachename('foo.pyhtml')) == 'foo.pyhtml.cache'
+
+    def test_to_filename(self):
+        engine = tenjin.Engine(prefix='user_', postfix='.pyhtml')
+        if spec("if template_name starts with ':', add prefix and postfix to it."):
+            ok (engine.to_filename(':list')) == 'user_list.pyhtml'
+        if spec("if template_name doesn't start with ':', just return it."):
+            ok (engine.to_filename('list')) == 'list'
+
+    @_with_dummy_files
+    def test__get_template_path(self):
+        e1 = tenjin.Engine(path=['_views/blog', '_views'], postfix='.pyhtml')
+        if spec("if template file is not found then raise IOError."):
+            def f(): e1._get_template_path('index2.pyhtml')
+            ok (f).raises(IOError, "index2.pyhtml: filename not found (path=['_views/blog', '_views']).")
+        if spec("if template file name is kept then reuse it."):
+            e1._filepaths['index2.pyhtml'] = 'foobar'
+            ok (e1._get_template_path('index2.pyhtml')) == 'foobar'
+        if spec("return relative path and absolute path."):
+            ok (e1._filepaths.get('index.pyhtml')) == None
+            rel_path = '_views/blog/index.pyhtml'
+            abs_path = os.path.join(os.getcwd(), rel_path)
+            ok (e1._get_template_path('index.pyhtml')) == (rel_path, abs_path)
+        if spec("_ keep relative path and absolute path"):
+            ok (e1._filepaths.get('index.pyhtml')) == (rel_path, abs_path)
+
+    @_with_dummy_files
+    def test__find_template_file(self):
+        e1 = tenjin.Engine(path=['_views/blog', '_views'], postfix='.pyhtml')
+        if spec("if path is provided then search template file from it."):
+            ok (e1._find_template_file('index.pyhtml')) == '_views/blog/index.pyhtml'
+            ok (e1._find_template_file('layout.pyhtml')) == '_views/layout.pyhtml'
+        e2 = tenjin.Engine(postfix='.pyhtml')
+        if spec("if path is not provided then just return filename if file exists."):
+            ok (e2._find_template_file('_views/index.pyhtml')) == '_views/index.pyhtml'
+        if spec("return nil if template file is not found."):
+            ok (e1._find_template_file('index2.pyhtml')) == None
+            ok (e2._find_template_file('_views/index2.pyhtml')) == None
+
+    @_with_dummy_files
+    def test__create_template(self):
+        e1 = tenjin.Engine(path=['_views/blog', '_views'])
+        t = None
+        if spec("if filepath is not specified then just create empty template object."):
+            t = e1._create_template(None)
+            ok (t).is_a(tenjin.Template)
+            ok (t.filename) == None
+            ok (t.script) == None
+        if spec("if filepath is specified then create template object and return it."):
+            t = e1._create_template('_views/layout.pyhtml')
+            ok (t).is_a(tenjin.Template)
+            ok (t.filename) == "_views/layout.pyhtml"
+            ok (t.script) == "_buf.extend(('''<div>''', to_str(_content), '''</div>''', ));"
+        if spec("if preprocessing is enabled then preprocess it."):
+            e1.preprocess = True
+            t = e1._create_template("_views/index.pyhtml", {}, globals())
+            ok (t.script) == "_buf.extend(('''<<SOS>>''', ));"
+
+    @_with_dummy_files
+    def test__preprocess(self):
+        e1 = tenjin.Engine()
+        if spec("preprocess template and return result"):
+            output = e1._preprocess('_views/index.pyhtml', {}, globals())
+            ok (output) == "<<SOS>>"
+
+    @_with_dummy_files
+    def test_get_template(self):
+        e1 = tenjin.Engine(path=['_views/blog', '_views'], postfix='.pyhtml')
+        filepath  = '_views/blog/index.pyhtml'
+        fullpath  = os.getcwd() + filepath
+        cachepath = fullpath + '.cache'
+        assert not_ok (cachepath).exists()
+        t = None
+        if spec("return template object.") and \
+           spec("accept template_name such as ':index'."):
+            t = e1.get_template(':index')
+            ok (t).is_a(tenjin.Template)
+            ok (t.filename) == filepath
+        if spec("if template file is not found then raise error"):
+            def f(): e1.get_template('index')
+            ok (f).raises(IOError, "index: filename not found (path=['_views/blog', '_views']).")
+        if spec("use full path as base of cache file path") and \
+           spec("get template object from cache"):
+            ok (list(e1.cache.items.keys())) == ["%s/_views/blog/index.pyhtml.cache" % os.getcwd()]
+        if spec("if template object is found in cache..."):
+            if spec("if checked within a sec, skip timestamp check."):
+                #try:
+                #    t.timestamp = time.time() - 0.2
+                #    #import pdb; pdb.set_trace()
+                #    tenjin.logger = DebugLogger()
+                #    ret = e1.get_template(':index')
+                #    msg = tenjin.logger.messages[0]
+                #    ok (msg.startswith("[TRACE] [tenjin.Engine] timestamp check skipped (")) == True
+                #finally:
+                #    tenjin.logger = None
+                pass
+            if spec("if timestamp of template objectis same as file, return it."):
+                t.timestamp = os.path.getmtime(filepath)
+                ok (e1.get_template(':index')).is_(t)
+            if spec("if timestamp of template object is different from file, clear it"):
+                t.timestamp = t.timestamp + 1
+                t._last_checked_at = time.time() - 999
+                try:
+                    #import pdb; pdb.set_trace()
+                    tenjin.logger = DebugLogger()
+                    ret = e1.get_template(':index')
+                    msg = tenjin.logger.messages[0]
+                    ok (msg) == "[INFO] [tenjin.Engine] cache expired (filepath='_views/blog/index.pyhtml', template=None)"
+                finally:
+                    tenjin.logger = None
+        if spec("if template object is not found in cache or is expired..."):
+            e1.cache.clear()
+            ok (len(e1.cache.items)) == 0
+            tname = ':layout'
+            fpath = '_views/layout.pyhtml'
+            cpath = os.path.join(os.getcwd(), '_views/layout.pyhtml.cache')
+            not_ok (cpath).exists()
+            if spec("create template object."):
+                t = e1.get_template(tname)
+                ok (t).is_a(tenjin.Template)
+            if spec("set timestamp and filename of template object."):
+                ok (t.timestamp) == os.path.getmtime(filepath)
+                ok (t.filename) == fpath
+                ok (t._last_checked_at).in_delta(time.time(), 0.001)
+            if spec("save template object into cache."):
+                ok (cpath).exists()
+                ok (len(e1.cache.items)) == 1
+                ok (e1.cache.items).contains(cpath)
+
+    def test_include(self):
+        if spec("get local and global vars of caller."):
+            pass
+        if spec("get _context from caller's local vars."):
+            pass
+        if spec("if kwargs specified then add them into context."):
+            pass
+        if spec("get template object with context data and global vars."):
+            pass
+        if spec("if append_to_buf is true then add output to _buf."):
+            pass
+        if spec("if append_to_buf is false then don't add output to _buf."):
+            pass
+        if spec("render template and return output."):
+            pass
+        if spec("kwargs are removed from context data."):
+            pass
+
+    def test_hook_context(self):
+        e = tenjin.Engine()
+        ctx = {}
+        e.hook_context(ctx)
+        if spec("add engine itself into context data."):
+            ok (ctx.get('_engine')).is_(e)
+        if spec("add include() method into context data."):
+            ok (ctx.get('_include')).is_(e.include)
+
+
+_DUMMY_VALUE = 'SOS'
 
 
 if __name__ == '__main__':

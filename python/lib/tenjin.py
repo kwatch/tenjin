@@ -1481,8 +1481,10 @@ class Engine(object):
             raise ValueError("%r: invalid cache object." % (cache, ))
 
     def cachename(self, filepath):
+        #: if lang is provided then add it to cache filename.
         if self.lang:
             return '%s.%s.cache' % (filepath, self.lang)
+        #: return cache file name.
         else:
             return filepath + '.cache'
 
@@ -1495,43 +1497,58 @@ class Engine(object):
              >>> engine.to_filename('list')
              'list'
         """
+        #: if template_name starts with ':', add prefix and postfix to it.
         if template_name[0] == ':' :
             return self.prefix + template_name[1:] + self.postfix
+        #: if template_name doesn't start with ':', just return it.
         return template_name
 
-    def _relative_and_absolute_path(self, filename):
+    def _get_template_path(self, filename):
+        #: if template file name is kept then reuse it.
         pair = self._filepaths.get(filename)
         if pair: return pair
-        filepath = self._find_file(filename)
+        #: if template file is not found then raise IOError.
+        filepath = self._find_template_file(filename)
         if not filepath:
             raise IOError('%s: filename not found (path=%r).' % (filename, self.path, ))
         fullpath = os.path.abspath(filepath)
+        #: _ keep relative path and absolute path
         self._filepaths[filename] = pair = (filepath, fullpath)
+        #: return relative path and aboslute path.
         return pair
 
-    def _find_file(self, filename):
+    def _find_template_file(self, filename):
+        #: if path is provided then search template file from it.
         if self.path:
             for dirname in self.path:
                 filepath = os.path.join(dirname, filename)
                 if _isfile(filepath):
                     return filepath
+        #: if path is not provided then just return filename if file exists.
         else:
             if _isfile(filename):
                 return filename
+        #: if template file is not found then return None.
         return None
 
-    def _create_template(self, filepath, _context, _globals):
-        if filepath and self.preprocess:
-            s = self._preprocess(filepath, _context, _globals)
+    def _create_template(self, filepath, _context=None, _globals=None):
+        #: if filepath is not specified then just create empty template object.
+        if not filepath:
+            return self.templateclass(None, **self.kwargs)
+        #: if filepath is specified then create template object and return it.
+        elif not self.preprocess:
+            return self.templateclass(filepath, **self.kwargs)
+        #: if preprocessing is enabled then preprocess it.
+        else:
+            s = self._preprocess(filepath, _context or {}, _globals or globals())
             template = self.templateclass(None, **self.kwargs)
             template.convert(s, filepath)
-        else:
-            template = self.templateclass(filepath, **self.kwargs)
-        return template
+            return template
 
     def _preprocess(self, filepath, _context, _globals):
         #if _context is None: _context = {}
         #if _globals is None: _globals = sys._getframe(3).f_globals
+        #: preprocess template and return result
         if '_engine' not in _context:
             self.hook_context(_context)
         preprocessor = Preprocessor(filepath)
@@ -1545,35 +1562,51 @@ class Engine(object):
            If template object has not registered, template engine creates
            and registers template object automatically.
         """
+        #: accept template_name such as ':index'.
         filename = self.to_filename(template_name)
+        #:
         if filename in self._added_templates:
             return self._added_templates[filename]
-        filepath, fullpath = self._relative_and_absolute_path(filename)
+        #: if template file is not found then raise error
+        filepath, fullpath = self._get_template_path(filename)
         assert filepath and fullpath
+        #: use full path as base of cache file path
         cache = self.cache
         cachepath = self.cachename(fullpath)
+        #: get template object from cache
         template = cache and cache.get(cachepath, self.templateclass) or None
         now = _time()
+        #: if template object is found in cache...
         if template:
             assert template.timestamp is not None
             if not template.filename:
                 template.filename = self.prefer_fullpath and fullpath or filepath
+            #: if checked within a sec, skip timestamp check.
             if now < getattr(template, '_last_checked_at', 0) + self.timestamp_interval:
+                #if logger: logger.trace('[tenjin.%s] timestamp check skipped (%f < %f + %f)' % \
+                #                        (self.__class__.__name__, now, template._last_checked_at, self.timestamp_interval))
                 return template
+            #: if timestamp of template objectis same as file, return it.
             if template.timestamp == _getmtime(filepath):
+                template._last_checked_at = now
                 return template
-            #if cache: cache.delete(cachepath)
+            #: if timestamp of template object is different from file, clear it
+            #if cache: cache._delete(cachepath)
             template = None
             if logger: logger.info("[tenjin.%s] cache expired (filepath=%r, template=%r)" % \
                                        (self.__class__.__name__, filepath, template, ))
+        #: if template object is not found in cache or is expired...
         if not template:
+            #: create template object.
             if self.preprocess:   ## required for preprocessing
                 if _context is None: _context = {}
                 if _globals is None: _globals = sys._getframe(1).f_globals
             template = self._create_template(filepath, _context, _globals)
+            #: set timestamp and filename of template object.
             template.timestamp = _getmtime(filepath)
-            template._last_checked_at = now
             template.filename = self.prefer_fullpath and fullpath or filepath
+            template._last_checked_at = now
+            #: save template object into cache.
             if cache:
                 if not template.bytecode: template.compile()
                 cache.set(cachepath, template)
@@ -1595,18 +1628,26 @@ class Engine(object):
              #{include('file.pyhtml', False)}
              <?py val = include('file.pyhtml', False) ?>
         """
+        #: get local and global vars of caller.
         frame = sys._getframe(1)
         locals  = frame.f_locals
         globals = frame.f_globals
+        #: get _context from caller's local vars.
         assert '_context' in locals
         context = locals['_context']
+        #: if kwargs specified then add them into context.
         if kwargs:
             context.update(kwargs)
-        ## context and globals are passed to get_template() only for preprocessing.
+        #: get template object with context data and global vars.
+        ## (context and globals are passed to get_template() only for preprocessing.)
         template = self.get_template(template_name, context, globals)
+        #: if append_to_buf is true then add output to _buf.
+        #: if append_to_buf is false then don't add output to _buf.
         if append_to_buf:  _buf = locals['_buf']
         else:              _buf = None
+        #: render template and return output.
         s = template.render(context, globals, _buf=_buf)
+        #: kwargs are removed from context data.
         if kwargs:
             for k in kwargs:
                 del context[k]
@@ -1650,8 +1691,10 @@ class Engine(object):
         return content
 
     def hook_context(self, context):
+        #: add engine itself into context data.
         context['_engine'] = self
         #context['render'] = self.render
+        #: add include() method into context data.
         context['include'] = self.include
 
 
