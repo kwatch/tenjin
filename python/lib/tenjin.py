@@ -1108,6 +1108,25 @@ class MemoryCacheStorage(CacheStorage):
 
 class FileCacheStorage(CacheStorage):
 
+    def _load(self, fullpath):
+        cachepath = self._cachename(fullpath)
+        if not _isfile(cachepath): return None
+        if logger: logger.info("[tenjin.%s] load cache (file=%r)" % (self.__class__.__name__, cachepath))
+        data = _read_binary_file(cachepath)
+        return self._restore(data)
+
+    def _restore(self, data):
+        raise NotImplementedError("%s._restore(): not implemented yet." % self.__class__.__name__)
+
+    def _store(self, fullpath, dict):
+        cachepath = self._cachename(fullpath)
+        if logger: logger.info("[tenjin.%s] store cache (file=%r)" % (self.__class__.__name__, cachepath))
+        data = self._dump(dict)
+        _write_binary_file(cachepath, data)
+
+    def _dump(self, data):
+        raise NotImplementedError("%s._dump(): not implemented yet." % self.__class__.__name__)
+
     def _delete(self, fullpath):
         cachepath = self._cachename(fullpath)
         _ignore_not_found_error(lambda: os.unlink(cachepath))
@@ -1118,17 +1137,11 @@ class MarshalCacheStorage(FileCacheStorage):
     def __init__(self, postfix='.cache'):
         FileCacheStorage.__init__(self, postfix)
 
-    def _load(self, fullpath):
-        cachepath = self._cachename(fullpath)
-        if not _isfile(cachepath): return None
-        if logger: logger.info("[tenjin.MarshalCacheStorage] load cache (file=%r)" % (cachepath, ))
-        dump = _read_binary_file(cachepath)
-        return marshal.loads(dump)
+    def _restore(self, data):
+        return marshal.loads(data)
 
-    def _store(self, fullpath, dict):
-        cachepath = self._cachename(fullpath)
-        if logger: logger.info("[tenjin.MarshalCacheStorage] store cache (file=%r)" % (cachepath, ))
-        _write_binary_file(cachepath, marshal.dumps(dict))
+    def _dump(self, dict):
+        return marshal.dumps(dict)
 
 
 class PickleCacheStorage(FileCacheStorage):
@@ -1140,31 +1153,21 @@ class PickleCacheStorage(FileCacheStorage):
             except: import pickle
         FileCacheStorage.__init__(self, postfix)
 
-    def _load(self, fullpath):
-        cachepath = self._cachename(fullpath)
-        if not _isfile(cachepath): return None
-        if logger: logger.info("[tenjin.PickleCacheStorage] load cache (file=%r)" % (cachepath, ))
-        dump = _read_binary_file(cachepath)
-        return pickle.loads(dump)
+    def _restore(self, data):
+        return pickle.loads(data)
 
-    def _store(self, fullpath, dict):
-        if 'bytecode' in dict: dict.pop('bytecode')
-        cachepath = self._cachename(fullpath)
-        if logger: logger.info("[tenjin.PickleCacheStorage] store cache (file=%r)" % (cachepath, ))
-        _write_binary_file(cachepath, pickle.dumps(dict))
+    def _dump(self, dict):
+        dict.pop('bytecode', None)
+        return pickle.dumps(dict)
 
 
 class TextCacheStorage(FileCacheStorage):
 
-    def _load(self, fullpath):
-        cachepath = self._cachename(fullpath)
-        if not _isfile(cachepath): return None
-        if logger: logger.info("[tenjin.TextCacheStorage] load cache (file=%r)" % (cachepath, ))
-        s = _read_binary_file(cachepath)
+    def _restore(self, data):
         if python2:
-            header, script = s.split("\n\n", 1)
+            header, script = data.split("\n\n", 1)
         elif python3:
-            header, script = s.split("\n\n".encode('ascii'), 1)
+            header, script = data.split("\n\n".encode('ascii'), 1)
             header = header.decode('ascii')
         timestamp = encoding = args = None
         for line in header.split("\n"):
@@ -1178,7 +1181,7 @@ class TextCacheStorage(FileCacheStorage):
             script = script.decode(encoding or 'utf-8')     ## binary to unicode(=str)
         return {'args': args, 'script': script, 'timestamp': timestamp}
 
-    def _store(self, fullpath, dict):
+    def _dump(self, dict):
         s = dict['script']
         if python2:
             if dict.get('encoding') and isinstance(s, unicode):
@@ -1195,9 +1198,7 @@ class TextCacheStorage(FileCacheStorage):
         if python3:
             if isinstance(s, str):
                 s = s.encode(dict.get('encoding') or 'utf-8')   ## unicode(=str) to binary
-        cachepath = self._cachename(fullpath)
-        if logger: logger.info("[tenjin.TextCacheStorage] store cache (file=%r)" % (cachepath, ))
-        _write_binary_file(cachepath, s)
+        return s
 
     def _save_data_of(self, template):
         dict = FileCacheStorage._save_data_of(self, template)
