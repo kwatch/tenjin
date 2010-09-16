@@ -1073,9 +1073,10 @@ class CacheStorage(object):
 
     def clear(self):
         """remove all template objects and attributes from dict and cache file."""
-        for k, v in self.items.items():
+        d, self.items = self.items, {}
+        for k in d.keys():
             self._delete(k)
-        self.items.clear()
+        d.clear()
 
     def _load(self, fullpath):
         """(abstract) load dict object which represents template object attributes from cache file."""
