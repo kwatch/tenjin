@@ -629,7 +629,7 @@ END
 
   def self.before_all
     Tenjin::Engine.class_eval do
-      @_methods = [ :cachename, :to_filename, :find_template_path, :find_template_file,
+      @_methods = [ :cachename, :to_filename, :find_template_file,
                     :read_template_file, :create_template, :_set_template_attrs, :hook_context ]
       public *@_methods
     end
@@ -699,30 +699,22 @@ END
     end
   end
 
-  def test_find_template_path
-    _with_dummy_files do
-      engine1 = Tenjin::Engine.new(:path=>['_views/blog', '_views'], :postfix=>'.rbhtml')
-      spec "if @path is provided then search template file from it." do
-        ok_(engine1.find_template_path('index.rbhtml')) == '_views/blog/index.rbhtml'
-        ok_(engine1.find_template_path('layout.rbhtml')) == '_views/layout.rbhtml'
-      end
-      engine2 = Tenjin::Engine.new(:postfix=>'.rbhtml')
-      spec "if @path is not provided then just return filename if file exists." do
-        ok_(engine2.find_template_path('_views/index.rbhtml')) == '_views/index.rbhtml'
-      end
-      spec "return nil if template file is not found." do
-        ok_(engine1.find_template_path('index2.rbhtml')) == nil
-        ok_(engine2.find_template_path('_views/index2.rbhtml')) == nil
-      end
-    end
-  end
-
   def test_find_template_file
     _with_dummy_files do
       engine1 = Tenjin::Engine.new(:path=>['_views/blog', '_views'], :postfix=>'.rbhtml')
+      engine2 = Tenjin::Engine.new(:postfix=>'.rbhtml')
+      spec "if @path is provided then search template file from it." do
+        ok_(engine1.find_template_file('index.rbhtml').first) == '_views/blog/index.rbhtml'
+        ok_(engine1.find_template_file('layout.rbhtml').first) == '_views/layout.rbhtml'
+      end
+      spec "if @path is not provided then just return filename if file exists." do
+        ok_(engine2.find_template_file('_views/index.rbhtml').first) == '_views/index.rbhtml'
+      end
       spec "if template file is not found then raises Errno::ENOENT." do
         f = proc { engine1.find_template_file('index2.rbhtml') }
         ok_(f).raise?(Errno::ENOENT, 'No such file or directory - index2.rbhtml (path=["_views/blog", "_views"])')
+        f = proc { engine2.find_template_file('_views/index2.rbhtml') }
+        ok_(f).raise?(Errno::ENOENT, 'No such file or directory - _views/index2.rbhtml (path=nil)')
       end
       filepath = "_views/blog/index.rbhtml"
       #filepath = "#{Dir.pwd}/_views/blog/index.rbhtml"

@@ -1299,30 +1299,23 @@ module Tenjin
       return name.is_a?(Symbol) ? "#{@prefix}#{name}#{@postfix}" : name
     end
 
-    ## find template file path
-    def find_template_path(filename)
-      #: if @path is provided then search template file from it.
-      if @path
-        for dir in @path
-          filepath = File.join(dir, filename)
-          return filepath if test(?f, filepath.untaint)
-        end
-      #: if @path is not provided then just return filename if file exists.
-      else
-        return filename if test(?f, filename.dup.untaint)  # dup is required for frozen string
-      end
-      #: return nil if template file is not found.
-      return nil
-    end
-
     ## return file path and mtime of template file
     def find_template_file(template_name)
       #: accept template_name such as :index
       filename = to_filename(template_name)
-      #: if template file is not found then raises Errno::ENOENT.
-      filepath = find_template_path(filename)  or
+      #: if @path is provided then search template file from it.
+      if @path
+        found = @path.find {|dir| File.file?(File.join(dir, filename)) }
+        filepath = File.join(found, filename) if found
+      #: if @path is not provided then just check existence.
+      else
+        filepath = filename.dup.untaint  # dup is required for frozen string
+        filepath = nil unless test(?f, filepath)
+      end
+      #: if template file doesn't exist then raise Errno::ENOENT.
+      filepath  or
         raise Errno::ENOENT.new("#{filename} (path=#{@path.inspect})")
-      #: return file path and mtime of template file.
+      #: if template file exists then return file path and timestamp of template file.
       return filepath, File.mtime(filepath)
       #/: return full path and mtime of template file.
       #fullpath = File.expand_path(filepath)
@@ -1379,6 +1372,8 @@ module Tenjin
       elsif context.is_a?(Hash)
         context = Context.new(context)
       #: if context is an object then use it as context object
+      else
+        # nothing
       end
       #: set _engine attribute
       context._engine = self
