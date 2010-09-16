@@ -418,6 +418,7 @@ module Tenjin
     attr_accessor :filename, :escapefunc, :initbuf, :newline
     attr_accessor :timestamp, :args
     attr_accessor :script #,:bytecode
+    attr_accessor :_last_checked_at
 
     ## convert file into ruby code
     def convert_file(filename)
@@ -1191,6 +1192,8 @@ module Tenjin
     def self.datacache;     @@datacache;     end
     def self.datacache=(x); @@datacache = x; end
 
+    TIMESTAMP_INTERVAL = 1.0
+
     ## get template object
     def get_template(template_name, _context=nil)
       #: if template object is in memory cache...
@@ -1198,9 +1201,16 @@ module Tenjin
       if template
         #: if it doesn't have file path, don't check timestamp.
         return template unless filepath
+        #: if checked within a sec, skip timestamp check.
+        now = Time.now
+        time = template._last_checked_at
+        return template if time && now - time < TIMESTAMP_INTERVAL
         #: if it's timestamp is same as file, return it.
         template.timestamp != nil  or raise "** assertion afiled"
-        return template if template.timestamp == File.mtime(filepath)
+        if template.timestamp == File.mtime(filepath)
+          template._last_checked_at = now
+          return template
+        end
         #: if it's timestamp is different from file, clear it
         @_templates[template_name] = nil
       end
@@ -1218,6 +1228,7 @@ module Tenjin
       if ! template
         template = create_template(filepath, timestamp, _context)
         @cache.save(cachepath, template)
+        template._last_checked_at = Time.now
       end
       #: save template object into memory cache with file path.
       @_templates[template_name] = [template, filepath]

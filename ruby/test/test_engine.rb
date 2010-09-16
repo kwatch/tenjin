@@ -591,7 +591,9 @@ END
       end
       spec "if template file is updated then block is called again" do
         ## update template timestamp
-        t = Time.now + 1
+        #t = Time.now + 1
+        sleep(1)
+        t = Time.now
         File.utime(t, t, fname)
         ##
         called = false
