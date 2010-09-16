@@ -1425,11 +1425,12 @@ class Engine(object):
     templateclass = Template
     path       = None
     cache      = MarshalCacheStorage()  # save converted Python code into file by marshal-format
+    lang       = None
     preprocess = False
     timestamp_interval = 1  # seconds
     prefer_fullpath = False    # if True then use fullpath when template error is reported
 
-    def __init__(self, prefix=None, postfix=None, layout=None, path=None, cache=True, preprocess=None, templateclass=None, **kwargs):
+    def __init__(self, prefix=None, postfix=None, layout=None, path=None, cache=True, preprocess=None, templateclass=None, lang=None, **kwargs):
         """Initializer of Engine class.
 
            prefix:str (='')
@@ -1449,6 +1450,9 @@ class Engine(object):
              Activate preprocessing or not.
            templateclass:class (=Template)
              Template class which engine creates automatically.
+           lang:str (=None)
+             Language name such as 'en', 'fr', 'ja', and so on. If you specify
+             this, cache file path will be 'inex.html.en.cache' for example.
            kwargs:dict
              Options for Template class constructor.
              See document of Template.__init__() for details.
@@ -1458,6 +1462,7 @@ class Engine(object):
         if layout:  self.layout  = layout
         if templateclass: self.templateclass = templateclass
         if path is not None:  self.path = path
+        if lang is not None:  self.lang = lang
         if preprocess is not None: self.preprocess = preprocess
         self.kwargs = kwargs
         self.encoding = kwargs.get('encoding')
@@ -1480,7 +1485,10 @@ class Engine(object):
             raise ValueError("%r: invalid cache object." % (cache, ))
 
     def cachename(self, filepath):
-        return filepath + '.cache'
+        if self.lang:
+            return '%s.%s.cache' % (filepath, self.lang)
+        else:
+            return filepath + '.cache'
 
     def to_filename(self, template_name):
         """Convert template short name into filename.
