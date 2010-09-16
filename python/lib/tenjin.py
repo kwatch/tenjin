@@ -1044,32 +1044,32 @@ class CacheStorage(object):
         self.postfix = postfix
         self.items = {}    # key: full path, value: template object
 
-    def get(self, fullpath, create_template):
+    def get(self, cachepath, create_template):
         """get template object. if not found, load attributes from cache file and restore  template object."""
-        template = self.items.get(fullpath)
+        template = self.items.get(cachepath)
         if not template:
-            dict = self._load(fullpath)
+            dict = self._load(cachepath)
             if dict:
                 template = create_template()
                 for k, v in dict.items():
                     setattr(template, k, v)
-                self.items[fullpath] = template
+                self.items[cachepath] = template
         return template
 
-    def set(self, fullpath, template):
+    def set(self, cachepath, template):
         """set template object and save template attributes into cache file."""
-        self.items[fullpath] = template
+        self.items[cachepath] = template
         dict = self._save_data_of(template)
-        return self._store(fullpath, dict)
+        return self._store(cachepath, dict)
 
     def _save_data_of(self, template):
         return { 'args'  : template.args,   'bytecode' : template.bytecode,
                  'script': template.script, 'timestamp': template.timestamp }
 
-    def unset(self, fullpath):
+    def unset(self, cachepath):
         """remove template object from dict and cache file."""
-        self.items.pop(fullpath, None)
-        return self._delete(fullpath)
+        self.items.pop(cachepath, None)
+        return self._delete(cachepath)
 
     def clear(self):
         """remove all template objects and attributes from dict and cache file."""
@@ -1078,39 +1078,34 @@ class CacheStorage(object):
             self._delete(k)
         d.clear()
 
-    def _load(self, fullpath):
+    def _load(self, cachepath):
         """(abstract) load dict object which represents template object attributes from cache file."""
         raise NotImplementedError.new("%s#_load(): not implemented yet." % self.__class__.__name__)
 
-    def _store(self, fullpath, template):
+    def _store(self, cachepath, template):
         """(abstract) load dict object which represents template object attributes from cache file."""
         raise NotImplementedError.new("%s#_store(): not implemented yet." % self.__class__.__name__)
 
-    def _delete(self, fullpath):
+    def _delete(self, cachepath):
         """(abstract) remove template object from cache file."""
         raise NotImplementedError.new("%s#_delete(): not implemented yet." % self.__class__.__name__)
-
-    def _cachename(self, fullpath):
-        """change fullpath into cache file path."""
-        return fullpath + self.postfix
 
 
 class MemoryCacheStorage(CacheStorage):
 
-    def _load(self, fullpath):
+    def _load(self, cachepath):
         return None
 
-    def _store(self, fullpath, template):
+    def _store(self, cachepath, template):
         pass
 
-    def _delete(self, fullpath):
+    def _delete(self, cachepath):
         pass
 
 
 class FileCacheStorage(CacheStorage):
 
-    def _load(self, fullpath):
-        cachepath = self._cachename(fullpath)
+    def _load(self, cachepath):
         if not _isfile(cachepath): return None
         if logger: logger.info("[tenjin.%s] load cache (file=%r)" % (self.__class__.__name__, cachepath))
         data = _read_binary_file(cachepath)
@@ -1119,8 +1114,7 @@ class FileCacheStorage(CacheStorage):
     def _restore(self, data):
         raise NotImplementedError("%s._restore(): not implemented yet." % self.__class__.__name__)
 
-    def _store(self, fullpath, dict):
-        cachepath = self._cachename(fullpath)
+    def _store(self, cachepath, dict):
         if logger: logger.info("[tenjin.%s] store cache (file=%r)" % (self.__class__.__name__, cachepath))
         data = self._dump(dict)
         _write_binary_file(cachepath, data)
@@ -1128,8 +1122,7 @@ class FileCacheStorage(CacheStorage):
     def _dump(self, data):
         raise NotImplementedError("%s._dump(): not implemented yet." % self.__class__.__name__)
 
-    def _delete(self, fullpath):
-        cachepath = self._cachename(fullpath)
+    def _delete(self, cachepath):
         _ignore_not_found_error(lambda: os.unlink(cachepath))
 
 
@@ -1486,6 +1479,9 @@ class Engine(object):
         else:
             raise ValueError("%r: invalid cache object." % (cache, ))
 
+    def cachename(self, filepath):
+        return filepath + '.cache'
+
     def to_filename(self, template_name):
         """Convert template short name into filename.
            ex.
@@ -1551,7 +1547,8 @@ class Engine(object):
         filepath, fullpath = self._relative_and_absolute_path(filename)
         assert filepath and fullpath
         cache = self.cache
-        template = cache and cache.get(fullpath, self.templateclass) or None
+        cachepath = self.cachename(fullpath)
+        template = cache and cache.get(cachepath, self.templateclass) or None
         mtime = None
         now = _time()
         if template:
@@ -1561,7 +1558,7 @@ class Engine(object):
             if now > getattr(template, '_last_checked_at', 0) + self.timestamp_interval:
                 mtime = _getmtime(filepath)
                 if template.timestamp != mtime:
-                    #if cache: cache.delete(fullpath)
+                    #if cache: cache.delete(cachepath)
                     template = None
                     if logger: logger.info("[tenjin.Engine] cache is old (filepath=%r, template=%r)" % (filepath, template, ))
         if not template:
@@ -1575,7 +1572,7 @@ class Engine(object):
             template.filename = self.prefer_fullpath and fullpath or filepath
             if cache:
                 if not template.bytecode: template.compile()
-                cache.set(fullpath, template)
+                cache.set(cachepath, template)
         #else:
         #    template.compile()
         return template
@@ -1672,21 +1669,21 @@ class GaeMemcacheCacheStorage(CacheStorage):
         if lifetime is not None:  self.lifetime = lifetime
         self.namespace = namespace
 
-    def _load(self, fullpath):
-        key = self._cachename(fullpath)
+    def _load(self, cachepath):
+        key = cachepath
         if logger: logger.info("[tenjin.gae.GaeMemcacheCacheStorage] load cache (key=%r)" % (key, ))
         return memcache.get(key, namespace=self.namespace)
 
-    def _store(self, fullpath, dict):
-        if 'bytecode' in dict: dict.pop('bytecode')
-        key = self._cachename(fullpath)
+    def _store(self, cachepath, dict):
+        dict.pop('bytecode', None)
+        key = cachepath
         if logger: logger.info("[tenjin.gae.GaeMemcacheCacheStorage] store cache (key=%r)" % (key, ))
         ret = memcache.set(key, dict, self.lifetime, namespace=self.namespace)
         if not ret:
             if logger: logger.info("[tenjin.gae.GaeMemcacheCacheStorage] failed to store cache (key=%r)" % (key, ))
 
-    def _delete(self, fullpath):
-        key = self._cachename(fullpath)
+    def _delete(self, cachepath):
+        key = cachepath
         memcache.delete(key, namespace=self.namespace)
 
 
