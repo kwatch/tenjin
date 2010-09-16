@@ -964,38 +964,38 @@ module Tenjin
     attr_accessor :values, :lifetime
 
     def set(key, value, lifetime=nil)
-      ## store key and value with current and expired timestamp
+      #: store key and value with current and expired timestamp
       now = Time.now
       @values[key] = [value, now, now + (lifetime || @lifetime)]
     end
 
     def get(key, original_timestamp=nil)
-      ## if cache data is not found, return nil
+      #: if cache data is not found, return nil
       arr = @values[key]
       return nil if arr.nil?
-      ## if cache data is older than original data, remove it and return nil
+      #: if cache data is older than original data, remove it and return nil
       value, created_at, timestamp = arr
       if original_timestamp && created_at < original_timestamp
         del(key)
         return nil
       end
-      ## if cache data is expired then remove it and return nil
+      #: if cache data is expired then remove it and return nil
       if timestamp < Time.now
         del(key)
         return nil
       end
-      ## return cache data
+      #: return cache data
       return value
     end
 
     def del(key)
-      ## remove data
-      ## don't raise error even if key doesn't exist
+      #: remove data
+      #: don't raise error even if key doesn't exist
       @values.delete(key)
     end
 
     def has?(key)
-      ## if key exists then return true else return false
+      #: if key exists then return true else return false
       return @values.key?(key)
     end
 
@@ -1028,54 +1028,54 @@ module Tenjin
     end
 
     def set(key, value, lifetime=nil)
-      ## create directory for cache
+      #: create directory for cache
       fpath = filepath(key)
       dir = File.dirname(fpath)
       unless File.exist?(dir)
         require 'fileutils' #unless defined?(FileUtils)
         FileUtils.mkdir_p(dir)
       end
-      ## create temporary file and rename it to cache file (in order not to flock)
+      #: create temporary file and rename it to cache file (in order not to flock)
       tmppath = "#{fpath}#{rand().to_s[1,8]}"
       _write_binary(tmppath, value)
       File.rename(tmppath, fpath)
-      ## set mtime (which is regarded as cache expired timestamp)
+      #: set mtime (which is regarded as cache expired timestamp)
       timestamp = Time.now + (lifetime || @lifetime)
       File.utime(timestamp, timestamp, fpath)
-      ## return value
+      #: return value
       return value
     end
 
     def get(key, original_timestamp=nil)
-      ## if cache file is not found, return nil
+      #: if cache file is not found, return nil
       fpath = filepath(key)
       #return nil unless File.exist?(fpath)
       stat = _ignore_not_found_error { File.stat(fpath) }
       return nil if stat.nil?
-      ## if cache file is older than original data, remove it and return nil
+      #: if cache file is older than original data, remove it and return nil
       if original_timestamp && stat.ctime < original_timestamp
         del(key)
         return nil
       end
-      ## if cache file is expired then remove it and return nil
+      #: if cache file is expired then remove it and return nil
       if stat.mtime < Time.now
         del(key)
         return nil
       end
-      ## return cache file content
+      #: return cache file content
       return _ignore_not_found_error { _read_binary(fpath) }
     end
 
     def del(key, *options)
-      ## delete data file
-      ## if data file doesn't exist, don't raise error
+      #: delete data file
+      #: if data file doesn't exist, don't raise error
       fpath = filepath(key)
       _ignore_not_found_error { File.unlink(fpath) }
       nil
     end
 
     def has?(key)
-      ## if key exists then return true else return false
+      #: if key exists then return true else return false
       return File.exist?(filepath(key))
     end
 
@@ -1196,15 +1196,13 @@ module Tenjin
       #: if template object is in memory cache...
       template, filepath = @_templates[template_name]
       if template
-        if filepath
-          #: ... and it's timestamp is same as file, return it.
-          template.timestamp != nil  or raise "** assertion afiled"
-          return template if template.timestamp == File.mtime(filepath)
-          @_templates[template_name] = nil
-        else
-          #: ... but it doesn't have file path, don't check timestamp.
-          return template unless filepath
-        end
+        #: if it doesn't have file path, don't check timestamp.
+        return template unless filepath
+        #: if it's timestamp is same as file, return it.
+        template.timestamp != nil  or raise "** assertion afiled"
+        return template if template.timestamp == File.mtime(filepath)
+        #: if it's timestamp is different from file, clear it
+        @_templates[template_name] = nil
       end
       #: if template object is not found in memory cache, load from file cache.
       filepath, timestamp = find_template_file(template_name)
@@ -1216,7 +1214,7 @@ module Tenjin
         template = create_template(nil, timestamp, _context)
         _set_template_attrs(template, filepath, script, args)
       end
-      #: if template is not found in file cache, create it and save to file cache.
+      #: if template is not found in file cache, create it and save into cache file.
       if ! template
         template = create_template(filepath, timestamp, _context)
         @cache.save(cachepath, template)
@@ -1339,7 +1337,6 @@ module Tenjin
     ## create template object from file
     def create_template(filepath, timestamp=nil, _context=nil)
       #: if filepath is specified then create template from it.
-      #: if filepath is not specified then just create empty template object.
       template = @templateclass.new(nil, @init_opts_for_template)
       if filepath
         _context ||= hook_context(Context.new)
@@ -1347,6 +1344,7 @@ module Tenjin
         template.convert(input, filepath)
         #: if filepath is specified but not timestamp then use file's mtime as timestamp
         template.timestamp = timestamp || File.mtime(filepath)
+      #: if filepath is not specified then just create empty template object.
       else
         #: set timestamp of template object.
         template.timestamp = timestamp

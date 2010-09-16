@@ -815,7 +815,7 @@ END
         ok_(t).is_a?(Tenjin::Template)
         ok_(t.filename) == filepath
       end
-      spec "if template is not found in file cache, create it and save to file cache." do
+      spec "if template is not found in file cache, create it and save into cache file." do
         ok_(cachefile).exist?
       end
       spec "save template object into memory cache with file path." do
