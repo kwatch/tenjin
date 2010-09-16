@@ -375,7 +375,8 @@ Benchmark.bm(20) do |job|
     when 'tenjin'
       job.report(target) do
         ntimes.times do
-          engine = Tenjin::Engine.new(:cache=>true)
+          #engine = Tenjin::Engine.new(:cache=>true)
+          engine = Tenjin::Engine.new(:cache=>Tenjin::FileBaseTemplateCache.new)
           output = engine.render(tmpl_tenjin, context)
           print output
         end
