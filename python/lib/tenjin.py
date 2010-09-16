@@ -1553,25 +1553,25 @@ class Engine(object):
         cache = self.cache
         cachepath = self.cachename(fullpath)
         template = cache and cache.get(cachepath, self.templateclass) or None
-        mtime = None
         now = _time()
         if template:
             assert template.timestamp is not None
             if not template.filename:
                 template.filename = self.prefer_fullpath and fullpath or filepath
-            if now > getattr(template, '_last_checked_at', 0) + self.timestamp_interval:
-                mtime = _getmtime(filepath)
-                if template.timestamp != mtime:
-                    #if cache: cache.delete(cachepath)
-                    template = None
-                    if logger: logger.info("[tenjin.Engine] cache is old (filepath=%r, template=%r)" % (filepath, template, ))
+            if now < getattr(template, '_last_checked_at', 0) + self.timestamp_interval:
+                return template
+            if template.timestamp == _getmtime(filepath):
+                return template
+            #if cache: cache.delete(cachepath)
+            template = None
+            if logger: logger.info("[tenjin.%s] cache expired (filepath=%r, template=%r)" % \
+                                       (self.__class__.__name__, filepath, template, ))
         if not template:
-            if not mtime: mtime = _getmtime(filepath)
-            if self.preprocess:   ## required for preprocess
+            if self.preprocess:   ## required for preprocessing
                 if _context is None: _context = {}
                 if _globals is None: _globals = sys._getframe(1).f_globals
             template = self._create_template(filepath, _context, _globals)
-            template.timestamp = mtime
+            template.timestamp = _getmtime(filepath)
             template._last_checked_at = now
             template.filename = self.prefer_fullpath and fullpath or filepath
             if cache:
