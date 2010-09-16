@@ -554,10 +554,10 @@ END
       cachedir = ".test.fragcache"
       Dir.mkdir(cachedir)
       fragcache_fpath = "#{cachedir}/entries/index"
-      datacache = Tenjin::FileBaseStore.new(cachedir)
-      Tenjin::Engine.datacache = datacache
+      kv_store = Tenjin::FileBaseStore.new(cachedir)
+      Tenjin::Engine.data_cache = kv_store
       engine = Tenjin::Engine.new
-          # or engine = Tenjin::Engine.new(:datacache=>datacache)
+          # or engine = Tenjin::Engine.new(:data_cache=>kv_store)
       spec "if called first time then calls block and save output to cache store" do
         called = false
         entries = proc { called = true; ['Haruhi', 'Mikuru', 'Yuki'] }
@@ -614,12 +614,12 @@ END
   def test_default_datacache
     spec "if datastore is not speicified then @@datastore is used instead" do
       begin
-        backup = Tenjin::Engine.datacache
-        Tenjin::Engine.datacache = store = Tenjin::FileBaseStore.new('/tmp')
+        backup = Tenjin::Engine.data_cache
+        Tenjin::Engine.data_cache = store = Tenjin::FileBaseStore.new('/tmp')
         engine = Tenjin::Engine.new
-        ok_(engine.datacache).same?(store)
+        ok_(engine.data_cache).same?(store)
       ensure
-        Tenjin::Engine.datacache = backup
+        Tenjin::Engine.data_cache = backup
       end
     end
   end

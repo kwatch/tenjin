@@ -250,10 +250,10 @@ module Tenjin
     ## cache fragment data
     ##
     ## ex.
-    ##   datacache = Tenjin::FileBaseStore.new("/var/tmp/myapp/dacache")
-    ##   Tenjin::Engine.datacache = datacache
+    ##   kv_store = Tenjin::FileBaseStore.new("/var/tmp/myapp/dacache")
+    ##   Tenjin::Engine.data_cache = kv_store
     ##   engine = Tenjin::Engine.new
-    ##       # or engine = Tenjin::Engine.new(:datacache=>datacache)
+    ##       # or engine = Tenjin::Engine.new(:data_cache=>kv_store)
     ##   entries = proc { Entry.find(:all) }
     ##   html = engine.render("index.rbhtml", {:entries => entries})
     ##
@@ -272,16 +272,16 @@ module Tenjin
     ##   </html>
     ##
     def cache_with(cache_key, lifetime=nil)
-      datacache = self._engine.datacache  or
-        raise ArgumentError.new("datacache object is not set for engine object.")
-      data = datacache.get(cache_key, self._template.timestamp)
+      kv_store = self._engine.data_cache  or
+        raise ArgumentError.new("data_cache object is not set for engine object.")
+      data = kv_store.get(cache_key, self._template.timestamp)
       if data
         echo data
       else
         pos = self._buf.length
         yield
         data = self._buf[pos..-1]
-        datacache.set(cache_key, data, lifetime)
+        kv_store.set(cache_key, data, lifetime)
       end
       nil
     end
@@ -1164,13 +1164,13 @@ module Tenjin
       @lang    = options[:lang]
       @cache   = _template_cache(options[:cache])
       @preprocess = options.fetch(:preprocess, nil)
-      @datacache = options[:datacache] || @@datacache
+      @data_cache = options[:data_cache] || @@data_cache
       @templateclass = options.fetch(:templateclass, Template)
       @init_opts_for_template = options
       @_templates = {}   # template_name => [template_obj, filepath]
     end
     attr_accessor :prefix, :postfix, :layout, :path, :lang, :cache
-    attr_accessor :preprocess, :datacache, :templateclass
+    attr_accessor :preprocess, :data_cache, :templateclass
 
     def _template_cache(cache)  #:nodoc:
       #: if cache is nil or true then return @@template_cache
@@ -1188,9 +1188,9 @@ module Tenjin
     def self.template_cache;     @@template_cache;     end
     def self.template_cache=(x); @@template_cache = x; end
 
-    @@datacache = MemoryBaseStore.new()
-    def self.datacache;     @@datacache;     end
-    def self.datacache=(x); @@datacache = x; end
+    @@data_cache = MemoryBaseStore.new()
+    def self.data_cache;     @@data_cache;     end
+    def self.data_cache=(x); @@data_cache = x; end
 
     TIMESTAMP_INTERVAL = 1.0
 
