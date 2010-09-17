@@ -858,7 +858,7 @@ module Tenjin
       raise NotImplementedError.new("#{self.class.name}#save(): not implemented yet.")
     end
 
-    def load(cachepath, timestamp)
+    def load(cachepath, timestamp=nil)
       raise NotImplementedError.new("#{self.class.name}#load(): not implemented yet.")
     end
 
@@ -874,7 +874,7 @@ module Tenjin
       ## do nothing.
     end
 
-    def load(cachepath, timestamp)
+    def load(cachepath, timestamp=nil)
       ## do nothing.
     end
 
@@ -897,13 +897,13 @@ module Tenjin
       File.rename(tmppath, cachepath)
     end
 
-    def load(cachepath, timestamp)
+    def load(cachepath, timestamp=nil)
       # 'timestamp' argument has mtime of template file
       #: load template data from cache file.
       begin
         #: if timestamp of cache file is different from template file, return nil
         mtime = File.mtime(cachepath)
-        if mtime != timestamp
+        if timestamp && mtime != timestamp
           #File.unlink(cachepath)
           return nil
         end
