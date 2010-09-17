@@ -61,6 +61,109 @@ class ContextHelperTest
 end
 
 
+class SafeTemplateTest
+  include Oktest::TestCase
+
+  def test_initialize
+    t = Tenjin::SafeTemplate.new(nil)
+    spec "default escapefunc is 'safe_escape'." do
+      ok_(t.escapefunc) == 'safe_escape'
+    end
+  end
+
+  def test_escape_str
+    t = Tenjin::SafeTemplate.new(nil)
+    spec "escape '#'" do
+      ok_(t.escape_str('<#><`><\\>')) == '<\\#><\\`><\\\\>'
+    end
+  end
+
+  def test_FUNCTEST_convert_and_render
+    input = <<'END'
+<p>@v1=${@v1}<p>
+<p>@v2=${@v2}<p>
+<p>safe_str(@v1)=${safe_str(@v1)}<p>
+<p>safe_str(@v2)=${safe_str(@v2)}<p>
+END
+    script = <<'END'
+ _buf << %Q`<p>@v1=#{safe_escape((@v1).to_s)}<p>
+<p>@v2=#{safe_escape((@v2).to_s)}<p>
+<p>safe_str(@v1)=#{safe_escape((safe_str(@v1)).to_s)}<p>
+<p>safe_str(@v2)=#{safe_escape((safe_str(@v2)).to_s)}<p>\n`
+END
+    output = <<'END'
+<p>@v1=&lt;&gt;<p>
+<p>@v2=<><p>
+<p>safe_str(@v1)=<><p>
+<p>safe_str(@v2)=<><p>
+END
+    t = Tenjin::SafeTemplate.new(nil)
+    spec "'\#' should be escaped with backslash." do
+      ok_(t.convert('<<#{true}>>')) == ' _buf << %Q`<<\\#{true}>>`; ' + "\n"
+    end
+    spec "use safe_escape() as escape function." do
+      ok_(t.convert(input)) == script
+    end
+    spec "'${s}' doesn't escape if s is SafeString object." do
+      context = {:v1=>'<>', :v2=>Tenjin::SafeString.new('<>')}
+      ok_(t.render(context)) == output
+    end
+  end
+
+end
+
+
+class SafeEngineTest
+  include Oktest::TestCase
+
+  def test_initialize
+    spec "use SafeTemplate as default template class." do
+      e = Tenjin::SafeEngine.new
+      ok_(e.templateclass) == Tenjin::SafeTemplate
+    end
+  end
+
+  def test_FUNCTEST_render
+    input = <<'END'
+<?rb for item in @items ?>
+<tr>
+ <td>#{item}</td>
+ <td>${item}</td>
+ <td>${safe_str(item)}</td>
+</tr>
+<?rb end ?>
+END
+    expected = <<'END'
+<tr>
+ <td>#{item}</td>
+ <td>&lt;&gt;</td>
+ <td><></td>
+</tr>
+<tr>
+ <td>#{item}</td>
+ <td><></td>
+ <td><></td>
+</tr>
+END
+    begin
+      fname = 'test_safeengine.rbhtml'
+      File.open(fname, 'w') {|f| f.write(input) }
+      spec "String is escaped but SafeString is not." do
+        engine = Tenjin::SafeEngine.new(:postfix=>'.rbhtml')
+        context = {:items=>['<>', Tenjin::SafeString.new('<>')]}
+        output = engine.render(fname, context)
+        ok_(output) == expected
+      end
+    ensure
+      [fname, fname+'.cache'].each do |f|
+        File.unlink(f) if File.exist?(f)
+      end
+    end
+  end
+
+end
+
+
 if __FILE__ == $0
   Oktest.run_all()
 end

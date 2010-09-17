@@ -895,6 +895,28 @@ module Tenjin
 
 
   ##
+  ##
+  ##
+  class SafeTemplate < Template
+
+    ESCAPE_FUNCTION = 'safe_escape'
+
+    def initialize(filename=nil, options={})
+      options[:escapefunc] ||= 'safe_escape'
+      super(filename, options)
+    end
+
+    ## escape '#' in addition '\\' and '`'
+    def escape_str(str)
+      str.gsub!(/[`\#\\]/, '\\\\\&')
+      str.gsub!(/\r\n/, "\\r\r\n") if @newline == "\r\n"
+      return str
+    end
+
+  end
+
+
+  ##
   ## abstract class for template cache
   ##
   class TemplateCache
@@ -1498,6 +1520,16 @@ module Tenjin
         context.instance_variable_set('@_content', output)
       end
       return output
+    end
+
+  end
+
+
+  class SafeEngine < Engine
+
+    def initialize(options={})
+      options[:templateclass] = SafeTemplate
+      super(options)
     end
 
   end
