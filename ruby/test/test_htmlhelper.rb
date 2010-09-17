@@ -9,6 +9,7 @@ require "#{File.dirname(__FILE__)}/test_all"
 
 class TenjinHtmlHelperTest
   include Oktest::TestCase
+  include Tenjin::ContextHelper
   include Tenjin::HtmlHelper
 
   def test_escape_xml
@@ -17,6 +18,32 @@ class TenjinHtmlHelperTest
 
   def test_escape_html
     ok_(escape_html('<>&"')) == '&lt;&gt;&amp;&quot;'
+  end
+
+  def test_safe_escape_xml
+    spec "escape if arg is normal string." do
+      ok_(safe_escape_xml('<>')) == '&lt;&gt;'
+    end
+    spec "do nothing if arg is SafeString." do
+      ok_(safe_escape_xml(safe_str('<>'))) == '<>'
+    end
+    spec "return SafeString object." do
+      ok_(safe_escape_xml('<>')).is_a?(Tenjin::SafeString)
+      ok_(safe_escape_xml(safe_str('<>'))).is_a?(Tenjin::SafeString)
+    end
+  end
+
+  def test_safe_escape_html
+    spec "escape if arg is normal string." do
+      ok_(safe_escape_html('<>')) == '&lt;&gt;'
+    end
+    spec "do nothing if arg is SafeString." do
+      ok_(safe_escape_html(safe_str('<>'))) == '<>'
+    end
+    spec "return SafeString object." do
+      ok_(safe_escape_html('<>')).is_a?(Tenjin::SafeString)
+      ok_(safe_escape_html(safe_str('<>'))).is_a?(Tenjin::SafeString)
+    end
   end
 
   def test_tagattr
@@ -35,6 +62,10 @@ class TenjinHtmlHelperTest
     actual = tagattr('checked', false, 'checked')
     expected = ''
     ok_(actual) == expected
+    #
+    spec "return SafeString object." do
+      ok_(tagattr('size', 20)).is_a?(Tenjin::SafeString)
+    end
   end
 
   def test_checked
@@ -45,6 +76,10 @@ class TenjinHtmlHelperTest
     actual = checked(1==0)
     expected = ''
     ok_(actual) == expected
+    #
+    spec "return SafeString object." do
+      ok_(checked(1==1)).is_a?(Tenjin::SafeString)
+    end
   end
 
   def test_selected
@@ -55,6 +90,10 @@ class TenjinHtmlHelperTest
     actual = selected(1==0)
     expected = ''
     ok_(actual) == expected
+    #
+    spec "return SafeString object." do
+      ok_(selected(1==1)).is_a?(Tenjin::SafeString)
+    end
   end
 
   def test_disabled
@@ -65,6 +104,10 @@ class TenjinHtmlHelperTest
     actual = disabled(1==0)
     expected = ''
     ok_(actual) == expected
+    #
+    spec "return SafeString object." do
+      ok_(disabled(1==1)).is_a?(Tenjin::SafeString)
+    end
   end
 
   def test_nl2br
@@ -72,6 +115,10 @@ class TenjinHtmlHelperTest
     actual = nl2br(s)
     expected = "foo<br />\nbar<br />\nbaz<br />\n"
     ok_(actual) == expected
+    #
+    spec "return SafeString object." do
+      ok_(actual).is_a?(Tenjin::SafeString)
+    end
   end
 
   def test_text2html
@@ -79,6 +126,10 @@ class TenjinHtmlHelperTest
     actual = text2html(s)
     expected = "foo<br />\n &nbsp; &nbsp;bar<br />\nba &nbsp; &nbsp; z<br />\n"
     ok_(actual) == expected
+    #
+    spec "return SafeString object." do
+      ok_(actual).is_a?(Tenjin::SafeString)
+    end
   end
 
   def test_Cycle

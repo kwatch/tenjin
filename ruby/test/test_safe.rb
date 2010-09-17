@@ -73,6 +73,7 @@ class SafeTemplateTest
 
   def test_escape_str
     t = Tenjin::SafeTemplate.new(nil)
+    t.instance_variable_set('@newline', nil)  # avoid warning
     spec "escape '#'" do
       ok_(t.escape_str('<#><`><\\>')) == '<\\#><\\`><\\\\>'
     end

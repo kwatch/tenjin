@@ -77,41 +77,51 @@ module Tenjin
     alias escape escape_xml
     alias h      escape_xml
 
+    def safe_escape_xml(val)  #:nodoc:
+      safe_str?(val) ? val : safe_str(escape_xml(val))
+    end
+
+    def safe_escape_html(val) #:nodoc:
+      safe_str?(val) ? val : safe_str(escape_html(val))
+    end
+
+    alias safe_h      safe_escape_xml  #:nodoc:
+
     ## (experimental) return ' name="value"' if expr is not false nor nil.
     ## if value is nil or false then expr is used as value.
     def tagattr(name, expr, value=nil, escape=true)
       if !expr
         return ''
       elsif escape
-        return " #{name}=\"#{escape_xml((value || expr).to_s)}\""
+        return safe_str(" #{name}=\"#{safe_escape_xml((value || expr).to_s)}\"")
       else
-        return " #{name}=\"#{value || expr}\""
+        return safe_str(" #{name}=\"#{value || expr}\"")
       end
     end
 
     ## return ' checked="checked"' if expr is not false or nil
     def checked(expr)
-      return expr ? ' checked="checked"' : ''
+      return expr ? safe_str(' checked="checked"') : ''
     end
 
     ## return ' selected="selected"' if expr is not false or nil
     def selected(expr)
-      return expr ? ' selected="selected"' : ''
+      return expr ? safe_str(' selected="selected"') : ''
     end
 
     ## return ' disabled="disabled"' if expr is not false or nil
     def disabled(expr)
-      return expr ? ' disabled="disabled"' : ''
+      return expr ? safe_str(' disabled="disabled"') : ''
     end
 
     ## convert "\n" into "<br />\n"
     def nl2br(text)
-      return text.to_s.gsub(/\n/, "<br />\n")
+      return safe_str(text.to_s.gsub(/\n/, "<br />\n"))
     end
 
     ## convert "\n" and "  " into "<br />\n" and " &nbsp;"
     def text2html(text)
-      return nl2br(escape_xml(text.to_s).gsub(/  /, ' &nbsp;'))
+      return nl2br(safe_escape_xml(text.to_s).gsub(/  /, ' &nbsp;'))
     end
 
     ## cycle values everytime when #to_s() is called
