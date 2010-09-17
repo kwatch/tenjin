@@ -75,6 +75,7 @@ module Tenjin
     end
 
     alias escape escape_xml
+    alias h      escape_xml
 
     ## (experimental) return ' name="value"' if expr is not false nor nil.
     ## if value is nil or false then expr is used as value.
