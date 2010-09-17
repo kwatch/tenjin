@@ -67,11 +67,11 @@ END
       ok_(ret).is_a?(Array)
       args = ['name', 'items']
       spec "get template args data from cached data."
-      spec "return script and template args." do
-        ok_(ret) == [@script, args]
+      spec "return script, template args, and mtime of cache file." do
+        ok_(ret) == [@script, args, ts]
       end
     end
-    spec "if timestamp of cache file is different from template file, return nil" do
+    spec "if template timestamp is specified and different from that of cache file, return nil" do
       File.utime(ts, ts, filepath)
       File.utime(ts, ts, cachepath)
       ok_(@cache.load(filepath, ts + 1)) == nil

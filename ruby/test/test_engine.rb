@@ -629,15 +629,33 @@ END
 
   def self.before_all
     Tenjin::Engine.class_eval do
-      @_methods = [ :cachename, :to_filename, :find_template_file,
-                    :read_template_file, :create_template, :_set_template_attrs, :hook_context ]
-      public *@_methods
+      @_methods = [ :cachename, :to_filename,
+                    :_get_template_in_memory, :_get_template_in_cache, :_timestamp_changed?,
+                    :_preprocess, :create_template,  :hook_context ]
+      public(*@_methods)
     end
   end
 
   def self.after_all
     Tenjin::Engine.class_eval do
-      private *@_methods
+      private(*@_methods)
+    end
+  end
+
+  def _write(filename, content)
+    File.open(filename, 'wb') {|f| f.write(content) }
+  end
+
+  def _with_dummy_files
+    engine = Tenjin::Engine.new(:path=>['_views/blog', '_views'], :postfix=>'.rbhtml')
+    begin
+      FileUtils.mkdir_p('_views/blog')
+      _write('_views/blog/index.rbhtml', 'xxx')
+      _write('_views/index.rbhtml', '<<#{{@dummy_value}}>>')
+      _write('_views/layout.rbhtml', '<div>#{_content}</div>')
+      yield(engine)
+    ensure
+      FileUtils.rm_rf('_views')
     end
   end
 
@@ -687,167 +705,219 @@ END
     end
   end
 
-  def _with_dummy_files
-    begin
-      FileUtils.mkdir_p('_views/blog')
-      File.open('_views/blog/index.rbhtml', 'w') {|f| f.write('xxx') }
-      File.open('_views/index.rbhtml', 'w') {|f| f.write('<<#{{$dummy_value}}>>') }
-      File.open('_views/layout.rbhtml', 'w') {|f| f.write('<div>#{_content}</div>') }
-      yield
-    ensure
-      FileUtils.rm_rf('_views')
-    end
-  end
-
-  def test_find_template_file
-    _with_dummy_files do
-      engine1 = Tenjin::Engine.new(:path=>['_views/blog', '_views'], :postfix=>'.rbhtml')
-      engine2 = Tenjin::Engine.new(:postfix=>'.rbhtml')
-      spec "if @path is provided then search template file from it." do
-        ok_(engine1.find_template_file('index.rbhtml').first) == '_views/blog/index.rbhtml'
-        ok_(engine1.find_template_file('layout.rbhtml').first) == '_views/layout.rbhtml'
-      end
-      spec "if @path is not provided then just return filename if file exists." do
-        ok_(engine2.find_template_file('_views/index.rbhtml').first) == '_views/index.rbhtml'
-      end
-      spec "if template file is not found then raises Errno::ENOENT." do
-        f = proc { engine1.find_template_file('index2.rbhtml') }
-        ok_(f).raise?(Errno::ENOENT, 'No such file or directory - index2.rbhtml (path=["_views/blog", "_views"])')
-        f = proc { engine2.find_template_file('_views/index2.rbhtml') }
-        ok_(f).raise?(Errno::ENOENT, 'No such file or directory - _views/index2.rbhtml (path=nil)')
-      end
-      filepath = "_views/blog/index.rbhtml"
-      #filepath = "#{Dir.pwd}/_views/blog/index.rbhtml"
-      mtime = File.mtime(filepath)
-      spec "return file path and mtime of template file." do
-        ok_(engine1.find_template_file("index.rbhtml")) == [filepath, mtime]
-      end
-      spec "accept template_name such as :index" do
-        ok_(engine1.find_template_file(:index)) == [filepath, mtime]
-      end
-    end
-  end
-
-  def test_read_template_file
-    _with_dummy_files do
-      $dummy_value = 'ABC'
-      fpath = '_views/index.rbhtml'
-      spec "if preprocessing is not enabled, just read template file and return it." do
-        engine1 = Tenjin::Engine.new()
-        ok_(engine1.read_template_file(fpath)) == '<<#{{$dummy_value}}>>'
-      end
-      spec "if preprocessing is enabled, read template file and preprocess it." do
-        engine2 = Tenjin::Engine.new(:preprocess=>true)
-        ok_(engine2.read_template_file(fpath)) == '<<ABC>>'
-      end
-    end
-  end
-
   def test_register_template
-    engine = Tenjin::Engine.new()
+    engine = Tenjin::Engine.new(:postfix=>'.rbhtml')
     template = Tenjin::Template.new(nil)
     spec "register template object without file path." do
       engine.register_template(:foo, template)
-      ok_(engine.instance_variable_get('@_templates')) == {:foo=>[template, nil]}
+      ok_(engine.instance_variable_get('@_templates')) == {'foo.rbhtml'=>[template, nil]}
       ok_(engine.get_template(:foo)) == template
     end
   end
 
-  def test_create_template
-    _with_dummy_files do
-      engine = Tenjin::Engine.new(:path=>['_views/blog', '_views'])
-      t = nil
-      spec "return template object" do
-        ok_(engine.create_template(nil)).is_a?(Tenjin::Template)
+  def test__timestamp_changed?
+    _with_dummy_files do |engine|
+      e = engine
+      t = Tenjin::Template.new('_views/index.rbhtml')
+      mtime = File.mtime('_views/index.rbhtml')
+      spec "if checked within a sec, skip timestamp check and return false." do
+        t.timestamp = mtime + 30
+        ok_(e._timestamp_changed?(t)) == true
+        t._last_checked_at = Time.now - 0.5
+        ok_(e._timestamp_changed?(t)) == false
       end
-      spec "if filepath is specified then create template from it." do
-        t = engine.create_template('_views/layout.rbhtml')
-        ok_(t.filename) == "_views/layout.rbhtml"
-        ok_(t.script) == ' _buf << %Q`<div>#{_content}</div>`; ' + "\n"
+      spec "if timestamp is same as file, return false." do
+        t._last_checked_at = nil
+        t.timestamp = mtime
+        ok_(e._timestamp_changed?(t)) == false
+        ok_(t._last_checked_at.to_f).in_delta?(Time.now.to_f, 0.001)
       end
-      spec "if filepath is not specified then just create empty template object." do
-        t = engine.create_template(nil)
-        ok_(t.filename) == nil
-        ok_(t.script) == nil
-      end
-      spec "set timestamp of template object." do
-        ts = Time.now - 5
-        t = engine.create_template('_views/layout.rbhtml', ts)
-        ok_(t.timestamp) == ts
-        t = engine.create_template(nil, ts)
-        ok_(t.timestamp) == ts
-      end
-      spec "if filepath is specified but not timestamp then use file's mtime as timestamp" do
-        ts = Time.now - 30
-        File.utime(ts, ts, '_views/layout.rbhtml')
-        t = engine.create_template('_views/layout.rbhtml')
-        ok_(t.timestamp.to_s) == ts.to_s
+      spec "if timestamp is changed, return true." do
+        t._last_checked_at = nil
+        t.timestamp = mtime + 1
+        ok_(e._timestamp_changed?(t)) == true
       end
     end
   end
 
-  def test__set_template_attrs
-    t = Tenjin::Template.new(nil)
-    engine = Tenjin::Engine.new()
-    engine.__send__(:_set_template_attrs, t, 'foobar.rbhtml', 'x=10', ['x', 'y'])
-    ok_(t.filename) == 'foobar.rbhtml'
-    ok_(t.script)   == 'x=10'
-    ok_(t.args)     == ['x', 'y']
+  def test__get_template_in_memory
+    fname = 'index.rbhtml'
+    fpath = '_views/blog/index.rbhtml'
+    _with_dummy_files do |engine|
+      e = engine
+      t = Tenjin::Template.new(fpath)
+      _templates = e.instance_variable_get('@_templates')
+      spec "if template object is not in memory cache then return nil." do
+        ok_(e._get_template_in_memory(fname)) == nil
+      end
+      spec "if without filepath, don't check timestamp and return it." do
+        _templates[fname] = ["foo", nil]
+        ok_(e._get_template_in_memory(fname)) == "foo"
+      end
+      spec "if timestamp of template file is not changed, return it." do
+        _templates[fname] = [t, fpath]
+        t.timestamp = File.mtime(fpath)
+        ok_(e._get_template_in_memory(fname)) == t
+      end
+      spec "if timestamp of template file is changed, clear it and return nil." do
+        t._last_checked_at = nil
+        _templates[fname] = [t, fpath]
+        t.timestamp = File.mtime(fpath) + 1
+        ok_(e._get_template_in_memory(fname)) == nil
+        ok_(_templates[fname]) == nil
+      end
+    end
+  end
+
+  def test__get_template_in_cache
+    _with_dummy_files do |engine|
+      e = engine
+      _templates = e.instance_variable_get('@_templates')
+      fname = 'index.rbhtml'
+      fpath = '_views/blog/index.rbhtml'
+      cpath = '_views/blog/index.rbhtml.cache'
+      t = nil
+      spec "if template is not found in cache file, return nil." do
+        not_ok_(cpath).exist?
+        ok_(e._get_template_in_cache(fpath, cpath)) == nil
+        t = e.get_template(:index)
+        ok_(cpath).exist?
+        t2 = e._get_template_in_cache(fpath, cpath)
+        ok_(t2.filename) == t.filename
+        ok_(t2.timestamp) == t.timestamp
+        ok_(t2.script) == t.script
+      end
+      spec "if cache returns script and args then build a template object from them." do
+        ok_(e.cache.load(cpath)) == [" _buf << %Q`xxx`; \n", [], File.mtime(cpath)]
+        ok_(t).is_a?(Tenjin::Template)
+      end
+      spec "if timestamp of template is changed then ignore it." do
+        t._last_checked_at = nil
+        ts = Time.now + 1
+        File.utime(ts, ts, cpath)
+        ok_(e._get_template_in_cache(fpath, cpath)) == nil
+      end
+      spec "if timestamp is not changed then return it." do
+        t._last_checked_at = nil
+        ts = Time.now.to_i.to_f
+        File.utime(ts, ts, fpath)
+        File.utime(ts, ts, cpath)
+        t2 = e._get_template_in_cache(fpath, cpath)
+        ok_(t2).is_a?(Tenjin::Template)
+        ok_(t2.filename) == fpath
+        ok_(t2.timestamp.to_f) == ts
+      end
+    end
   end
 
   def test_get_template
-    _with_dummy_files do
-      e = Tenjin::Engine.new(:path=>['_views/blog', '_views'], :postfix=>'.rbhtml')
+    _with_dummy_files do |engine|
+      e = engine
       _templates = e.instance_variable_get('@_templates')
-      cachefile = '_views/blog/index.rbhtml.cache'
-      filepath = "_views/blog/index.rbhtml"
-      #filepath = "#{Dir.pwd}/_views/blog/index.rbhtml"
-      pre_cond { not_ok_(cachefile).exist? }
+      fname = "index.rbhtml"
+      fpath = "_views/blog/index.rbhtml"
+      cpath = "_views/blog/index.rbhtml.cache"
+      #fpath = "#{Dir.pwd}/_views/blog/index.rbhtml"
+      pre_cond { not_ok_(cpath).exist? }
       t = nil
-      spec "return template object." do
+      spec "accept template name such as :index" do
         t = e.get_template(:index)
-        ok_(t).is_a?(Tenjin::Template)
-        ok_(t.filename) == filepath
+        ok_(t.filename) == '_views/blog/index.rbhtml'
       end
-      spec "if template is not found in file cache, create it and save into cache file." do
-        ok_(cachefile).exist?
+      spec "if template object is memory cache then return it." do
+        pre_cond { ok_(_templates[fname].first).same?(t) }
+        pre_cond { ok_(t.timestamp) == File.mtime(fpath) }
+        ok_(e.get_template(:index)).same?(t)
+        sleep 1
+        ok_(e.get_template(:index)).same?(t)
       end
-      spec "save template object into memory cache with file path." do
-        ok_(_templates) == { :index => [t, filepath] }
+      spec "if template is cached in file then store it into memory and return it." do
+        _templates.clear()        # clear memory cache
+        File.open(cpath, 'wb') {|f| f.write("\#@ARGS \n\nSOS") } # change cache content
+        mtime = File.mtime(fpath) # make timestamps to the same value
+        File.utime(mtime, mtime, cpath)
+        t2 = e.get_template(:index)
+        ok_(t2.script) == "\nSOS"
+        ok_(_templates) == {"index.rbhtml" => [t2, "_views/blog/index.rbhtml"]}
       end
-      #
-      spec "if template object is in memory cache..." do
-        ts = Time.now
-        File.utime(ts-30, ts-30, filepath)
-        File.utime(ts, ts, cachefile)
-        spec "... and it's timestamp is same as file, return it." do
-          t.timestamp = File.mtime(filepath)
-          ok_(e.get_template(:index)).same?(t)
-        end
-        spec "... but it doesn't have file path, don't check timestamp." do
-          t.timestamp = ts
-          _templates[:index][1] = nil
-          ok_(e.get_template(:index)).same?(t)
-        end
+      spec "if template file is not found then raise TemplateNotFoundError" do
+        errmsg = 'index2.rbhtml: template not found (path=["_views/blog", "_views"]).'
+        ok_(proc { e.get_template(:index2) }).raise?(Tenjin::TemplateNotFoundError, errmsg)
       end
-      #
-      spec "if template object is not found in memory cache, load from file cache." do
-        _templates.clear()
-        ok_(_templates[:index]) == nil
-        ts = File.mtime(cachefile)
-        t2 = e.get_template(:index, ts)
+      spec "if @preprocess is true then preprocess template file" do
+        e2 = Tenjin::Engine.new(:preprocess=>true)
+        t2 = e2.get_template('_views/index.rbhtml', {:dummy_value=>'ZOZ'})
+        ok_(t2.script) == ' _buf << %Q`<<ZOZ>>`; ' + "\n"
+      end
+      t1 = t2 = nil
+      spec "if template is not found in memory nor cache then create new one." do
+        t1 = e.get_template(:index)
+        File.unlink(cpath)                      # remove cache file
+        ok_(e.get_template(:index)).same?(t1)
+        not_ok_(cpath).exist?
+        _templates.clear()                      # clear memory cache
+        t2 = e.get_template(:index)
         ok_(t2).is_a?(Tenjin::Template)
-        ok_(t2.filename) == t.filename
-        ok_(t2.script) == t.script
-        ok_(t2.args) == t.args
-        not_ok_(t2).same?(t)
+        not_ok_(t2).same?(t1)
       end
-      spec "if file cache data is a pair of script and args, create template object from them." do
-        ts = File.mtime(cachefile)
-        ret = e.cache.load(cachefile, ts)
-        ok_(ret).is_a?(Array)
-        ok_(ret) == [" _buf << %Q`xxx`; \n", []]
+      spec "save template object into file cache and memory cache." do
+        ok_(cpath).exist?
+        ok_(_templates) == {fname => [t2, fpath]}
       end
+      spec "return template object." do
+        ok_(t2).is_a?(Tenjin::Template)
+      end
+    end
+  end
+
+  def test__preprocess
+    engine = Tenjin::Engine.new
+    spec "preprocess input with _context and return result" do
+      ret = engine._preprocess('<<#{{@name}}>>', nil, {:name=>'SOS'})
+      ok_(ret) == '<<SOS>>'
+    end
+  end
+
+  def test_create_template
+    engine = Tenjin::Engine.new(:path=>['_views/blog', '_views'])
+    t = nil
+    spec "create template object and return it." do
+      t1 = engine.create_template()
+      t2 = engine.create_template()
+      ok_(t1).is_a?(Tenjin::Template)
+      ok_(t2).is_a?(Tenjin::Template)
+      not_ok(t1).same?(t2)
+    end
+    spec "if input is specified then convert it into script." do
+      t = engine.create_template("Hello ${name}!", "foo.txt")
+      ok_(t.script) == ' _buf << %Q`Hello #{escape((name).to_s)}!`; ' + "\n"
+      ok_(t.filename) == 'foo.txt'
+    end
+  end
+
+  def test_hook_context
+    engine = Tenjin::Engine.new
+    ctx = nil
+    spec "return context object"
+    spec "if context is nil then create new Context object" do
+      ctx = engine.hook_context(nil)
+      ok_(ctx).is_a?(Tenjin::Context)
+    end
+    spec "if context is a Hash object then convert it into Context object" do
+      ctx = engine.hook_context({:x=>10})
+      ok_(ctx).is_a?(Tenjin::Context)
+      ok_(ctx[:x]) == 10
+    end
+    spec "if context is an object then use it as context object" do
+      obj = Object.new
+      obj.extend(Tenjin::ContextHelper)
+      ok_(engine.hook_context(obj)).same?(obj)
+    end
+    spec "set _engine attribute" do
+      ok_(ctx._engine).same?(engine)
+    end
+    spec "set _engine attribute" do
+      ok_(ctx._layout) == nil
     end
   end
 
@@ -889,7 +959,6 @@ END
       end
       spec "use default layout template if layout is true or nil" do
         expected = "<div><p>Hello SOS!</p></div>"
-        output = 
         ok_(engine.render(:ex1, context))       == expected
         ok_(engine.render(:ex1, context, true)) == expected
         ok_(engine.render(:ex1, context, nil))  == expected
@@ -909,29 +978,68 @@ END
     end
   end
 
-  def test_hook_context
-    engine = Tenjin::Engine.new
-    ctx = nil
-    spec "return context object"
-    spec "if context is nil then create new Context object" do
-      ctx = engine.hook_context(nil)
-      ok_(ctx).is_a?(Tenjin::Context)
+end
+
+
+class FileFinderTest
+  include Oktest::TestCase
+
+  def _write(filename, content)
+    File.open(filename, 'wb') {|f| f.write(content) }
+  end
+
+  def _with_dummies
+    finder = Tenjin::FileFinder.new
+    path = ["_views/blog", "_views"]
+    begin
+      FileUtils.mkdir_p("_views/blog")
+      _write("_views/index.rbhtml",      "AAA")
+      _write("_views/blog/index.rbhtml", "BBB")
+      _write("_views/layout.rbhtml",     '<<#{_content}>>')
+      yield(finder, path)
+    ensure
+      FileUtils.rm_rf("_views")
     end
-    spec "if context is a Hash object then convert it into Context object" do
-      ctx = engine.hook_context({:x=>10})
-      ok_(ctx).is_a?(Tenjin::Context)
-      ok_(ctx[:x]) == 10
+  end
+
+  def test_find
+    _with_dummies do |finder, path|
+      spec "if dirs specified then find file from it." do
+        ok_(finder.find('index.rbhtml', path)) == "_views/blog/index.rbhtml"
+        ok_(finder.find('layout.rbhtml', path)) == "_views/layout.rbhtml"
+      end
+      spec "if dirs not specified then return filename if it exists." do
+        ok_(finder.find('_views/index.rbhtml')) == "_views/index.rbhtml"
+      end
+      spec "if file not found then return nil." do
+        ok_(finder.find('foo.rbhtml', path)) == nil
+        ok_(finder.find('foo.rbhtml')) == nil
+      end
     end
-    spec "if context is an object then use it as context object" do
-      obj = Object.new
-      obj.extend(Tenjin::ContextHelper)
-      ok_(engine.hook_context(obj)).same?(obj)
+  end
+
+  def test_timestamp
+    _with_dummies do |finder, path|
+      spec "return mtime of filepath." do
+        ts = (Time.now - 30.0).to_i.to_f
+        fpath = '_views/index.rbhtml'
+        not_ok_(finder.timestamp(fpath).to_f) == ts
+        File.utime(ts, ts, fpath)
+        ok_(finder.timestamp(fpath).to_f) == ts
+      end
     end
-    spec "set _engine attribute" do
-      ok_(ctx._engine).same?(engine)
-    end
-    spec "set _engine attribute" do
-      ok_(ctx._layout) == nil
+  end
+
+  def test_read
+    _with_dummies do |finder, path|
+      spec "if file exists then return file content and mtime." do
+        fpath = '_views/blog/index.rbhtml'
+        ret = finder.read(fpath)
+        ok_(ret) == ['BBB', File.mtime(fpath)]
+      end
+      spec "if file not found then return nil." do
+        ok_(finder.read('hogehoge')) == nil
+      end
     end
   end
 
