@@ -140,6 +140,16 @@ module Tenjin
 
 
   ##
+  ##
+  ##
+  class SafeString < String
+    def to_s
+      self
+    end
+  end
+
+
+  ##
   ## helper module for BaseContext class
   ##
   module ContextHelper
@@ -149,6 +159,21 @@ module Tenjin
     ## escape value. this method should be overrided in subclass.
     def escape(val)
       return val
+    end
+
+    ## return SafeString object
+    def safe_str(s)
+      SafeString.new(s.to_s)
+    end
+
+    ## return true if s is SafeString object
+    def safe_str?(s)
+      s.is_a?(SafeString)
+    end
+
+    ## escape val only if val is not SafeString object, and return SafeString object
+    def safe_escape(val)
+      safe_str?(val) ? val : safe_str(escape(val))
     end
 
     ## include template. 'template_name' can be filename or short name.
