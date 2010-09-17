@@ -1107,6 +1107,63 @@ module Tenjin
   end
 
 
+  ##
+  ##
+  ##
+  class TemplateNotFoundError < StandardError
+  end
+
+
+  ##
+  ## helper class for Engine to find and read files
+  ##
+  class FileFinder
+
+    def find(filename, dirs=nil)
+      if dirs
+        #: if dirs specified then find file from it.
+        for dir in dirs
+          filepath = File.join(dir, filename)
+          return filepath if File.file?(filepath)
+        end
+        #found = dirs.find {|dir| File.isfile(File.join(dir, filename)) }
+        #return File.join(found, filename) if found
+      else
+        #: if dirs not specified then return filename if it exists.
+        return filename if File.file?(filename)
+      end
+      #: if file not found then return nil.
+      return nil
+    end
+
+    def timestamp(filepath)
+      #: return mtime of filepath.
+      return File.mtime(filepath)
+    end
+
+    def read(filepath)
+      begin
+        #: if file exists then return file content and mtime.
+        mtime = File.mtime(filepath)
+        input = File.open(filepath, 'rb') {|f| f.read }
+        mtime2 = File.mtime(filepath)
+        if mtime != mtime2
+          mtime = mtime2
+          input = File.open(filepath, 'rb') {|f| f.read }
+          mtime2 = File.mtime(filepath)
+          if mtime != mtime2
+            @logger.error("#{self.class.name}#read(): timestamp is changed while reading file.") if @logger
+          end
+        end
+        return input, mtime
+      rescue Errno::ENOENT
+        #: if file not found then return nil.
+        return nil
+      end
+    end
+
+  end
+
 
   ##
   ## engine class for templates
