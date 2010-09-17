@@ -514,7 +514,7 @@ module Tenjin
     end
 
     def self.compile_stmt_pattern(pi)
-      return /(^[ \t]*)?<\?#{pi}( |\t|\r?\n)(.*?) ?\?>([ \t]*\r?\n)?/m
+      return /(^[ \t]*)?<\?#{pi}(\s)(.*?) ?\?>([ \t]*\r?\n)?/m
     end
 
     def capture_stmt(matched)
