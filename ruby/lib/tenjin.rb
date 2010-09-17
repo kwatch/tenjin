@@ -514,7 +514,7 @@ module Tenjin
     end
 
     def self.compile_stmt_pattern(pi)
-      return /<\?#{pi}( |\t|\r?\n)(.*?) ?\?>([ \t]*\r?\n)?/m
+      return /(^[ \t]*)?<\?#{pi}( |\t|\r?\n)(.*?) ?\?>([ \t]*\r?\n)?/m
     end
 
     STMT_PATTERN = self.compile_stmt_pattern('rb')
@@ -529,56 +529,23 @@ module Tenjin
       is_bol = true
       prev_rspace = nil
       pos = 0
-      input.scan(stmt_pattern()) do |mspace, code, rspace|
+      input.scan(stmt_pattern()) do |lspace, mspace, code, rspace|
         m = Regexp.last_match
         text = input[pos, m.begin(0) - pos]
         pos = m.end(0)
-        ## detect spaces at beginning of line
-        lspace = nil
-        if rspace.nil?
-          # nothing
-        elsif text.empty?
-          lspace = "" if is_bol
-        elsif text[-1] == ?\n
-          lspace = ""
-        else
-          rindex = text.rindex(?\n)
-          if rindex
-            s = text[rindex+1..-1]
-            if s =~ /\A[ \t]*\z/
-              lspace = s
-              text = text[0..rindex]
-              #text[rindex+1..-1] = ''
-            end
-          else
-            if is_bol && text =~ /\A[ \t]*\z/
-              lspace = text
-              text = nil
-              #lspace = text.dup
-              #text[0..-1] = ''
-            end
-          end
-        end
-        is_bol = rspace ? true : false
         ##
         text.insert(0, prev_rspace) if prev_rspace
-        parse_exprs(text)
-        code.insert(0, mspace) if mspace != ' '
-        if lspace
-          assert if rspace.nil?
-          code.insert(0, lspace)
-          code << rspace
-          #add_stmt(code)
-          prev_rspace = nil
+        prev_rspace = nil
+        code = "#{mspace}#{code}" unless mspace == ' '
+        if lspace && rspace
+          code = "#{lspace}#{code}#{rspace}"
         else
-          code << ';' unless code[-1] == ?\n
-          #add_stmt(code)
-          prev_rspace = rspace
+          code << ";" unless code[-1] == ?\n
+          text << lspace       if lspace && !lspace.empty?
+          prev_rspace = rspace if rspace && !rspace.empty?
         end
-        if code
-          code = statement_hook(code)
-          add_stmt(code)
-        end
+        parse_exprs(text)
+        add_stmt(statement_hook(code)) if code && !code.empty?
       end
       #rest = $' || input
       rest = pos > 0 ? input[pos..-1] : input
