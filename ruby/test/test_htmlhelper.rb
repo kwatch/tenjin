@@ -10,6 +10,14 @@ require "#{File.dirname(__FILE__)}/test_all"
 class TenjinHtmlHelperTest
   include Oktest::TestCase
 
+  def test_escape_xml
+    ok_(Tenjin::HtmlHelper.escape_xml('<>&"')) == '&lt;&gt;&amp;&quot;'
+  end
+
+  def test_escape_html
+    ok_(Tenjin::HtmlHelper.escape_html('<>&"')) == '&lt;&gt;&amp;&quot;'
+  end
+
   def test_tagattr
     actual = Tenjin::HtmlHelper.tagattr('size', 20)
     expected = ' size="20"'

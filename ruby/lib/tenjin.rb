@@ -56,17 +56,22 @@ module Tenjin
 
     XML_ESCAPE_TABLE = { '&'=>'&amp;', '<'=>'&lt;', '>'=>'&gt;', '"'=>'&quot;', "'"=>'&#039;' }
 
+    ## faster than escape_html(s) if s is not HTML document.
+    ## (please use escape_html(s) if you want to escape HTML document.)
     def escape_xml(s)
       #return s.gsub(/[&<>"]/) { XML_ESCAPE_TABLE[$&] }
-      return s.gsub(/[&<>"]/) { |s| XML_ESCAPE_TABLE[s] }
-      ##
-      #s = s.gsub(/&/, '&amp;')
-      #s.gsub!(/</, '&lt;')
-      #s.gsub!(/>/, '&gt;')
-      #s.gsub!(/"/, '&quot;')
-      #return s
-      ##
+      return s.gsub(/[&<>"]/) {|s| XML_ESCAPE_TABLE[s] }
+    end
+
+    ## much faster than escape_xml(s) if s is HTML document
+    def escape_html(s)
       #return s.gsub(/&/, '&amp;').gsub(/</, '&lt;').gsub(/>/, '&gt;').gsub(/"/, '&quot;')
+      s = s.gsub(/&/, '&amp;')
+      s.gsub!(/</, '&lt;')
+      s.gsub!(/>/, '&gt;')
+      s.gsub!(/"/, '&quot;')
+      #s.gsub!(/'/, '&039;')
+      return s
     end
 
     alias escape escape_xml
