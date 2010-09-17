@@ -517,6 +517,11 @@ module Tenjin
       return /(^[ \t]*)?<\?#{pi}( |\t|\r?\n)(.*?) ?\?>([ \t]*\r?\n)?/m
     end
 
+    def capture_stmt(matched)
+      #: return lspace, mspace, code, and rspace
+      return matched.captures()
+    end
+
     STMT_PATTERN = self.compile_stmt_pattern('rb')
 
     def stmt_pattern
@@ -529,8 +534,9 @@ module Tenjin
       is_bol = true
       prev_rspace = nil
       pos = 0
-      input.scan(stmt_pattern()) do |lspace, mspace, code, rspace|
+      input.scan(stmt_pattern()) do
         m = Regexp.last_match
+        lspace, mspace, code, rspace = capture_stmt(m)
         text = input[pos, m.begin(0) - pos]
         pos = m.end(0)
         ##
