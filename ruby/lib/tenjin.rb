@@ -34,6 +34,20 @@ module Tenjin
 
 
   ##
+  ## logger
+  ##
+  @logger = nil
+
+  def self.logger
+    return @logger
+  end
+
+  def self.logger=(logger)
+    @logger = logger
+  end
+
+
+  ##
   ## helper module for Context class
   ##
   module HtmlHelper
@@ -895,6 +909,7 @@ module Tenjin
       #: set cache file's mtime to template timestamp.
       File.utime(t.timestamp, t.timestamp, tmppath)
       File.rename(tmppath, cachepath)
+      Tenjin.logger.debug("[tenjin.rb:#{__LINE__}] cache saved (cachefile=#{cachepath.inspect}).") if Tenjin.logger
     end
 
     def load(cachepath, timestamp=nil)
@@ -905,16 +920,19 @@ module Tenjin
         mtime = File.mtime(cachepath)
         if timestamp && mtime != timestamp
           #File.unlink(cachepath)
+          Tenjin.logger.debug("[tenjin.rb:#{__LINE__}] cache expired (cachefile=#{cachepath.inspect}).") if Tenjin.logger
           return nil
         end
         script = File.open(cachepath, 'rb') {|f| f.read }
       rescue Errno::ENOENT => ex
         #: if cache file is not found, return nil.
+        Tenjin.logger.debug("[tenjin.rb:#{__LINE__}] cache not found (cachefile=#{cachepath.inspect}).") if Tenjin.logger
         return nil
       end
       #: get template args data from cached data.
       args = script.sub!(/\A\#@ARGS (.*)\r?\n/, '') ? $1.split(/,/) : []
       #: return script, template args, and mtime of cache file.
+      Tenjin.logger.debug("[tenjin.rb:#{__LINE__}] cache found (cachefile=#{cachepath.inspect}).") if Tenjin.logger
       return [script, args, mtime]
     end
 
@@ -1152,7 +1170,7 @@ module Tenjin
           input = File.open(filepath, 'rb') {|f| f.read }
           mtime2 = File.mtime(filepath)
           if mtime != mtime2
-            @logger.error("#{self.class.name}#read(): timestamp is changed while reading file.") if @logger
+            Tenjin.logger.warn("[tenjin.rb:#{__LINE__}] #{self.class.name}#read(): timestamp is changed while reading file.") if Tenjin.logger
           end
         end
         return input, mtime
@@ -1294,7 +1312,7 @@ module Tenjin
         return false
       #: if timestamp is changed, return true.
       else
-        #LOGGER.info("[Tenjin::Engine] cache expired (template='#{template.filename}')") if LOGGER
+        Tenjin.logger.info("[tenjin.rb:#{__LINE__}] cache expired (template='#{template.filename}')") if Tenjin.logger
         return true
       end
     end
