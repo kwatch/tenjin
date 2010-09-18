@@ -772,23 +772,6 @@ class EngineTest(object):
             ok (engine.to_filename('list')) == 'list'
 
     @_with_dummy_files
-    def test__get_template_path(self):
-        e1 = tenjin.Engine(path=['_views/blog', '_views'], postfix='.pyhtml')
-        if spec("if template file is not found then raise IOError."):
-            def f(): e1._get_template_path('index2.pyhtml')
-            ok (f).raises(IOError, "index2.pyhtml: filename not found (path=['_views/blog', '_views']).")
-        if spec("if template file name is kept then reuse it."):
-            e1._filepaths['index2.pyhtml'] = 'foobar'
-            ok (e1._get_template_path('index2.pyhtml')) == 'foobar'
-        if spec("return relative path and absolute path."):
-            ok (e1._filepaths.get('index.pyhtml')) == None
-            rel_path = '_views/blog/index.pyhtml'
-            abs_path = os.path.join(os.getcwd(), rel_path)
-            ok (e1._get_template_path('index.pyhtml')) == (rel_path, abs_path)
-        if spec("_ keep relative path and absolute path"):
-            ok (e1._filepaths.get('index.pyhtml')) == (rel_path, abs_path)
-
-    @_with_dummy_files
     def test__create_template(self):
         e1 = tenjin.Engine(path=['_views/blog', '_views'])
         t = None
@@ -813,6 +796,44 @@ class EngineTest(object):
             ok (ret) == "<<SOS>>"
 
     @_with_dummy_files
+    def test__get_template_from_cache(self):
+        e1 = tenjin.Engine(path=['_views/blog', '_views'], postfix='.pyhtml')
+        fpath = '_views/blog/index.pyhtml'
+        cpath = fpath + '.cache'
+        if spec("if template not found in cache, return None"):
+            ret = e1._get_template_from_cache(cpath, fpath)
+            ok (ret) == None
+        t = tenjin.Template(fpath)
+        e1.cache.set(fpath + '.cache', t)
+        if spec("if checked within a sec, skip timestamp check."):
+            #try:
+            #    t.timestamp = time.time() - 0.2
+            #    #import pdb; pdb.set_trace()
+            #    tenjin.logger = DebugLogger()
+            #    ret = e1._get_template_from_cache(cpath, fpath)
+            #    msg = tenjin.logger.messages[0]
+            #    ok (msg.startswith("[TRACE] [tenjin.Engine] timestamp check skipped (")) == True
+            #finally:
+            #    tenjin.logger = None
+            pass
+        if spec("if timestamp of template objectis same as file, return it."):
+            t._last_checked_at = None
+            t.timestamp = os.path.getmtime(fpath)
+            ok (e1._get_template_from_cache(cpath, fpath)).is_(t)
+            ok (t._last_checked_at).in_delta(time.time(), 0.001)
+        if spec("if timestamp of template object is different from file, clear it"):
+            t.timestamp = t.timestamp + 1
+            t._last_checked_at = None
+            try:
+                #import pdb; pdb.set_trace()
+                tenjin.logger = DebugLogger()
+                ret = e1._get_template_from_cache(cpath, fpath)
+                msg = tenjin.logger.messages[0]
+                ok (msg) == "[INFO] [tenjin.Engine] cache expired (filepath='_views/blog/index.pyhtml')"
+            finally:
+                tenjin.logger = None
+
+    @_with_dummy_files
     def test_get_template(self):
         e1 = tenjin.Engine(path=['_views/blog', '_views'], postfix='.pyhtml')
         filepath  = '_views/blog/index.pyhtml'
@@ -825,38 +846,24 @@ class EngineTest(object):
             t = e1.get_template(':index')
             ok (t).is_a(tenjin.Template)
             ok (t.filename) == filepath
-        if spec("if template file is not found then raise error"):
+        if spec("if template object is added by add_template(), return it."):
+            tmp = tenjin.Template('foo.pyhtml', input="<<dummy>>")
+            e1.add_template(tmp)
+            ok (e1.get_template('foo.pyhtml')).is_(tmp)
+        if spec("get filepath and fullpath of template"):
+            e1._filepaths['index.pyhtml'] == (filepath, fullpath)
+        if spec("if template file is not found then raise TemplateNotFoundError"):
             def f(): e1.get_template('index')
-            ok (f).raises(IOError, "index: filename not found (path=['_views/blog', '_views']).")
+            ok (f).raises(tenjin.TemplateNotFoundError, "index: filename not found (path=['_views/blog', '_views']).")
         if spec("use full path as base of cache file path") and \
            spec("get template object from cache"):
             ok (list(e1.cache.items.keys())) == ["%s/_views/blog/index.pyhtml.cache" % os.getcwd()]
-        if spec("if template object is found in cache..."):
-            if spec("if checked within a sec, skip timestamp check."):
-                #try:
-                #    t.timestamp = time.time() - 0.2
-                #    #import pdb; pdb.set_trace()
-                #    tenjin.logger = DebugLogger()
-                #    ret = e1.get_template(':index')
-                #    msg = tenjin.logger.messages[0]
-                #    ok (msg.startswith("[TRACE] [tenjin.Engine] timestamp check skipped (")) == True
-                #finally:
-                #    tenjin.logger = None
-                pass
-            if spec("if timestamp of template objectis same as file, return it."):
-                t.timestamp = os.path.getmtime(filepath)
-                ok (e1.get_template(':index')).is_(t)
-            if spec("if timestamp of template object is different from file, clear it"):
-                t.timestamp = t.timestamp + 1
-                t._last_checked_at = time.time() - 999
-                try:
-                    #import pdb; pdb.set_trace()
-                    tenjin.logger = DebugLogger()
-                    ret = e1.get_template(':index')
-                    msg = tenjin.logger.messages[0]
-                    ok (msg) == "[INFO] [tenjin.Engine] cache expired (filepath='_views/blog/index.pyhtml', template=None)"
-                finally:
-                    tenjin.logger = None
+        if spec("change template filename according to prefer_fullpath"):
+            pass
+        if spec("use full path as base of cache file path"):
+            pass
+        if spec("get template object from cache"):
+            pass
         if spec("if template object is not found in cache or is expired..."):
             e1.cache.clear()
             ok (len(e1.cache.items)) == 0

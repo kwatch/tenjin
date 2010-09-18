@@ -1448,6 +1448,13 @@ class FileFinder(object):
         return _ignore_not_found_error(f)
 
 
+##
+##
+##
+class TemplateNotFoundError(Exception):
+    pass
+
+
 
 ##
 ## template engine class
@@ -1551,20 +1558,6 @@ class Engine(object):
         #: if template_name doesn't start with ':', just return it.
         return template_name
 
-    def _get_template_path(self, filename):
-        #: if template file name is kept then reuse it.
-        pair = self._filepaths.get(filename)
-        if pair: return pair
-        #: if template file is not found then raise IOError.
-        filepath = self.finder.find(filename, self.path)
-        if not filepath:
-            raise IOError('%s: filename not found (path=%r).' % (filename, self.path, ))
-        fullpath = self.finder.abspath(filepath)
-        #: _ keep relative path and absolute path
-        self._filepaths[filename] = pair = (filepath, fullpath)
-        #: return relative path and aboslute path.
-        return pair
-
     def _create_template(self, input=None, filepath=None, _context=None, _globals=None):
         #: if input is not specified then just create empty template object.
         template = self.templateclass(None, **self.kwargs)
@@ -1585,6 +1578,29 @@ class Engine(object):
     def add_template(self, template):
         self._added_templates[template.filename] = template
 
+    def _get_template_from_cache(self, cachepath, filepath):
+        #: if template not found in cache, return None
+        template = self.cache.get(cachepath, self.templateclass)
+        if not template:
+            return None
+        assert template.timestamp is not None
+        #: if checked within a sec, skip timestamp check.
+        now = _time()
+        last_checked = getattr(template, '_last_checked_at', None)
+        if last_checked and now < last_checked + self.timestamp_interval:
+            #if logger: logger.trace('[tenjin.%s] timestamp check skipped (%f < %f + %f)' % \
+            #                        (self.__class__.__name__, now, template._last_checked_at, self.timestamp_interval))
+            return template
+        #: if timestamp of template objectis same as file, return it.
+        if template.timestamp == self.finder.timestamp(filepath):
+            template._last_checked_at = now
+            return template
+        #: if timestamp of template object is different from file, clear it
+        #cache._delete(cachepath)
+        if logger: logger.info("[tenjin.%s] cache expired (filepath=%r)" % \
+                                   (self.__class__.__name__, filepath))
+        return None
+
     def get_template(self, template_name, _context=None, _globals=None):
         """Return template object.
            If template object has not registered, template engine creates
@@ -1592,38 +1608,28 @@ class Engine(object):
         """
         #: accept template_name such as ':index'.
         filename = self.to_filename(template_name)
-        #:
+        #: if template object is added by add_template(), return it.
         if filename in self._added_templates:
             return self._added_templates[filename]
-        #: if template file is not found then raise error
-        filepath, fullpath = self._get_template_path(filename)
-        assert filepath and fullpath
+        #: get filepath and fullpath of template
+        pair = self._filepaths.get(filename)
+        if pair:
+            filepath, fullpath = pair
+        else:
+            #: if template file is not found then raise TemplateNotFoundError.
+            filepath = self.finder.find(filename, self.path)
+            if not filepath:
+                raise TemplateNotFoundError('%s: filename not found (path=%r).' % (filename, self.path))
+            #
+            fullpath = self.finder.abspath(filepath)
+            self._filepaths[filename] = (filepath, fullpath)
+        #: change template filename according to prefer_fullpath
         template_fpath = self.prefer_fullpath and fullpath or filepath
         #: use full path as base of cache file path
-        cache = self.cache
         cachepath = self.cachename(fullpath)
         #: get template object from cache
-        template = cache and cache.get(cachepath, self.templateclass) or None
-        now = _time()
-        #: if template object is found in cache...
-        if template:
-            assert template.timestamp is not None
-            if not template.filename:
-                template.filename = template_fpath
-            #: if checked within a sec, skip timestamp check.
-            if now < getattr(template, '_last_checked_at', 0) + self.timestamp_interval:
-                #if logger: logger.trace('[tenjin.%s] timestamp check skipped (%f < %f + %f)' % \
-                #                        (self.__class__.__name__, now, template._last_checked_at, self.timestamp_interval))
-                return template
-            #: if timestamp of template objectis same as file, return it.
-            if template.timestamp == self.finder.timestamp(filepath):
-                template._last_checked_at = now
-                return template
-            #: if timestamp of template object is different from file, clear it
-            #if cache: cache._delete(cachepath)
-            template = None
-            if logger: logger.info("[tenjin.%s] cache expired (filepath=%r, template=%r)" % \
-                                       (self.__class__.__name__, filepath, template, ))
+        cache = self.cache
+        template = cache and self._get_template_from_cache(cachepath, filepath) or None
         #: if template object is not found in cache or is expired...
         if not template:
             ret = self.finder.read(filepath)
@@ -1638,14 +1644,15 @@ class Engine(object):
             template = self._create_template(input, template_fpath, _context, _globals)
             #: set timestamp and filename of template object.
             template.timestamp = timestamp
-            template.filename = template_fpath
-            template._last_checked_at = now
+            template._last_checked_at = _time()
             #: save template object into cache.
             if cache:
                 if not template.bytecode: template.compile()
                 cache.set(cachepath, template)
         #else:
         #    template.compile()
+        #:
+        template.filename = template_fpath
         return template
 
     def include(self, template_name, append_to_buf=True, **kwargs):
