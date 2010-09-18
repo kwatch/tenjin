@@ -423,7 +423,7 @@ Benchmark.bm(20) do |job|
     when 'tenjin-defun-reuse'
       job.report(target) do
         template = Tenjin::Template.new(tmpl_tenjin)
-        defun = defun_code(template.rbcode)
+        defun = defun_code(template.script)
         context.instance_eval(defun)
         ntimes.times do
           output = context.tmpl_tenjin_view()
