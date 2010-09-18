@@ -30,6 +30,9 @@ class TenjinFaqTest
     s =~ /\A\$ (.*?)\n/
     command = $1
     expected = $'
+    if RUBY_VERSION >= '1.9'
+      expected.gsub!(/(expecting|unexpected) kEND/, '\1 keyword_end')
+    end
     result = `#{command}`
     ok_(result) == expected
   end

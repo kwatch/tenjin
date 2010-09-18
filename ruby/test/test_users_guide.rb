@@ -46,10 +46,12 @@ class TenjinUsersGuideTest
     s =~ /\A\$ (.*?)\n/
     command = $1
     expected = $'
+    if RUBY_VERSION >= '1.9'
+      expected.gsub!(/expecting kEND/, 'expecting keyword_end')
+    end
     result = `#{command}`
     ok_(result) == expected
   end
-
 
   Dir.chdir DIR do
     filenames = []

@@ -167,6 +167,12 @@ class TenjinMainTest
         ok_(ex.to_s) == @errormsg
       end
     else
+      if RUBY_VERSION >= '1.9'
+        if @name =~ /lint/
+          @expected.gsub!(/kIN/, 'keyword_in')
+          @expected.gsub!(/kEND/, 'keyword_end')
+        end
+      end
       output = main.execute()
       ok_(output) == @expected
     end
@@ -634,7 +640,7 @@ END
   def test_templateclass()  # --templateclass
     @options  = "--templateclass=Tenjin::ArrayBufferTemplate -s"
     @input    = INPUT
-    @expected = SOURCE4
+    @expected = SOURCE4.sub(/_buf\.to_s/, '_buf.join')
     _test()
     @options  = "--templateclass=Tenjin::ArrayBufferTemplate"
     @expected = OUTPUT

@@ -90,6 +90,7 @@ module Oktest::ClassMethodHelper
 
   def load_yaml_documents(filename, options={})   # :nodoc:
     str = File.read(filename)
+    str.force_encoding('utf-8') if str.respond_to?(:force_encoding)
     if filename =~ /\.rb$/
       str =~ /^__END__$/   or raise "*** error: __END__ is not found in '#{filename}'."
       str = $'

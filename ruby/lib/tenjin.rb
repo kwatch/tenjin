@@ -798,6 +798,11 @@ module Tenjin
   ##
   class ArrayBufferTemplate < Template
 
+    def initialize(filename=nil, options={})
+      options[:postamble] = options[:postamble] == true ? '_buf.join' : options[:postamble]
+      super(filename, options)
+    end
+
     protected
 
     def expr_pattern
@@ -829,6 +834,12 @@ module Tenjin
 
     def quote_expr(expr, flag_escape)
       return flag_escape ? "#{@escapefunc}((#{expr}).to_s)" : "(#{expr}).to_s"  # or "(#{expr})"
+    end
+
+    private
+
+    def _render()   # :nodoc:
+      return eval("proc { |_context| self._buf = _buf = #{init_buf_expr()}; #{@script}; _buf.join }".untaint, nil, @filename || '(tenjin)')
     end
 
     #--
