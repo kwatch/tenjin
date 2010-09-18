@@ -1,5 +1,7 @@
 ##
-## $Copyright$
+## $Release: $
+## $Copyright: copyright(c) 2007-2010 kuwata-lab.com all rights reserved. $
+## $License: MIT License $
 ##
 ## Permission is hereby granted, free of charge, to any person obtaining
 ## a copy of this software and associated documentation files (the
@@ -22,9 +24,8 @@
 ##
 
 ##
-## Tenjin module
+## Tenjin -- a very fast and full-featured template engine
 ##
-## $Rev$
 ## $Release: 0.0.0 $
 ##
 
