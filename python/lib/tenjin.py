@@ -1404,6 +1404,52 @@ helpers.__all__.extend(('not_cached', 'echo_cached'))
 
 
 ##
+## helper class to find and read files
+##
+class FileFinder(object):
+
+    def find(self, filename, dirs=None):
+        #: if dirs provided then search template file from it.
+        if dirs:
+            for dirname in dirs:
+                filepath = os.path.join(dirname, filename)
+                if os.path.isfile(filepath):
+                    return filepath
+        #: if dirs not provided then just return filename if file exists.
+        else:
+            if os.path.isfile(filename):
+                return filename
+        #: if file not found then return None.
+        return None
+
+    def abspath(self, filepath):
+        #: return full-path of filepath
+        return os.path.abspath(filepath)
+
+    def timestamp(self, filepath):
+        #: return mtime of file
+        return _getmtime(filepath)
+
+    def read(self, filepath):
+        #: if file exists, return file content and mtime
+        def f():
+            mtime = _getmtime(filepath)
+            input = _read_binary_file(filepath)
+            mtime2 = _getmtime(filepath)
+            if mtime != mtime2:
+                mtime = mtime2
+                input = _read_binary_file(filepath)
+                mtime2 = _getmtime(filepath)
+                if mtime != mtime2:
+                    if logger:
+                        logger.warn("[tenjin] %s.read(): timestamp is changed while reading file." % self.__class__.__name__)
+            return input, mtime
+        #: if file not exist, return None
+        return _ignore_not_found_error(f)
+
+
+
+##
 ## template engine class
 ##
 
@@ -1422,11 +1468,12 @@ class Engine(object):
     path       = None
     cache      = MarshalCacheStorage()  # save converted Python code into file by marshal-format
     lang       = None
+    finder     = FileFinder()
     preprocess = False
     timestamp_interval = 1  # seconds
     prefer_fullpath = False    # if True then use fullpath when template error is reported
 
-    def __init__(self, prefix=None, postfix=None, layout=None, path=None, cache=True, preprocess=None, templateclass=None, lang=None, **kwargs):
+    def __init__(self, prefix=None, postfix=None, layout=None, path=None, cache=True, preprocess=None, templateclass=None, lang=None, finder=None, **kwargs):
         """Initializer of Engine class.
 
            prefix:str (='')
@@ -1459,6 +1506,7 @@ class Engine(object):
         if templateclass: self.templateclass = templateclass
         if path is not None:  self.path = path
         if lang is not None:  self.lang = lang
+        if finder is not None: self.finder = finder
         if preprocess is not None: self.preprocess = preprocess
         self.kwargs = kwargs
         self.encoding = kwargs.get('encoding')
@@ -1508,50 +1556,30 @@ class Engine(object):
         pair = self._filepaths.get(filename)
         if pair: return pair
         #: if template file is not found then raise IOError.
-        filepath = self._find_template_file(filename)
+        filepath = self.finder.find(filename, self.path)
         if not filepath:
             raise IOError('%s: filename not found (path=%r).' % (filename, self.path, ))
-        fullpath = os.path.abspath(filepath)
+        fullpath = self.finder.abspath(filepath)
         #: _ keep relative path and absolute path
         self._filepaths[filename] = pair = (filepath, fullpath)
         #: return relative path and aboslute path.
         return pair
 
-    def _find_template_file(self, filename):
-        #: if path is provided then search template file from it.
-        if self.path:
-            for dirname in self.path:
-                filepath = os.path.join(dirname, filename)
-                if _isfile(filepath):
-                    return filepath
-        #: if path is not provided then just return filename if file exists.
-        else:
-            if _isfile(filename):
-                return filename
-        #: if template file is not found then return None.
-        return None
+    def _create_template(self, input=None, filepath=None, _context=None, _globals=None):
+        #: if input is not specified then just create empty template object.
+        template = self.templateclass(None, **self.kwargs)
+        #: if input is specified then create template object and return it.
+        if input:
+            template.convert(input, filepath)
+        return template
 
-    def _create_template(self, filepath, _context=None, _globals=None):
-        #: if filepath is not specified then just create empty template object.
-        if not filepath:
-            return self.templateclass(None, **self.kwargs)
-        #: if filepath is specified then create template object and return it.
-        elif not self.preprocess:
-            return self.templateclass(filepath, **self.kwargs)
-        #: if preprocessing is enabled then preprocess it.
-        else:
-            s = self._preprocess(filepath, _context or {}, _globals or globals())
-            template = self.templateclass(None, **self.kwargs)
-            template.convert(s, filepath)
-            return template
-
-    def _preprocess(self, filepath, _context, _globals):
+    def _preprocess(self, input, filepath, _context, _globals):
         #if _context is None: _context = {}
         #if _globals is None: _globals = sys._getframe(3).f_globals
         #: preprocess template and return result
         if '_engine' not in _context:
             self.hook_context(_context)
-        preprocessor = Preprocessor(filepath)
+        preprocessor = Preprocessor(filepath, input=input)
         return preprocessor.render(_context, globals=_globals)
 
     def add_template(self, template):
@@ -1570,6 +1598,7 @@ class Engine(object):
         #: if template file is not found then raise error
         filepath, fullpath = self._get_template_path(filename)
         assert filepath and fullpath
+        template_fpath = self.prefer_fullpath and fullpath or filepath
         #: use full path as base of cache file path
         cache = self.cache
         cachepath = self.cachename(fullpath)
@@ -1580,14 +1609,14 @@ class Engine(object):
         if template:
             assert template.timestamp is not None
             if not template.filename:
-                template.filename = self.prefer_fullpath and fullpath or filepath
+                template.filename = template_fpath
             #: if checked within a sec, skip timestamp check.
             if now < getattr(template, '_last_checked_at', 0) + self.timestamp_interval:
                 #if logger: logger.trace('[tenjin.%s] timestamp check skipped (%f < %f + %f)' % \
                 #                        (self.__class__.__name__, now, template._last_checked_at, self.timestamp_interval))
                 return template
             #: if timestamp of template objectis same as file, return it.
-            if template.timestamp == _getmtime(filepath):
+            if template.timestamp == self.finder.timestamp(filepath):
                 template._last_checked_at = now
                 return template
             #: if timestamp of template object is different from file, clear it
@@ -1597,14 +1626,19 @@ class Engine(object):
                                        (self.__class__.__name__, filepath, template, ))
         #: if template object is not found in cache or is expired...
         if not template:
-            #: create template object.
+            ret = self.finder.read(filepath)
+            if not ret:
+                raise TemplateNotFoundError("%r: template not found." % filepath)
+            input, timestamp = ret
             if self.preprocess:   ## required for preprocessing
                 if _context is None: _context = {}
                 if _globals is None: _globals = sys._getframe(1).f_globals
-            template = self._create_template(filepath, _context, _globals)
+                input = self._preprocess(input, template_fpath, _context, _globals)
+            #: create template object.
+            template = self._create_template(input, template_fpath, _context, _globals)
             #: set timestamp and filename of template object.
-            template.timestamp = _getmtime(filepath)
-            template.filename = self.prefer_fullpath and fullpath or filepath
+            template.timestamp = timestamp
+            template.filename = template_fpath
             template._last_checked_at = now
             #: save template object into cache.
             if cache:

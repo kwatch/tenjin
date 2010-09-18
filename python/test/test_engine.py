@@ -40,6 +40,30 @@ def _remove_files(basenames=[]):
             os.unlink(filename)
 
 
+def _with_dummy_files(func):
+    """decorator for test functions"""
+    def deco(self):
+        isdir = os.path.isdir
+        mkdir = os.mkdir
+        try:
+            if not isdir('_views'): mkdir('_views')
+            if not isdir('_views/blog'): mkdir('_views/blog')
+            pairs = [ ('_views/blog/index.pyhtml', 'xxx'),
+                      ('_views/index.pyhtml', '<<#{{_DUMMY_VALUE}}>>'),
+                      ('_views/layout.pyhtml', '<div>#{_content}</div>'), ]
+            for fname, cont in pairs:
+                f = open(fname, 'w')
+                f.write(cont)
+                f.close()
+            func(self)
+        finally:
+            shutil.rmtree('_views')
+    for x in ('func_name', '__name__', '__doc__'):
+        if hasattr(func, x):
+            setattr(deco, x, getattr(func, x))
+    return deco
+
+
 class DebugLogger(object):
 
     def __init__(self):
@@ -735,29 +759,6 @@ class EngineTest(object):
 
     ##################
 
-    def _with_dummy_files(func):
-        """decorator for test functions"""
-        def deco(self):
-            isdir = os.path.isdir
-            mkdir = os.mkdir
-            try:
-                if not isdir('_views'): mkdir('_views')
-                if not isdir('_views/blog'): mkdir('_views/blog')
-                pairs = [ ('_views/blog/index.pyhtml', 'xxx'),
-                          ('_views/index.pyhtml', '<<#{{_DUMMY_VALUE}}>>'),
-                          ('_views/layout.pyhtml', '<div>#{_content}</div>'), ]
-                for fname, cont in pairs:
-                    f = open(fname, 'w')
-                    f.write(cont)
-                    f.close()
-                func(self)
-            finally:
-                shutil.rmtree('_views')
-        for x in ('func_name', '__name__', '__doc__'):
-            if hasattr(func, x):
-                setattr(deco, x, getattr(func, x))
-        return deco
-
     def test_cachename(self):
         engine = tenjin.Engine()
         if spec("return cache file path"):
@@ -788,43 +789,28 @@ class EngineTest(object):
             ok (e1._filepaths.get('index.pyhtml')) == (rel_path, abs_path)
 
     @_with_dummy_files
-    def test__find_template_file(self):
-        e1 = tenjin.Engine(path=['_views/blog', '_views'], postfix='.pyhtml')
-        if spec("if path is provided then search template file from it."):
-            ok (e1._find_template_file('index.pyhtml')) == '_views/blog/index.pyhtml'
-            ok (e1._find_template_file('layout.pyhtml')) == '_views/layout.pyhtml'
-        e2 = tenjin.Engine(postfix='.pyhtml')
-        if spec("if path is not provided then just return filename if file exists."):
-            ok (e2._find_template_file('_views/index.pyhtml')) == '_views/index.pyhtml'
-        if spec("return nil if template file is not found."):
-            ok (e1._find_template_file('index2.pyhtml')) == None
-            ok (e2._find_template_file('_views/index2.pyhtml')) == None
-
-    @_with_dummy_files
     def test__create_template(self):
         e1 = tenjin.Engine(path=['_views/blog', '_views'])
         t = None
-        if spec("if filepath is not specified then just create empty template object."):
+        if spec("if input is not specified then just create empty template object."):
             t = e1._create_template(None)
             ok (t).is_a(tenjin.Template)
             ok (t.filename) == None
             ok (t.script) == None
-        if spec("if filepath is specified then create template object and return it."):
-            t = e1._create_template('_views/layout.pyhtml')
+        if spec("if input is specified then create template object and return it."):
+            t = e1._create_template('<p>#{_content}</p>', '_views/layout.pyhtml')
             ok (t).is_a(tenjin.Template)
             ok (t.filename) == "_views/layout.pyhtml"
-            ok (t.script) == "_buf.extend(('''<div>''', to_str(_content), '''</div>''', ));"
-        if spec("if preprocessing is enabled then preprocess it."):
-            e1.preprocess = True
-            t = e1._create_template("_views/index.pyhtml", {}, globals())
-            ok (t.script) == "_buf.extend(('''<<SOS>>''', ));"
+            ok (t.script) == "_buf.extend(('''<p>''', to_str(_content), '''</p>''', ));"
 
     @_with_dummy_files
     def test__preprocess(self):
         e1 = tenjin.Engine()
         if spec("preprocess template and return result"):
-            output = e1._preprocess('_views/index.pyhtml', {}, globals())
-            ok (output) == "<<SOS>>"
+            fpath = '_views/index.pyhtml'
+            input, mtime = e1.finder.read(fpath)
+            ret = e1._preprocess(input, fpath, {}, globals())
+            ok (ret) == "<<SOS>>"
 
     @_with_dummy_files
     def test_get_template(self):
@@ -915,11 +901,54 @@ class EngineTest(object):
         if spec("add engine itself into context data."):
             ok (ctx.get('_engine')).is_(e)
         if spec("add include() method into context data."):
-            ok (ctx.get('_include')).is_(e.include)
+            ok (ctx.get('include')) == (e.include)
 
 
 _DUMMY_VALUE = 'SOS'
 
 
+class FileFinderTest(object):
+
+    def before(self):
+        self.finder = tenjin.FileFinder()
+        self.dirs = ['_views/blog', '_views']
+
+    @_with_dummy_files
+    def test_find(self):
+        if spec("if dirs provided then search template file from it."):
+            ok (self.finder.find('index.pyhtml', self.dirs)) == '_views/blog/index.pyhtml'
+            ok (self.finder.find('layout.pyhtml', self.dirs)) == '_views/layout.pyhtml'
+        if spec("if dirs not provided then just return filename if file exists."):
+            ok (self.finder.find('_views/index.pyhtml')) == '_views/index.pyhtml'
+        if spec("if file not found then return None."):
+            ok (self.finder.find('index2.pyhtml', self.dirs)) == None
+            ok (self.finder.find('index2.pyhtml')) == None
+
+    @_with_dummy_files
+    def test_abspath(self):
+        if spec("return full-path of filepath"):
+            ret = self.finder.abspath('_views/blog/index.pyhtml')
+            ok (ret) == os.path.join(os.getcwd(), '_views/blog/index.pyhtml')
+
+    @_with_dummy_files
+    def test_timestamp(self):
+        if spec("return mtime of file"):
+            ts = float(int(time.time())) - 3.0
+            os.utime('_views/blog/index.pyhtml', (ts, ts))
+            ret = self.finder.timestamp('_views/blog/index.pyhtml')
+            ok (ret) == ts
+
+    @_with_dummy_files
+    def test_read(self):
+        if spec("if file exists, return file content and mtime"):
+            ts = float(int(time.time())) - 1.0
+            os.utime('_views/layout.pyhtml', (ts, ts))
+            ret = self.finder.read('_views/layout.pyhtml')
+            ok (ret) == ("<div>#{_content}</div>", ts)
+        if spec("if file not exist, return None"):
+            ret = self.finder.read('_views/layout2.pyhtml')
+            ok (ret) == None
+
+
 if __name__ == '__main__':
-    run()
+    run(EngineTest)
