@@ -81,22 +81,22 @@ class SafeTemplateTest
 
   def test_FUNCTEST_convert_and_render
     input = <<'END'
-<p>@v1=${@v1}<p>
-<p>@v2=${@v2}<p>
-<p>safe_str(@v1)=${safe_str(@v1)}<p>
-<p>safe_str(@v2)=${safe_str(@v2)}<p>
+<p>@v1=${@v1}</p>
+<p>@v2=${@v2}</p>
+<p>safe_str(@v1)=${safe_str(@v1)}</p>
+<p>safe_str(@v2)=${safe_str(@v2)}</p>
 END
     script = <<'END'
- _buf << %Q`<p>@v1=#{safe_escape((@v1).to_s)}<p>
-<p>@v2=#{safe_escape((@v2).to_s)}<p>
-<p>safe_str(@v1)=#{safe_escape((safe_str(@v1)).to_s)}<p>
-<p>safe_str(@v2)=#{safe_escape((safe_str(@v2)).to_s)}<p>\n`
+ _buf << %Q`<p>@v1=#{safe_escape((@v1).to_s)}</p>
+<p>@v2=#{safe_escape((@v2).to_s)}</p>
+<p>safe_str(@v1)=#{safe_escape((safe_str(@v1)).to_s)}</p>
+<p>safe_str(@v2)=#{safe_escape((safe_str(@v2)).to_s)}</p>\n`
 END
     output = <<'END'
-<p>@v1=&lt;&gt;<p>
-<p>@v2=<><p>
-<p>safe_str(@v1)=<><p>
-<p>safe_str(@v2)=<><p>
+<p>@v1=&lt;&gt;</p>
+<p>@v2=<></p>
+<p>safe_str(@v1)=<></p>
+<p>safe_str(@v2)=<></p>
 END
     t = Tenjin::SafeTemplate.new(nil)
     spec "'\#' should be escaped with backslash." do
