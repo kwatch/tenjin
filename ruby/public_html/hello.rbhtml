@@ -1,0 +1,31 @@
+<?rb # -*- coding: utf-8 -*-
+
+@page_title = 'Tenjin Example'
+
+require 'cgi'  # or 'cgialt' for performance
+cgi = CGI.new
+name = cgi.params['name']
+name = 'World' if name.empty?
+
+?>
+<style type="text/css">
+  table.env {
+    border-collapse: collapse;
+  }
+  table.env th, table.env td {
+    border: solid 1px #DDD;
+  }
+</style>
+
+<h1>Hello ${name}!</h1>
+
+<table class="env">
+  <tbody>
+    <?rb cycle = Cycle.new('odd', 'even') ?>
+    <?rb ENV.keys.sort.each do |key| ?>
+    <tr class="${cycle}">
+      <td>${key}</td><td>${ENV[key]}</td>
+    </tr>
+    <?rb end ?>
+  </tbody>
+</table>
