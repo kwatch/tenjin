@@ -198,7 +198,7 @@ module Tenjin
 
     ## add value into _buf. this is equivarent to '#{value}'.
     def echo(value)
-      self._buf << value
+      self._buf << value.to_s
     end
 
     ##
