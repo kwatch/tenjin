@@ -35,13 +35,18 @@ recipes:
 
   - product:	:test
     method*: |
+        sys "find test -name '*.cache' | xargs rm"
     	chdir 'test' do
 	  sys "ruby test_template.rb"
 	  sys "ruby test_engine.rb"
 	  sys "ruby test_main.rb"
 	  sys "ruby test_htmlhelper.rb"
+	  sys "ruby test_safe.rb"
+	  sys "ruby test_store.rb"
+	  sys "ruby test_tcache.rb"
 	  sys "ruby test_users_guide.rb"
 	  sys "ruby test_faq.rb"
+	  sys "ruby test_examples.rb"
 	end
 
   - product:	:clear
