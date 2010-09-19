@@ -10,15 +10,15 @@
 ##    $ cd rbtenjin-X.X.X/
 ##    $ cp lib/tenjin.rb ~/public_html/
 ##    $ cd public_html/
-##    $ cp index.cgi .htaccess *.rbhtml ~/public_html/
-##    $ chmod a+x ~/public_html/index.cgi
+##    $ cp rbtenjin.cgi .htaccess *.rbhtml ~/public_html/
+##    $ chmod a+x ~/public_html/rbtenjin.cgi
 ##    $ cat ~/public_html/.htaccess
 ##    RewriteEngine on
 ##    RewriteRule \.(rb|rbhtml|cache)$ - [R=404,L]
 ##    RewriteCond %{SCRIPT_FILENAME} !-f
-##    RewriteRule \.html$ index.cgi
-##    RewriteRule ^$ index.cgi
-##    RewriteRule /$ index.cgi
+##    RewriteRule \.html$ rbtenjin.cgi
+##    RewriteRule ^$ rbtenjin.cgi
+##    RewriteRule /$ rbtenjin.cgi
 ##
 ##
 ## $Release: $
@@ -51,17 +51,17 @@ end
 begin
 
   ## simulate CGI in command-line to debug your *.rbhtml file
-  #ENV['SCRIPT_NAME'] = '/A/B/index.cgi'
-  #ENV['REQUEST_URI'] = '/A/B/env.html'
+  #ENV['SCRIPT_NAME'] = '/A/B/rbtenjin.cgi'
+  #ENV['REQUEST_URI'] = '/A/B/hello.html'
 
   ## get script name and request path
-  script_name = ENV['SCRIPT_NAME']  or     # ex. '/A/B/index.cgi'
+  script_name = ENV['SCRIPT_NAME']  or     # ex. '/A/B/rbtenjin.cgi'
     raise HttpError.new('500 Internal Error', "ENV['SCRIPT_NAME'] is not set.")
   req_uri     = ENV['REQUEST_URI']  or     # ex. '/A/B/C/foo.html?x=1'
     raise HttpError.new('500 Internal Error', "ENV['REQUEST_URI'] is not set.")
   req_path, _ = req_uri.split(/\?/, 2)     # ex. ['/A/B/C/foo.html', 'x=1']
 
-  ## deny direct access to index.cgi
+  ## deny direct access to rbtenjin.cgi
   req_path != script_name  or
     raise HttpError.new('403 Forbidden', "#{req_path}: not accessable.")
 
