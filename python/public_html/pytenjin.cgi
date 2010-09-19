@@ -38,7 +38,10 @@ python3 = sys.version_info[0] == 3
 
 encoding = 'utf-8'
 headers = {}
-debug = os.environ.get('SERVER_ADDR') == '::1'   # set debug mode true when on localhost
+#debug = os.environ.get('SERVER_ADDR') == '::1'   # set debug mode true when on localhost
+debug = 'HTTP_X_FORWARDED_FOR' not in os.environ and \
+        os.environ.get('SERVER_ADDR') == os.environ.get('REMOTE_ADDR')
+#debug = True
 
 def h(val):
     return str(val).replace('&','&amp;').replace('<','&lt;').replace('>','&gt;').replace('"','&quot;')
