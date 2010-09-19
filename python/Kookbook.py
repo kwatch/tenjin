@@ -165,13 +165,19 @@ def task_test(c, *args, **kwargs):
 
 @recipe
 def task_clean(c):
+    rm_rf("**/*.pyc", "**/*.cache", "**/__cache__")
+    rm_f("test/test.log", "test/kook.log")
+
+
+@recipe
+@ingreds('clean')
+def task_clear(c):
     from glob import glob
     dirs = glob("examples/*");
     for dir in dirs:
         if os.path.isdir(dir):
             with chdir(dir) as d:
                 system("make clean")
-    rm_f("test/test.log", "test/kook.log")
 
 
 @recipe
