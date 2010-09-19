@@ -136,7 +136,7 @@ for item in items:
             m = t.expr_pattern().search("<p>#{{item}}</p>")
             def f(): t.get_expr_and_escapeflag(m)
             ok (f).raises(tenjin.TemplateSyntaxError,
-                          "'#{item}': '#{{}}' is not available in SafePreprocessor.")
+                          "'#{{item}}': '#{{}}' is not available in SafePreprocessor.")
 
     def test_FUNCTEST_with_engine(self):
         fname = 'test_safe_preprocessor.pyhtml'

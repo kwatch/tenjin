@@ -1028,7 +1028,7 @@ class SafePreprocessor(Preprocessor):
 
     def get_expr_and_escapeflag(self, match):
         if match.group(1) == '#':
-            msg = "'#{%s}': '#{{}}' is not available in %s."
+            msg = "'#{{%s}}': '#{{}}' is not available in %s."
             raise TemplateSyntaxError(msg % (match.group(2), self.__class__.__name__))
         return match.group(2), True
 
