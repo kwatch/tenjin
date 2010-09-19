@@ -797,10 +797,27 @@ sub has {
 ## file base key-value store
 ##
 package Tenjin::FileBaseStore;
-use File::Basename;     # dirname
-use File::Path;         # mkpath, rmtree
+#use File::Basename;     # dirname
+#use File::Path;         # mkpath, rmtree
 our $ISA = ('Tenjin::KeyValueStore');
 our $LIFE_TIME = 60*60*24*7;    # 1 week
+
+my $_sub_dirname;
+$_ = $^O;
+#if ($_ eq 'linux' || $_ eq 'darwin' || m/bsd$/) {
+if (0) {
+    $_sub_dirname = sub {
+        my ($fpath) = @_;
+        $fpath =~ s/\/+$//;
+        $fpath =~ m/(.*)[\/]/ ? $1 || '/' : '.';
+    };
+}
+else {
+    $_sub_dirname = sub {
+        eval 'use File::Basename;' unless $File::Basename::VERSION; # lazy loading
+        File::Basename::dirname($_[0]);
+    }
+}
 
 sub new {
     my ($class, $root_path) = @_;
@@ -814,8 +831,8 @@ sub new {
 }
 
 sub filepath {
-    $this->{root_path} ne '0'  or die "root path is not set yet.";
     my ($this, $key) = @_;
+    $this->{root_path} ne '0'  or die "root path is not set yet.";
     $_ = $key;
     s/[^-\/\w]/_/g;
     return $this->{root_path}.'/'.$_;
@@ -836,8 +853,11 @@ sub set {
     my ($this, $key, $value, $lifetime) = @_;
     $lifetime ||= $Tenjin::FileBaseStore::LIFE_TIME;
     my $fpath = $this->filepath($key);
-    my $dir = dirname($fpath);
-    mkpath($dir) unless -d $dir;
+    my $dir = $_sub_dirname->($fpath);
+    unless (-d $dir) {
+        eval 'use File::Path;' unless defined($File::Path::VERSION);   # lazy loading
+        File::Path::mkpath($dir) unless -d $dir;
+    }
     Tenjin::Util::write_file($fpath, $value, 't', time() + $lifetime);
 }
 
