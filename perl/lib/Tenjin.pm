@@ -121,9 +121,9 @@ sub _decode_params {
 
 
 ##
-## raw string
+## safe string
 ##
-package Tenjin::RawString;
+package Tenjin::SafeStr;
 
 
 sub new {
@@ -397,12 +397,12 @@ package Tenjin::Template;
 sub new {
     my ($class, $filename, $opts) = @_;
     my $escapefunc = defined($opts) && exists($opts->{escapefunc}) ? $opts->{escapefunc} : undef;
-    my $rawclass   = defined($opts) && exists($opts->{rawclass}) ? $opts->{rawclass} : undef;
+    my $safeclass  = defined($opts) && exists($opts->{safeclass}) ? $opts->{safeclass} : undef;
     my $this = {
         'filename'   => $filename,
         'script'     => undef,
         'escapefunc' => $escapefunc,
-        'rawclass'   => $rawclass,
+        'safeclass'  => $safeclass,
         'timestamp'  => undef,
         'args'       => undef,
     };
@@ -649,10 +649,10 @@ sub add_expr {
 
 sub escaped_expr {
     my ($this, $expr) = @_;
-    if ($this->{rawclass}) {
+    if ($this->{safeclass}) {
         return $this->{escapefunc}
-               ? "(ref(\$_V = ($expr)) eq '$this->{rawclass}' ? \$_V->{str} : $this->{escapefunc}(\$V)"
-               : "(ref(\$_V = ($expr)) eq '$this->{rawclass}' ? \$_V->{str} : (\$_V =~ s/[&<>\"]/\$Tenjin::_H{\$&}/ge, \$_V))";
+               ? "(ref(\$_V = ($expr)) eq '$this->{safeclass}' ? \$_V->{str} : $this->{escapefunc}(\$V)"
+               : "(ref(\$_V = ($expr)) eq '$this->{safeclass}' ? \$_V->{str} : (\$_V =~ s/[&<>\"]/\$Tenjin::_H{\$&}/ge, \$_V))";
     }
     else {
         return $this->{escapefunc}
