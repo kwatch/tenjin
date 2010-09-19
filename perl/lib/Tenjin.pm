@@ -459,7 +459,9 @@ sub convert_file {
 sub convert {
     my ($this, $input, $filename) = @_;
     $this->{filename} = $filename;
-    my @buf = ('my $_buf = ""; my $_V; ', );
+    my @buf = $this->{escapefunc} ?
+              ('my $_buf = ""; ', ) :
+              ('my $_buf = ""; my $_V; ', );
     $this->parse_stmt(\@buf, $input);
     return $this->{script} = $buf[0] . " \$_buf;\n";
 }
@@ -644,14 +646,16 @@ sub add_expr {
 
 sub escaped_expr {
     my ($this, $expr) = @_;
-    if ($this->{escapefunc}) {
-        return "$this->{escapefunc}($expr)";
-    }
     if ($this->{rawclass}) {
-        return "(ref(\$_V = ($expr)) eq '$this->{rawclass}' ? \$_V->{str} : (\$_V =~ s/[&<>\"]/\$Tenjin::_H{\$&}/ge, \$_V))";
+        return $this->{escapefunc}
+               ? "(ref(\$_V = ($expr)) eq '$this->{rawclass}' ? \$_V->{str} : $this->{escapefunc}(\$V)"
+               : "(ref(\$_V = ($expr)) eq '$this->{rawclass}' ? \$_V->{str} : (\$_V =~ s/[&<>\"]/\$Tenjin::_H{\$&}/ge, \$_V))";
     }
-    #return "((\$_V = ($expr)) =~ s/[&<>\"]/\$ESCAPE_HTML{\$&}/ge, \$_V)";
-    return "((\$_V = ($expr)) =~ s/[&<>\"]/\$Tenjin::_H{\$&}/ge, \$_V)";
+    else {
+        return $this->{escapefunc}
+               ? "$this->{escapefunc}($expr)"
+               : "((\$_V = ($expr)) =~ s/[&<>\"]/\$Tenjin::_H{\$&}/ge, \$_V)";
+    }
 }
 
 
