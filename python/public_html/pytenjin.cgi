@@ -32,6 +32,7 @@ import re
 import tenjin
 from tenjin.helpers import *
 from tenjin.helpers.html import *
+h = tenjin.helpers.html.escape_html
 
 python2 = sys.version_info[0] == 2
 python3 = sys.version_info[0] == 3
@@ -42,9 +43,6 @@ headers = {}
 debug = 'HTTP_X_FORWARDED_FOR' not in os.environ and \
         os.environ.get('SERVER_ADDR') == os.environ.get('REMOTE_ADDR')
 #debug = True
-
-def h(val):
-    return str(val).replace('&','&amp;').replace('<','&lt;').replace('>','&gt;').replace('"','&quot;')
 
 
 class HttpError(Exception):
