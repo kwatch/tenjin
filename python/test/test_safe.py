@@ -154,5 +154,120 @@ for item in items:
                 os.path.isfile(x) and os.unlink(x)
 
 
+def _with_template(fname, content):
+    def deco(func):
+        def newfunc(*args):
+            try:
+                f = open(fname, 'w')
+                f.write(content)
+                f.close()
+                func()
+            finally:
+                for x in [fname, fname+'.cache']:
+                    if os.path.isfile(x):
+                        os.unlink(x)
+        return newfunc
+    return deco
+
+
+class SafeEngineTest(object):
+
+    def test_FUNCTEST_convert(self):
+        fname = 'test_safe_engine_convert.pyhtml'
+        input = r"""Hello #{name}!"""
+        @_with_template(fname, input)
+        def f():
+            engine = tenjin.SafeEngine()
+            def f(): engine.render(fname, {'name': 'World'})
+            ok (f).raises(tenjin.TemplateSyntaxError, "'#{name}': '#{}' is not available in SafeTemplate.")
+        f()
+
+    def test_FUNCTEST_render(self):
+        fname = 'test_safe_engine_render.pyhtml'
+        input = r"""
+<p>v1=${v1}</p>
+<p>v2=${v2}</p>
+<p>SafeStr(v1)=${SafeStr(v1)}</p>
+<p>SafeStr(v2)=${SafeStr(v2)}</p>
+"""[1:]
+        expected = r"""
+<p>v1=&lt;&amp;&gt;</p>
+<p>v2=<&></p>
+<p>SafeStr(v1)=<&></p>
+<p>SafeStr(v2)=<&></p>
+"""[1:]
+        @_with_template(fname, input)
+        def f():
+            engine = tenjin.SafeEngine()
+            context = { 'v1': '<&>', 'v2': SafeStr('<&>'), }
+            output = engine.render(fname, context)
+            ok (output) == expected
+        f()
+
+    def test_FUNCTEST_preprocessing1(self):
+        fname = 'test_safe_engine_preprocessing1.pyhtml'
+        input = r"""Hello #{{name}}!"""
+        @_with_template(fname, input)
+        def f():
+            engine = tenjin.SafeEngine(preprocess=True)
+            def f(): engine.get_template(fname, {'name': 'World'})
+            ok (f).raises(tenjin.TemplateSyntaxError,
+                          "'#{{name}}': '#{{}}' is not available in SafePreprocessor.")
+        f()
+
+    def test_FUNCTEST_preprocessing2(self):
+        fname = 'test_safe_engine_preprocessing2.pyhtml'
+        input = r'''
+  <h1>${title}</h1>
+  <ul>
+  <?PY for wday in WDAYS: ?>
+    <li>${{wday}}</li>
+  <?PY #endfor ?>
+  <ul>
+  <div>${{COPYRIGHT}}</div>
+'''[1:]
+        expected_output = r'''
+  <h1>SafeEngine Example</h1>
+  <ul>
+    <li>Su</li>
+    <li>M</li>
+    <li>Tu</li>
+    <li>W</li>
+    <li>Th</li>
+    <li>F</li>
+    <li>Sa</li>
+  <ul>
+  <div>copyright(c)2010 kuwata-lab.com</div>
+'''[1:]
+        expected_script = r"""
+_buf.extend(('''  <h1>''', safe_escape(to_str(title)), '''</h1>
+  <ul>
+    <li>Su</li>
+    <li>M</li>
+    <li>Tu</li>
+    <li>W</li>
+    <li>Th</li>
+    <li>F</li>
+    <li>Sa</li>
+  <ul>
+  <div>copyright(c)2010 kuwata-lab.com</div>\n''', ));
+"""[1:]
+        @_with_template(fname, input)
+        def f():
+            f = open(fname, 'w')
+            f.write(input)
+            f.close()
+            engine = tenjin.SafeEngine(preprocess=True)
+            context = {
+                'title': 'SafeEngine Example',
+                'WDAYS': ['Su', 'M', 'Tu', 'W', 'Th','F', 'Sa'],
+                'COPYRIGHT': 'copyright(c)2010 kuwata-lab.com',
+            }
+            output = engine.render(fname, context)
+            ok (output) == expected_output
+            ok (engine.get_template(fname).script) == expected_script
+        f()
+
+
 if __name__ == '__main__':
     run()

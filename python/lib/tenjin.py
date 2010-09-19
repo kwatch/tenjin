@@ -1021,9 +1021,7 @@ class Preprocessor(Template):
 
 
 class SafePreprocessor(Preprocessor):
-    """ex.
-         tenjin.Engine.preprocessor = tenjin.SafePreprocessor
-    """
+
     escapefunc = 'safe_escape'
 
     def get_expr_and_escapeflag(self, match):
@@ -1738,6 +1736,15 @@ class Engine(object):
         #context['render'] = self.render
         #: add include() method into context data.
         context['include'] = self.include
+
+
+##
+## engine class which uses SafeTemplate and SafePreprocessor classes
+##
+class SafeEngine(Engine):
+
+    templateclass = SafeTemplate
+    preprocessorclass = SafePreprocessor
 
 
 
