@@ -57,6 +57,15 @@ END
         should_eq($t->convert($input), $expected);
     };
 
+    it "refuses to compile '[== expr =]'", sub {
+        my $t = Tenjin::SafeTemplate->new(undef);
+        my $input = "<div>\n[== \$_content =]\n</div>\n";
+        eval { $t->convert($input); };
+        $_ = $@;
+        s/ at .*$//;
+        should_eq($_, "'[== \$_content =]': '[== =]' is not available with Tenjin::SafeTemplate.\n");
+    };
+
 };
 
 

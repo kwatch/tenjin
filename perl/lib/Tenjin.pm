@@ -698,6 +698,31 @@ sub compile {
 
 
 ##
+##
+##
+package Tenjin::SafeTemplate;
+our @ISA = 'Tenjin::Template';
+
+
+sub escaped_expr {
+    my ($this, $expr) = @_;
+    return $this->{escapefunc}
+           ? "(ref(\$_V = ($expr)) eq 'Tenjin::SafeStr' ? \$_V->{value} : $this->{escapefunc}(\$V)"
+           : "(ref(\$_V = ($expr)) eq 'Tenjin::SafeStr' ? \$_V->{value} : (\$_V =~ s/[&<>\"]/\$Tenjin::_H{\$&}/ge, \$_V))";
+}
+
+
+sub get_expr_and_escapeflag {
+    my ($this, $m1, $m2, $m3) = @_;
+    my ($not_escape, $expr, $delete_newline) = ($m1, $m2, $m3);
+    #return $expr, $not_escape eq '', $delete_newline eq '=',
+    $not_escape eq ''  or die "'[==$expr=]': '[== =]' is not available with Tenjin::SafeTemplate.";
+    return $expr, 1, $delete_newline eq '=',
+}
+
+
+
+##
 ## preprocessor
 ##
 package Tenjin::Preprocessor;
@@ -724,22 +749,6 @@ sub add_expr {
     my ($this, $bufref, $expr, $flag_escape) = @_;
     $expr = "Tenjin::Util::_decode_params($expr)";
     $this->SUPER::add_expr($bufref, $expr, $flag_escape);
-}
-
-
-
-##
-##
-##
-package Tenjin::SafeTemplate;
-our @ISA = 'Tenjin::Template';
-
-
-sub escaped_expr {
-    my ($this, $expr) = @_;
-    return $this->{escapefunc}
-           ? "(ref(\$_V = ($expr)) eq 'Tenjin::SafeStr' ? \$_V->{value} : $this->{escapefunc}(\$V)"
-           : "(ref(\$_V = ($expr)) eq 'Tenjin::SafeStr' ? \$_V->{value} : (\$_V =~ s/[&<>\"]/\$Tenjin::_H{\$&}/ge, \$_V))";
 }
 
 
