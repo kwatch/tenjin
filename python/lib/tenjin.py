@@ -1477,6 +1477,7 @@ class Engine(object):
     lang       = None
     finder     = FileFinder()
     preprocess = False
+    preprocessorclass = Preprocessor
     timestamp_interval = 1  # seconds
     prefer_fullpath = False    # if True then use fullpath when template error is reported
 
@@ -1572,7 +1573,7 @@ class Engine(object):
         #: preprocess template and return result
         if '_engine' not in _context:
             self.hook_context(_context)
-        preprocessor = Preprocessor(filepath, input=input)
+        preprocessor = self.preprocessorclass(filepath, input=input)
         return preprocessor.render(_context, globals=_globals)
 
     def add_template(self, template):
