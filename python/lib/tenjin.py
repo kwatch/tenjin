@@ -1432,11 +1432,11 @@ class FileFinder(object):
         #: if file exists, return file content and mtime
         def f():
             mtime = _getmtime(filepath)
-            input = _read_binary_file(filepath)
+            input = _read_template_file(filepath)
             mtime2 = _getmtime(filepath)
             if mtime != mtime2:
                 mtime = mtime2
-                input = _read_binary_file(filepath)
+                input = _read_template_file(filepath)
                 mtime2 = _getmtime(filepath)
                 if mtime != mtime2:
                     if logger:
