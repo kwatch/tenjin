@@ -113,7 +113,7 @@ class UsersGuideTest(object):
     def test_logging(self):
         self._test()
 
-    def test_m18n(self):
+    def test_m17n(self):
         self._test()
 
     def test_nested(self):

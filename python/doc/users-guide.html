@@ -96,8 +96,6 @@
 
             <li><a href="#google-appengine">Using Tenjin with Google App Engine</a></li>
 
-            <li><a href="#function-names">Specify Function Names of escape() and to_str()</a></li>
-
             <li>
               <a href="#preprocessing">Preprocessing</a>
 
@@ -109,6 +107,8 @@
                 <li><a href="#preprocessing-parameters">Parameters</a></li>
               </ul>
             </li>
+
+            <li><a href="#m17n">M17N Page</a></li>
           </ul>
         </li>
 
@@ -134,9 +134,9 @@
           <ul>
             <li><a href="#tips-trace">Trace Templates</a></li>
 
-            <li><a href="#tips-webext">Webext</a></li>
+            <li><a href="#function-names">Specify Function Names of escape() and to_str()</a></li>
 
-            <li><a href="#tips-m17n">M17N Page</a></li>
+            <li><a href="#tips-webext">Webext</a></li>
 
             <li><a href="#tips-template-inheritance">Template Inheritance</a></li>
 
@@ -1214,10 +1214,10 @@ u'hoge'
 
       <h3 class="section2">Safe Template</h3>
 
-      <p>Tenjin provides SafeTemplate class which enforces HTML escape.</p>
+      <p>Tenjin provides SafeTemplate and SafeEngine class which enforces HTML escape.</p>
 
       <ul type="disc">
-        <li>With SafeTemplate class, <code>#{}</code> is not allowed. Only <code>${}</code> is available.</li>
+        <li>With these classes, <code>#{}</code> is not allowed. Only <code>${}</code> is available.</li>
 
         <li>Use <code>${SafeStr(x)}</code> instead of <code>#{x}</code>.</li>
       </ul><a name="test_safe/safe-test.pyhtml"></a>
@@ -1239,10 +1239,11 @@ SafeStr(var1) = ${<strong>SafeStr(</strong>var1<strong>)</strong>}
 ## import safe_escape() and SafeStr class
 import tenjin
 from tenjin.helpers import to_str, <strong>safe_escape</strong>, <strong>SafeStr</strong>
+    # or form tenjin.helpers import *
 
-## set SafeTemplaet class as default template class
-## (or pass templateclass=tenjin.SafeTemplate to Engine())
-<strong>tenjin.Engine.templateclass = tenjin.SafeTemplate</strong>
+## use SafeEngine class instead Engine class
+## (SafeEngine class uses SafeTemplate class internally)
+engine = tenjin.<strong>SafeEngine</strong>()
 
 ## if you want NOT escape a certain value, wrap by SafeStr
 context = {
@@ -1251,7 +1252,6 @@ context = {
 }
 
 ## render template
-engine = tenjin.Engine()
 output = engine.render('safe-test.pyhtml', context)
 print(output)
 </pre><a name="test_safe/result.output"></a>
@@ -1265,12 +1265,6 @@ var1 = &amp;lt;b&amp;gt;Hello&amp;lt;/b&amp;gt;
 var2 = <strong>&lt;b&gt;Hello&lt;/b&gt;</strong>
 SafeStr(var1) = <strong>&lt;b&gt;Hello&lt;/b&gt;</strong>
 
-</pre>
-
-      <p>tenjin.SafePreprocessor is also provided. If you want to use it, pass <code>preprocessor=tenjin.SafePreprocessor</code> to <code>tenjin.Engine()</code> as keyword argument, or set SafePreprocessor as default preprocessor class.</p>
-      <pre class="program">
-## set default preprocessor class
-tenjin.Engine.preprocess = tenjin.SafePreprocessor
 </pre>
 
       <p>SafeTemplate class uses safe_escape() instead of escape(). You can see it by <code>--safe</code> option for pytenjin command.<sup>(<a href="#fnref:1" name="fnlink:1" id="fnlink:1">*1</a>)</sup></p><a name="test_safe/result2.output"></a>
@@ -1662,45 +1656,6 @@ fragcache.prefix   = 'fragment.'
 </pre>
 
       <p>NOTICE: Google App Engine shares memcache in any version. In other words, Google App Engine doesn't allow to separate memcache for each version. This means that <strong>memcache data can be conflict between old and new version application in Google App Engine</strong>. Tenjin avoids this confliction by using version id as namespace.</p><br>
-      <a name="function-names" id="function-names"></a>
-
-      <h3 class="section2">Specify Function Names of escape() and to_str()</h3>
-
-      <p>It is able to specify function names of <code>escape()</code> and <code>to_str()</code> which are used in converted Python script.</p><a name="test_escape/main.py"></a>
-
-      <div class="program_caption">
-        main.y
-      </div>
-      <pre class="program">
-import tenjin
-from tenjin.helpers import *
-engine = tenjin.Engine(path=['views'], <strong>escapefunc='cgi.escape', tostrfunc='str'</strong>)
-print(engine.get_template('page.pyhtml').script)
-</pre><a name="test_escape/views/page.pyhtml"></a>
-
-      <div class="program_caption">
-        views/page.pyhtml
-      </div>
-      <pre class="program">
-&lt;p&gt;
-  escaped:     ${value}
-  not escaped: #{value}
-&lt;/p&gt;
-</pre><a name="test_escape/result.output"></a>
-
-      <div class="program_caption">
-        Result
-      </div>
-      <pre class="program">
-$ python main.py
-_buf.extend(('''&lt;p&gt;
-  escaped:     ''', <strong>cgi.escape</strong>(<strong>str</strong>(value)), '''
-  not escaped: ''', <strong>str</strong>(value), '''
-&lt;/p&gt;\n''', ));
-
-</pre>
-
-      <p>If you need faster version of <code>to_str()</code> and <code>escape()</code>, see <a href="#webext">this section</a>.</p><br>
       <a name="preprocessing" id="preprocessing"></a>
 
       <h3 class="section2">Preprocessing</h3>
@@ -1816,7 +1771,7 @@ print(''.join(_buf))
 <strong>&lt;?PY            "HI": "Hawaii", } ?&gt;</strong>
 <strong>&lt;?PY # ?&gt;</strong>
 &lt;?py chk = { params['state']: ' selected="selected"' } ?&gt;
-<strong>&lt;?PY codes = states.keys() ?&gt;</strong>
+<strong>&lt;?PY codes = list(states.keys()) ?&gt;</strong>
 <strong>&lt;?PY codes.sort() ?&gt;</strong>
 &lt;select name="state"&gt;
   &lt;option value=""&gt;-&lt;/option&gt;
@@ -1855,8 +1810,9 @@ $ pytenjin -P views/pp-example2.pyhtml
       <pre class="program">
 &lt;?PY ## ex. link_to('Show', '/show/1')  =&gt; &lt;a href="/show/1"&gt;Show&lt;/a&gt; ?&gt;
 &lt;?PY def link_to(label, url): ?&gt;
-&lt;?PY     import urllib ?&gt;
-&lt;?PY     return '&lt;a href="%s"&gt;%s&lt;/a&gt;' % (urllib.quote(url), label) ?&gt;
+&lt;?PY     try:    from urllib.parse import quote ?&gt;
+&lt;?PY     except: from urllib import quote ?&gt;
+&lt;?PY     return '&lt;a href="%s"&gt;%s&lt;/a&gt;' % (quote(url), label) ?&gt;
 &lt;?PY #enddef ?&gt;
 #{{link_to('Show '+<strong>_P(</strong>'params["name"]'<strong>)</strong>, '/items/show/'+<strong>_p(</strong>'params["id"]'<strong>)</strong>)}}
 </pre>
@@ -1875,6 +1831,131 @@ $ pytenjin -P views/pp-example3.pyhtml
 
       <p>Preprocessor has the power to make view-layer much faster, but it may make the debugging difficult. You should use it carefully.</p><br>
       <br>
+      <a name="m17n" id="m17n"></a>
+
+      <h3 class="section2">M17N Page</h3>
+
+      <p>If you have M17N site, you can make your site faster by Tenjin.</p>
+
+      <p>In M17N-ed site, message translation function (such as <code>_('message-key')</code>) is called many times. Therefore if you can eliminate calling that function, your site can be faster. And Tenjin can do it by preprocessing.</p>
+
+      <p>The point is:</p>
+
+      <ul type="disc">
+        <li>Change cache filename according to language. For example, create cache file 'file.pyhtml.en.cache', 'file.pyhtml.fr.cache', 'file.pyhtml.it.cache', and so on from a template file 'file.pyhtml'. This is done by Tenjin automatically if you pass '<code>lang=en</code>' or '<code>lang=fr</code>' option to Engine class.</li>
+
+        <li>Create Engine object for each language and pass <code>lang</code> option respectively.</li>
+
+        <li>Enable preprocessing to create different cache content for each language.</li>
+      </ul>
+
+      <p>The following is an example to generate M17N pages from a template file.</p><a name="test_m17n/m17n.pyhtml"></a>
+
+      <div class="program_caption">
+        m17n.pyhtml:
+      </div>
+      <pre class="program">
+&lt;div&gt;
+&lt;?PY ## '_()' represents translator method ?&gt;
+ &lt;p&gt;<strong>${{_('Hello')}}</strong> ${username}!&lt;/p&gt;
+&lt;/div&gt;
+</pre><a name="test_m17n/m17n.py"></a>
+
+      <div class="program_caption">
+        m17n.py:
+      </div>
+      <pre class="program">
+# -*- coding: utf-8 -*-
+import tenjin
+from tenjin.helpers import *
+import re
+
+##
+## message catalog to translate message
+##
+MESSAGE_CATALOG = {
+    'en': { 'Hello': 'Hello',
+            'Good bye': 'Good bye',
+          },
+    'fr': { 'Hello': 'Bonjour',
+            'Good bye': 'Au revoir',
+          },
+}
+
+##
+## create translation function and return it.
+## ex.
+##    _ = create_m17n_func('fr')
+##    print _('Hello')   #=&gt; 'Bonjour'
+##
+def create_m17n_func(lang):
+    dct = MESSAGE_CATALOG.get(lang)
+    if not dct:
+        raise ValueError("%s: unknown lang." % lang)
+    def _(message_key):
+        return dct.get(message_key)
+    return _
+    # or return dct.get
+
+##
+## test program
+##
+if __name__ == '__main__':
+
+    ## render html for English
+    engine_en = tenjin.Engine(preprocess=True, <strong>lang='en'</strong>)
+    context = { 'username': 'World' }
+    <strong>context['_'] = create_m17n_func('en')</strong>
+    html = engine_en.render('m17n.pyhtml', context)
+    print("--- lang: en ---")
+    print(html)
+
+    ## render html for French
+    engine_fr = tenjin.Engine(preprocess=True, <strong>lang='fr'</strong>)
+    context = { 'username': 'World' }
+    <strong>context['_'] = create_m17n_func('fr')</strong>
+    html = engine_fr.render('m17n.pyhtml', context)
+    print("--- lang: fr ---")
+    print(html)
+</pre><a name="test_m17n/result.output"></a>
+
+      <div class="terminal_caption">
+        Result:
+      </div>
+      <pre class="terminal">
+$ python m17n.py
+--- lang: en ---
+&lt;div&gt;
+ &lt;p&gt;<strong>Hello</strong> World!&lt;/p&gt;
+&lt;/div&gt;
+
+--- lang: fr ---
+&lt;div&gt;
+ &lt;p&gt;<strong>Bonjour</strong> World!&lt;/p&gt;
+&lt;/div&gt;
+
+</pre>
+
+      <p>After that, you can find two cache files are created.</p>
+      <pre class="terminal">
+$ ls m17n.pyhtml*
+m17n.pyhtml    m17n.pyhtml.<strong>en</strong>.cache    m17n.pyhtml.<strong>fr</strong>.cache
+</pre>
+
+      <p>And each cache files have different content.</p>
+      <pre class="terminal">
+### "_('Hello')" is translated into "Hello" in Engilish cache file
+$ pytenjin -a dump m17n.pyhtml.en.cache
+_buf.extend(('''&lt;div&gt;
+ &lt;p&gt;<strong>Hello</strong> ''', escape(to_str(username)), '''!&lt;/p&gt;
+&lt;/div&gt;\n''', ));
+
+### "_('Hello')" is translated into "Bonjour" in French cache file
+$ pytenjin -a dump m17n.pyhtml.fr.cache
+_buf.extend(('''&lt;div&gt;
+ &lt;p&gt;<strong>Bonjour</strong> ''', escape(to_str(username)), '''!&lt;/p&gt;
+&lt;/div&gt;\n''', ));
+</pre><br>
       <br>
       <a name="command" id="command"></a>
 
@@ -2234,6 +2315,45 @@ $ python trace-example.py
 ## trace is alwasy enabled
 tenjin.Engine.trace = True
 </pre><br>
+      <a name="function-names" id="function-names"></a>
+
+      <h3 class="section2">Specify Function Names of escape() and to_str()</h3>
+
+      <p>It is able to specify function names of <code>escape()</code> and <code>to_str()</code> which are used in converted Python script.</p><a name="test_escape/main.py"></a>
+
+      <div class="program_caption">
+        main.y
+      </div>
+      <pre class="program">
+import tenjin
+from tenjin.helpers import *
+engine = tenjin.Engine(path=['views'], <strong>escapefunc='cgi.escape', tostrfunc='str'</strong>)
+print(engine.get_template('page.pyhtml').script)
+</pre><a name="test_escape/views/page.pyhtml"></a>
+
+      <div class="program_caption">
+        views/page.pyhtml
+      </div>
+      <pre class="program">
+&lt;p&gt;
+  escaped:     ${value}
+  not escaped: #{value}
+&lt;/p&gt;
+</pre><a name="test_escape/result.output"></a>
+
+      <div class="program_caption">
+        Result
+      </div>
+      <pre class="program">
+$ python main.py
+_buf.extend(('''&lt;p&gt;
+  escaped:     ''', <strong>cgi.escape</strong>(<strong>str</strong>(value)), '''
+  not escaped: ''', <strong>str</strong>(value), '''
+&lt;/p&gt;\n''', ));
+
+</pre>
+
+      <p>If you need faster version of <code>to_str()</code> and <code>escape()</code>, see <a href="#webext">next section</a>.</p><br>
       <a name="tips-webext" id="tips-webext"></a>
 
       <h3 class="section2">Webext</h3>
@@ -2271,7 +2391,7 @@ from tenjin.helpers import *
         Intel CoreDuo2 2GHz, Mac OS X 10.6, Python 2.5.5
       </div>
       <pre class="terminal">
-### without html escaping
+### without html escape
 $ cd Tenjin-X.X.X/
 $ cd benchmark/
 $ python bench.py -q -n 10000 tenjin tenjin-str tenjin-webext
@@ -2281,162 +2401,13 @@ tenjin                             3.8100    0.0400    3.8500    3.8462
 tenjin-str                         2.4500    0.0200    2.4700    2.4815
 tenjin-webext                      2.4500    0.0300    2.4800    2.4825
 
-## with html escaping
+## with html escape
 $ python bench.py -e -q -n 10000 tenjin tenjin-str tenjin-webext
 *** ntimes=10000
                                     utime     stime     total      real
 tenjin                             7.2900    0.0500    7.3400    7.4669
 tenjin-str                         5.7400    0.0400    5.7800    5.8202
 tenjin-webext                      2.9700    0.0400    3.0100    3.0079
-</pre><br>
-      <a name="tips-m17n" id="tips-m17n"></a>
-
-      <h3 class="section2">M17N Page</h3>
-
-      <p>If you have M17N site, you can make your site faster by Tenjin.</p>
-
-      <p>In M17N-ed site, message translation function (such as <code>_('message-key')</code>) is called many times. Therefore if you can eliminate calling that function, your site can be faster. And Tenjin can do it by preprocessing.</p>
-
-      <p>The point is:</p>
-
-      <ul type="disc">
-        <li>Change cache filename according to language. For example, create cache file 'file.pyhtml.en.cache', 'file.pyhtml.fr.cache', 'file.pyhtml.it.cache', and so on from a template file 'file.pyhtml'. This can be done by overriding CacheStorage#_cachename().</li>
-
-        <li>Create CacheStorage and Engine object for each language.</li>
-
-        <li>Enable preprocessing to create different cache content for each language.</li>
-      </ul>
-
-      <p>The following is an example to generate M17N pages from a template file.</p><a name="test_m18n/m18n.pyhtml"></a>
-
-      <div class="program_caption">
-        m18n.pyhtml:
-      </div>
-      <pre class="program">
-&lt;div&gt;
-&lt;?PY ## '_()' represents translator method ?&gt;
- &lt;p&gt;<strong>${{_('Hello')}}</strong> ${username}!&lt;/p&gt;
-&lt;/div&gt;
-</pre><a name="test_m18n/m18n.py"></a>
-
-      <div class="program_caption">
-        m18n.py:
-      </div>
-      <pre class="program">
-# -*- coding: utf-8 -*-
-import tenjin
-from tenjin.helpers import *
-import re
-
-##
-## message catalog to translate message
-##
-MESSAGE_CATALOG = {
-    'en': { 'Hello': 'Hello',
-            'Good bye': 'Good bye',
-          },
-    'fr': { 'Hello': 'Bonjour',
-            'Good bye': 'Au revoir',
-          },
-}
-
-##
-## create translation function and return it.
-## ex.
-##    _ = create_m18n_func('fr')
-##    print _('Hello')   #=&gt; 'Bonjour'
-##
-def create_m18n_func(lang):
-    dct = MESSAGE_CATALOG.get(lang)
-    if not dct:
-        raise ValueError("%s: unknown lang." % lang)
-    def _(message_key):
-        return dct.get(message_key)
-    return _
-    # or return dct.get
-    
-##
-## cache storage class to cache template object for each language
-##
-class M17nCacheStorage(tenjin.MarshalCacheStorage):
-
-    lang = 'en'       # default language
-
-    def __init__(self, *args, **kwargs):
-        if 'lang' in kwargs:
-            lang = kwargs.pop('lang')
-            if lang: 
-                self.lang = lang
-        tenjin.MarshalCacheStorage.__init__(self, *args, **kwargs)
-
-    ## change cache filename to 'file.pyhtml.lang.cache'
-    <strong>def _cachename(self, fullpath):</strong>
-        <strong>return "%s.%s.cache" % (fullpath, self.lang)</strong>
-
-##
-## test program
-##
-if __name__ == '__main__':
-
-    ## create cache storage and engine for English
-    <strong>m17ncache = M17nCacheStorage(lang='en')</strong>
-    engine_en = tenjin.Engine(preprocess=True, <strong>cache=m17ncache</strong>)
-
-    ## render html for English
-    context = { 'username': 'World' }
-    <strong>context['_'] = create_m18n_func('en')</strong>
-    html = engine_en.render('m18n.pyhtml', context)
-    print("--- lang: en ---")
-    print(html)
-    
-    ## create cache storage and engine for French
-    <strong>m17ncache = M17nCacheStorage(lang='fr')</strong>
-    engine_fr = tenjin.Engine(preprocess=True, <strong>cache=m17ncache</strong>)
-
-    ## render html for French
-    context = { 'username': 'World' }
-    <strong>context['_'] = create_m18n_func('fr')</strong>
-    html = engine_fr.render('m18n.pyhtml', context)
-    print("--- lang: fr ---")
-    print(html)
-</pre><a name="test_m18n/result.output"></a>
-
-      <div class="terminal_caption">
-        Result:
-      </div>
-      <pre class="terminal">
-$ python m18n.py
---- lang: en ---
-&lt;div&gt;
- &lt;p&gt;<strong>Hello</strong> World!&lt;/p&gt;
-&lt;/div&gt;
-
---- lang: fr ---
-&lt;div&gt;
- &lt;p&gt;<strong>Bonjour</strong> World!&lt;/p&gt;
-&lt;/div&gt;
-
-</pre>
-
-      <p>After that, you can find two cache files are created.</p>
-      <pre class="terminal">
-$ ls m18n.pyhtml*
-m18n.pyhtml    m18n.pyhtml.<strong>en</strong>.cache    m18n.pyhtml.<strong>fr</strong>.cache
-</pre>
-
-      <p>And each cache files have different content.</p>
-      <pre class="terminal">
-### "_('Hello')" is translated into "Hello" in Engilish cache file
-$ pytenjin -a dump m18n.pyhtml.en.cache
-_buf.extend(('''&lt;div&gt;
- &lt;p&gt;<strong>Hello</strong> ''', escape(to_str(username)), '''!&lt;/p&gt;
-&lt;/div&gt;\n''', ));
-
-### "_('Hello')" is translated into "Bonjour" in French cache file
-$ pytenjin -a dump m18n.pyhtml.fr.cache
-_buf.extend(('''&lt;div&gt;
- &lt;p&gt;<strong>Bonjour</strong> ''', escape(to_str(username)), '''!&lt;/p&gt;
-&lt;/div&gt;\n''', ));
 </pre><br>
       <a name="tips-template-inheritance" id="tips-template-inheritance"></a>
 
