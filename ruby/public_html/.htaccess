@@ -4,8 +4,8 @@ RewriteEngine on
 RewriteRule \.(rb|rbhtml|cache)$ - [R=404,L]
 ## rewrite only if requested file is not found
 RewriteCond %{SCRIPT_FILENAME} !-f
-## handle request to *.html by index.cgi
-RewriteRule \.html$ index.cgi
-## handle request to root or other directory by index.cgi
-RewriteRule ^$ index.cgi
-RewriteRule /$ index.cgi
+## handle request to *.html by rbtenjin.cgi
+RewriteRule \.html$ rbtenjin.cgi
+## handle request to root or other directory by rbtenjin.cgi
+RewriteRule ^$ rbtenjin.cgi
+RewriteRule /$ rbtenjin.cgi
