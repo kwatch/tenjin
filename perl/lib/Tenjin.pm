@@ -127,16 +127,16 @@ package Tenjin::SafeStr;
 
 
 sub new {
-    #my ($class, $str) = @_;
-    #return bless { str => $str }, $class;
-    bless { str => $_[1] }, $_[0];
+    #my ($class, $value) = @_;
+    #return bless { value => $value }, $class;
+    bless { value => $_[1] }, $_[0];
 }
 
 
 sub to_str {
     #my ($this) = @_;
-    #return $this->{str};
-    $_[0]->{str};
+    #return $this->{value};
+    $_[0]->{value};
 }
 
 
@@ -651,8 +651,8 @@ sub escaped_expr {
     my ($this, $expr) = @_;
     if ($this->{safeclass}) {
         return $this->{escapefunc}
-               ? "(ref(\$_V = ($expr)) eq '$this->{safeclass}' ? \$_V->{str} : $this->{escapefunc}(\$V)"
-               : "(ref(\$_V = ($expr)) eq '$this->{safeclass}' ? \$_V->{str} : (\$_V =~ s/[&<>\"]/\$Tenjin::_H{\$&}/ge, \$_V))";
+               ? "(ref(\$_V = ($expr)) eq '$this->{safeclass}' ? \$_V->{value} : $this->{escapefunc}(\$V)"
+               : "(ref(\$_V = ($expr)) eq '$this->{safeclass}' ? \$_V->{value} : (\$_V =~ s/[&<>\"]/\$Tenjin::_H{\$&}/ge, \$_V))";
     }
     else {
         return $this->{escapefunc}
