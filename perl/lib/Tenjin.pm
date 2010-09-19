@@ -754,6 +754,31 @@ sub add_expr {
 
 
 ##
+## safe preprocessor
+##
+package Tenjin::SafePreprocessor;
+our @ISA = ('Tenjin::Preprocessor');
+
+
+sub escaped_expr {
+    my ($this, $expr) = @_;
+    return $this->{escapefunc}
+           ? "(ref(\$_V = ($expr)) eq 'Tenjin::SafeStr' ? \$_V->{value} : $this->{escapefunc}(\$V)"
+           : "(ref(\$_V = ($expr)) eq 'Tenjin::SafeStr' ? \$_V->{value} : (\$_V =~ s/[&<>\"]/\$Tenjin::_H{\$&}/ge, \$_V))";
+}
+
+
+sub get_expr_and_escapeflag {
+    my ($this, $m1, $m2, $m3) = @_;
+    my ($not_escape, $expr, $delete_newline) = ($m1, $m2, $m3);
+    #return $expr, $not_escape eq '', $delete_newline eq '=',
+    $not_escape eq ''  or die "'[*==$expr=*]': '[*== =*]' is not available with Tenjin::SafePreprocessor.";
+    return $expr, 1, $delete_newline eq '=',
+}
+
+
+
+##
 ## abstract class for key-value store
 ##
 package Tenjin::KeyValueStore;

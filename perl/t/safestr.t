@@ -11,7 +11,7 @@ BEGIN {
 
 use strict;
 use Data::Dumper;
-use Test::Simple tests => 9;
+use Test::Simple tests => 12;
 use Specofit;
 use Tenjin;
 $Tenjin::USE_STRICT = 1;
@@ -79,6 +79,26 @@ spec_of "Tenjin::SafeTemplate#render", sub {
         should_eq($actual, "<div>\n&lt;AAA&amp;BBB&gt;\n</div>\n");
         my $actual = $t->render({_content => Tenjin::SafeStr->new('<AAA&BBB>')});
         should_eq($actual, "<div>\n<AAA&BBB>\n</div>\n");
+    };
+
+};
+
+
+spec_of "Tenjin::SafePreprocessor#convert", sub {
+
+    it "generates script to check whether value is safe string or not", sub {
+        my $pp = Tenjin::SafePreprocessor->new();
+        my $ret = $pp->convert('<<[*=$x=*]>>');
+        should_eq($ret, 'my $_buf = ""; my $_V;  $_buf .= q`<<` . (ref($_V = (Tenjin::Util::_decode_params($x))) eq \'Tenjin::SafeStr\' ? $_V->{value} : ($_V =~ s/[&<>"]/$Tenjin::_H{$&}/ge, $_V)) . q`>>`;  $_buf;'."\n");
+    };
+
+    it "refuses to compile '[== expr =]'", sub {
+        my $pp = Tenjin::SafePreprocessor->new();
+        eval { $pp->convert('<<[*==$x=*]>>'); };
+        $_ = $@;
+        s/ at .*$//;
+        should_eq($_, "'[*==\$x=*]': '[*== =*]' is not available with Tenjin::SafePreprocessor."."\n");
+        $@ = '';
     };
 
 };
