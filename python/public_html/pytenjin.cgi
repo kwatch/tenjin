@@ -29,6 +29,9 @@
 import sys
 import os
 import re
+import tenjin
+from tenjin.helpers import *
+from tenjin.helpers.html import *
 
 python2 = sys.version_info[0] == 2
 python3 = sys.version_info[0] == 3
@@ -50,120 +53,149 @@ class HttpError(Exception):
       self.headers = headers
 
 
-try:
+class TenjinApp(object):
 
-    import tenjin
-    from tenjin.helpers import *
-    from tenjin.helpers.html import *
+    encoding = 'utf-8'
+    engineclass = tenjin.SafeEngine    # or tenjin.Engine
+    engineopts = {
+        'cache': False,          # set True for performance
+        'preprocess': False,
+    }
 
-    kwargs = {}
-    if os.path.isfile('_layout.pyhtml'):
-        kwargs['layout'] = '_layout.pyhtml'
-    kwargs['cache'] = False   # set True for perfomance
-    #kwargs['preprocess'] = True
-    engine = tenjin.SafeEngine(**kwargs)   # or tenjin.Engine(**kwargs)
+    def __init__(self, encoding='utf-8', engineclass=None, engineopts=None):
+        if engineclass is not None:
+            self.engineclass = engineclass
+        self.engineopts = opts = self.__class__.engineopts.copy()
+        if engineopts:
+            opts.merge(engineopts)
+        if 'layout' not in opts and os.path.isfile('_layout.pyhtml'):
+            opts['layout'] = '_layout.pyhtml'
+        self.engine = self.engineclass(**opts)
+        self.status = '200 OK'
+        self.headers = { 'Content-Type': 'text/html; charset=%s' % self.encoding }
 
-    ## simulate CGI in command-line to debug your *.rbhtml file
-    #os.environ['SCRIPT_NAME'] = '/A/B/pytenjin.cgi'
-    #os.environ['REQUEST_URI'] = '/A/B/hello.html'
+    def _script_name(self, env):
+        ## get script name and request path
+        script_name = env.get('SCRIPT_NAME')    # ex. '/A/B/pytenjin.cgi'
+        if not script_name:
+            raise HttpError('500 Internal Error', "ENV['SCRIPT_NAME'] is not set.")
+        return script_name
 
-    ## get script name and request path
-    script_name = os.environ.get('SCRIPT_NAME')    # ex. '/A/B/pytenjin.cgi'
-    if not script_name:
-        raise HttpError('500 Internal Error', "ENV['SCRIPT_NAME'] is not set.")
-    req_uri     = os.environ.get('REQUEST_URI')    # ex. '/A/B/C/foo.html?x=1'
-    if not req_uri:
-        raise HttpError('500 Internal Error', "ENV['REQUEST_URI'] is not set.")
-    req_path = req_uri.split('?', 1)[0]            # ex. ('/A/B/C/foo.html', 'x=1')
+    def _request_path(self, env):
+        req_uri = env.get('REQUEST_URI')        # ex. '/A/B/C/foo.html?x=1'
+        if not req_uri:
+            raise HttpError('500 Internal Error', "ENV['REQUEST_URI'] is not set.")
+        req_path  = req_uri.split('?', 1)[0]    # ex. ('/A/B/C/foo.html', 'x=1')
+        ## normalize request path and redirect if necessary
+        req_path2 = req_path
+        req_path2 = req_path2.replace(r'\\', '/')      # ex. '\A\B\C' -> '/A/B/C'
+        req_path2 = re.sub(r'//+', '/', req_path2)     # ex. '/A///B//C' -> '/A/B/C'
+        #while True:
+        #    s = re.sub(r'/[^\/]+/\.\./', '/', req_path2)  # ex. '/A/../B' -> '/B'
+        #    if s == req_path2: break
+        #    req_path2 = s
+        if req_path != req_path2:
+            raise HttpError.new('302 Found', req_path2, {'Location': req_path2})
+        return req_path
 
-    ## deny direct access to pytenjin.cgi
-    if req_path == script_name:
-        raise HttpError('403 Forbidden', "#{req_path}: not accessable.")
+    def _file_path(self, req_path, script_name):
+        base_path = os.path.dirname(script_name)       # ex. '/A/B'
+        assert req_path.startswith(base_path)
+        ## if file_path is a directory, add 'index.html'
+        file_path = req_path[len(base_path)+1:]        # ex. 'C/foo.html'
+        if not file_path:                              # access to root dir
+            file_path = "index.html"
+        elif os.path.isdir(file_path):                 # access to directory
+            assert file_path[-1] == '/'
+            file_path += "index.html"
+        return file_path
 
-    ## assert request path
-    base_path = os.path.dirname(script_name)       # ex. '/A/B'
-    assert req_path.startswith(base_path)
+    def main(self, env):
+        ## simulate CGI in command-line to debug your *.rbhtml file
+        env['SCRIPT_NAME'] = '/A/B/pytenjin.cgi'
+        env['REQUEST_URI'] = '/A/B/hello.html'
+        ## get request info
+        script_name = self._script_name(env)           # ex. '/A/B/pytenjin.cgi'
+        req_path    = self._request_path(env)          # ex. '/A/B/hello.html'
+        ## deny direct access to pytenjin.cgi
+        if req_path == script_name:
+            raise HttpError('403 Forbidden', "#{req_path}: not accessable.")
+        ## template file path
+        file_path = self._file_path(req_path, script_name)   # ex. 'hello.pyhtml'
+        if not file_path.endswith('.html'):            # expected '*.html'
+            raise HttpError('500 Internal Error', 'invalid .htaccess configuration.')
+        template_path = re.sub(r'\.html$', '.pyhtml', file_path)
+        if not os.path.isfile(template_path):          # file not found
+            raise HttpError('404 Not Found', "%s: not found." % req_path)
+        if os.path.basename(template_path)[0] == '_':  # deny access to '_*' (ex. _layout.rbhtml)
+            raise HttpError('403 Forbidden', "%s: not accessable." % req_path)
+        ## context object
+        context = {
+            'self': self,
+        }
+        ## render template
+        output = self.engine.render(template_path, context)
+        return output
 
-    ## normalize request path and redirect if necessary
-    req_path2 = req_path
-    req_path2 = req_path2.replace(r'\\', '/')      # ex. '\A\B\C' -> '/A/B/C'
-    req_path2 = re.sub(r'//+', '/', req_path2)     # ex. '/A///B//C' -> '/A/B/C'
-    #while True:
-    #    s = re.sub(r'/[^\/]+/\.\./', '/', req_path2)  # ex. '/A/../B' -> '/B'
-    #    if s == req_path2: break
-    #    req_path2 = s
-    if req_path != req_path2:
-        raise HttpError.new('302 Found', req_path2, {'Location': req_path2})
+    def __call__(self, env, start_response):
+        self.env = env
+        self.start_response = start_response
+        try:
+            output = self.main(env)
+            if python2:
+                if isinstance(output, unicode):
+                    output = output.encode(self.encoding)
+            elif python3:
+                #if isinstance(output, str):
+                #    output = output.encode(self.encoding)
+                sys.stderr.write("\033[0;31m*** debug: type(output)=%r\033[0m\n" % (type(output), ))
+            headers = [ (k, self.headers[k]) for k in self.headers ]
+            if not self.headers.get('Content-Length'):
+                headers.append(('Content-Length', str(len(output))))
+            self.start_response(self.status, headers)
+            return [output]
+        except HttpError:
+            ex = sys.exc_info()[1]
+            return self.handle_http_error(ex)
+        except Exception:
+            ex = sys.exc_info()[1]
+            return self.handle_exception(ex)
 
-    ## if file_path is a directory, add 'index.html'
-    file_path = req_path[len(base_path)+1:]        # ex. 'C/foo.html'
-    if not file_path:                              # access to root dir
-        file_path = "index.html"
-    elif os.path.isdir(file_path):                 # access to directory
-        assert file_path[-1] == '/'
-        file_path += "index.html"
+    def handle_http_error(self, ex):
+        buf = []; a = buf.append
+        a("<h1>%s</h1>\n" % h(ex.status))
+        a("<p>%s</p>\n" % h(ex.text))
+        output = ''.join(buf)
+        d = ex.headers
+        headers = d and [ (k, d[k]) for k in d ] or []
+        headers.append(('Content-Type', 'text/html'))
+        start_response(ex.status, headers)
+        return [output]
 
-    ## request validation
-    if not file_path.endswith('.html'):            # expected '*.html'
-        raise HttpError('500 Internal Error', 'invalid .htaccess configuration.')
-    template_path = re.sub(r'\.html$', '.pyhtml', file_path)
-    if not os.path.isfile(template_path):          # file not found
-        raise HttpError('404 Not Found', "%s: not found." % req_path)
-    if os.path.basename(template_path)[0] == '_':  # deny access to '_*' (ex. _layout.rbhtml)
-        raise HttpError('403 Forbidden', "%s: not accessable." % req_path)
+    def handle_exception(self, ex):
+        sys.stderr.write("*** %s: %s\n" % (ex.__class__.__name__, str(ex)))
+        import traceback
+        traceback.print_exc(file=sys.stderr)
+        buf = []; a = buf.append
+        a("<h1>500 Internal Error</h1>\n")
+        if debug:
+            a("<h3>%s: %s</h3>\n" % (h(ex.__class__.__name__), h(str(ex))))
+            a("<style type=\"text/css\">\n")
+            a("  pre.backtrace { font-size: large; }\n")
+            #a("  span.from { color: #933; }\n")
+            #a("  span.line { color: #333; }\n")
+            #a("  span.first { font-weight: bold; font-size: x-large; }\n")
+            a("</style>\n")
+            a("<pre class=\"backtrace\">\n")
+            traceback.print_exc(file=sys.stdout)
+            a("</pre>\n")
+        output = ''.join(buf)
+        headers = [('Content-Type', 'text/html')]
+        self.start_response("500 Internal Error", headers)
+        return [output]
 
-    ## render template
-    output = engine.render(template_path)
-    if python2:
-        if isinstance(output, unicode):
-            output = output.encode(encoding)
-    elif python3:
-        pass  # TODO:
 
-except HttpError:
-    ex = sys.exc_info()[1]
-    w = sys.stdout.write
-    w("Status: %s\r\n" % (h(ex.status), ))
-    w("Content-Type: text/html\r\n")
-    if ex.headers:
-        for k in ex.headers:
-            w("%s: %s\r\n" % (k, ex.headers[k]))
-    w("\r\n")
-    w("<h1>%s</h1>\n" % (h(ex.status), ))
-    w("<p>%s</p>\n" % (h(ex.text), ))
-
-except Exception:
-    ex = sys.exc_info()[1]
-    sys.stderr.write("*** %s: %s\n" % (ex.__class__.__name__, str(ex)))
-    import traceback
-    traceback.print_exc(file=sys.stderr)
-    w = sys.stdout.write
-    w("Status: 500 Internal Error\r\n")
-    w("Content-Type: text/html\r\n")
-    w("\r\n")
-    w("<h1>500 Internal Error</h1>\n")
-    if debug:
-        w("<h3>%s: %s</h3>\n" % (h(ex.__class__.__name__), h(str(ex))))
-        w("<style type=\"text/css\">\n")
-        w("  pre.backtrace { font-size: large; }\n")
-        #w("  span.from { color: #933; }\n")
-        #w("  span.line { color: #333; }\n")
-        #w("  span.first { font-weight: bold; font-size: x-large; }\n")
-        w("</style>\n")
-        w("<pre class=\"backtrace\">\n")
-        traceback.print_exc(file=sys.stdout)
-        w("</pre>\n")
-
-else:
-    ## print response header and body
-    w = sys.stdout.write
-    if headers.get('Status'):
-        w("Status: %s\r\n" % (headers.pop('Status'), ))
-    for k in headers:
-        w("%s: %s\r\n" % (k, headers[k]))
-    if not headers.get('Content-Type'):
-        w("Content-Type: text/html\r\n")
-    if not headers.get('Content-Length'):
-        w("Content-Length: %s\r\n" % len(output))
-    w("\r\n")
-    w(output)
+if __name__ == '__main__':
+    from wsgiref.handlers import CGIHandler
+    app = TenjinApp()
+    CGIHandler().run(app)
