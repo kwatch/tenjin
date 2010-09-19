@@ -729,6 +729,22 @@ sub add_expr {
 
 
 ##
+##
+##
+package Tenjin::SafeTemplate;
+our @ISA = 'Tenjin::Template';
+
+
+sub escaped_expr {
+    my ($this, $expr) = @_;
+    return $this->{escapefunc}
+           ? "(ref(\$_V = ($expr)) eq 'Tenjin::SafeStr' ? \$_V->{value} : $this->{escapefunc}(\$V)"
+           : "(ref(\$_V = ($expr)) eq 'Tenjin::SafeStr' ? \$_V->{value} : (\$_V =~ s/[&<>\"]/\$Tenjin::_H{\$&}/ge, \$_V))";
+}
+
+
+
+##
 ## abstract class for key-value store
 ##
 package Tenjin::KeyValueStore;
@@ -1107,6 +1123,22 @@ sub _include {
         $s = $this->render($template_name, $context, 0);
     }
     $s;
+}
+
+
+
+##
+## engine class which uses SafeTemplate class
+##
+package Tenjin::SafeEngine;
+our @ISA = ('Tenjin::Engine');
+
+
+sub new {
+    my ($class, $options) = @_;
+    $options->{templateclass} ||= 'Tenjin::SafeTemplate';
+    my $this = Tenjin::Engine->new($options);
+    return bless($this, $class);
 }
 
 

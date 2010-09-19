@@ -26,7 +26,7 @@ spec_of "Tenjin::SafeStr->new", sub {
     it "returns Tenjin::SafeStr object", sub {
         my $obj = Tenjin::SafeStr->new('<A&B>');
         should_eq(ref($obj), "Tenjin::SafeStr");
-        should_eq(repr($obj), q|bless( {"str" => "<A&B>"}, 'Tenjin::SafeStr' )|);
+        should_eq(repr($obj), q|bless( {"value" => "<A&B>"}, 'Tenjin::SafeStr' )|);
     };
 
 };
@@ -42,14 +42,14 @@ spec_of "Tenjin::SafeStr#to_str", sub {
 };
 
 
-spec_of "Tenjin::Template#convert", sub {
+spec_of "Tenjin::SafeTemplate#convert", sub {
 
     it "generates script to check whether value is safe string or not", sub {
-        my $t = Tenjin::Template->new(undef, {safeclass=>'Tenjin::SafeStr'});
+        my $t = Tenjin::SafeTemplate->new(undef);
         my $input = "<div>\n[= \$_content =]\n</div>\n";
         my $expected = <<'END';
 	my $_buf = ""; my $_V;  $_buf .= q`<div>
-	` . (ref($_V = ( $_content )) eq 'Tenjin::SafeStr' ? $_V->{str} : ($_V =~ s/[&<>"]/$Tenjin::_H{$&}/ge, $_V)) . q`
+	` . (ref($_V = ( $_content )) eq 'Tenjin::SafeStr' ? $_V->{value} : ($_V =~ s/[&<>"]/$Tenjin::_H{$&}/ge, $_V)) . q`
 	</div>
 	`;  $_buf;
 END
@@ -60,10 +60,10 @@ END
 };
 
 
-spec_of "Tenjin::Template#render", sub {
+spec_of "Tenjin::SafeTemplate#render", sub {
 
     it "doesn't escape safe string value", sub {
-        my $t = Tenjin::Template->new(undef, {safeclass=>'Tenjin::SafeStr'});
+        my $t = Tenjin::SafeTemplate->new(undef);
         my $input = "<div>\n[= \$_content =]\n</div>\n";
         $t->convert($input);
         my $actual = $t->render({_content => '<AAA&BBB>'});
@@ -75,7 +75,7 @@ spec_of "Tenjin::Template#render", sub {
 };
 
 
-spec_of "Tenjin::Engine", sub {
+spec_of "Tenjin::SafeEngine", sub {
 
     my $INPUT = <<'END';
 	<ul>
@@ -89,7 +89,7 @@ END
     my $SCRIPT = <<'END';
 my $_buf = ""; my $_V;  $_buf .= q`<ul>
 `;   for (@$items) {
- $_buf .= q`  <li>` . (ref($_V = ( $_ )) eq 'Tenjin::SafeStr' ? $_V->{str} : ($_V =~ s/[&<>"]/$Tenjin::_H{$&}/ge, $_V)) . q`</li>
+ $_buf .= q`  <li>` . (ref($_V = ( $_ )) eq 'Tenjin::SafeStr' ? $_V->{value} : ($_V =~ s/[&<>"]/$Tenjin::_H{$&}/ge, $_V)) . q`</li>
 `;   }
  $_buf .= q`</ul>
 `;  $_buf;
@@ -116,9 +116,9 @@ END
 
     spec_of "->new", sub {
         it "passes 'safeclass' option to template class", sub {
-            $engine = Tenjin::Engine->new({safeclass=>'Tenjin::SafeStr'});
+            $engine = Tenjin::SafeEngine->new();
             my $t = $engine->get_template("_ex.plhtml");
-            should_eq($t->{safeclass}, 'Tenjin::SafeStr');
+            should_eq(ref($t), 'Tenjin::SafeTemplate');
             should_eq($t->{script}, $SCRIPT);
         };
     };
