@@ -145,6 +145,9 @@ sub to_str {
 ## HTML Helper
 ##
 package Tenjin::Helper::Html;
+use Exporter 'import';
+our @EXPORT = qw(escape_xml unescape_xml encode_url decode_url
+                 checked selected disabled nl2br text2html tagattr tagattrs new_cycle);
 
 
 our %ESCAPE_HTML = ( '&'=>'&amp;', '<'=>'&lt;', '>'=>'&gt;', '"'=>'&quot;', "'"=>'&#039;');
