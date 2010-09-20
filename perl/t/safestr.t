@@ -263,6 +263,8 @@ END
         }
     };
 
+    unlink glob("_ex.plhtml.*");
+
     spec_of "#render", sub {
         it "prints safe string as it is", sub {
             my $e = Tenjin::SafeEngine->new();

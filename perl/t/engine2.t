@@ -229,7 +229,7 @@ spec_of "Tenjin::Engine::render()", sub {
         pre_cond { ! -f $fname };
         my $e = Tenjin::Engine->new();
         eval { $e->render($fname, $CONTEXT1); };
-        should_match($@, '^_foobar.plhtml: not found.');
+        should_match($@, '^_foobar.plhtml: template not found.');
     };
 
 };
