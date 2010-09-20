@@ -1009,6 +1009,75 @@ sub has {
 
 
 ##
+## helper class to find and read template files.
+## if you want to store template files into database or other,
+## define subclass of this and pass it's object to Engine.
+##
+## ex.
+##    package DatabaseFinder;
+##    sub find { ... }
+##    sub timestamp { ... }
+##    sub read { ... }   # should return content and mtime of file
+##    #
+##    package main;
+##    my $engine = Tenjin::Engine->new({finder=>DatabaseFinder->new()});
+##
+package Tenjin::FileFinder;
+#use Carp;
+
+
+sub new {
+    my ($class) = @_;
+    my $this = {};
+    return bless($this, $class);
+}
+
+
+sub find {
+    my ($this, $filename, $dirs) = @_;
+    if ($dirs) {
+        for my $dir (@$dirs) {
+            my $filepath = "$dir/$filename";
+            return $filepath if -f $filepath;
+        }
+    }
+    else {
+        return $filename if -f $filename;
+    }
+    return;
+}
+
+
+sub timestamp {
+    my ($this, $filepath) = @_;
+    return (stat $filepath)[9] if -f $filepath;
+    return;
+}
+
+
+sub read {    # returns file content and file mtime
+    my ($this, $filepath) = @_;
+    if (-f $filepath) {
+        my $mtime = (stat $filepath)[9];
+        my $input = Tenjin::Util::read_file($filepath);
+        my $mtime2 = (stat $filepath)[9];
+        if ($mtime != $mtime2) {
+            $mtime = $mtime2;
+            my $input = Tenjin::Util::read_file($filepath);
+            my $mtime2 = (stat $filepath)[9];
+            if ($mtime != $mtime2) {
+                eval 'use Carp;';
+                carp("*** Tenjin::FileFinder->read(): timestamp changed while reading file (=$filepath).");
+            }
+        }
+        return ($input, $mtime);
+    }
+    return;
+}
+
+
+
+##
 ## engine class which handles several template objects.
 ##
 ## ex.
