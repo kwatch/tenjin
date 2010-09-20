@@ -89,7 +89,7 @@ spec_of "Tenjin::SafePreprocessor#convert", sub {
     it "generates script to check whether value is safe string or not", sub {
         my $pp = Tenjin::SafePreprocessor->new();
         my $ret = $pp->convert('<<[*=$x=*]>>');
-        should_eq($ret, 'my $_buf = ""; my $_V;  $_buf .= q`<<` . (ref($_V = (Tenjin::Util::_decode_params($x))) eq \'Tenjin::SafeStr\' ? $_V->{value} : ($_V =~ s/[&<>"]/$Tenjin::_H{$&}/ge, $_V)) . q`>>`;  $_buf;'."\n");
+        should_eq($ret, 'my $_buf = ""; my $_V;  $_buf .= q`<<` . (ref($_V = ($x)) eq \'Tenjin::SafeStr\' ? Tenjin::Util::_decode_params($_V->{value}) : ($_V = Tenjin::Util::_decode_params($_V), $_V =~ s/[&<>"]/$Tenjin::_H{$&}/ge, $_V)) . q`>>`;  $_buf;'."\n");
     };
 
     it "refuses to compile '[== expr =]'", sub {

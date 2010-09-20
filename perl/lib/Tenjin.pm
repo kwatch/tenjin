@@ -760,11 +760,19 @@ package Tenjin::SafePreprocessor;
 our @ISA = ('Tenjin::Preprocessor');
 
 
+sub add_expr {
+    my ($this, $bufref, $expr, $flag_escape) = @_;
+    my $dot = $bufref->[0] =~ / \$_buf \.= \Z/ ? "" : " . ";
+    #$bufref->[0] .= $dot . ($flag_escape ? $this->escaped_expr($expr) : "($expr)");
+    $bufref->[0] .= $dot . $this->escaped_expr($expr);
+}
+
+
 sub escaped_expr {
     my ($this, $expr) = @_;
     return $this->{escapefunc}
-           ? "(ref(\$_V = ($expr)) eq 'Tenjin::SafeStr' ? \$_V->{value} : $this->{escapefunc}(\$V)"
-           : "(ref(\$_V = ($expr)) eq 'Tenjin::SafeStr' ? \$_V->{value} : (\$_V =~ s/[&<>\"]/\$Tenjin::_H{\$&}/ge, \$_V))";
+           ? "(ref(\$_V = ($expr)) eq 'Tenjin::SafeStr' ? Tenjin::Util::_decode_params(\$_V->{value}) : $this->{escapefunc}(\$V)"
+           : "(ref(\$_V = ($expr)) eq 'Tenjin::SafeStr' ? Tenjin::Util::_decode_params(\$_V->{value}) : (\$_V = Tenjin::Util::_decode_params(\$_V), \$_V =~ s/[&<>\"]/\$Tenjin::_H{\$&}/ge, \$_V))";
 }
 
 
