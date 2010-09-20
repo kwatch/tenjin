@@ -837,6 +837,114 @@ sub get_expr_and_escapeflag {
 
 
 ##
+## interface of TemplateCache
+##
+package Tenjin::TemplateCache;
+
+
+sub save {
+    my ($this, $cachepath, $template) = @_;
+}
+
+
+sub load {
+    my ($this, $cachepath, $timestamp) = @_;
+}
+
+
+
+##
+## memory base template cache
+##
+package Tenjin::MemoryBaseTemplateCache;
+our @ISA = ('Tenjin::TemplateCache');
+
+
+sub new {
+    my ($class) = @_;
+    my $this = {
+        values => {},
+    };
+    return bless($this, $class);
+}
+
+
+sub save {
+    my ($this, $cachepath, $template) = @_;
+    $this->{cachepath} = $template;
+}
+
+
+sub load {
+    my ($this, $cachepath, $timestamp) = @_;
+    my $template = $this->{cachepath};
+    return unless $template;
+    return if $timestamp && $template->{timestamp} != $timestamp;
+    return $timestamp;
+}
+
+
+
+##
+## file base template cache
+##
+package Tenjin::FileBaseTemplateCache;
+our @ISA = ('Tenjin::TemplateCache');
+
+
+sub new {
+    my ($class) = @_;
+    my $this = {};
+    return bless($this, $class);
+}
+
+
+sub save {
+    my ($this, $cachepath, $template) = @_;
+    #: save template script and args into cache file.
+    my $cachestr = $template->{script};
+    if (defined($template->{args})) {
+        my $args = $template->{args};
+        $cachestr = "\#\@ARGS " . join(',', @$args) . "\n" . $cachestr;
+    }
+    Tenjin::Util::write_file($cachepath, $cachestr, 1);
+    #: set cache file's mtime to template timestamp.
+    my $ts = $template->{timestamp};
+    utime($ts, $ts, $cachepath);
+    $Tenjin::logger->debug("[Tenjin.pm:#{__LINE__}] template cache saved (path=$cachepath)") if $Tenjin::logger;
+}
+
+
+sub load {
+    my ($this, $cachepath, $timestamp) = @_;
+    #: if cache file is not found, return undef.
+    unless (-f $cachepath) {
+        $Tenjin::logger->debug("[Tenjin.pm:#{__LINE__}] template cache not found (path=$cachepath)") if $Tenjin::logger;
+        return;
+    }
+    #: if template timestamp is specified and different from that of cache file, return undef.
+    my $mtime = (stat $cachepath)[9];
+    if ($timestamp && $timestamp != $mtime) {
+        $Tenjin::logger->debug("[Tenjin.pm:#{__LINE__}] template cache expired (path=$cachepath)") if $Tenjin::logger;
+        return;
+    }
+    #: load template data from cache file.
+    my $str = Tenjin::Util::read_file($cachepath);
+    my @args = ();
+    if ($str =~ s/\A\#\@ARGS (.*)\r?\n//) {
+        #: get template args data from cached data.
+        my $argstr = $1;
+        $argstr =~ s/\A\s+|\s+\Z//g;
+        @args = split(',', $argstr);
+    }
+    #: return script, template args, and mtime of cache file.
+    my $script = $str;
+    return {script=>$script, args=>\@args, timestamp=>$mtime};
+}
+
+
+
+##
 ## abstract class for key-value store
 ##
 package Tenjin::KeyValueStore;
