@@ -507,6 +507,7 @@ sub compile_stmt_pattern {
     return qr/$pat/sm;
 }
 
+
 #my $STMT_PATTERN = qr/((^[ \t]*)?<\?pl( |\t|\r?\n)(.*?) ?\?>([ \t]*\r?\n)?)/sm;
 my $STMT_PATTERN = compile_stmt_pattern('pl');
 
@@ -515,6 +516,7 @@ sub stmt_pattern {
     my $this = shift;
     return $STMT_PATTERN;
 }
+
 
 sub parse_stmt {
     my ($this, $bufref, $input) = @_;
@@ -678,6 +680,7 @@ sub add_expr {
     $bufref->[0] .= $dot . ($flag_escape ? $this->escaped_expr($expr) : "($expr)");
 }
 
+
 sub escaped_expr {
     my ($this, $expr) = @_;
     if ($this->{safeclass}) {
@@ -769,6 +772,7 @@ our @ISA = ('Tenjin::Template');
 
 our $STMT_PATTERN = Tenjin::Template::compile_stmt_pattern('PL');
 
+
 sub stmt_pattern {
     my ($this) = @_;
     return $STMT_PATTERN;
@@ -776,6 +780,7 @@ sub stmt_pattern {
 
 
 our $EXPR_PATTERN = qr/\[\*=(=?)(.*?)(=?)=\*\]/s;
+
 
 sub expr_pattern {
     my ($this) = @_;
@@ -829,25 +834,30 @@ sub get_expr_and_escapeflag {
 ##
 package Tenjin::KeyValueStore;
 
+
 sub get {
     my ($this, $key, @options) = @_;
     die "get() is not implemented yet.";
 }
+
 
 sub set {
     my ($this, $key, $value, @options) = @_;
     die "set() is not implemented yet.";
 }
 
+
 sub del {
     my ($this, $key, @options) = @_;
     die "del() is not implemented yet.";
 }
 
+
 sub has {
     my ($this, $key, @options) = @_;
     die "has() is not implemented yet.";
 }
+
 
 
 ##
@@ -856,6 +866,7 @@ sub has {
 package Tenjin::MemoryBaseStore;
 our $ISA = ('Tenjin::KeyValueStore');
 
+
 sub new {
     my ($class) = @_;
     my $this = {
@@ -863,6 +874,7 @@ sub new {
     };
     return bless($this, $class);
 }
+
 
 sub get {
     my ($this, $key) = @_;
@@ -876,6 +888,7 @@ sub get {
     return $value;
 }
 
+
 sub set {
     my ($this, $key, $value, $lifetime) = @_;
     my $timestamp = $lifetime ? time() + $lifetime : 0;
@@ -883,17 +896,20 @@ sub set {
     return 1;
 }
 
+
 sub del {
     my ($this, $key) = @_;
     undef $this->{values}->{$key};
     return 1;
 }
 
+
 sub has {
     my ($this, $key) = @_;
     return unless $this->{values}->{$key};
     return 1;
 }
+
 
 
 ##
@@ -904,6 +920,7 @@ package Tenjin::FileBaseStore;
 #use File::Path;         # mkpath, rmtree
 our $ISA = ('Tenjin::KeyValueStore');
 our $LIFE_TIME = 60*60*24*7;    # 1 week
+
 
 my $_sub_dirname;
 $_ = $^O;
@@ -922,6 +939,7 @@ else {
     }
 }
 
+
 sub new {
     my ($class, $root_path) = @_;
     unless ($root_path eq '0') {
@@ -933,6 +951,7 @@ sub new {
     return bless($this, $class);
 }
 
+
 sub filepath {
     my ($this, $key) = @_;
     $this->{root_path} ne '0'  or die "root path is not set yet.";
@@ -940,6 +959,7 @@ sub filepath {
     s/[^-\/\w]/_/g;
     return $this->{root_path}.'/'.$_;
 }
+
 
 sub get {
     my ($this, $key) = @_;
@@ -951,6 +971,7 @@ sub get {
     }
     return Tenjin::Util::read_file($fpath);
 }
+
 
 sub set {
     my ($this, $key, $value, $lifetime) = @_;
@@ -964,12 +985,14 @@ sub set {
     Tenjin::Util::write_file($fpath, $value, 't', time() + $lifetime);
 }
 
+
 sub del {
     my ($this, $key) = @_;
     my $fpath = $this->filepath($key);
     return unless -f $fpath;
     return unlink($fpath);
 }
+
 
 sub has {
     my ($this, $key) = @_;
