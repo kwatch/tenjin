@@ -9,7 +9,7 @@ use strict;
 use Data::Dumper;
 #use Exporter 'import';
 use Exporter;
-our @EXPORT = qw(spec_of describe it when and_it and_that examples_of scenario
+our @EXPORT = qw(spec_of describe it spec when and_it and_that examples_of scenario
                  before_each after_each before_all after_all
                  invoke_before_each invoke_after_each invoke_before_all invoke_after_all
                  pre_cond pre_task post_task repr
@@ -89,6 +89,10 @@ sub _it {
 }
 
 sub it {
+    return _it("IT", @_);
+}
+
+sub spec {
     return _it("IT", @_);
 }
 
