@@ -32,6 +32,7 @@ our $TEMPLATE_CLASS = 'Tenjin::Template';
 our $CONTEXT_CLASS  = 'Tenjin::Context';
 our $PREPROCESSOR_CLASS = 'Tenjin::Preprocessor';
 our $VERSION        = (split(' ', '$Release: 0.0.0 $'))[1];
+our $logger         = undef;
 
 sub import {
     my ($klass, %opts) = @_;
