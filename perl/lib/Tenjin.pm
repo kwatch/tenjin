@@ -125,7 +125,7 @@ sub _decode_params {
 ##
 package Tenjin::SafeStr;
 use Exporter 'import';
-our @EXPORT = qw(safe_str is_safe_str safe_escape);
+our @EXPORT = qw(safe_str to_str is_safe_str safe_escape);
 
 
 sub new {
@@ -146,6 +146,12 @@ sub safe_str {
     #Tenjin::SafeStr->new($_[0]);    # return
     #is_safe_str($_[0]) ? $_[0] : Tenjin::SafeStr->new($_[0]);  # return
     ref($_[0]) eq 'Tenjin::SafeStr' ? $_[0] : Tenjin::SafeStr->new($_[0]);  # return
+}
+
+
+sub to_str {
+    #is_safe_str($_[0]) ? $_[0]->{value} : $_[0];  # return
+    ref($_[0]) eq 'Tenjin::SafeStr' ? $_[0]->{value} : $_[0];  # return
 }
 
 
@@ -380,6 +386,7 @@ eval $defun;
 *_p           = *Tenjin::Util::_p;
 *_P           = *Tenjin::Util::_P;
 *safe_str     = *Tenjin::SafeStr::safe_str;
+*to_str       = *Tenjin::SafeStr::to_str;
 *is_safe_str  = *Tenjin::SafeStr::is_safe_str;
 *safe_escape  = *Tenjin::SafeStr::safe_escape;
 *escape       = *Tenjin::Helper::Html::escape_xml;
