@@ -1201,65 +1201,30 @@ sub read {    # returns file content and file mtime
 ##   print $engine->render('example.plhtml', $context);
 ##
 package Tenjin::Engine;
+#use strict;
 
 
 our $TIMESTAMP_INTERVAL = 1;
+our $CACHE  = Tenjin::FileBaseTemplateCache->new();
 our $STORE;   # default key-value store object for fragment cache
+our $FINDER = Tenjin::FileFinder->new();
 
 
 sub new {
     my ($class, $options) = @_;
     my $this = {};
-    for my $key (qw[prefix postfix layout path cache store preprocess templateclass preprocessorclass]) {
+    for my $key (qw[prefix postfix layout path cache store finder preprocess templateclass preprocessorclass]) {
         $this->{$key} = delete($options->{$key});
         #$this->{$key} = $options->{$key};
     }
-    $this->{cache} = 1 unless defined($this->{cache});
+    $this->{cache} = $Tenjin::Engine::CACHE if ! defined($this->{cache}) || $this->{cache} == 1;
     $this->{init_opts_for_template} = $options;
-    $this->{templates} = {};
+    $this->{_templates} = {};
     $this->{prefix} = '' if (! $this->{prefix});
     $this->{postfix} = '' if (! $this->{postfix});
     $this->{store} = $Tenjin::Engine::STORE unless $this->{store};
+    $this->{finder} = $Tenjin::Engine::FINDER unless $this->{finder};
     return bless($this, $class);
-}
-
-
-sub _read_file {
-    my $this = shift;
-    return Tenjin::Util::read_file(@_);
-}
-
-
-sub _write_file {
-    my $this = shift;
-    return Tenjin::Util::write_file(@_);
-}
-
-
-sub to_filename {
-    my ($this, $template_name) = @_;
-    if (substr($template_name, 0, 1) eq ':') {
-        return $this->{prefix} . substr($template_name, 1) . $this->{postfix};
-    }
-    return $template_name;
-}
-
-
-sub find_template_file {
-    my ($this, $filename) = @_;
-    my $path = $this->{path};
-    if ($path) {
-        my $sep = $^O eq 'MSWin32' ? '\\\\' : '/';
-        for my $dirname (@$path) {
-            my $filepath = $dirname . $sep . $filename;
-            return $filepath if -f $filepath;
-        }
-    }
-    else {
-        return $filename if -f $filename;
-    }
-    my $s = $path ? ("['" . join("','", @$path) . "']") : '[]';
-    die "$filename: not found. (path=$s)";
 }
 
 
@@ -1269,102 +1234,148 @@ sub register_template {
 }
 
 
-sub get_template {
-    my ($this, $template_name, $_context) = @_;
-    ## get cached template
-    my $template = $this->{templates}->{$template_name};
-    ## check whether template file is updated or not
-    my $now = time();
-    if ($template && $template->{timestamp} && $template->{filename}) {
-        if ($now >= $template->{_last_checked_at} + $TIMESTAMP_INTERVAL) {
-            $template->{_last_checked_at} = $now;
-            $template = undef if $template->{timestamp} < (stat $template->{filename})[9];
-        }
-    }
-    ## load and register template
-    if (! $template) {
-        my $filename = $this->to_filename($template_name);
-        my $filepath = $this->find_template_file($filename);
-        $template = $this->create_template($filepath, $_context);  # $_context is passed only for preprocessor
-        $template->{_last_checked_at} = $now;
-        $this->register_template($template_name, $template);
-    }
-    return $template;
-}
-
-
-sub read_template_file {
-    my ($this, $template, $filename, $_context) = @_;
-    my $input = $this->_read_file($filename);
-    if ($this->{preprocess}) {
-        if (! defined($_context) || ! $_context->{_engine}) {
-            $_context = {};
-            $this->hook_context($_context);
-        }
-        #$input = Tenjin::Preprocessor->new($filename)->render($_context);
-        $input = $this->_read_file($filename);
-        my $klass = $this->{preprocessorclass} || $Tenjin::PREPROCESSOR_CLASS;
-        my $pp = $klass->new();
-        #$pp->compile();   # DON'T COMPILE!
-        $pp->convert($input);
-        $input = $pp->render($_context);
-    }
-    return $input;
-}
-
-
-sub store_cachefile {
-    my ($this, $cachename, $template) = @_;
-    my $cache = $template->{script};
-    if (defined($template->{args})) {
-        my $args = $template->{args};
-        $cache = "\#\@ARGS " . join(',', @$args) . "\n" . $cache;
-    }
-    $this->_write_file($cachename, $cache, 1);
-}
-
-
-sub load_cachefile {
-    my ($this, $cachename, $template) = @_;
-    my $cache = $this->_read_file($cachename);
-    if ($cache =~ s/\A\#\@ARGS (.*)\r?\n//) {
-        my $argstr = $1;
-        $argstr =~ s/\A\s+|\s+\Z//g;
-        my @args = split(',', $argstr);
-        $template->{args} = \@args;
-    }
-    $template->{script} = $cache;
-}
-
-
 sub cachename {
+    #: return cache file path.
     my ($this, $filename) = @_;
     return $filename . '.cache';
 }
 
 
-sub create_template {
-    my ($this, $filename, $_context) = @_;
-    my $cachename = $this->cachename($filename);
+sub to_filename {
+    my ($this, $template_name) = @_;
+    #: if template_name starts with ':', add prefix and postfix to it.
+    #: if template_name doesn't start with ':', just return it.
+    if (substr($template_name, 0, 1) eq ':') {
+        return $this->{prefix} . substr($template_name, 1) . $this->{postfix};
+    }
+    return $template_name;
+}
+
+
+sub _timestamp_changed {
+    my ($this, $template) = @_;
+    #: if checked within a sec, skip timestamp check and return false.
+    my $time = $template->{_last_checked_at};
+    my $now = time();
+    if ($time && $now - $time <= $Tenjin::Engine::TIMESTAMP_INTERVAL) {
+        return;
+    }
+    #: if timestamp is same as file, return false.
+    my $filepath = $template->{filename};
+    if ($template->{timestamp} == $this->{finder}->timestamp($filepath)) {
+        $template->{_last_checked_at} = $now;
+        return;
+    }
+    #: if timestamp is changed, return true.
+    else {
+        $Tenjin::logger->info("[Tenjin.pm:".__LINE__."] template cache expired (path=$template->{filename})") if $Tenjin::logger;
+        return 1;
+    }
+}
+
+
+sub _get_template_in_memory {
+    my ($this, $filename) = @_;
+    #: if template object is not in memory cache then return undef.
+    my $template = $this->{_templates}->{$filename};
+    return unless $template;
+    #: if timestamp is not set, don't check timestamp and return it.
+    return $template unless $template->{timestamp};
+    #: if timestamp of template file is not changed, return it.
+    return $template unless $this->_timestamp_changed($template);
+    #: if timestamp of template file is changed, clear it and return undef.
+    delete($this->{_templates}->{$filename});
+    return;
+}
+
+
+sub _get_template_in_cache {
+    my ($this, $filepath, $cachepath) = @_;
+    #: if template is not found in cache file, return nil.
+    my $template = $this->{cache}->load($cachepath);
+    return unless $template;
+    #: if cache returns script and args then build a template object from them.
+    if (ref($template) eq 'HASH') {
+        my $hash = $template;
+        $template = $this->_create_template();
+        $template->{script}    = $hash->{script};
+        $template->{args}      = $hash->{args};
+        $template->{timestamp} = $hash->{timestamp};
+        $template->{filename}  = $filepath;
+    }
+    #: if timestamp of template is changed then ignore it.
+    return if $this->_timestamp_changed($template);
+    #: if timestamp is not changed then return it.
+    #$Tenjin::logger->trace("[Tenjin.pm:".__LINE__."] template '$filepath' found in cache.") if $Tenjin::logger;
+    return $template;
+}
+
+
+sub _preprocess {
+    my ($this, $input, $filepath, $_context) = @_;
+    #: preprocess input with _context and return result.
+    $_context = {} unless defined($_context);
+    $this->hook_context($_context) unless $_context->{_engine};
+    #$input = Tenjin::Preprocessor->new($filename)->render($_context);
+    my $klass = $this->{preprocessorclass} || $Tenjin::PREPROCESSOR_CLASS;
+    my $pp = $klass->new();
+    #$pp->compile();   # DON'T COMPILE!
+    $pp->convert($input);
+    return $pp->render($_context);
+}
+
+
+sub _create_template {
+    my ($this, $input, $filepath) = @_;
+    #: create template object and return it.
     my $klass = $this->{templateclass} || $Tenjin::TEMPLATE_CLASS; # Tenjin::Template;
     my $template = $klass->new(undef, $this->{init_opts_for_template});
-    $template->{timestamp} = time();
-    if (! $this->{cache}) {
-        #print STDERR "*** debug: caching is off.\n";
-        my $input = $this->read_template_file($template, $filename, $_context);
-        $template->convert($input, $filename);
+    #: if input is specified then convert it into script.
+    $template->convert($input, $filepath) if $input;
+    return $template;
+}
+
+
+sub get_template {
+    my ($this, $template_name, $_context) = @_;
+    #: accept template name such as :index.
+    my $filename = $this->to_filename($template_name);
+    #: if template object is in memory cache then return it.
+    my $template = $this->_get_template_in_memory($filename);
+    return $template if $template;
+    #: if template file is not found then raise TemplateNotFoundError.
+    my $filepath = $this->{finder}->find($filename, $this->{path});
+    unless ($filepath) {
+        my $path = $this->{path};
+        my $s = $path ? ("['" . join("','", @$path) . "']") : '[]';
+        die "$filename: template not found. (path=$s)";
     }
-    elsif (! -f $cachename || (stat $cachename)[9] < (stat $filename)[9]) {
-        #print STDERR "*** debug: $cachename: cache file is not found or old.\n";
-        my $input = $this->read_template_file($template, $filename, $_context);
-        $template->convert($input, $filename);
-        $this->store_cachefile($cachename, $template);
+    #: if template is cached in file then store it into memory and return it.
+    my $cachepath = $this->cachename($filepath);
+    if ($this->{cache}) {
+        $template = $this->_get_template_in_cache($filepath, $cachepath);
+        if ($template) {
+            $this->{_templates}->{$filename} = $template;
+            $template->compile();
+            return $template;
+        }
     }
-    else {
-        #print STDERR "*** debug: $cachename: cache file is found.\n";
-        $template->{filename} = $filename;
-        $this->load_cachefile($cachename, $template);
+    #: get template content and timestamp
+    my ($input, $timestamp) = $this->{finder}->read($filepath);
+    if (!$input && !$timestamp) {
+        die "$filepath: template not found.";
     }
+    #: if preprocess is enabled then preprocess template file.
+    $input = $this->_preprocess($input, $filepath, $_context) if $this->{preprocess};
+    #: if template is not found in memory nor cache then create new one.
+    $template = $this->_create_template($input, $filepath);
+    $template->{filename} = $filepath;
+    $template->{timestamp} = $timestamp;
+    $template->{_last_checked_at} = time();
+    #: save template object into file cache and memory cache.
+    $this->{cache}->save($cachepath, $template) if $this->{cache};
+    $this->{_templates}->{$filename} = $template;
+    #: return template object.
     $template->compile();
     return $template;
 }
