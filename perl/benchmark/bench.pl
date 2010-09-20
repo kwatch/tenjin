@@ -118,6 +118,24 @@ sub before_each {
     my ($this) = @_;
     my $cache = $template_filename.".cache";
     unlink $cache if -f $cache;
+    if ($this->{name} eq 'tenjin_safe') {
+        my $old = main::read_file($template_filename);
+        my $new = $old;
+        $new =~ s/\[==(.*?)=]/[=safe_str(\1)=]/g;
+        #$old ne $new  or die "*** failed to convert template.";
+        main::write_file($template_filename, $new);
+    }
+}
+
+sub after_each {
+    my ($this) = @_;
+    if ($this->{name} eq 'tenjin_safe') {
+        my $old = main::read_file($template_filename);
+        my $new = $old;
+        $new =~ s/\[=safe_str\((.*?)\)=]/[==\1=]/g;
+        #$old ne $new  or die "*** failed to convert template.";
+        main::write_file($template_filename, $new);
+    }
 }
 
 sub _bench_tenjin_template {
@@ -207,6 +225,17 @@ sub bench_tenjin_nocache {
     my $output;
     while ($n--) {
         my $engine = Tenjin::Engine->new({cache=>0});
+        $output = $engine->render($template_filename, $context);
+    }
+    return $output;
+}
+
+## tenjin (render + SafeEngine)
+sub bench_tenjin_safe {
+    my ($this, $n, $context) = @_;
+    my $output;
+    my $engine = Tenjin::SafeEngine->new();
+    while ($n--) {
         $output = $engine->render($template_filename, $context);
     }
     return $output;
@@ -842,6 +871,7 @@ sub main {
         next unless $klass;
         next if $faileds{$klass};
         my $obj = $klass->new();
+        $obj->{name} = $name;
         my $method = "bench_$name";
         my %symbols = eval "%${klass}::";
         #$method = "_bench_$name" unless defined $symbols{$method};  # error on taint mode

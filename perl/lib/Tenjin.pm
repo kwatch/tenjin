@@ -740,6 +740,8 @@ sub escaped_expr {
     return $this->{escapefunc}
            ? "(ref(\$_V = ($expr)) eq 'Tenjin::SafeStr' ? \$_V->{value} : $this->{escapefunc}(\$V)"
            : "(ref(\$_V = ($expr)) eq 'Tenjin::SafeStr' ? \$_V->{value} : (\$_V =~ s/[&<>\"]/\$Tenjin::_H{\$&}/ge, \$_V))";
+           #? "(is_safe_str(\$_V = ($expr)) ? \$_V->{value} : $this->{escapefunc}(\$V)"
+           #: "(is_safe_str(\$_V = ($expr)) ? \$_V->{value} : (\$_V =~ s/[&<>\"]/\$Tenjin::_H{\$&}/ge, \$_V))";
 }
 
 
