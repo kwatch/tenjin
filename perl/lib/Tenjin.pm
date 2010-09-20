@@ -750,7 +750,12 @@ sub get_expr_and_escapeflag {
     my ($not_escape, $expr, $delete_newline) = ($m1, $m2, $m3);
     #return $expr, $not_escape eq '', $delete_newline eq '=',
     $not_escape eq ''  or die "'[==$expr=]': '[== =]' is not available with Tenjin::SafeTemplate.";
-    return $expr, 1, $delete_newline eq '=',
+    my $flag_escape = 1;
+    if ($expr =~ /\A(\s*)safe_str\((.*?)\)(\s*)\Z/s) {
+        $expr = $1 . $2 . $3;
+        $flag_escape = undef;
+    }
+    return $expr, $flag_escape, $delete_newline eq '=';
 }
 
 

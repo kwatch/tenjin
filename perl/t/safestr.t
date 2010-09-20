@@ -11,7 +11,7 @@ BEGIN {
 
 use strict;
 use Data::Dumper;
-use Test::Simple tests => 25;
+use Test::Simple tests => 27;
 use Specofit;
 use Tenjin;
 $Tenjin::USE_STRICT = 1;
@@ -123,6 +123,14 @@ END
         $_ = $@;
         s/ at .*$//;
         should_eq($_, "'[== \$_content =]': '[== =]' is not available with Tenjin::SafeTemplate.\n");
+    };
+
+    it "bypass to escape value if safe_str() is called directly", sub {
+        my $t = Tenjin::SafeTemplate->new();
+        my $ret = $t->convert('<div>[= safe_str($expr) =]</div>');
+        should_eq($ret, 'my $_buf = ""; my $_V;  $_buf .= q`<div>` . ( $expr ) . q`</div>`;  $_buf;'."\n");
+        my $ret = $t->convert("<div>[=\tsafe_str(\n\$expr\n)  =]</div>");
+        should_eq($ret, "my \$_buf = \"\"; my \$_V;  \$_buf .= q`<div>` . (\t\n\$expr\n  ) . q`</div>`;  \$_buf;\n");
     };
 
 };
