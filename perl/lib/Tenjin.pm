@@ -965,7 +965,7 @@ our $STORE;   # default key-value store object for fragment cache
 sub new {
     my ($class, $options) = @_;
     my $this = {};
-    for my $key (qw[prefix postfix layout path cache store preprocess templateclass]) {
+    for my $key (qw[prefix postfix layout path cache store preprocess templateclass preprocessorclass]) {
         $this->{$key} = delete($options->{$key});
         #$this->{$key} = $options->{$key};
     }
@@ -1058,7 +1058,8 @@ sub read_template_file {
         }
         #$input = Tenjin::Preprocessor->new($filename)->render($_context);
         $input = $this->_read_file($filename);
-        my $pp = $Tenjin::PREPROCESSOR_CLASS->new();
+        my $klass = $this->{preprocessorclass} || $Tenjin::PREPROCESSOR_CLASS;
+        my $pp = $klass->new();
         #$pp->compile();   # DON'T COMPILE!
         $pp->convert($input);
         $input = $pp->render($_context);
@@ -1179,6 +1180,7 @@ our @ISA = ('Tenjin::Engine');
 sub new {
     my ($class, $options) = @_;
     $options->{templateclass} ||= 'Tenjin::SafeTemplate';
+    $options->{preprocessorclass} ||= 'Tenjin::SafePreprocessor';
     my $this = Tenjin::Engine->new($options);
     return bless($this, $class);
 }

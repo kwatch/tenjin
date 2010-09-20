@@ -11,7 +11,7 @@ BEGIN {
 
 use strict;
 use Data::Dumper;
-use Test::Simple tests => 12;
+use Test::Simple tests => 14;
 use Specofit;
 use Tenjin;
 $Tenjin::USE_STRICT = 1;
@@ -116,17 +116,14 @@ END
     $INPUT =~ s/^\t//mg;
 
     my $SCRIPT = <<'END';
-my $_buf = ""; my $_V;  $_buf .= q`<ul>
-`;   for (@$items) {
- $_buf .= q`  <li>` . (ref($_V = ( $_ )) eq 'Tenjin::SafeStr' ? $_V->{value} : ($_V =~ s/[&<>"]/$Tenjin::_H{$&}/ge, $_V)) . q`</li>
-`;   }
- $_buf .= q`</ul>
-`;  $_buf;
+	my $_buf = ""; my $_V;  $_buf .= q`<ul>
+	`;   for (@$items) {
+	 $_buf .= q`  <li>` . (ref($_V = ( $_ )) eq 'Tenjin::SafeStr' ? $_V->{value} : ($_V =~ s/[&<>"]/$Tenjin::_H{$&}/ge, $_V)) . q`</li>
+	`;   }
+	 $_buf .= q`</ul>
+	`;  $_buf;
 END
-
-    my $CONTEXT = {
-        items => [ "<br>", Tenjin::SafeStr->new("<BR>") ],
-    };
+    $SCRIPT =~ s/^\t//mg;
 
     my $EXPECTED = <<'END';
 	<ul>
@@ -136,31 +133,88 @@ END
 END
     $EXPECTED =~ s/^\t//mg;
 
+    my $INPUT2 = <<'END';
+	<div>
+	  <p>v1=[=$v1=]</p>
+	  <p>v2=[=$v2=]</p>
+	</div>
+	<div>
+	  <p>v1=[*=$v1=*]</p>
+	  <p>v2=[*=$v2=*]</p>
+	</div>
+END
+    $INPUT2 =~ s/^\t//mg;
+
+    my $SCRIPT2 = <<'END';
+	my $_buf = ""; my $_V;  $_buf .= q`<div>
+	  <p>v1=` . (ref($_V = ($v1)) eq 'Tenjin::SafeStr' ? $_V->{value} : ($_V =~ s/[&<>"]/$Tenjin::_H{$&}/ge, $_V)) . q`</p>
+	  <p>v2=` . (ref($_V = ($v2)) eq 'Tenjin::SafeStr' ? $_V->{value} : ($_V =~ s/[&<>"]/$Tenjin::_H{$&}/ge, $_V)) . q`</p>
+	</div>
+	<div>
+	  <p>v1=&lt;&amp;&gt;</p>
+	  <p>v2=<&></p>
+	</div>
+	`;  $_buf;
+END
+    $SCRIPT2 =~ s/^\t//mg;
+
+    my $EXPECTED2 = <<'END';
+	<div>
+	  <p>v1=&lt;&amp;&gt;</p>
+	  <p>v2=<&></p>
+	</div>
+	<div>
+	  <p>v1=&lt;&amp;&gt;</p>
+	  <p>v2=<&></p>
+	</div>
+END
+    $EXPECTED2 =~ s/^\t//mg;
+
+    my $CONTEXT = {
+        items => [ "<br>", Tenjin::SafeStr->new("<BR>") ],
+    };
+
     pre_task {
         unlink glob("_ex.plhtml*");
         write_file("_ex.plhtml", $INPUT);
+        unlink glob("_ex2.plhtml*");
+        write_file("_ex2.plhtml", $INPUT2);
     };
 
     my $engine;
 
     spec_of "->new", sub {
-        it "passes 'safeclass' option to template class", sub {
-            $engine = Tenjin::SafeEngine->new();
+        my $engine = Tenjin::SafeEngine->new();
+        it "sets 'templateclass' attribute to 'SafeTemplate'", sub {
+            should_eq($engine->{templateclass}, 'Tenjin::SafeTemplate');
             my $t = $engine->get_template("_ex.plhtml");
             should_eq(ref($t), 'Tenjin::SafeTemplate');
             should_eq($t->{script}, $SCRIPT);
         };
+        it "sets 'preprocessor' attribute to 'SafePreprocessor'", sub {
+            should_eq($engine->{preprocessorclass}, 'Tenjin::SafePreprocessor');
+        }
     };
 
     spec_of "#render", sub {
         it "prints safe string as it is", sub {
-            my $output = $engine->render("_ex.plhtml", $CONTEXT);
+            my $e = Tenjin::SafeEngine->new();
+            my $output = $e->render("_ex.plhtml", $CONTEXT);
             should_eq($output, $EXPECTED);
+        };
+        it "supports preprocessing with SafePreprocessor class", sub {
+            my $e = Tenjin::SafeEngine->new({preprocess=>1});
+            my $context = { v1=>'<&>', v2=>Tenjin::SafeStr->new('<&>') };
+            my $output = $e->render("_ex2.plhtml", $context);
+            my $t = $e->get_template('_ex2.plhtml');
+            should_eq($t->{script}, $SCRIPT2);
+            should_eq($output, $EXPECTED2);
         };
     };
 
     post_task {
         unlink glob("_ex.plhtml*");
+        unlink glob("_ex2.plhtml*");
     };
 
 };
