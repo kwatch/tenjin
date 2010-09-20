@@ -143,7 +143,9 @@ sub value {
 
 
 sub safe_str {
-    Tenjin::SafeStr->new($_[0]);    # return
+    #Tenjin::SafeStr->new($_[0]);    # return
+    #is_safe_str($_[0]) ? $_[0] : Tenjin::SafeStr->new($_[0]);  # return
+    ref($_[0]) eq 'Tenjin::SafeStr' ? $_[0] : Tenjin::SafeStr->new($_[0]);  # return
 }
 
 
