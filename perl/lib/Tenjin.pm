@@ -1181,8 +1181,7 @@ sub read {    # returns file content and file mtime
             my $input = Tenjin::Util::read_file($filepath);
             my $mtime2 = (stat $filepath)[9];
             if ($mtime != $mtime2) {
-                eval 'use Carp;';
-                carp("*** Tenjin::FileFinder->read(): timestamp changed while reading file (=$filepath).");
+                warn("*** Tenjin::FileFinder->read(): timestamp changed while reading file (=$filepath).");
             }
         }
         return ($input, $mtime);
