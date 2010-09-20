@@ -73,6 +73,12 @@ sub write_file {
 }
 
 
+sub _path_join {
+    my $sep = $^O eq 'MSWin32' ? '\\\\' : '/';
+    return join($sep, @_);
+}
+
+
 sub expand_tabs {
     my ($str, $tabwidth) = @_;
     $tabwidth = 8 unless defined $tabwidth;
@@ -1037,7 +1043,7 @@ sub find {
     my ($this, $filename, $dirs) = @_;
     if ($dirs) {
         for my $dir (@$dirs) {
-            my $filepath = "$dir/$filename";
+            my $filepath = Tenjin::Util::_path_join($dir, $filename);
             return $filepath if -f $filepath;
         }
     }
