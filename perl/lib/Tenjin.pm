@@ -135,7 +135,7 @@ sub new {
 }
 
 
-sub to_str {
+sub value {
     #my ($this) = @_;
     #return $this->{value};
     $_[0]->{value};

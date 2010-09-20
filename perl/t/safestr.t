@@ -32,11 +32,11 @@ spec_of "Tenjin::SafeStr->new", sub {
 };
 
 
-spec_of "Tenjin::SafeStr#to_str", sub {
+spec_of "Tenjin::SafeStr#value", sub {
 
     it "converts Tenjin::SafeStr to normal string", sub {
         my $obj = Tenjin::SafeStr->new('<A&B>');
-        should_eq($obj->to_str, '<A&B>');
+        should_eq($obj->value, '<A&B>');
     };
 
 };
