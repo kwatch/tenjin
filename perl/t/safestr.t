@@ -11,7 +11,7 @@ BEGIN {
 
 use strict;
 use Data::Dumper;
-use Test::Simple tests => 14;
+use Test::Simple tests => 21;
 use Specofit;
 use Tenjin;
 $Tenjin::USE_STRICT = 1;
@@ -34,9 +34,47 @@ spec_of "Tenjin::SafeStr->new", sub {
 
 spec_of "Tenjin::SafeStr#to_str", sub {
 
-    it "returns safe string", sub {
+    it "converts Tenjin::SafeStr to normal string", sub {
         my $obj = Tenjin::SafeStr->new('<A&B>');
         should_eq($obj->to_str, '<A&B>');
+    };
+
+};
+
+
+spec_of "Tenjin::SafeStr::safe_str", sub {
+
+    it "returns Tenjin::SafeStr object", sub {
+        my $obj = Tenjin::SafeStr::safe_str('<A&B>');
+        should_eq(ref($obj), 'Tenjin::SafeStr');
+    };
+
+};
+
+
+spec_of "Tenjin::SafeStr::is_safe_str", sub {
+
+    it "returns 1 if arg is Tenjin::SafeStr object", sub {
+        my $obj = Tenjin::SafeStr::safe_str('<A&B>');
+        should_eq(Tenjin::SafeStr::is_safe_str($obj), 1);
+    };
+
+    it "returns undef if arg is not Tenjin::SafeStr object", sub {
+        should_eq(Tenjin::SafeStr::is_safe_str('<A&B>'), undef);
+    };
+
+};
+
+
+spec_of "Tenjin::SafeStr::safe_escape", sub {
+
+    it "returns unescaped str if arg is Tenjin::SafeStr", sub {
+        my $obj = Tenjin::SafeStr::safe_str('<A&B>');
+        should_eq(Tenjin::SafeStr::safe_escape($obj), '<A&B>');
+    };
+
+    it "returns escaped str if arg is normal string", sub {
+        should_eq(Tenjin::SafeStr::safe_escape('<A&B>'), '&lt;A&amp;B&gt;');
     };
 
 };

@@ -124,6 +124,8 @@ sub _decode_params {
 ## safe string
 ##
 package Tenjin::SafeStr;
+use Exporter 'import';
+our @EXPORT = qw(safe_str is_safe_str safe_escape);
 
 
 sub new {
@@ -137,6 +139,21 @@ sub to_str {
     #my ($this) = @_;
     #return $this->{value};
     $_[0]->{value};
+}
+
+
+sub safe_str {
+    Tenjin::SafeStr->new($_[0]);    # return
+}
+
+
+sub is_safe_str {
+    ref($_[0]) eq 'Tenjin::SafeStr';  # return
+}
+
+
+sub safe_escape {
+    is_safe_str($_[0]) ? $_[0]->{value} : escape_xml($_[0]);  # return
 }
 
 
@@ -175,6 +192,8 @@ sub escape_xml {
     #(my $s=$_[0])=~s/&/&amp;/g; $s=~s/</&lt;/g; $s=~s/>/&gt;/g; $s=~s/"/&quot;/g; $s;    # 7.67
 
 }
+
+*Tenjin::SafeStr::escape_xml = *escape_xml;
 
 
 our %UNESCAPE_HTML = ('lt'=>'<', 'gt'=>'>', 'amp'=>'&', 'quot'=>'"', '#039'=>"'");
@@ -358,6 +377,9 @@ eval $defun;
 
 *_p           = *Tenjin::Util::_p;
 *_P           = *Tenjin::Util::_P;
+*safe_str     = *Tenjin::SafeStr::safe_str;
+*is_safe_str  = *Tenjin::SafeStr::is_safe_str;
+*safe_escape  = *Tenjin::SafeStr::safe_escape;
 *escape       = *Tenjin::Helper::Html::escape_xml;
 *escape_xml   = *Tenjin::Helper::Html::escape_xml;
 *unescape_xml = *Tenjin::Helper::Html::unescape_xml;
