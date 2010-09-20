@@ -54,7 +54,7 @@ sub _spec_of {
     local ($_before_each, $_after_each) = ($_before_each, $_after_each);
     $current_target = $target;
     $_before_all->() if $_before_all;
-    $closure->();
+    $closure->($target);
     $_after_all->()  if $_after_all;
     $current_target = undef;
 }
