@@ -662,14 +662,14 @@ sub parse_stmt {
     my $pos = 0;
     my $pat = $this->stmt_pattern();
     while ($input =~ /$pat/g) {
-        my ($pi, $lspace, $mspace, $stmt, $rspace) = $this->capture_stmt($1, $2, $3, $4, $5, $6, $7, $8, $9);
+        my ($lspace, $stmt, $rspace) = $this->capture_stmt($1, $2, $3, $4, $5, $6, $7, $8, $9);
         my $start = $-[0];
         my $text = substr($input, $pos, $start - $pos);
-        $pos = $start + length($pi);
+        #$pos = $start + length($&);
+        $pos = $+[0];
         $this->parse_expr($bufref, $text) if $text;
-        $mspace = '' if $mspace eq ' ';
         $stmt = $this->hook_stmt($stmt);
-        $this->add_stmt($bufref, $lspace . $mspace . $stmt . $rspace);
+        $this->add_stmt($bufref, $lspace . $stmt . $rspace);
     }
     my $rest = $pos == 0 ? $input : substr($input, $pos);
     $this->parse_expr($bufref, $rest) if $rest;
@@ -677,7 +677,10 @@ sub parse_stmt {
 
 
 sub capture_stmt {
-    return @_[1], @_[2], @_[3], @_[4], @_[5];
+    my ($this, $pi, $lspace, $mspace, $stmt, $rspace) = @_;
+    $mspace = '' if $mspace eq ' ';
+    $stmt = $mspace . $stmt if $mspace;
+    return $lspace, $stmt, $rspace;
 }
 
 
