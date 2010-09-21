@@ -537,8 +537,6 @@ sub before_all {
     main::write_file($template_filename, $s);
     $class->load_package("Text::MicroTemplate qw(encoded_string)")  and return -1;
     $class->load_package("Text::MicroTemplate::File")  and return -1;
-    use Text::MicroTemplate qw(encoded_string);
-    use Text::MicroTemplate::File;
 }
 
 sub escape_template {
