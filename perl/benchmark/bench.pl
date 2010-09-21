@@ -777,8 +777,17 @@ sub load_context_data {
     #my $s = main::read_file($context_filename);
     #my $context = eval $s;   # error on taint mode
     my $context = require "./$context_filename";
-    $context->{list} = $this->{mode} eq 'hash' ? $context->{hash_list}
-                                               : $context->{user_list};
+    if ($this->{mode} eq 'hash') {
+        $context->{list} = $context->{hash_list};
+    }
+    else {
+        use User;
+        my @arr = map { User->new($_) } @{$context->{hash_list}};
+        $context->{list} = \@arr;
+    }
+    #$context->{list} = $this->{mode} eq 'hash' ? $context->{hash_list}
+    #                                           : $context->{user_list};
+    #print Dumper($context);
     if ($this->{flag_html}) {
         for (@{$context->{list}}) {
             $_->{name} = '<B>'.($_->{name}).'</B>';
