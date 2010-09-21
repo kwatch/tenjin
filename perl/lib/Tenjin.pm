@@ -28,6 +28,7 @@ use strict;
 
 package Tenjin;
 
+
 our $USE_STRICT     = undef;
 our $BYPASS_TAINT   = 1;          # unset if you like taint mode
 our $TEMPLATE_CLASS = 'Tenjin::Template';
@@ -37,13 +38,16 @@ our $VERSION        = (split(' ', '$Release: 0.0.0 $'))[1];
 our $WARNING        = 0;
 our $logger         = undef;
 
+
 sub import {
     my ($klass, %opts) = @_;
     $USE_STRICT = $opts{strict}  if defined $opts{strict};
     $WARNING    = $opts{warning} if defined $opts{warning};
 }
 
+
 our %_H = undef;   # set by Helper::Html later
+
 
 
 ##
