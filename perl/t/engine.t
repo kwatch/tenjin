@@ -11,7 +11,7 @@ BEGIN {
 
 use strict;
 use Data::Dumper;
-use Test::More tests => 50;
+use Test::More tests => 48;
 use Specofit;
 use YAML::Syck;
 use File::Path;
@@ -326,22 +326,27 @@ spec_of "Tenjin::Engine", sub {
         my $exception = eval($data->{exception});
         my $context = $data->{context};
         my $filename = 'content.plhtml';
+        my $cachename = $filename . '.cache';
         my $args1;
         my $args2;
         pre_task {
             write_file($filename, $data->{content});
         };
         $Tenjin::USE_STRICT = 1;
-        eval { ## when no cache file exists
-            should_not_exist("$filename.cache", $testname);
+        ## when no cache file exists
+        ! -f $cachename  or die;
+        eval {
             my $engine = new Tenjin::Engine({cache=>1});
             $args1 = $engine->get_template($filename)->{args};
         };
         my $actual = $@;
         should_eq($errormsg, $actual, $testname);
         $@ = undef;
-        eval { ## when cache file exists
-            should_exist("$filename.cache", $testname);
+        ## when cache file exists
+        my $t = Tenjin::Template->new($filename);
+        $Tenjin::Engine::CACHE->save($cachename, $t);
+        -f $cachename  or die;
+        eval {
             my $engine = new Tenjin::Engine({cache=>1});
             $args2 = $engine->get_template($filename)->{args};
         };
