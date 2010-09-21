@@ -352,12 +352,12 @@ import Tenjin::Helper::Safe;
 
 
 sub import {
-    _import();
+    setup();
     goto &Exporter::import;
 }
 
 
-sub _import {
+sub setup {
     *Tenjin::Context::checked   = *checked;
     *Tenjin::Context::selected  = *selected;
     *Tenjin::Context::disabled  = *disabled;
