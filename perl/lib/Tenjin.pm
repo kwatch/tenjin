@@ -537,12 +537,10 @@ package Tenjin::Template;
 sub new {
     my ($class, $filename, $opts) = @_;
     my $escapefunc = defined($opts) && exists($opts->{escapefunc}) ? $opts->{escapefunc} : undef;
-    my $safeclass  = defined($opts) && exists($opts->{safeclass}) ? $opts->{safeclass} : undef;
     my $this = {
         'filename'   => $filename,
         'script'     => undef,
         'escapefunc' => $escapefunc,
-        'safeclass'  => $safeclass,
         'timestamp'  => undef,
         'args'       => undef,
     };
@@ -792,16 +790,9 @@ sub add_expr {
 
 sub escaped_expr {
     my ($this, $expr) = @_;
-    if ($this->{safeclass}) {
-        return $this->{escapefunc}
-               ? "(ref(\$_V = ($expr)) eq '$this->{safeclass}' ? \$_V->{value} : $this->{escapefunc}(\$V)"
-               : "(ref(\$_V = ($expr)) eq '$this->{safeclass}' ? \$_V->{value} : (\$_V =~ s/[&<>\"]/\$Tenjin::_H{\$&}/ge, \$_V))";
-    }
-    else {
-        return $this->{escapefunc}
-               ? "$this->{escapefunc}($expr)"
-               : "((\$_V = ($expr)) =~ s/[&<>\"]/\$Tenjin::_H{\$&}/ge, \$_V)";
-    }
+    return $this->{escapefunc}
+           ? "$this->{escapefunc}($expr)"
+           : "((\$_V = ($expr)) =~ s/[&<>\"]/\$Tenjin::_H{\$&}/ge, \$_V)";
 }
 
 
