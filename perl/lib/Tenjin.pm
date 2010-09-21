@@ -1015,7 +1015,7 @@ sub load {
     my $template = $this->{cachepath};
     return unless $template;
     return if $timestamp && $template->{timestamp} != $timestamp;
-    return $timestamp;
+    return $template;
 }
 
 
