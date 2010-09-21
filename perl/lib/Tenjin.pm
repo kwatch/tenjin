@@ -41,7 +41,7 @@ sub import {
     $WARNING    = $opts{warning} if defined $opts{warning};
 }
 
-our %_H = ( '&'=>'&amp;', '<'=>'&lt;', '>'=>'&gt;', '"'=>'&quot;', "'"=>'&#039;' );
+our %_H = undef;   # set by Helper::Html later
 
 
 ##
@@ -203,6 +203,7 @@ our @EXPORT = qw(escape_xml unescape_xml encode_url decode_url
 
 
 our %ESCAPE_HTML = ( '&'=>'&amp;', '<'=>'&lt;', '>'=>'&gt;', '"'=>'&quot;', "'"=>'&#039;');
+%Tenjin::_H = %ESCAPE_HTML;
 
 
 sub escape_xml {
