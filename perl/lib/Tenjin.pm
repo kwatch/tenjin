@@ -572,9 +572,13 @@ sub new {
         'timestamp'  => undef,
         'args'       => undef,
     };
-    #return bless($this, $class);
     $this = bless($this, $class);
-    $this->convert_file($filename) if $filename;
+    if (defined($opts) && defined($opts->{input})) {
+        $this->convert($opts->{input}, $filename);
+    }
+    elsif ($filename) {
+        $this->convert_file($filename);
+    }
     return $this;
 }
 

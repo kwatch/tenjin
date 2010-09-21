@@ -10,7 +10,7 @@ BEGIN {
 }
 
 use strict;
-use Test::More tests => 30;
+use Test::More tests => 31;
 use Specofit;
 use Data::Dumper;
 use Tenjin strict=>1;
@@ -310,6 +310,11 @@ spec_of "Tenjin::Template->new()", sub {
         should_eq($t->{script}, $SCRIPT1);
         should_eq($t->{filename}, $filename);
         unlink $filename if -f $filename;
+    };
+
+    it "converts input option if it specified", sub {
+        my $t = Tenjin::Template->new(undef, {input=>'<p>Hello [==$name=]!</p>'});
+        is $t->{script}, 'my $_buf = ""; my $_V;  $_buf .= q`<p>Hello ` . ($name) . q`!</p>`;  $_buf;' . "\n";
     };
 
 };
