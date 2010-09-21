@@ -846,7 +846,6 @@ sub defun {   ## (experimental)
 
 ## compile $this->{script} into closure.
 sub compile {
-    use Data::Dumper;
     my ($this, $_context) = @_;
     if (! $this->{args}) {
         warn "[tenjin] $this->{filename}: Template arguments not found. It is strongly recommended to specify '<?pl #\@ARGS arg1, arg2 ?> for performance and readability." if $Tenjin::WARNING;
