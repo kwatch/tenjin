@@ -18,20 +18,29 @@ use Specofit;
 
 spec_of 'Tenjn', sub {
 
-    it 'sets $Tenjin::USE_STRICT to 1 if strict=>1 is specified', sub {
-        use Tenjin strict => 1;
-        is $Tenjin::USE_STRICT, 1;
-    };
-
-    #it 'leaves $Tenjin::USE_STRICT to 0 if no option specified', sub {
-    #    use Tenjin;
-    #    is $Tenjin::USE_STRICT, 0;
-    #};
 
     it "has version number", sub {
         ok defined($Tenjin::VERSION);
-        like $Tenjin::VERSION, qr`^\d+\.\d+\.\d+$`;
+        like $Tenjin::VERSION, qr`^\d+\.\d+\.\d+$`;   #`
     };
+
+
+    spec_of '::import', sub {
+
+        it "sets \$Tenjin::USE_STRICT to 1 if strict=>1 is specified", sub {
+            my $bkup = $Tenjin::USE_STRICT;
+            use Tenjin strict => 1;
+            is $Tenjin::USE_STRICT, 1;
+            $Tenjin::USE_STRICT = $bkup;
+        };
+
+        #it "leaves \$Tenjin::USE_STRICT to 0 if no option specified", sub {
+        #    use Tenjin;
+        #    is $Tenjin::USE_STRICT, 0;
+        #};
+
+    };
+
 
 };
 
