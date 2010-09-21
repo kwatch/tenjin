@@ -850,7 +850,7 @@ sub compile {
     my ($this, $_context) = @_;
     if (! $this->{args}) {
         warn "[tenjin] $this->{filename}: Template arguments not found. It is strongly recommended to specify '<?pl #\@ARGS arg1, arg2 ?> for performance and readability." if $Tenjin::WARNING;
-        #: if context vars provided, guess template args from it.
+        #: guess template args from context vars if provided
         if ($_context) {
             my ($decl, $keys) = Tenjin::BaseContext::_build_decl2($_context);
             $this->{script} = $decl . $this->{script};
@@ -1501,11 +1501,12 @@ sub get_template {
     $template->{filename} = $filepath;
     $template->{timestamp} = $timestamp;
     $template->{_last_checked_at} = time();
+    #: compile template before saving in order to guess template args from context vars.
+    $template->compile($_context);
     #: save template object into file cache and memory cache.
     $this->{cache}->save($cachepath, $template) if $this->{cache};
     $this->{_templates}->{$filename} = $template;
     #: return template object.
-    $template->compile($_context);
     return $template;
 }
 

@@ -11,7 +11,7 @@ BEGIN {
 
 use strict;
 use Data::Dumper;
-use Test::More tests => 33;
+use Test::More tests => 38;
 use Specofit;
 use File::Path;
 use Tenjin;
@@ -300,6 +300,28 @@ spec_of "Tenjin::Engine", sub {
                 #falldown
                 ok -f $cpath;
                 isa_ok $e->{_templates}->{$fpath}, 'Tenjin::Template';
+            };
+
+            spec "compile template before saving in order to guess template args from context vars.", sub {
+                unlink $cpath;                           # remove cache file
+                $e->{_templates}->{$fpath} = undef;      # clear memory cache
+                write_file($fpath, "<<[==\$x=]>>\n<<[==\$y=]]>>");   # create new template
+                my $context = {x=>10, y=>20};
+                my $t = $e->get_template($fpath, $context);
+                ok $t->{func};
+                isa_ok $t->{args}, 'ARRAY';
+                my $keys = join(",", @{$t->{args}});
+                if ($keys eq "y,x") {
+                    is $keys, "y,x";
+                    is $t->{script}, 'my $y = $_context->{y}; my $x = $_context->{x}; my $_buf = ""; my $_V;  $_buf .= q`<<` . ($x) . q`>>'."\n"
+                                    .'<<` . ($y) . q`]>>`;  $_buf;'."\n";
+                } else {
+                    is $keys, "x,y";
+                    is $t->{script}, 'my $x = $_context->{x}; my $y = $_context->{y}; my $_buf = ""; my $_V;  $_buf .= q`<<` . ($x) . q`>>'."\n"
+                                    .'<<` . ($y) . q`]>>`;  $_buf;'."\n";
+                }
+                my $cdata = read_file($cpath);
+                is $cdata, "\#\@ARGS ".$keys."\n".$t->{script};
             };
 
             spec "return template object.", sub { }
