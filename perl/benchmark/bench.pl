@@ -74,7 +74,8 @@ sub load_package {
     eval "use $package_name";
     my $errmsg = $@;
     return unless $errmsg;
-    warn "*** failed to load package '$package_name': $@";
+    #warn "*** failed to load package '$package_name': $@";
+    warn "*** failed to load package '$package_name': skipped.\n";
     $@ = undef;
     return $errmsg;
 }
