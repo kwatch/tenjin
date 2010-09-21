@@ -49,6 +49,7 @@ sub invoke_after_each  { return $_after_each->(@_);  }
 sub _spec_of {
     my ($envkey, $target, @args) = @_;
     return if $ENV{$envkey} && $target ne $ENV{$envkey};
+    print "*** $envkey: $target\n" if $ENV{VERBOSE};
     my $closure = pop @args;
     local ($_before_all,  $_after_all)  = ($_before_all,  $_after_all);
     local ($_before_each, $_after_each) = ($_before_each, $_after_each);
@@ -84,6 +85,7 @@ sub scenario {
 sub _it {
     my ($envkey, $desc, @args) = @_;
     return if $ENV{$envkey} && $desc ne $ENV{$envkey};
+    print "*** $envkey: $desc\n" if $ENV{VERBOSE};
     my $closure = pop @args;
     #$current_desc = $desc;
     $_before_each->(@args) if $_before_each;
