@@ -405,4 +405,17 @@ END
         $@ = undef;
     };
 
+    it "warns if template arguments not found and \$Tenjin::WARNING is set", sub {
+        my $t = Tenjin::Template->new();
+        #$t->convert("<?pl #\@ARGS name ?>\n<p>[=\$name=]</p>");
+        $t->convert("<p>[=\$name=]</p>");
+        my $bkup = $Tenjin::WARNING;
+        eval {
+            $Tenjin::WARNING = 1;
+            #$t->compile();           # TODO: how to get warning message?
+        };
+        $Tenjin::WARNING = $bkup;
+    };
+
+
 };

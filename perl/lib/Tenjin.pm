@@ -32,6 +32,7 @@ our $TEMPLATE_CLASS = 'Tenjin::Template';
 our $CONTEXT_CLASS  = 'Tenjin::Context';
 our $PREPROCESSOR_CLASS = 'Tenjin::Preprocessor';
 our $VERSION        = (split(' ', '$Release: 0.0.0 $'))[1];
+our $WARNING        = 0;
 our $logger         = undef;
 
 sub import {
@@ -825,6 +826,9 @@ sub compile {
         my $func = $Tenjin::CONTEXT_CLASS->to_func($this->{script}, $this->{filename});
         ! $@  or die "*** Error: " . $this->{filename} . "\n", $@;
         return $this->{func} = $func;
+    }
+    else {
+        warn "[Tenjin.pm] $this->{filename}: Template arguments not found. It is strongly recommended to specify '<?pl #\@ARGS arg1, arg2 ?> for performance and readability." if $Tenjin::WARNING;
     }
     return;
 }
