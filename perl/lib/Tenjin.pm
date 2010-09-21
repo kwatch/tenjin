@@ -1043,7 +1043,7 @@ sub save {
     #: set cache file's mtime to template timestamp.
     my $ts = $t->{timestamp};
     utime($ts, $ts, $cachepath);
-    $Tenjin::logger->debug("[Tenjin.pm:".__LINE__."] template cache saved (path=$cachepath)") if $Tenjin::logger;
+    $Tenjin::logger->debug("[tenjin] template cache saved (path=$cachepath)") if $Tenjin::logger;
 }
 
 
@@ -1051,13 +1051,13 @@ sub load {
     my ($this, $cachepath, $timestamp) = @_;
     #: if cache file is not found, return undef.
     unless (-f $cachepath) {
-        $Tenjin::logger->debug("[Tenjin.pm:".__LINE__."] template cache not found (path=$cachepath)") if $Tenjin::logger;
+        $Tenjin::logger->debug("[tenjin] template cache not found (path=$cachepath)") if $Tenjin::logger;
         return;
     }
     #: if template timestamp is specified and different from that of cache file, return undef.
     my $mtime = (stat $cachepath)[9];
     if ($timestamp && $timestamp != $mtime) {
-        $Tenjin::logger->debug("[Tenjin.pm:".__LINE__."] template cache expired (path=$cachepath)") if $Tenjin::logger;
+        $Tenjin::logger->debug("[tenjin] template cache expired (path=$cachepath)") if $Tenjin::logger;
         return;
     }
     #: load template data from cache file.
@@ -1396,7 +1396,7 @@ sub _timestamp_changed {
     }
     #: if timestamp is changed, return true.
     else {
-        $Tenjin::logger->info("[Tenjin.pm:".__LINE__."] template cache expired (path=$template->{filename})") if $Tenjin::logger;
+        $Tenjin::logger->info("[tenjin] template cache expired (path=$template->{filename})") if $Tenjin::logger;
         return 1;
     }
 }
