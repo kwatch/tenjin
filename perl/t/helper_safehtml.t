@@ -12,7 +12,7 @@ BEGIN {
 use strict;
 use Data::Dumper;
 use Test::More;
-use Specofit tests => 52;
+use Specofit tests => 57;
 use Tenjin;
 $Tenjin::USE_STRICT = 1;
 import Tenjin::Helper::SafeHtml;
@@ -142,6 +142,23 @@ spec_of "Tenjin::Helper::SafeHtml::tagattrs()", sub {
 };
 
 
+spec_of "Tenjin::Helper::SafeHtml::nv()", sub {
+
+    it "returns SafeStr object", sub {
+        my $ret = nv('pair', 'Haru&Kyon');
+        isa_ok $ret, 'Tenjin::SafeStr';
+        is $ret->{value}, 'name="pair" value="Haru&amp;Kyon"';
+    };
+
+    it "accepts SafeStr object", sub {
+        my $ret = nv('pair', safe_str('Haru&Kyon'));
+        isa_ok $ret, 'Tenjin::SafeStr';
+        is $ret->{value}, 'name="pair" value="Haru&Kyon"';
+    }
+
+};
+
+
 spec_of "Tenjin::Helper::SafeHtml::new_cycle()", sub {
 
     it "returns SafeStr object, even if arg is false", sub {
@@ -178,6 +195,7 @@ spec_of "Tenjin::Helper::SafeHtml::import()", sub {
         isa_ok Tenjin::Context::text2html("<p>"), 'Tenjin::SafeStr';
         isa_ok Tenjin::Context::tagattr('a', 'A'), 'Tenjin::SafeStr';
         isa_ok Tenjin::Context::tagattrs(a=>'A'), 'Tenjin::SafeStr';
+        isa_ok Tenjin::Context::nv('n', 'v'), 'Tenjin::SafeStr';
         isa_ok Tenjin::Context::new_cycle('A')->(), 'Tenjin::SafeStr';
     };
 

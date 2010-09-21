@@ -11,7 +11,7 @@ BEGIN {
 
 use strict;
 use Data::Dumper;
-use Specofit tests => 32;
+use Specofit tests => 33;
 use Tenjin;
 $Tenjin::USE_STRICT = 1;
 
@@ -175,6 +175,16 @@ spec_of "Tenjin::Helper::Html::tagattrs()", sub {
 
     it "escapes html special chars in attribute values", sub {
         should_eq(Tenjin::Helper::Html::tagattrs('<name>'=>"A&B"), ' <name>="A&amp;B"');
+    };
+
+};
+
+
+spec_of "Tenjin::Helper::Html::nv()", sub {
+
+    it "returns name and value attributes", sub {
+        my $ret = Tenjin::Helper::Html::nv('pair', 'Haru&Kyon');
+        should_eq($ret, 'name="pair" value="Haru&amp;Kyon"');
     };
 
 };

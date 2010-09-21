@@ -191,7 +191,7 @@ sub safe_escape {
 package Tenjin::Helper::Html;
 use Exporter 'import';
 our @EXPORT = qw(escape_xml unescape_xml encode_url decode_url
-                 checked selected disabled nl2br text2html tagattr tagattrs new_cycle);
+                 checked selected disabled nl2br text2html tagattr tagattrs nv new_cycle);
 
 
 our %ESCAPE_HTML = ( '&'=>'&amp;', '<'=>'&lt;', '>'=>'&gt;', '"'=>'&quot;', "'"=>'&#039;');
@@ -300,6 +300,14 @@ sub tagattrs {   ## [experimental]
 
 
 ## ex.
+##   nv('pair', 'Haru&Kyon')  #=> 'name="pair" value="Haru&amp;Kyon"'
+sub nv {   ## [experimental]
+    my ($name, $value) = @_;
+    'name="'.$name.'" value="'.escape_xml($value).'"';  # return
+}
+
+
+## ex.
 ##   my $cycle = new_cycle('red', 'blue');
 ##   print $cycle->();  #=> 'red'
 ##   print $cycle->();  #=> 'blue'
@@ -319,7 +327,7 @@ sub new_cycle {   ## [experimental]
 ##
 package Tenjin::Helper::SafeHtml;
 use Exporter 'import';
-our @EXPORT = qw(checked selected disabled nl2br text2html tagattr tagattrs new_cycle);
+our @EXPORT = qw(checked selected disabled nl2br text2html tagattr tagattrs nv new_cycle);
 import Tenjin::Helper::Safe;
 
 
@@ -337,6 +345,7 @@ sub _import {
     *Tenjin::Context::text2html = *text2html;
     *Tenjin::Context::tagattr   = *tagattr;
     *Tenjin::Context::tagattrs  = *tagattrs;
+    *Tenjin::Context::nv        = *nv;
     *Tenjin::Context::new_cycle = *new_cycle;
 }
 
@@ -391,6 +400,12 @@ sub tagattrs {   ## [experimental]
         $s .= " $k=\"".safe_escape($v)."\"" if defined $v;
     }
     safe_str($s);  # return
+}
+
+
+sub nv {   ## [experimental]
+    my ($name, $value) = @_;
+    safe_str('name="'.$name.'" value="'.safe_escape($value).'"');  # return
 }
 
 
