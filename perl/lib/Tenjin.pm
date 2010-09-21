@@ -29,7 +29,7 @@ use strict;
 package Tenjin;
 
 
-our $USE_STRICT     = undef;
+our $USE_STRICT     = undef;      # no effect; only for backward compatibility
 our $BYPASS_TAINT   = 1;          # unset if you like taint mode
 our $TEMPLATE_CLASS = 'Tenjin::Template';
 our $CONTEXT_CLASS  = 'Tenjin::Context';
@@ -46,7 +46,7 @@ sub import {
 }
 
 
-our %_H = undef;   # set by Helper::Html later
+our %_H = undef;   # set by Tenjin::Helper::Html later
 
 
 
@@ -144,8 +144,8 @@ package Tenjin::SafeStr;
 
 sub new {
     #my ($class, $value) = @_;
-    #return bless { value => $value }, $class;
-    bless { value => $_[1] }, $_[0];
+    #return bless({ value => $value }, $class);
+    bless({ value => $_[1] }, $_[0]);
 }
 
 
@@ -447,7 +447,7 @@ package Tenjin::BaseContext;
 sub new {
     my ($class, $this) = @_;
     $this = { } unless defined $this;
-    return bless $this, $class;
+    return bless($this, $class);
 }
 
 
@@ -534,8 +534,8 @@ our @ISA = ('Tenjin::BaseContext');
 our $defun = $Tenjin::BaseContext::defun;
 eval $defun;
 
-*_p           = *Tenjin::Util::_p;
-*_P           = *Tenjin::Util::_P;
+*_p = *Tenjin::Util::_p;
+*_P = *Tenjin::Util::_P;
 
 import Tenjin::Helper::Safe;
 import Tenjin::Helper::Html;
@@ -564,7 +564,7 @@ package Tenjin::Template;
 
 sub new {
     my ($class, $filename, $opts) = @_;
-    my $escapefunc = defined($opts) && exists($opts->{escapefunc}) ? $opts->{escapefunc} : undef;
+    my $escapefunc = defined($opts) ? $opts->{escapefunc} : undef;
     my $this = {
         'filename'   => $filename,
         'script'     => undef,
@@ -1068,10 +1068,7 @@ sub load {
         my ($k, $v) = split(/: */, $line, 2);
         #: get template args data from cached data.
         #: set undef instead of empty array if '#args' not found in cache.
-        if ($k eq '#args') {
-            my @args = split(/,/, $v);
-            $args = \@args;
-        }
+        $args = [ split(/,/, $v) ] if $k eq '#args';
     }
     #: return script, template args, and mtime of cache file.
     return {script=>$script, args=>$args, timestamp=>$mtime};
@@ -1352,10 +1349,10 @@ sub new {
     $this->{cache} = $Tenjin::Engine::CACHE if ! defined($this->{cache}) || $this->{cache} == 1;
     $this->{init_opts_for_template} = $options;
     $this->{_templates} = {};
-    $this->{prefix} = '' if (! $this->{prefix});
-    $this->{postfix} = '' if (! $this->{postfix});
-    $this->{store} = $Tenjin::Engine::STORE unless $this->{store};
-    $this->{finder} = $Tenjin::Engine::FINDER unless $this->{finder};
+    $this->{prefix}  = '' unless $this->{prefix};
+    $this->{postfix} = '' unless $this->{postfix};
+    $this->{store}   = $Tenjin::Engine::STORE  unless $this->{store};
+    $this->{finder}  = $Tenjin::Engine::FINDER unless $this->{finder};
     return bless($this, $class);
 }
 
@@ -1570,8 +1567,7 @@ sub new {
     my ($class, $options) = @_;
     $options->{templateclass} ||= 'Tenjin::SafeTemplate';
     $options->{preprocessorclass} ||= 'Tenjin::SafePreprocessor';
-    my $this = Tenjin::Engine->new($options);
-    return bless($this, $class);
+    return $class->SUPER::new($options);
 }
 
 
