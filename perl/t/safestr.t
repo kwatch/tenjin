@@ -11,7 +11,7 @@ BEGIN {
 
 use strict;
 use Data::Dumper;
-use Test::Simple tests => 25;
+use Test::Simple tests => 28;
 use Specofit;
 use Tenjin;
 $Tenjin::USE_STRICT = 1;
@@ -44,17 +44,27 @@ spec_of "Tenjin::SafeStr#value", sub {
 
 spec_of "Tenjin::SafeStr::safe_str", sub {
 
+    it "returns Tenjin::SafeStr object", sub {
+        my $obj = Tenjin::SafeStr::safe_str('<A&B>');
+        should_eq(ref($obj), 'Tenjin::SafeStr');
+    };
+
+};
+
+
+spec_of "Tenjin::SafeStr::to_safe_str", sub {
+
     it "returns Tenjin::SafeStr object if arg is normal string", sub {
         my $obj = Tenjin::SafeStr::safe_str('<A&B>');
         should_eq(ref($obj), 'Tenjin::SafeStr');
     };
 
-    #it "returns as-is arg if arg is Tenjin::SafeStr object", sub {
-    #    my $obj = Tenjin::SafeStr::safe_str('<A&B>');
-    #    my $obj2 = Tenjin::SafeStr::safe_str($obj);
-    #    should_eq(ref($obj2), 'Tenjin::SafeStr');
-    #    should_eq($obj2->{value}, '<A&B>');
-    #};
+    it "returns as-is arg if arg is Tenjin::SafeStr object", sub {
+        my $obj = Tenjin::SafeStr::safe_str('<A&B>');
+        my $obj2 = Tenjin::SafeStr::safe_str($obj);
+        should_eq(ref($obj2), 'Tenjin::SafeStr');
+        should_eq($obj2->{value}, '<A&B>');
+    };
 
 };
 
