@@ -10,11 +10,12 @@ BEGIN {
 }
 
 use strict;
-use Tenjin;
-use Data::Dumper tests => 50;
+use Data::Dumper;
+use Test::More tests => 50;
 use Specofit;
 use YAML::Syck;
 use File::Path;
+use Tenjin;
 
 my $s = Tenjin::Util::read_file('test_engine.yaml');
 $s = Tenjin::Util::expand_tabs($s);

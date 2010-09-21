@@ -1,0 +1,309 @@
+# -*- coding: utf-8 -*-
+##
+##
+##
+
+
+###
+- name:         convert1
+  desc:         basic
+  input: |
+
+  source: &convert1_source |6
+
+  expected: &convert1_expected |
+
+
+###
+- name:         convert2
+  desc:         basic2
+  input: |
+
+  source:  *convert1_source
+
+  expected:  *convert1_expected
+
+
+###
+- name:         convert3
+  desc:         basic3
+  input: |
+
+  source: |6
+
+  expected:  *convert1_expected
+
+
+###
+- name:         convert4
+  desc:         mixing styles
+  input: |
+
+  source: |6
+
+  expected: |
+
+###
+- name:         convert5
+  desc:         line starting with embedded expression
+  input: |
+
+  source: |6
+
+  expected: |6
+
+###
+- name:         convert6
+  desc:         lspaces
+  testopts:  { spacechar: '^' }
+  input: |6
+
+  source: |6
+
+  expected: |
+
+
+###
+- name:         quotation1
+  desc:         single quotation
+  input: &quotation1_input |
+
+  source: |6
+
+  expected: *quotation1_input
+
+
+###
+- name:         newline1
+  desc:         'newline is \r\n'
+  testopts:     { crchar: '^' }
+  input: |6
+
+  source: |6
+
+  expected: |
+
+
+###
+- name:         newline2
+  desc:         'newline is \r\n'
+  testopts:     { crchar: '^' }
+  input: |
+
+  source: |6
+
+  expected: |
+
+
+###
+- name:         option_initbuf1
+  desc:         initbuf option with input which starts with text
+  options: { preamble: true, postamble: true }
+  #options: { initbuf: true }
+  input: |
+
+  source: |
+
+
+###
+- name:         option_initbuf2
+  desc:         initbuf option with input which starts with"python" code
+  options: { preamble: true, postamble: true }
+  #options: { initbuf: true }
+  input: |
+
+  source: |
+
+
+###
+- name:         option_escapefunc1
+  desc:         escapefunc option
+
+  input: |
+
+  source: |6
+
+
+###
+- name:         option_tostrfunc1
+  desc:         tostrfunc option
+  options: { tostrfunc: str }
+  input: |
+        #{value}
+        ${value}
+  source: |6
+
+
+###
+- name:         option_indent1
+  desc:         indent  option
+  options: { indent: 2 }
+  disabled:     true
+
+  input: |
+
+  source: |
+
+
+###
+- name:         option_encoding1
+  desc:         encoding option
+  disabled:     true
+  options: { encoding: utf-8 }
+  testopts: { encoding: utf-8 }
+  input: |
+
+  source: |
+
+  context: { user: 世界 }
+  expected: |
+        こんにちは世界!
+        <ul>
+          <li>日</li>
+          <li>本</li>
+          <li>語</li>
+          <li></li>
+        </ul>
+
+###
+- name:         syntaxerr1
+  desc:         syntax error
+  filename:     syntaxerr1.tenjin
+  disabled:     true
+  input: |
+  source: |
+
+
+###
+- name:         escape1
+  desc:         escape() function
+  input: &input_escape1 |
+
+  source: &source_escape1 |6
+
+  expected: |
+        &amp; &lt; &gt; &quot;
+
+  context:  { var: '& < > "' }
+
+
+###
+- name:         to_str1
+  desc:         to_str() function
+  disabled:     true
+  input: |
+
+  source: |6
+
+  expected: |
+
+  context:   { var: null, flag: true, flag2: false }
+
+
+##
+- name:         template_args
+  desc:         '#@ARGS'
+  input: |
+
+  source: |6
+
+  context: { name: 'world' }
+
+
+##
+- name:         arraybuffertemplate1
+  desc:         ArrayBufferTemplate class
+  disabled:     true
+  testopts:     { templateclass: 'Tenjin::ArrayBufferTemplate' }
+  input: |
+
+  source: |6
+
+  expected: |
+
+  context:   { items: ['<AAA>', 'B&B', '"CCC"'] }
+
+
+###
+- name:         preprocessor1
+  desc:         template class for preprocessor
+
+  input: |
+        <?PL my $states = { "CA" => "California", ?>
+        <?PL                "NY" => "New York", ?>
+        <?PL                "FL" => "Florida", }; ?>
+        <?pl my $chk = { $params->{state} => ' checked="checked"' }; ?>
+        <select name="state">
+          <option value="">-</option>
+        <?PL for my $code (sort(keys(%$states))) { ?>
+          <option value="[%=$code=%]"[==$chk->{[%=$code=%]}=]>[%=$states->{code}=%]</option>
+        <?PL } ?>
+        </select>
+
+  source: |6
+        my @_buf = (); my $states = { "CA" => "California",
+                    "NY" => "New York",
+                       "FL" => "Florida", };
+        push(@_buf, q`<?pl my $chk = { $params->{state} => ' checked="checked"' }; ?>
+        <select name="state">
+          <option value="">-</option>
+        `, ); for my $code (sort(keys(%$states))) {
+        push(@_buf, q`  <option value="`, escape($code), q`"[==$chk->{`, escape($code), q`}=]>`, escape($states->{code}), q`</option>
+        `, ); }
+        push(@_buf, q`</select>
+        `, ); join('', @_buf);
+
+  expected: |
+        <?pl my $chk = { $params->{state} => ' checked="checked"' }; ?>
+        <select name="state">
+          <option value="">-</option>
+          <option value="CA"[==$chk->{CA}=]></option>
+          <option value="FL"[==$chk->{FL}=]></option>
+          <option value="NY"[==$chk->{NY}=]></option>
+        </select>
+
+
+##
+- name:         preprocessor2
+  desc:         template class for preprocessor
+  input: |6
+        <?PL sub link_to { ?>
+        <?PL   my($label, $url) = @_; ?>
+        <?PL   return sprintf('<a href="%s">%s</a>', Tenjin::Util::encode_url($url), $label); ?>
+        <?PL } ?>
+        [%==link_to('<b>Create</b>', '/items/create')=%]
+        [%==link_to('"Show '._P('$item->{"name"}').'"', '/items/show/'._p('$item->{"id"}'))=%]
+        [%==escape('<b>'._P('$item->{"name"}').'</b>')=%]
+
+  source: |6
+        my @_buf = (); sub link_to {
+          my($label, $url) = @_;
+          return sprintf('<a href="%s">%s</a>', Tenjin::Util::encode_url($url), $label);
+        }
+        push(@_buf, Tenjin::Util::_decode_params(link_to('<b>Create</b>', '/items/create')), q`
+        `, Tenjin::Util::_decode_params(link_to('"Show '._P('$item->{"name"}').'"', '/items/show/'._p('$item->{"id"}'))), q`
+        `, Tenjin::Util::_decode_params(escape('<b>'._P('$item->{"name"}').'</b>')), q`
+        `, ); join('', @_buf);
+
+  expected: |6
+        <a href="/items/create"><b>Create</b></a>
+        <a href="/items/show/[==$item->{"id"}=]">"Show [=$item->{"name"}=]"</a>
+        &lt;b&gt;[=$item->{"name"}=]&lt;/b&gt;
+
+  context: { item: { id: 101, name: foo } }
+#  expected: |
+#       <a href="/items/create"><b>Create</b></a>
+#       <a href="/items/show/#{item['id']}">"Show ${item['name']}"</a>
+#       &lt;b&gt;${item['name']}&lt;/b&gt;
+
+
+##
+- name:         smarttrim1
+  desc:         smarttrim option
+  disabled:     true
+  options:      { smarttrim: true }
+  input: |6
+
+  source: |6
+
+  expected: |-
