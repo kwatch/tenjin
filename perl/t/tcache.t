@@ -11,7 +11,7 @@ BEGIN {
 
 use strict;
 use Data::Dumper;
-use Test::More tests => 13;
+use Test::More tests => 16;
 use Specofit;
 use Tenjin;
 $Tenjin::USE_STRICT = 1;
@@ -55,7 +55,7 @@ spec_of "Tenjin::FileBaseTemplateCache", sub {
                              . "\n"
                              . $template->{script};
                 ok -f $cachepath;
-                should_eq read_file($cachepath), $expected;
+                is read_file($cachepath), $expected;
             };
 
             it "set cache file's mtime to template timestamp.", sub {
@@ -101,10 +101,22 @@ spec_of "Tenjin::FileBaseTemplateCache", sub {
                 my $ret = $tcache->load($cachepath);
                 isa_ok $ret, 'HASH';
                 is $ret->{script}, $template->{script};
-                it "get template args data from cached data.", sub {
-                    is(''.@{$ret->{args}}, ''.@{$template->{args}});
-                };
                 is $ret->{timestamp}, $template->{timestamp};
+                it "get template args data from cached data.", sub {
+                    is join('|', @{$ret->{args}}), join('|', @{$template->{args}});
+                };
+                it "set undef instead of empty array if '#args' not found in cache.", sub {
+                    ## '#args: ' not found
+                    write_file($cachepath, "#pltenjin: 0.0.0\n#timestamp: 123\n\nABC");
+                    $ret = $tcache->load($cachepath);
+                    ok ! defined($ret->{args});
+                    ## '#args: ' found but empty
+                    write_file($cachepath, "#pltenjin: 0.0.0\n#args: \n\nABC");
+                    $ret = $tcache->load($cachepath);
+                    isa_ok $ret->{args}, 'ARRAY';
+                    my $len = @{$ret->{args}};
+                    is $len, 0;
+                }
             };
 
             it "return script, template args, and mtime of cache file.", sub {};

@@ -1062,15 +1062,19 @@ sub load {
     }
     #: load template data from cache file.
     my $str = Tenjin::Util::read_file($cachepath);
-    my @args = ();
+    my $args = undef;
     my ($header, $script) = split(/\n\n/, $str, 2);
     for my $line (split(/\n/, $header)) {
         my ($k, $v) = split(/: */, $line, 2);
         #: get template args data from cached data.
-        @args = split(/,/, $v) if $k eq '#args';
+        #: set undef instead of empty array if '#args' not found in cache.
+        if ($k eq '#args') {
+            my @args = split(/,/, $v);
+            $args = \@args;
+        }
     }
     #: return script, template args, and mtime of cache file.
-    return {script=>$script, args=>\@args, timestamp=>$mtime};
+    return {script=>$script, args=>$args, timestamp=>$mtime};
 }
 
 
