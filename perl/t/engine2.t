@@ -70,7 +70,11 @@ END
 $SCRIPT1 =~ s/^\t//mg;
 
 
-my $CACHE1 = "#\@ARGS title,items\n" . $SCRIPT1;
+my $CACHE1 = "#pltenjin: $Tenjin::VERSION\n"
+           . "#args: title,items\n"
+           . "#timestam: " . time() . "\n"
+           . "\n"
+           . $SCRIPT1;
 
 
 my $OUTPUT1 = <<'END';
@@ -196,7 +200,11 @@ spec_of "Tenjin::Engine::render()", sub {
             should_eq(repr($t->{args}), '["title","items"]');
         };
         and_it "stores #\@ARGS into cache file", sub {
-            my $expected = "#\@ARGS title,items\n" . $SCRIPT1;
+            my $expected = "#pltenjin: $Tenjin::VERSION\n"
+                         . "#args: title,items\n"
+                         . "#timestamp: " . (stat "$FILENAME.cache")[9] . "\n"
+                         . "\n"
+                         . $SCRIPT1;
             should_eq(read_file("$FILENAME.cache"), $expected);
         };
         and_it "compiles template automatically", sub {

@@ -49,9 +49,13 @@ spec_of "Tenjin::FileBaseTemplateCache", sub {
             it "save template script and args into cache file.", sub {
                 ok ! -f $cachepath;
                 $tcache->save($cachepath, $template);
-                my $expected = "\#\@ARGS name,age\n" . $template->{script};
+                my $expected = "#pltenjin: $Tenjin::VERSION\n"
+                             . "#args: name,age\n"
+                             . "#timestamp: " . $template->{timestamp} . "\n"
+                             . "\n"
+                             . $template->{script};
                 ok -f $cachepath;
-                is read_file($cachepath), $expected;
+                should_eq read_file($cachepath), $expected;
             };
 
             it "set cache file's mtime to template timestamp.", sub {

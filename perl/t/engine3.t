@@ -321,7 +321,10 @@ spec_of "Tenjin::Engine", sub {
                                     .'<<` . ($y) . q`]>>`;  $_buf;'."\n";
                 }
                 my $cdata = read_file($cpath);
-                is $cdata, "\#\@ARGS ".$keys."\n".$t->{script};
+                my $header = "\#pltenjin: $Tenjin::VERSION\n"
+                           . "\#args: $keys\n"
+                           . "\#timestamp: " . (stat $cpath)[9] . "\n";
+                is $cdata, $header."\n".$t->{script};
             };
 
             spec "return template object.", sub { }

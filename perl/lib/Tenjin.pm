@@ -1034,14 +1034,14 @@ sub new {
 sub save {
     my ($this, $cachepath, $template) = @_;
     #: save template script and args into cache file.
-    my $cachestr = $template->{script};
-    if (defined($template->{args})) {
-        my $args = $template->{args};
-        $cachestr = "\#\@ARGS " . join(',', @$args) . "\n" . $cachestr;
-    }
-    Tenjin::Util::write_file($cachepath, $cachestr, 1);
+    my $t = $template;
+    my $header = '';
+    $header .= '#pltenjin: ' . $Tenjin::VERSION . "\n";
+    $header .= '#args: ' . join(',', @{$t->{args}}) . "\n" if $t->{args};
+    $header .= '#timestamp: ' . $t->{timestamp}  . "\n" if $t->{timestamp};
+    Tenjin::Util::write_file($cachepath, $header . "\n" . $t->{script}, 1);
     #: set cache file's mtime to template timestamp.
-    my $ts = $template->{timestamp};
+    my $ts = $t->{timestamp};
     utime($ts, $ts, $cachepath);
     $Tenjin::logger->debug("[Tenjin.pm:".__LINE__."] template cache saved (path=$cachepath)") if $Tenjin::logger;
 }
@@ -1063,14 +1063,13 @@ sub load {
     #: load template data from cache file.
     my $str = Tenjin::Util::read_file($cachepath);
     my @args = ();
-    if ($str =~ s/\A\#\@ARGS (.*)\r?\n//) {
+    my ($header, $script) = split(/\n\n/, $str, 2);
+    for my $line (split(/\n/, $header)) {
+        my ($k, $v) = split(/: */, $line, 2);
         #: get template args data from cached data.
-        my $argstr = $1;
-        $argstr =~ s/\A\s+|\s+\Z//g;
-        @args = split(',', $argstr);
+        @args = split(/,/, $v) if $k eq '#args';
     }
     #: return script, template args, and mtime of cache file.
-    my $script = $str;
     return {script=>$script, args=>\@args, timestamp=>$mtime};
 }
 
