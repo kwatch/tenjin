@@ -308,6 +308,95 @@ sub new_cycle {   ## [experimental]
 
 
 ##
+## html helpers for SafeTemplate and SafeEngine
+##
+package Tenjin::Helper::SafeHtml;
+use Exporter 'import';
+our @EXPORT = qw(checked selected disabled nl2br text2html tagattr tagattrs new_cycle);
+import Tenjin::SafeStr;
+
+
+sub import {
+    _import();
+    goto &Exporter::import;
+}
+
+
+sub _import {
+    *Tenjin::Context::checked   = *checked;
+    *Tenjin::Context::selected  = *selected;
+    *Tenjin::Context::disabled  = *disabled;
+    *Tenjin::Context::nl2br     = *nl2br;
+    *Tenjin::Context::text2html = *text2html;
+    *Tenjin::Context::tagattr   = *tagattr;
+    *Tenjin::Context::tagattrs  = *tagattrs;
+    *Tenjin::Context::new_cycle = *new_cycle;
+}
+
+
+my $_empty    = safe_str('');
+my $_checked  = safe_str(' checked="checked"');
+my $_selected = safe_str(' selected="selected"');
+my $_disabled = safe_str(' disabled="disabled"');
+
+
+sub checked {
+    $_[0] ? $_checked : $_empty;  # return
+}
+
+
+sub selected {
+    $_[0] ? $_selected : $_empty;  # return
+}
+
+
+sub disabled {
+    $_[0] ? $_disabled : $_empty;  # return
+}
+
+
+sub nl2br {
+    my $text = to_str($_[0]);
+    $text =~ s/(\r?\n)/<br \/>$1/g;
+    safe_str($text);  # return
+}
+
+
+sub text2html {
+    my $text = safe_escape($_[0]);
+    $text =~ s/(\r?\n)/<br \/>$1/g;
+    safe_str($text);  # return
+}
+
+
+sub tagattr {   ## [experimental]
+    my ($name, $expr, $value) = @_;
+    return safe_str('') unless $expr;
+    $value = $expr unless defined $value;
+    safe_str(" $name=\"".safe_escape($value)."\"");   # return
+}
+
+
+sub tagattrs {   ## [experimental]
+    my (%attrs) = @_;
+    my $s = "";
+    while (my ($k, $v) = each %attrs) {
+        $s .= " $k=\"".safe_escape($v)."\"" if defined $v;
+    }
+    safe_str($s);  # return
+}
+
+
+sub new_cycle {   ## [experimental]
+    my @items = map { safe_str(safe_escape($_)) } @_;
+    my $len = @items;
+    my $i = 0;
+    sub { $items[$i++ % $len] };  # return
+}
+
+
+
+##
 ## base colass of context object
 ##
 package Tenjin::BaseContext;
