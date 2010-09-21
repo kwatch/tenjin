@@ -23,8 +23,10 @@
 ##
 
 
+use strict;
+
+
 package Tenjin;
-#use strict;
 
 our $USE_STRICT     = undef;
 our $BYPASS_TAINT   = 1;          # unset if you like taint mode
@@ -1309,7 +1311,6 @@ sub read {    # returns file content and file mtime
 ##   print $engine->render('example.plhtml', $context);
 ##
 package Tenjin::Engine;
-#use strict;
 
 
 our $TIMESTAMP_INTERVAL = 1;
