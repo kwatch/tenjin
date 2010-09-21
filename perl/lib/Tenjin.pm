@@ -121,8 +121,8 @@ sub _decode_params {
     $_ = $s;
     s/%3C%60%23(.*?)%23%60%3E/'[=='.Tenjin::Helper::Html::decode_url($1).'=]'/ge;
     s/%3C%60%24(.*?)%24%60%3E/'[='.Tenjin::Helper::Html::decode_url($1).'=]'/ge;
-    s/&lt;`\#(.*?)\#`&gt;/'[=='.Tenjin::Helper::Html::unescape_xml($1).'=]'/ge;
-    s/&lt;`\$(.*?)\$`&gt;/'[='.Tenjin::Helper::Html::unescape_xml($1).'=]'/ge;
+    s/&lt;`\#(.*?)\#`&gt;/'[=='.Tenjin::Helper::Html::unescape_html($1).'=]'/ge;
+    s/&lt;`\$(.*?)\$`&gt;/'[='.Tenjin::Helper::Html::unescape_html($1).'=]'/ge;
     s/<`\#(.*?)\#`>/[==$1=]/g;
     s/<`\$(.*?)\$`>/[=$1=]/g;
     return $_;
@@ -188,7 +188,8 @@ sub to_str {
 
 
 sub safe_escape {
-    is_safe_str($_[0]) ? $_[0]->{value} : escape_xml($_[0]);  # return
+    #is_safe_str($_[0]) ? $_[0]->{value} : escape($_[0]);  # return
+    is_safe_str($_[0]) ? $_[0]->{value} : escape_html($_[0]);  # return
 }
 
 
@@ -198,7 +199,7 @@ sub safe_escape {
 ##
 package Tenjin::Helper::Html;
 use Exporter 'import';
-our @EXPORT = qw(escape_xml unescape_xml encode_url decode_url
+our @EXPORT = qw(escape_html unescape_html escape_xml unescape_xml encode_url decode_url
                  checked selected disabled nl2br text2html tagattr tagattrs nv new_cycle);
 
 
@@ -206,7 +207,7 @@ our %ESCAPE_HTML = ( '&'=>'&amp;', '<'=>'&lt;', '>'=>'&gt;', '"'=>'&quot;', "'"=
 %Tenjin::_H = %ESCAPE_HTML;
 
 
-sub escape_xml {
+sub escape_html {
     #my ($s) = @_; $s =~ s/[&<>"]/$ESCAPE_HTML{$&}/ge; return $s;       # 7.63
     #my ($s) = @_; $s =~ s/[&<>"]/$ESCAPE_HTML{$&}/ge; $s;              # 7.48
     #my $s = shift; $s =~ s/[&<>"]/$ESCAPE_HTML{$&}/ge; $s;             # 7.44
@@ -229,18 +230,22 @@ sub escape_xml {
 
 }
 
-*Tenjin::Helper::Safe::escape_xml = *escape_xml;
+*Tenjin::Helper::Safe::escape_html = *escape_html;
 
 
 our %UNESCAPE_HTML = ('lt'=>'<', 'gt'=>'>', 'amp'=>'&', 'quot'=>'"', '#039'=>"'");
 
 
-sub unescape_xml {
+sub unescape_html {
     my $s = $_[0];
     $s =~ tr/+/ /;
     $s =~ s/&(lt|gt|amp|quot|#039);/$UNESCAPE_HTML{$1}/ge;
     $s;  # returns
 }
+
+
+*escape_xml   = *escape_html;        # for backward compatibility
+*unescape_xml = *unescape_html;      # for backward compatibility
 
 
 sub encode_url {
@@ -276,7 +281,7 @@ sub disabled {
 
 sub nl2br {
     my $text = $_[0];
-    #$text = Tenjin::Helper::Html::escape_xml($text);
+    #$text = Tenjin::Helper::Html::escape_html($text);
     $text =~ s/(\r?\n)/<br \/>$1/g;
     $text;  # returns
 }
@@ -284,7 +289,7 @@ sub nl2br {
 
 sub text2html {
     my $text = $_[0];
-    $text = Tenjin::Helper::Html::escape_xml($text);
+    $text = Tenjin::Helper::Html::escape_html($text);
     $text =~ s/(\r?\n)/<br \/>$1/g;
     $text;  # returns
 }
@@ -294,7 +299,7 @@ sub tagattr {   ## [experimental]
     my ($name, $expr, $value) = @_;
     return '' unless $expr;
     $value = $expr unless defined $value;
-    " $name=\"".escape_xml($value)."\"";   # returns
+    " $name=\"".escape_html($value)."\"";   # returns
 }
 
 
@@ -302,7 +307,7 @@ sub tagattrs {   ## [experimental]
     my (%attrs) = @_;
     my $s = "";
     while (my ($k, $v) = each %attrs) {
-        $s .= " $k=\"".escape_xml($v)."\"" if defined $v;
+        $s .= " $k=\"".escape_html($v)."\"" if defined $v;
     }
     $s;  # returns
 }
@@ -312,7 +317,7 @@ sub tagattrs {   ## [experimental]
 ##   nv('pair', 'Haru&Kyon')  #=> 'name="pair" value="Haru&amp;Kyon"'
 sub nv {   ## [experimental]
     my ($name, $value) = @_;
-    'name="'.$name.'" value="'.escape_xml($value).'"';  # return
+    'name="'.$name.'" value="'.escape_html($value).'"';  # return
 }
 
 

@@ -33,27 +33,27 @@ after_each {
 spec_of "Tenjin::Helper::Html", sub {
 
 
-    spec_of "::escape_xml()", sub {
+    spec_of "::escape_html()", sub {
 
         it "converts html special chars into html entity", sub {
-            is escape_xml('<>&"'), '&lt;&gt;&amp;&quot;';
+            is escape_html('<>&"'), '&lt;&gt;&amp;&quot;';
         };
 
         it "doesn't convert single quote", sub {
-            is escape_xml("'"), "'";
+            is escape_html("'"), "'";
         };
 
     };
 
 
-    spec_of "::unescape_xml()", sub {
+    spec_of "::unescape_html()", sub {
 
         it "converts html entity to normal character", sub {
-            is unescape_xml('&lt;&gt;&amp;&quot;'), '<>&"';
+            is unescape_html('&lt;&gt;&amp;&quot;'), '<>&"';
         };
 
         it "converts &#039 into single quote", sub {
-            is unescape_xml('&#039;'), "'";
+            is unescape_html('&#039;'), "'";
         };
 
     };
