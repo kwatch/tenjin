@@ -44,7 +44,7 @@ sub invoke_before_each { return $_before_each->(@_); }
 sub invoke_after_each  { return $_after_each->(@_);  }
 
 
-our $current_target;
+#our $current_target;
 
 sub _spec_of {
     my ($envkey, $target, @args) = @_;
@@ -52,11 +52,11 @@ sub _spec_of {
     my $closure = pop @args;
     local ($_before_all,  $_after_all)  = ($_before_all,  $_after_all);
     local ($_before_each, $_after_each) = ($_before_each, $_after_each);
-    $current_target = $target;
+    #$current_target = $target;
     $_before_all->() if $_before_all;
     $closure->($target);
     $_after_all->()  if $_after_all;
-    $current_target = undef;
+    #$current_target = undef;
 }
 
 sub spec_of {
@@ -75,17 +75,17 @@ sub scenario {
     return _spec_of('SCENARIO', @_);
 }
 
-our $current_desc;
+#our $current_desc;
 
 sub _it {
     my ($envkey, $desc, @args) = @_;
     return if $ENV{$envkey} && $desc ne $ENV{$envkey};
     my $closure = pop @args;
-    $current_desc = $desc;
+    #$current_desc = $desc;
     $_before_each->(@args) if $_before_each;
     $closure->();
     $_after_each->(@args)  if $_after_each;
-    $current_desc = undef;
+    #$current_desc = undef;
 }
 
 sub it {
