@@ -20,6 +20,8 @@ spec_of 'Tenjn', sub {
 
 
     it "has version number", sub {
+        eval 'use Tenjin;';
+        ! $@  or die $@;
         ok defined($Tenjin::VERSION);
         like $Tenjin::VERSION, qr`^\d+\.\d+\.\d+$`;   #`
     };
@@ -29,8 +31,10 @@ spec_of 'Tenjn', sub {
 
         it "sets \$Tenjin::USE_STRICT to 1 if strict=>1 is specified", sub {
             my $bkup = $Tenjin::USE_STRICT;
-            use Tenjin strict => 1;
-            is $Tenjin::USE_STRICT, 1;
+            $Tenjin::USE_STRICT = undef;
+            eval 'use Tenjin strict => 2;';
+            ! $@  or die $@;
+            is $Tenjin::USE_STRICT, 2;
             $Tenjin::USE_STRICT = $bkup;
         };
 
