@@ -493,23 +493,9 @@ eval $defun;
 
 *_p           = *Tenjin::Util::_p;
 *_P           = *Tenjin::Util::_P;
-*safe_str     = *Tenjin::SafeStr::safe_str;
-*to_str       = *Tenjin::SafeStr::to_str;
-*is_safe_str  = *Tenjin::SafeStr::is_safe_str;
-*safe_escape  = *Tenjin::SafeStr::safe_escape;
-*escape       = *Tenjin::Helper::Html::escape_xml;
-*escape_xml   = *Tenjin::Helper::Html::escape_xml;
-*unescape_xml = *Tenjin::Helper::Html::unescape_xml;
-*encode_url   = *Tenjin::Helper::Html::encode_url;
-*decode_url   = *Tenjin::Helper::Html::decode_url;
-*checked      = *Tenjin::Helper::Html::checked;
-*selected     = *Tenjin::Helper::Html::selected;
-*disabled     = *Tenjin::Helper::Html::disabled;
-*nl2br        = *Tenjin::Helper::Html::nl2br;
-*text2html    = *Tenjin::Helper::Html::text2html;
-*tagattr      = *Tenjin::Helper::Html::tagattr;
-*tagattrs     = *Tenjin::Helper::Html::tagattrs;
-*new_cycle    = *Tenjin::Helper::Html::new_cycle;
+
+import Tenjin::Helper::Safe;
+import Tenjin::Helper::Html;
 
 
 
