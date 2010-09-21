@@ -153,6 +153,12 @@ sub value {
 ##
 ## helpers for SafeStr
 ##
+##  argument    -> return       no escape           do escape
+##  -------------------------------------------------------------------------
+##  str         -> SafeStr      safe_str($x)        safe_str(escape_html($x))
+##  str/SafeStr -> SafeStr      to_safe_str($x)     safe_str(safe_escape($x))
+##  str/SafeStr -> str          to_str($x)          safe_escape($x)
+##
 package Tenjin::Helper::Safe;
 use Exporter 'import';
 our @EXPORT = qw(safe_str is_safe_str to_safe_str to_str safe_escape);
