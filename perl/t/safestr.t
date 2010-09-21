@@ -55,13 +55,13 @@ spec_of "Tenjin::SafeStr::safe_str", sub {
 spec_of "Tenjin::SafeStr::to_safe_str", sub {
 
     it "returns Tenjin::SafeStr object if arg is normal string", sub {
-        my $obj = Tenjin::SafeStr::safe_str('<A&B>');
+        my $obj = Tenjin::SafeStr::to_safe_str('<A&B>');
         should_eq(ref($obj), 'Tenjin::SafeStr');
     };
 
     it "returns as-is arg if arg is Tenjin::SafeStr object", sub {
-        my $obj = Tenjin::SafeStr::safe_str('<A&B>');
-        my $obj2 = Tenjin::SafeStr::safe_str($obj);
+        my $obj = Tenjin::SafeStr::to_safe_str('<A&B>');
+        my $obj2 = Tenjin::SafeStr::to_safe_str($obj);
         should_eq(ref($obj2), 'Tenjin::SafeStr');
         should_eq($obj2->{value}, '<A&B>');
     };
