@@ -662,7 +662,7 @@ sub parse_stmt {
     my $pos = 0;
     my $pat = $this->stmt_pattern();
     while ($input =~ /$pat/g) {
-        my ($pi, $lspace, $mspace, $stmt, $rspace) = ($1, $2, $3, $4, $5);
+        my ($pi, $lspace, $mspace, $stmt, $rspace) = $this->capture_stmt($1, $2, $3, $4, $5, $6, $7, $8, $9);
         my $start = $-[0];
         my $text = substr($input, $pos, $start - $pos);
         $pos = $start + length($pi);
@@ -673,6 +673,11 @@ sub parse_stmt {
     }
     my $rest = $pos == 0 ? $input : substr($input, $pos);
     $this->parse_expr($bufref, $rest) if $rest;
+}
+
+
+sub capture_stmt {
+    return @_[1], @_[2], @_[3], @_[4], @_[5];
 }
 
 
