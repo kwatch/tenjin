@@ -722,8 +722,8 @@ sub expr_pattern {
 }
 
 
-## ex. get_expr_and_escapeflag('=', '$item->{name}', '')  => 1, '$item->{name}', 0
-sub get_expr_and_escapeflag {
+## ex. capture_expr('=', '$item->{name}', '')  => 1, '$item->{name}', 0
+sub capture_expr {
     my ($this, $m1, $m2, $m3) = @_;
     my ($not_escape, $expr, $delete_newline) = ($m1, $m2, $m3);
     return $expr, $not_escape eq '', $delete_newline eq '=',
@@ -738,7 +738,7 @@ sub parse_expr {
     while ($input =~ /$pat/g) {
         my $start = $-[0];
         my $text = substr($input, $pos, $start - $pos);
-        my ($expr, $flag_escape, $delete_newline) = $this->get_expr_and_escapeflag($1, $2, $3);
+        my ($expr, $flag_escape, $delete_newline) = $this->capture_expr($1, $2, $3);
         $pos = $start + length($&);
         $this->add_text($bufref, $text) if $text;
         $this->add_expr($bufref, $expr, $flag_escape) if $expr;
@@ -857,7 +857,7 @@ sub escaped_expr {
 }
 
 
-sub get_expr_and_escapeflag {
+sub capture_expr {
     my ($this, $m1, $m2, $m3) = @_;
     my ($not_escape, $expr, $delete_newline) = ($m1, $m2, $m3);
     #return $expr, $not_escape eq '', $delete_newline eq '=',
@@ -928,7 +928,7 @@ sub escaped_expr {
 }
 
 
-sub get_expr_and_escapeflag {
+sub capture_expr {
     my ($this, $m1, $m2, $m3) = @_;
     my ($not_escape, $expr, $delete_newline) = ($m1, $m2, $m3);
     #return $expr, $not_escape eq '', $delete_newline eq '=',
