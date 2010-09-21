@@ -132,8 +132,6 @@ sub _decode_params {
 ## safe string
 ##
 package Tenjin::SafeStr;
-use Exporter 'import';
-our @EXPORT = qw(safe_str to_safe_str to_str is_safe_str safe_escape);
 
 
 sub new {
@@ -150,13 +148,27 @@ sub value {
 }
 
 
+
+##
+## helpers for SafeStr
+##
+package Tenjin::Helper::Safe;
+use Exporter 'import';
+our @EXPORT = qw(safe_str is_safe_str to_safe_str to_str safe_escape);
+
+
 sub safe_str {
     Tenjin::SafeStr->new($_[0]);    # return
 }
 
 
+sub is_safe_str {
+    ref($_[0]) eq 'Tenjin::SafeStr';  # return
+}
+
+
 sub to_safe_str {
-    #is_safe_str($_[0]) ? $_[0] : Tenjin::SafeStr->new($_[0]);  # return
+    #is_safe_str($_[0]) ? $_[0] : safe_str($_[0]);  # return
     ref($_[0]) eq 'Tenjin::SafeStr' ? $_[0] : Tenjin::SafeStr->new($_[0]);  # return
 }
 
@@ -164,11 +176,6 @@ sub to_safe_str {
 sub to_str {
     #is_safe_str($_[0]) ? $_[0]->{value} : $_[0];  # return
     ref($_[0]) eq 'Tenjin::SafeStr' ? $_[0]->{value} : $_[0];  # return
-}
-
-
-sub is_safe_str {
-    ref($_[0]) eq 'Tenjin::SafeStr';  # return
 }
 
 
@@ -213,7 +220,7 @@ sub escape_xml {
 
 }
 
-*Tenjin::SafeStr::escape_xml = *escape_xml;
+*Tenjin::Helper::Safe::escape_xml = *escape_xml;
 
 
 our %UNESCAPE_HTML = ('lt'=>'<', 'gt'=>'>', 'amp'=>'&', 'quot'=>'"', '#039'=>"'");
@@ -313,7 +320,7 @@ sub new_cycle {   ## [experimental]
 package Tenjin::Helper::SafeHtml;
 use Exporter 'import';
 our @EXPORT = qw(checked selected disabled nl2br text2html tagattr tagattrs new_cycle);
-import Tenjin::SafeStr;
+import Tenjin::Helper::Safe;
 
 
 sub import {

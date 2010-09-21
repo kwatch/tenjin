@@ -42,26 +42,29 @@ spec_of "Tenjin::SafeStr#value", sub {
 };
 
 
-spec_of "Tenjin::SafeStr::safe_str", sub {
+import Tenjin::Helper::Safe;
+
+
+spec_of "Tenjin::Helper::Safe::safe_str", sub {
 
     it "returns Tenjin::SafeStr object", sub {
-        my $obj = Tenjin::SafeStr::safe_str('<A&B>');
+        my $obj = safe_str('<A&B>');
         should_eq(ref($obj), 'Tenjin::SafeStr');
     };
 
 };
 
 
-spec_of "Tenjin::SafeStr::to_safe_str", sub {
+spec_of "Tenjin::Helper::Safe::to_safe_str", sub {
 
     it "returns Tenjin::SafeStr object if arg is normal string", sub {
-        my $obj = Tenjin::SafeStr::to_safe_str('<A&B>');
+        my $obj = to_safe_str('<A&B>');
         should_eq(ref($obj), 'Tenjin::SafeStr');
     };
 
     it "returns as-is arg if arg is Tenjin::SafeStr object", sub {
-        my $obj = Tenjin::SafeStr::to_safe_str('<A&B>');
-        my $obj2 = Tenjin::SafeStr::to_safe_str($obj);
+        my $obj = to_safe_str('<A&B>');
+        my $obj2 = to_safe_str($obj);
         should_eq(ref($obj2), 'Tenjin::SafeStr');
         should_eq($obj2->{value}, '<A&B>');
     };
@@ -69,43 +72,43 @@ spec_of "Tenjin::SafeStr::to_safe_str", sub {
 };
 
 
-spec_of "Tenjin::SafeStr::to_str", sub {
+spec_of "Tenjin::Helper::Safe::to_str", sub {
 
     it "returns value-string if arg is Tenjin::SafeStr object", sub {
-        my $obj = Tenjin::SafeStr::safe_str('<A&B>');
-        should_eq(Tenjin::SafeStr::to_str($obj), '<A&B>');
+        my $obj = safe_str('<A&B>');
+        should_eq(to_str($obj), '<A&B>');
     };
 
     it "returns as-is arg if arg is a string", sub {
-        should_eq(Tenjin::SafeStr::to_str('<A&B>'), '<A&B>');
+        should_eq(to_str('<A&B>'), '<A&B>');
     };
 
 };
 
 
-spec_of "Tenjin::SafeStr::is_safe_str", sub {
+spec_of "Tenjin::Helper::Safe::is_safe_str", sub {
 
     it "returns 1 if arg is Tenjin::SafeStr object", sub {
-        my $obj = Tenjin::SafeStr::safe_str('<A&B>');
-        should_eq(Tenjin::SafeStr::is_safe_str($obj), 1);
+        my $obj = safe_str('<A&B>');
+        should_eq(is_safe_str($obj), 1);
     };
 
     it "returns undef if arg is not Tenjin::SafeStr object", sub {
-        should_eq(Tenjin::SafeStr::is_safe_str('<A&B>'), undef);
+        should_eq(is_safe_str('<A&B>'), undef);
     };
 
 };
 
 
-spec_of "Tenjin::SafeStr::safe_escape", sub {
+spec_of "Tenjin::Helper::Safe::safe_escape", sub {
 
     it "returns unescaped str if arg is Tenjin::SafeStr", sub {
-        my $obj = Tenjin::SafeStr::safe_str('<A&B>');
-        should_eq(Tenjin::SafeStr::safe_escape($obj), '<A&B>');
+        my $obj = safe_str('<A&B>');
+        should_eq(safe_escape($obj), '<A&B>');
     };
 
     it "returns escaped str if arg is normal string", sub {
-        should_eq(Tenjin::SafeStr::safe_escape('<A&B>'), '&lt;A&amp;B&gt;');
+        should_eq(safe_escape('<A&B>'), '&lt;A&amp;B&gt;');
     };
 
 };
