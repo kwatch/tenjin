@@ -11,7 +11,7 @@ BEGIN {
 
 use strict;
 use Data::Dumper;
-use Test::More tests => 3;
+use Test::More tests => 4;
 use Specofit;
 
 
@@ -43,8 +43,16 @@ spec_of 'Tenjn', sub {
         #    is $Tenjin::USE_STRICT, 0;
         #};
 
+        it "sets \$Tenjin::WARNING to 1 if warning=>1 is passed", sub {
+            my $bkup = $Tenjin::WARNING;
+            $Tenjin::WARNING = undef;
+            eval 'use Tenjin warning => 3;';
+            ! $@  or die $@;
+            is $Tenjin::WARNING, 3;
+            $Tenjin::WARNING = $bkup;
+        };
+
     };
 
 
 };
-

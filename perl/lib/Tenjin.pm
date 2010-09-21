@@ -37,7 +37,8 @@ our $logger         = undef;
 
 sub import {
     my ($klass, %opts) = @_;
-    $USE_STRICT = $opts{strict} if defined $opts{strict};
+    $USE_STRICT = $opts{strict}  if defined $opts{strict};
+    $WARNING    = $opts{warning} if defined $opts{warning};
 }
 
 our %_H = ( '&'=>'&amp;', '<'=>'&lt;', '>'=>'&gt;', '"'=>'&quot;', "'"=>'&#039;' );
