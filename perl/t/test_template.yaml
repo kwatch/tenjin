@@ -280,9 +280,9 @@
           my($label, $url) = @_;
           return sprintf('<a href="%s">%s</a>', Tenjin::Util::encode_url($url), $label);
         }
-        push(@_buf, Tenjin::Util::_decode_params(link_to('<b>Create</b>', '/items/create')), q`
-        `, Tenjin::Util::_decode_params(link_to('"Show '._P('$item->{"name"}').'"', '/items/show/'._p('$item->{"id"}'))), q`
-        `, Tenjin::Util::_decode_params(escape('<b>'._P('$item->{"name"}').'</b>')), q`
+        push(@_buf, _decode_params(link_to('<b>Create</b>', '/items/create')), q`
+        `, _decode_params(link_to('"Show '._P('$item->{"name"}').'"', '/items/show/'._p('$item->{"id"}'))), q`
+        `, _decode_params(escape('<b>'._P('$item->{"name"}').'</b>')), q`
         `, ); join('', @_buf);
 
   expected: |6

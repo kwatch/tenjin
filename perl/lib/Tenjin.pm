@@ -108,33 +108,6 @@ sub expand_tabs {
 }
 
 
-sub _p {
-    my ($arg) = @_;
-    return "<`\#$arg\#`>"
-}
-
-
-sub _P {
-    my ($arg) = @_;
-    return "<`\$$arg\$`>"
-}
-
-
-sub _decode_params {
-    my ($s) = @_;
-    $s = '' . $s;
-    return '' unless $s;
-    $_ = $s;
-    s/%3C%60%23(.*?)%23%60%3E/'[=='.Tenjin::Helper::Html::decode_url($1).'=]'/ge;
-    s/%3C%60%24(.*?)%24%60%3E/'[='.Tenjin::Helper::Html::decode_url($1).'=]'/ge;
-    s/&lt;`\#(.*?)\#`&gt;/'[=='.Tenjin::Helper::Html::unescape_html($1).'=]'/ge;
-    s/&lt;`\$(.*?)\$`&gt;/'[='.Tenjin::Helper::Html::unescape_html($1).'=]'/ge;
-    s/<`\#(.*?)\#`>/[==$1=]/g;
-    s/<`\$(.*?)\$`>/[=$1=]/g;
-    return $_;
-}
-
-
 
 ##
 ## safe string
@@ -439,9 +412,46 @@ sub new_cycle {   ## [experimental]
 
 
 ##
+## helpers for preprocessing
+##
+package Tenjin::Helper::Preprocess;
+use Exporter 'import';
+our @EXPORT = qw(_p _P _decode_params);
+
+
+sub _p {
+    my ($arg) = @_;
+    return "<`\#$arg\#`>"
+}
+
+
+sub _P {
+    my ($arg) = @_;
+    return "<`\$$arg\$`>"
+}
+
+
+sub _decode_params {
+    my ($s) = @_;
+    $s = '' . $s;
+    return '' unless $s;
+    $_ = $s;
+    s/%3C%60%23(.*?)%23%60%3E/'[=='.Tenjin::Helper::Html::decode_url($1).'=]'/ge;
+    s/%3C%60%24(.*?)%24%60%3E/'[='.Tenjin::Helper::Html::decode_url($1).'=]'/ge;
+    s/&lt;`\#(.*?)\#`&gt;/'[=='.Tenjin::Helper::Html::unescape_html($1).'=]'/ge;
+    s/&lt;`\$(.*?)\$`&gt;/'[='.Tenjin::Helper::Html::unescape_html($1).'=]'/ge;
+    s/<`\#(.*?)\#`>/[==$1=]/g;
+    s/<`\$(.*?)\$`>/[=$1=]/g;
+    return $_;
+}
+
+
+
+##
 ## base class of context object
 ##
 package Tenjin::BaseContext;
+import Tenjin::Helpers::Preprocessing;
 
 
 sub new {
@@ -520,10 +530,6 @@ sub escape {
 }
 
 
-*_p = *Tenjin::Util::_p;
-*_P = *Tenjin::Util::_P;
-
-
 
 ##
 ## common context object class which supports safe and html helpers
@@ -534,11 +540,10 @@ our @ISA = ('Tenjin::BaseContext');
 our $defun = $Tenjin::BaseContext::defun;
 eval $defun;
 
-*_p = *Tenjin::Util::_p;
-*_P = *Tenjin::Util::_P;
 
 import Tenjin::Helper::Safe;
 import Tenjin::Helper::Html;
+import Tenjin::Helper::Preprocess;
 
 
 
@@ -940,7 +945,7 @@ sub expr_pattern {
 
 sub add_expr {
     my ($this, $bufref, $expr, $flag_escape) = @_;
-    $expr = "Tenjin::Util::_decode_params($expr)";
+    $expr = "_decode_params($expr)";
     $this->SUPER::add_expr($bufref, $expr, $flag_escape);
 }
 
@@ -964,8 +969,8 @@ sub add_expr {
 sub escaped_expr {
     my ($this, $expr) = @_;
     return $this->{escapefunc}
-           ? "(ref(\$_V = ($expr)) eq 'Tenjin::SafeStr' ? Tenjin::Util::_decode_params(\$_V->{value}) : $this->{escapefunc}(\$V)"
-           : "(ref(\$_V = ($expr)) eq 'Tenjin::SafeStr' ? Tenjin::Util::_decode_params(\$_V->{value}) : (\$_V = Tenjin::Util::_decode_params(\$_V), \$_V =~ s/[&<>\"]/\$Tenjin::_H{\$&}/ge, \$_V))";
+           ? "(ref(\$_V = ($expr)) eq 'Tenjin::SafeStr' ? _decode_params(\$_V->{value}) : $this->{escapefunc}(\$V)"
+           : "(ref(\$_V = ($expr)) eq 'Tenjin::SafeStr' ? _decode_params(\$_V->{value}) : (\$_V = _decode_params(\$_V), \$_V =~ s/[&<>\"]/\$Tenjin::_H{\$&}/ge, \$_V))";
 }
 
 
