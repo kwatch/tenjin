@@ -54,7 +54,11 @@ sub _spec_of {
     local ($_before_each, $_after_each) = ($_before_each, $_after_each);
     #$current_target = $target;
     $_before_all->() if $_before_all;
-    $closure->($target);
+    if ($closure) {
+        ref($closure) eq 'CODE'  or
+            coark("closure expected but got '".ref($closure)."'.");
+        $closure->($target);
+    }
     $_after_all->()  if $_after_all;
     #$current_target = undef;
 }
@@ -83,7 +87,11 @@ sub _it {
     my $closure = pop @args;
     #$current_desc = $desc;
     $_before_each->(@args) if $_before_each;
-    $closure->();
+    if ($closure) {
+        ref($closure) eq 'CODE'  or
+            coark("closure expected but got '".ref($closure)."'.");
+        $closure->($desc);
+    }
     $_after_each->(@args)  if $_after_each;
     #$current_desc = undef;
 }
