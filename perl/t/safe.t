@@ -175,7 +175,7 @@ END
     $INPUT2 =~ s/^\t//mg;
 
     my $SCRIPT2 = <<'END';
-	my $_buf = ""; my $_V;  $_buf .= q`<div>
+	my $v1 = $_context->{v1}; my $v2 = $_context->{v2}; my $_buf = ""; my $_V;  $_buf .= q`<div>
 	  <p>v1=` . (ref($_V = ($v1)) eq 'Tenjin::SafeStr' ? $_V->{value} : ($_V =~ s/[&<>"]/$Tenjin::_H{$&}/ge, $_V)) . q`</p>
 	  <p>v2=` . (ref($_V = ($v2)) eq 'Tenjin::SafeStr' ? $_V->{value} : ($_V =~ s/[&<>"]/$Tenjin::_H{$&}/ge, $_V)) . q`</p>
 	</div>

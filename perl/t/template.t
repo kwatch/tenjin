@@ -10,7 +10,7 @@ BEGIN {
 }
 
 use strict;
-use Test::More tests => 26;
+use Test::More tests => 30;
 use Specofit;
 use Data::Dumper;
 use Tenjin strict=>1;
@@ -371,6 +371,19 @@ spec_of "Tenjin::Template::compile()", sub {
         ok ! $t->{args};
         ok ! $t->compile();
         ok ! $t->{func};
+    };
+
+    it "guess template args from context vars if provided", sub {
+        my $t = Tenjin::Template->new();
+        $t->convert($INPUT1);
+        ! $t->{args}  or die;
+        my $script = $t->{script};
+        my $context = { items=>[], title=>undef, };
+        $t->compile($context);
+        isa_ok $t->{args}, 'ARRAY';
+        isa_ok $t->{func}, 'CODE';
+        is join(',', @{$t->{args}}), 'title,items';
+        is $t->{script}, 'my $title = $_context->{title}; my $items = $_context->{items}; ' . $script;
     };
 
     it "reports error if syntax error exists", sub {

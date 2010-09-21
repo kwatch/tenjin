@@ -476,6 +476,14 @@ sub _build_decl {
 }
 
 
+sub _build_decl2 {
+    my ($context) = @_;
+    my @keys = grep { ! /^_(?:store|engine|layout|context)$/ } keys(%$context);
+    my $decl = join('', map { "my \$$_ = \$_context->{$_}; " } @keys);
+    return $decl, \@keys;
+}
+
+
 our $defun = '# line '.(__LINE__+1).' "'.__FILE__.'"'."\n" . <<'END';
 sub evaluate {
     my ($_this, $_script, $_filename) = @_;
@@ -838,16 +846,24 @@ sub defun {   ## (experimental)
 
 ## compile $this->{script} into closure.
 sub compile {
-    my ($this) = @_;
+    use Data::Dumper;
+    my ($this, $_context) = @_;
+    if (! $this->{args}) {
+        warn "[tenjin] $this->{filename}: Template arguments not found. It is strongly recommended to specify '<?pl #\@ARGS arg1, arg2 ?> for performance and readability." if $Tenjin::WARNING;
+        #: if context vars provided, guess template args from it.
+        if ($_context) {
+            my ($decl, $keys) = Tenjin::BaseContext::_build_decl2($_context);
+            $this->{script} = $decl . $this->{script};
+            $this->{args}   = $keys;
+            $Tenjin::logger->info("[tenjin] $this->{filename}: template args are guessed as ".join(',', @$keys).".") if $Tenjin::logger;
+        }
+    }
     if ($this->{args}) {
         #my $f = $Tenjin::CONTEXT_CLASS . '::to_func';
         #my $func = $f->($this->{script});
         my $func = $Tenjin::CONTEXT_CLASS->to_func($this->{script}, $this->{filename});
         ! $@  or die "*** Error: " . $this->{filename} . "\n", $@;
         return $this->{func} = $func;
-    }
-    else {
-        warn "[Tenjin.pm] $this->{filename}: Template arguments not found. It is strongly recommended to specify '<?pl #\@ARGS arg1, arg2 ?> for performance and readability." if $Tenjin::WARNING;
     }
     return;
 }
@@ -1469,7 +1485,7 @@ sub get_template {
         $template = $this->_get_template_in_cache($filepath, $cachepath);
         if ($template) {
             $this->{_templates}->{$filename} = $template;
-            $template->compile();
+            $template->compile($_context);
             return $template;
         }
     }
@@ -1489,7 +1505,7 @@ sub get_template {
     $this->{cache}->save($cachepath, $template) if $this->{cache};
     $this->{_templates}->{$filename} = $template;
     #: return template object.
-    $template->compile();
+    $template->compile($_context);
     return $template;
 }
 
