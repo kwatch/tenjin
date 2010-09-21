@@ -11,7 +11,7 @@ BEGIN {
 
 use strict;
 use Data::Dumper;
-use Test::Simple tests => 13;
+use Test::More tests => 13;
 use Specofit;
 use Tenjin;
 $Tenjin::USE_STRICT = 1;
@@ -29,79 +29,85 @@ sub _remove_file {
 }
 
 
-spec_of "Tenjin::FileBaseTemplateCache->save", sub {
-
-    my $filepath = '_foobar.plhtml';
-    my $cachepath = $filepath . '.cache';
-
-    _remove_file $cachepath, sub {
-
-        my $tcache = Tenjin::FileBaseTemplateCache->new();
-        my $input = "<?pl \#\@ARGS name, age ?>\n<p>Hello [=\$name=]!</p>";
-        my $template = Tenjin::Template->new();
-        $template->convert($input, $filepath);
-        my $ts = time() - 30;
-        $template->{timestamp} = $ts;
-
-        it "save template script and args into cache file.", sub {
-            ok ! -f $cachepath;
-            $tcache->save($cachepath, $template);
-            my $expected = "\#\@ARGS name,age\n" . $template->{script};
-            ok -f $cachepath;
-            should_eq(read_file($cachepath), $expected);
-        };
-
-        it "set cache file's mtime to template timestamp.", sub {
-            should_eq((stat $cachepath)[9], $ts);
-        };
-
-    };
-
-};
+spec_of "Tenjin::FileBaseTemplateCache", sub {
 
 
-spec_of "Tenjin::FileBaseTemplateCache->load", sub {
+    spec_of "->save", sub {
 
-    my $filepath = '_foobar.plhtml';
-    my $cachepath = $filepath +'.cache';
+        my $filepath = '_foobar.plhtml';
+        my $cachepath = $filepath . '.cache';
 
-    _remove_file $cachepath, sub {
+        _remove_file $cachepath, sub {
 
-        my $tcache = Tenjin::FileBaseTemplateCache->new();
-        my $input = "<?pl \#\@ARGS name, age ?>\n<p>Hello [=\$name=]!</p>";
-        my $template = Tenjin::Template->new();
-        $template->convert($input, $filepath);
-        my $ts = time() - 30;
-        $template->{timestamp} = $ts;
-        $tcache->save($cachepath, $template);
+            my $tcache = Tenjin::FileBaseTemplateCache->new();
+            my $input = "<?pl \#\@ARGS name, age ?>\n<p>Hello [=\$name=]!</p>";
+            my $template = Tenjin::Template->new();
+            $template->convert($input, $filepath);
+            my $ts = time() - 30;
+            $template->{timestamp} = $ts;
 
-        it "if cache file is not found, return undef.", sub {
-            my $dummy = 'hogehoge.plhtml.cache';
-            ok ! -f $dummy;
-            should_eq($tcache->load($dummy, time()), undef);
-        };
-
-        it "if template timestamp is specified and different from that of cache file, return undef.", sub {
-            my $ret = $tcache->load($cachepath, $ts);
-            should_eq(ref($ret), 'HASH');
-            my $ret = $tcache->load($cachepath, time());;
-            should_eq($ret, undef);
-            my $ret = $tcache->load($cachepath);
-            should_eq(ref($ret), 'HASH');
-        };
-
-        it "load template data from cache file.", sub {
-            my $ret = $tcache->load($cachepath);
-            should_eq(ref($ret), 'HASH');
-            should_eq($ret->{script}, $template->{script});
-            it "get template args data from cached data.", sub {
-                should_eq(''.@{$ret->{args}}, ''.@{$template->{args}});
+            it "save template script and args into cache file.", sub {
+                ok ! -f $cachepath;
+                $tcache->save($cachepath, $template);
+                my $expected = "\#\@ARGS name,age\n" . $template->{script};
+                ok -f $cachepath;
+                is read_file($cachepath), $expected;
             };
-            should_eq($ret->{timestamp}, $template->{timestamp});
+
+            it "set cache file's mtime to template timestamp.", sub {
+                is((stat $cachepath)[9], $ts);
+            };
+
         };
 
-        it "return script, template args, and mtime of cache file.", sub {};
+    };
+
+
+    spec_of "->load", sub {
+
+        my $filepath = '_foobar.plhtml';
+        my $cachepath = $filepath +'.cache';
+
+        _remove_file $cachepath, sub {
+
+            my $tcache = Tenjin::FileBaseTemplateCache->new();
+            my $input = "<?pl \#\@ARGS name, age ?>\n<p>Hello [=\$name=]!</p>";
+            my $template = Tenjin::Template->new();
+            $template->convert($input, $filepath);
+            my $ts = time() - 30;
+            $template->{timestamp} = $ts;
+            $tcache->save($cachepath, $template);
+
+            it "if cache file is not found, return undef.", sub {
+                my $dummy = 'hogehoge.plhtml.cache';
+                ok ! -f $dummy;
+                ok ! $tcache->load($dummy, time());
+            };
+
+            it "if template timestamp is specified and different from that of cache file, return undef.", sub {
+                my $ret = $tcache->load($cachepath, $ts);
+                isa_ok $ret, 'HASH';
+                my $ret = $tcache->load($cachepath, time());;
+                ok ! $ret;
+                my $ret = $tcache->load($cachepath);
+                isa_ok $ret, 'HASH';
+            };
+
+            it "load template data from cache file.", sub {
+                my $ret = $tcache->load($cachepath);
+                isa_ok $ret, 'HASH';
+                is $ret->{script}, $template->{script};
+                it "get template args data from cached data.", sub {
+                    is(''.@{$ret->{args}}, ''.@{$template->{args}});
+                };
+                is $ret->{timestamp}, $template->{timestamp};
+            };
+
+            it "return script, template args, and mtime of cache file.", sub {};
+
+        };
 
     };
+
 
 };

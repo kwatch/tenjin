@@ -10,7 +10,8 @@ BEGIN {
 }
 
 use strict;
-use Specofit tests => 26;
+use Test::More tests => 26;
+use Specofit;
 use Data::Dumper;
 use Tenjin strict=>1;
 
@@ -299,7 +300,7 @@ spec_of "Tenjin::Template->new()", sub {
 
     it "returns template object", sub {
         my $t = Tenjin::Template->new();
-        should_eq(ref($t), "Tenjin::Template");
+        isa_ok $t, "Tenjin::Template";
     };
 
     it "converts template file if filename is specified", sub {
@@ -357,19 +358,19 @@ spec_of "Tenjin::Template::compile()", sub {
     it "compiles script into closure if \@ARGS is specified", sub {
         my $t = Tenjin::Template->new();
         $t->convert($INPUT9);
-        should_eq(repr($t->{args}), '["title","items"]');
-        should_be_undef($t->{func});
+        is repr($t->{args}), '["title","items"]';
+        ok ! $t->{func};
         my $ret = $t->compile();
-        should_eq(ref($ret), 'CODE');
-        should_eq(ref($t->{func}), 'CODE');
+        isa_ok $ret, 'CODE';
+        isa_ok $t->{func}, 'CODE';
     };
 
     it "doesn't compile script into closure if \@ARGS is not specified", sub {
         my $t = Tenjin::Template->new();
         $t->convert($INPUT1);
-        should_be_undef($t->{args});
-        should_be_undef($t->compile());
-        should_be_undef($t->{func});
+        ok ! $t->{args};
+        ok ! $t->compile();
+        ok ! $t->{func};
     };
 
     it "reports error if syntax error exists", sub {

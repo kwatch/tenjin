@@ -11,7 +11,7 @@ BEGIN {
 
 use strict;
 use Data::Dumper;
-use Test::Simple tests => 18;
+use Test::More tests => 18;
 use Specofit;
 use Tenjin;
 $Tenjin::USE_STRICT = 1;
@@ -21,96 +21,116 @@ $Tenjin::USE_STRICT = 1;
 *write_file = *Tenjin::Util::write_file;
 
 
-spec_of "Tenjin::SafeStr->new", sub {
+spec_of "Tenjin::SafeStr", sub {
 
-    it "returns Tenjin::SafeStr object", sub {
-        my $obj = Tenjin::SafeStr->new('<A&B>');
-        should_eq(ref($obj), "Tenjin::SafeStr");
-        should_eq(repr($obj), q|bless( {"value" => "<A&B>"}, 'Tenjin::SafeStr' )|);
+
+    spec_of "->new", sub {
+
+        it "returns Tenjin::SafeStr object", sub {
+            my $obj = Tenjin::SafeStr->new('<A&B>');
+            is ref($obj), "Tenjin::SafeStr";
+            is repr($obj), q|bless( {"value" => "<A&B>"}, 'Tenjin::SafeStr' )|;
+        };
+
     };
+
+
+    spec_of "#value", sub {
+
+        it "converts Tenjin::SafeStr to normal string", sub {
+            my $obj = Tenjin::SafeStr->new('<A&B>');
+            is $obj->value, '<A&B>';
+        };
+
+    };
+
 
 };
 
 
-spec_of "Tenjin::SafeStr#value", sub {
 
-    it "converts Tenjin::SafeStr to normal string", sub {
-        my $obj = Tenjin::SafeStr->new('<A&B>');
-        should_eq($obj->value, '<A&B>');
-    };
-
-};
+spec_of "Tenjin::SafeTemplate", sub {
 
 
+    spec_of "#convert", sub {
 
-spec_of "Tenjin::SafeTemplate#convert", sub {
-
-    it "generates script to check whether value is safe string or not", sub {
-        my $t = Tenjin::SafeTemplate->new(undef);
-        my $input = "<div>\n[= \$_content =]\n</div>\n";
-        my $expected = <<'END';
+        it "generates script to check whether value is safe string or not", sub {
+            my $t = Tenjin::SafeTemplate->new(undef);
+            my $input = "<div>\n[= \$_content =]\n</div>\n";
+            my $expected = <<'END';
 	my $_buf = ""; my $_V;  $_buf .= q`<div>
 	` . (ref($_V = ( $_content )) eq 'Tenjin::SafeStr' ? $_V->{value} : ($_V =~ s/[&<>"]/$Tenjin::_H{$&}/ge, $_V)) . q`
 	</div>
 	`;  $_buf;
 END
-        $expected =~ s/^\t//mg;
-        should_eq($t->convert($input), $expected);
+            $expected =~ s/^\t//mg;
+            is $t->convert($input), $expected;
+        };
+
+        it "refuses to compile '[== expr =]'", sub {
+            my $t = Tenjin::SafeTemplate->new(undef);
+            my $input = "<div>\n[== \$_content =]\n</div>\n";
+            eval { $t->convert($input); };
+            $_ = $@;
+            s/ at .*$//;
+            is $_, "'[== \$_content =]': '[== =]' is not available with Tenjin::SafeTemplate.\n";
+        };
+
+        it "bypass to escape value if safe_str() is called directly", sub {
+            my $t = Tenjin::SafeTemplate->new();
+            my $ret = $t->convert('<div>[= safe_str($expr) =]</div>');
+            is $ret, 'my $_buf = ""; my $_V;  $_buf .= q`<div>` . ( $expr ) . q`</div>`;  $_buf;'."\n";
+            my $ret = $t->convert("<div>[=\tsafe_str(\n\$expr\n)  =]</div>");
+            is $ret, "my \$_buf = \"\"; my \$_V;  \$_buf .= q`<div>` . (\t\n\$expr\n  ) . q`</div>`;  \$_buf;\n";
+        };
+
     };
 
-    it "refuses to compile '[== expr =]'", sub {
-        my $t = Tenjin::SafeTemplate->new(undef);
-        my $input = "<div>\n[== \$_content =]\n</div>\n";
-        eval { $t->convert($input); };
-        $_ = $@;
-        s/ at .*$//;
-        should_eq($_, "'[== \$_content =]': '[== =]' is not available with Tenjin::SafeTemplate.\n");
+
+    spec_of "#render", sub {
+
+        it "doesn't escape safe string value", sub {
+            my $t = Tenjin::SafeTemplate->new(undef);
+            my $input = "<div>\n[= \$_content =]\n</div>\n";
+            $t->convert($input);
+            my $actual = $t->render({_content => '<AAA&BBB>'});
+            is $actual, "<div>\n&lt;AAA&amp;BBB&gt;\n</div>\n";
+            my $actual = $t->render({_content => Tenjin::SafeStr->new('<AAA&BBB>')});
+            is $actual, "<div>\n<AAA&BBB>\n</div>\n";
+        };
+
     };
 
-    it "bypass to escape value if safe_str() is called directly", sub {
-        my $t = Tenjin::SafeTemplate->new();
-        my $ret = $t->convert('<div>[= safe_str($expr) =]</div>');
-        should_eq($ret, 'my $_buf = ""; my $_V;  $_buf .= q`<div>` . ( $expr ) . q`</div>`;  $_buf;'."\n");
-        my $ret = $t->convert("<div>[=\tsafe_str(\n\$expr\n)  =]</div>");
-        should_eq($ret, "my \$_buf = \"\"; my \$_V;  \$_buf .= q`<div>` . (\t\n\$expr\n  ) . q`</div>`;  \$_buf;\n");
-    };
 
 };
 
-
-spec_of "Tenjin::SafeTemplate#render", sub {
-
-    it "doesn't escape safe string value", sub {
-        my $t = Tenjin::SafeTemplate->new(undef);
-        my $input = "<div>\n[= \$_content =]\n</div>\n";
-        $t->convert($input);
-        my $actual = $t->render({_content => '<AAA&BBB>'});
-        should_eq($actual, "<div>\n&lt;AAA&amp;BBB&gt;\n</div>\n");
-        my $actual = $t->render({_content => Tenjin::SafeStr->new('<AAA&BBB>')});
-        should_eq($actual, "<div>\n<AAA&BBB>\n</div>\n");
-    };
-
-};
 
 
 spec_of "Tenjin::SafePreprocessor#convert", sub {
 
-    it "generates script to check whether value is safe string or not", sub {
-        my $pp = Tenjin::SafePreprocessor->new();
-        my $ret = $pp->convert('<<[*=$x=*]>>');
-        should_eq($ret, 'my $_buf = ""; my $_V;  $_buf .= q`<<` . (ref($_V = ($x)) eq \'Tenjin::SafeStr\' ? Tenjin::Util::_decode_params($_V->{value}) : ($_V = Tenjin::Util::_decode_params($_V), $_V =~ s/[&<>"]/$Tenjin::_H{$&}/ge, $_V)) . q`>>`;  $_buf;'."\n");
+
+    spec_of "#convert", sub {
+
+        it "generates script to check whether value is safe string or not", sub {
+            my $pp = Tenjin::SafePreprocessor->new();
+            my $ret = $pp->convert('<<[*=$x=*]>>');
+            is $ret, 'my $_buf = ""; my $_V;  $_buf .= q`<<` . (ref($_V = ($x)) eq \'Tenjin::SafeStr\' ? Tenjin::Util::_decode_params($_V->{value}) : ($_V = Tenjin::Util::_decode_params($_V), $_V =~ s/[&<>"]/$Tenjin::_H{$&}/ge, $_V)) . q`>>`;  $_buf;'."\n";
+        };
+
+        it "refuses to compile '[== expr =]'", sub {
+            my $pp = Tenjin::SafePreprocessor->new();
+            eval { $pp->convert('<<[*==$x=*]>>'); };
+            $_ = $@;
+            s/ at .*$//;
+            is $_, "'[*==\$x=*]': '[*== =*]' is not available with Tenjin::SafePreprocessor."."\n";
+            $@ = '';
+        };
+
     };
 
-    it "refuses to compile '[== expr =]'", sub {
-        my $pp = Tenjin::SafePreprocessor->new();
-        eval { $pp->convert('<<[*==$x=*]>>'); };
-        $_ = $@;
-        s/ at .*$//;
-        should_eq($_, "'[*==\$x=*]': '[*== =*]' is not available with Tenjin::SafePreprocessor."."\n");
-        $@ = '';
-    };
 
 };
+
 
 
 spec_of "Tenjin::SafeEngine", sub {
@@ -192,40 +212,51 @@ END
 
     my $engine;
 
+
     spec_of "->new", sub {
+
         my $engine = Tenjin::SafeEngine->new();
+
         it "sets 'templateclass' attribute to 'SafeTemplate'", sub {
-            should_eq($engine->{templateclass}, 'Tenjin::SafeTemplate');
+            is $engine->{templateclass}, 'Tenjin::SafeTemplate';
             my $t = $engine->get_template("_ex.plhtml");
-            should_eq(ref($t), 'Tenjin::SafeTemplate');
-            should_eq($t->{script}, $SCRIPT);
+            is ref($t), 'Tenjin::SafeTemplate';
+            is $t->{script}, $SCRIPT;
         };
+
         it "sets 'preprocessor' attribute to 'SafePreprocessor'", sub {
-            should_eq($engine->{preprocessorclass}, 'Tenjin::SafePreprocessor');
+            is $engine->{preprocessorclass}, 'Tenjin::SafePreprocessor';
         }
+
     };
 
     unlink glob("_ex.plhtml.*");
 
+
     spec_of "#render", sub {
+
         it "prints safe string as it is", sub {
             my $e = Tenjin::SafeEngine->new();
             my $output = $e->render("_ex.plhtml", $CONTEXT);
-            should_eq($output, $EXPECTED);
+            is $output, $EXPECTED;
         };
+
         it "supports preprocessing with SafePreprocessor class", sub {
             my $e = Tenjin::SafeEngine->new({preprocess=>1});
             my $context = { v1=>'<&>', v2=>Tenjin::SafeStr->new('<&>') };
             my $output = $e->render("_ex2.plhtml", $context);
             my $t = $e->get_template('_ex2.plhtml');
-            should_eq($t->{script}, $SCRIPT2);
-            should_eq($output, $EXPECTED2);
+            is $t->{script}, $SCRIPT2;
+            is $output, $EXPECTED2;
         };
+
     };
+
 
     post_task {
         unlink glob("_ex.plhtml*");
         unlink glob("_ex2.plhtml*");
     };
+
 
 };

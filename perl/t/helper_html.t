@@ -11,9 +11,12 @@ BEGIN {
 
 use strict;
 use Data::Dumper;
-use Specofit tests => 33;
+use Test::More tests => 33;
+use Specofit;
 use Tenjin;
 $Tenjin::USE_STRICT = 1;
+
+import Tenjin::Helper::Html;
 
 
 *read_file  = *Tenjin::Util::read_file;
@@ -27,179 +30,182 @@ after_each {
 };
 
 
-spec_of "Tenjin::Helper::Html::escape_xml()", sub {
+spec_of "Tenjin::Helper::Html", sub {
 
-    it "converts html special chars into html entity", sub {
-        should_eq(Tenjin::Helper::Html::escape_xml('<>&"'), '&lt;&gt;&amp;&quot;');
+
+    spec_of "::escape_xml()", sub {
+
+        it "converts html special chars into html entity", sub {
+            is escape_xml('<>&"'), '&lt;&gt;&amp;&quot;';
+        };
+
+        it "doesn't convert single quote", sub {
+            is escape_xml("'"), "'";
+        };
+
     };
 
-    it "doesn't convert single quote", sub {
-        should_eq(Tenjin::Helper::Html::escape_xml("'"), "'");
+
+    spec_of "::unescape_xml()", sub {
+
+        it "converts html entity to normal character", sub {
+            is unescape_xml('&lt;&gt;&amp;&quot;'), '<>&"';
+        };
+
+        it "converts &#039 into single quote", sub {
+            is unescape_xml('&#039;'), "'";
+        };
+
     };
 
-};
 
+    spec_of "::encode_url()", sub {
 
-spec_of "Tenjin::Helper::Html::unescape_xml()", sub {
+        it 'encodes url string', sub {
+            my $actual = encode_url('http://example.com/?xxx=1&yyy=2');
+            is $actual, 'http%3A//example.com/%3Fxxx%3D1%26yyy%3D2';
+        }
 
-    it "converts html entity to normal character", sub {
-        should_eq(Tenjin::Helper::Html::unescape_xml('&lt;&gt;&amp;&quot;'), '<>&"');
     };
 
-    it "converts &#039 into single quote", sub {
-        should_eq(Tenjin::Helper::Html::unescape_xml('&#039;'), "'");
+
+    spec_of "::decode_url()", sub {
+
+        it 'decodes url encoded string', sub {
+            my $actual = decode_url('http%3A//example.com/%3Fxxx%3D1%26yyy%3D2');
+            is $actual, 'http://example.com/?xxx=1&yyy=2';
+        }
+
     };
 
-};
 
+    spec_of "::checked()", sub {
 
-spec_of "Tenjin::Helper::Html::encode_url()", sub {
+        it 'returns checked="checked" if argument is true', sub {
+            is checked(1==1), ' checked="checked"';
+        };
 
-    it 'encodes url string', sub {
-        my $actual = Tenjin::Helper::Html::encode_url('http://example.com/?xxx=1&yyy=2');
-        should_eq($actual, 'http%3A//example.com/%3Fxxx%3D1%26yyy%3D2');
-    }
+        it 'returns empty string if argument is false', sub {
+            is checked(1==0), "";
+        };
 
-};
-
-
-spec_of "Tenjin::Helper::Html::decode_url()", sub {
-
-    it 'decodes url encoded string', sub {
-        my $actual = Tenjin::Helper::Html::decode_url('http%3A//example.com/%3Fxxx%3D1%26yyy%3D2');
-        should_eq($actual, 'http://example.com/?xxx=1&yyy=2');
-    }
-
-};
-
-
-spec_of "Tenjin::Helper::Html::checked()", sub {
-
-    it 'returns checked="checked" if argument is true', sub {
-        should_eq(Tenjin::Helper::Html::checked(1==1), ' checked="checked"');
     };
 
-    it 'returns empty string if argument is false', sub {
-        should_eq(Tenjin::Helper::Html::checked(1==0), "");
-        #should_be_undef(Tenjin::Helper::Html::checked(1==0));
+
+    spec_of "::selected()", sub {
+
+        it 'returns selected="selected" if argument is true', sub {
+            is selected(1==1), ' selected="selected"';
+        };
+
+        it 'returns empty string if argument is false', sub {
+            is selected(1==0), "";
+        };
+
     };
 
-};
 
+    spec_of "::disabled()", sub {
 
-spec_of "Tenjin::Helper::Html::selected()", sub {
+        it 'returns disabled="disabled" if argument is true', sub {
+            is disabled(1==1), ' disabled="disabled"';
+        };
 
-    it 'returns selected="selected" if argument is true', sub {
-        should_eq(Tenjin::Helper::Html::selected(1==1), ' selected="selected"');
+        it 'returns empty string if argument is false', sub {
+            is disabled(1==0), "";
+        };
+
     };
 
-    it 'returns empty string if argument is false', sub {
-        should_eq(Tenjin::Helper::Html::selected(1==0), "");
-        #should_be_undef(Tenjin::Helper::Html::selected(1==0));
+
+    spec_of "::nl2br()", sub {
+
+        it 'converts LF into <br />', sub {
+            my $str = "foo\nbar\r\nbaz";
+            my $expected = "foo<br />\nbar<br />\r\nbaz";
+            is nl2br($str), $expected;
+        };
+
     };
 
-};
 
+    spec_of "::text2html()", sub {
 
-spec_of "Tenjin::Helper::Html::disabled()", sub {
+        it 'escapes html special chars and converts LF into <br />', sub {
+            my $str = "<foo>\nbar&bar\r\n\"baz\"";
+            my $expected = "&lt;foo&gt;<br />\nbar&amp;bar<br />\r\n&quot;baz&quot;";
+            is text2html($str), $expected;
+        };
 
-    it 'returns disabled="disabled" if argument is true', sub {
-        should_eq(Tenjin::Helper::Html::disabled(1==1), ' disabled="disabled"');
     };
 
-    it 'returns empty string if argument is false', sub {
-        should_eq(Tenjin::Helper::Html::disabled(1==0), "");
-        #should_be_undef(Tenjin::Helper::Html::disabled(1==0));
+
+    spec_of "::tagattr()", sub {
+
+        it 'returns tag attribute string', sub {
+            is tagattr('id', 123), ' id="123"';
+        };
+
+        it 'uses 3rd argument as attribute value if specified', sub {
+            is tagattr('selected', 1==1, 'selected'), ' selected="selected"';
+        };
+
+        it 'returns empty string if value is false value', sub {
+            is tagattr('id', 0),     '';
+            is tagattr('id', ""),    '';
+            is tagattr('id', undef), '';
+            is tagattr('id', 0,     123), '';
+            is tagattr('id', "",    123), '';
+            is tagattr('id', undef, 123), '';
+        };
+
+        it "escapes html special chars in attribute value", sub {
+            is tagattr('<name>', '"A&B"'), ' <name>="&quot;A&amp;B&quot;"';
+        };
+
     };
 
-};
 
+    spec_of "::tagattrs()", sub {
 
-spec_of "Tenjin::Helper::Html::nl2br()", sub {
+        it "takes hash and returns tag attribute string", sub {
+            is tagattrs(name=>"foo", id=>123), ' name="foo" id="123"';
+        };
 
-    it 'converts LF into <br />', sub {
-        my $str = "foo\nbar\r\nbaz";
-        my $expected = "foo<br />\nbar<br />\r\nbaz";
-        should_eq(Tenjin::Helper::Html::nl2br($str), $expected);
+        it "doesn't skip attributes even when attributes have false-value", sub {
+            is tagattrs(name=>"", id=>0), ' name="" id="0"';
+        };
+
+        it "escapes html special chars in attribute values", sub {
+            is tagattrs('<name>'=>"A&B"), ' <name>="A&amp;B"';
+        };
+
     };
 
-};
 
+    spec_of "::nv()", sub {
 
-spec_of "Tenjin::Helper::Html::text2html()", sub {
+        it "returns name and value attributes", sub {
+            my $ret = nv('pair', 'Haru&Kyon');
+            is $ret, 'name="pair" value="Haru&amp;Kyon"';
+        };
 
-    it 'escapes html special chars and converts LF into <br />', sub {
-        my $str = "<foo>\nbar&bar\r\n\"baz\"";
-        my $expected = "&lt;foo&gt;<br />\nbar&amp;bar<br />\r\n&quot;baz&quot;";
-        should_eq(Tenjin::Helper::Html::text2html($str), $expected);
     };
 
-};
 
+    spec_of "::new_cycle()", sub {
 
-spec_of "Tenjin::Helper::Html::tagattr()", sub {
+        it "returns each value repeatedly", sub {
+            my $cycle = new_cycle("A", "B", "C");
+            is $cycle->(), "A";
+            is $cycle->(), "B";
+            is $cycle->(), "C";
+            is $cycle->(), "A";
+            is $cycle->(), "B";
+            is $cycle->(), "C";
+        };
 
-    it 'returns tag attribute string', sub {
-        should_eq(Tenjin::Helper::Html::tagattr('id', 123), ' id="123"');
     };
 
-    it 'uses 3rd argument as attribute value if specified', sub {
-        should_eq(Tenjin::Helper::Html::tagattr('selected', 1==1, 'selected'), ' selected="selected"');
-    };
-
-    it 'returns empty string if value is false value', sub {
-        should_eq(Tenjin::Helper::Html::tagattr('id', 0),     '');
-        should_eq(Tenjin::Helper::Html::tagattr('id', ""),    '');
-        should_eq(Tenjin::Helper::Html::tagattr('id', undef), '');
-        should_eq(Tenjin::Helper::Html::tagattr('id', 0,     123), '');
-        should_eq(Tenjin::Helper::Html::tagattr('id', "",    123), '');
-        should_eq(Tenjin::Helper::Html::tagattr('id', undef, 123), '');
-    };
-
-    it "escapes html special chars in attribute value", sub {
-        should_eq(Tenjin::Helper::Html::tagattr('<name>', '"A&B"'), ' <name>="&quot;A&amp;B&quot;"');
-    };
-
-};
-
-
-spec_of "Tenjin::Helper::Html::tagattrs()", sub {
-
-    it "takes hash and returns tag attribute string", sub {
-        should_eq(Tenjin::Helper::Html::tagattrs(name=>"foo", id=>123), ' name="foo" id="123"');
-    };
-
-    it "doesn't skip attributes even when attributes have false-value", sub {
-        should_eq(Tenjin::Helper::Html::tagattrs(name=>"", id=>0), ' name="" id="0"');
-    };
-
-    it "escapes html special chars in attribute values", sub {
-        should_eq(Tenjin::Helper::Html::tagattrs('<name>'=>"A&B"), ' <name>="A&amp;B"');
-    };
-
-};
-
-
-spec_of "Tenjin::Helper::Html::nv()", sub {
-
-    it "returns name and value attributes", sub {
-        my $ret = Tenjin::Helper::Html::nv('pair', 'Haru&Kyon');
-        should_eq($ret, 'name="pair" value="Haru&amp;Kyon"');
-    };
-
-};
-
-
-spec_of "Tenjin::Helper::Html::new_cycle()", sub {
-
-    it "returns each value repeatedly", sub {
-        my $cycle = Tenjin::Helper::Html::new_cycle("A", "B", "C");
-        should_eq($cycle->(), "A");
-        should_eq($cycle->(), "B");
-        should_eq($cycle->(), "C");
-        should_eq($cycle->(), "A");
-        should_eq($cycle->(), "B");
-        should_eq($cycle->(), "C");
-    };
 
 };

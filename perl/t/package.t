@@ -10,32 +10,27 @@ BEGIN {
 }
 
 use strict;
-use Specofit tests => 3;
 use Data::Dumper;
+use Test::More tests => 3;
+use Specofit;
 
-
-#before_each {
-#};
-#
-#after_each {
-#};
 
 
 spec_of 'Tenjn', sub {
 
     it 'sets $Tenjin::USE_STRICT to 1 if strict=>1 is specified', sub {
         use Tenjin strict => 1;
-        should_eq($Tenjin::USE_STRICT, 1);
+        is $Tenjin::USE_STRICT, 1;
     };
 
     #it 'leaves $Tenjin::USE_STRICT to 0 if no option specified', sub {
     #    use Tenjin;
-    #    should_eq($Tenjin::USE_STRICT, 0);
+    #    is $Tenjin::USE_STRICT, 0;
     #};
 
     it "has version number", sub {
-        should_be_true(defined($Tenjin::VERSION));
-        should_match($Tenjin::VERSION, '^\d+\.\d+\.\d+$');
+        ok defined($Tenjin::VERSION);
+        like $Tenjin::VERSION, qr`^\d+\.\d+\.\d+$`;
     };
 
 };

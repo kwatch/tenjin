@@ -10,8 +10,8 @@ BEGIN {
 }
 
 use strict;
-use Data::Dumper;
-use Specofit tests => 10;
+use Data::Dumper tests => 10;
+use Specofit;
 use Tenjin;
 $Tenjin::USE_STRICT = 1;
 

@@ -11,8 +11,8 @@ BEGIN {
 
 use strict;
 use Tenjin;
-use Data::Dumper;
-use Specofit tests => 50;
+use Data::Dumper tests => 50;
+use Specofit;
 use YAML::Syck;
 use File::Path;
 
@@ -62,6 +62,7 @@ sub report_error {
 
 
 ## --------------------
+
 
 examples_of "Test::Engine", sub {
 
@@ -143,6 +144,7 @@ examples_of "Test::Engine", sub {
 
 
 ## --------------------
+
 
 spec_of "Tenjin::Engine", sub {
 
@@ -354,6 +356,7 @@ spec_of "Tenjin::Engine", sub {
 };
 
 
+
 examples_of "Tenjin::Engine", sub {
 
     my $testname = 'test_template_path';
@@ -400,6 +403,7 @@ examples_of "Tenjin::Engine", sub {
     $_test_template_path->('user',   'user',   'user');
 
 };
+
 
 
 spec_of "Tenjin::Engine", sub {
@@ -452,6 +456,7 @@ spec_of "Tenjin::Engine", sub {
     };
 
 };
+
 
 
 describe 'Template::Engine', sub {
