@@ -773,7 +773,7 @@ sub parse_expr {
     while ($input =~ /$pat/g) {
         my $start = $-[0];
         my $text = substr($input, $pos, $start - $pos);
-        my ($expr, $flag_escape, $delete_newline) = $this->capture_expr($1, $2, $3);
+        my ($expr, $flag_escape, $delete_newline) = $this->capture_expr($1, $2, $3, $4, $5, $6, $7, $8, $9);
         $pos = $start + length($&);
         $this->add_text($bufref, $text) if $text;
         $this->add_expr($bufref, $expr, $flag_escape) if $expr;
