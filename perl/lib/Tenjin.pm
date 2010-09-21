@@ -45,7 +45,7 @@ our %_H = ( '&'=>'&amp;', '<'=>'&lt;', '>'=>'&gt;', '"'=>'&quot;', "'"=>'&#039;'
 
 
 ##
-## utility package
+## utilities
 ##
 package Tenjin::Util;
 
@@ -194,7 +194,7 @@ sub safe_escape {
 
 
 ##
-## HTML Helper
+## helpers for html
 ##
 package Tenjin::Helper::Html;
 use Exporter 'import';
@@ -427,7 +427,7 @@ sub new_cycle {   ## [experimental]
 
 
 ##
-## base colass of context object
+## base class of context object
 ##
 package Tenjin::BaseContext;
 
@@ -506,7 +506,7 @@ sub escape {
 
 
 ##
-## common context object class which supports HTML helpers
+## common context object class which supports safe and html helpers
 ##
 package Tenjin::Context;
 our @ISA = ('Tenjin::BaseContext');
@@ -843,7 +843,7 @@ sub compile {
 
 
 ##
-##
+## safe template class which uses SafeStr
 ##
 package Tenjin::SafeTemplate;
 our @ISA = 'Tenjin::Template';
@@ -908,7 +908,7 @@ sub add_expr {
 
 
 ##
-## safe preprocessor
+## safe preprocessor class which uses SafeStr
 ##
 package Tenjin::SafePreprocessor;
 our @ISA = ('Tenjin::Preprocessor');
@@ -1241,7 +1241,6 @@ sub has {
 ##    my $engine = Tenjin::Engine->new({finder=>DatabaseFinder->new()});
 ##
 package Tenjin::FileFinder;
-#use Carp;
 
 
 sub new {
