@@ -1059,7 +1059,7 @@ sub save {
     #: set cache file's mtime to template timestamp.
     my $ts = $t->{timestamp};
     utime($ts, $ts, $cachepath);
-    $Tenjin::logger->debug("[tenjin] template cache saved (path=$cachepath)") if $Tenjin::logger;
+    $Tenjin::logger->info("[tenjin] template cache saved (path=$cachepath)") if $Tenjin::logger;
 }
 
 
@@ -1073,7 +1073,7 @@ sub load {
     #: if template timestamp is specified and different from that of cache file, return undef.
     my $mtime = (stat $cachepath)[9];
     if ($timestamp && $timestamp != $mtime) {
-        $Tenjin::logger->debug("[tenjin] template cache expired (path=$cachepath)") if $Tenjin::logger;
+        $Tenjin::logger->info("[tenjin] template cache expired (path=$cachepath)") if $Tenjin::logger;
         return;
     }
     #: load template data from cache file.
@@ -1086,6 +1086,7 @@ sub load {
         #: set undef instead of empty array if '#args' not found in cache.
         $args = [ split(/,/, $v) ] if $k eq '#args';
     }
+    $Tenjin::logger->info("[tenjin] template cache loaded (path=$cachepath)") if $Tenjin::logger;
     #: return script, template args, and mtime of cache file.
     return {script=>$script, args=>$args, timestamp=>$mtime};
 }
@@ -1413,7 +1414,7 @@ sub _timestamp_changed {
     }
     #: if timestamp is changed, return true.
     else {
-        $Tenjin::logger->info("[tenjin] template cache expired (path=$template->{filename})") if $Tenjin::logger;
+        $Tenjin::logger->info("[tenjin] template file updated (path=$template->{filename})") if $Tenjin::logger;
         return 1;
     }
 }
