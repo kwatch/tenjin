@@ -361,7 +361,7 @@ sub load_context_str {
     }
     else {                        # Perl style (ex. "x=>10, y=>['a','b','c']")
         eval "\$val = { $context_str };";
-        $@ and die("*** ERROR: -e:\n$@");
+        $@ and die("*** ERROR: -c:\n$@");
         ref($val) eq 'HASH'  or die "-c: hash reference required.";
     }
     return $val;
