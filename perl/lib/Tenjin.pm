@@ -59,7 +59,7 @@ package Tenjin::Util;
 
 sub read_file {
     my ($filename, $lock_required) = @_;
-    open(my $fh, $filename)  or die "$filename: $!";
+    open(my $fh, '<', $filename)  or die "$filename: $!";
     binmode($fh);
     my $content = '';
     flock($fh, 1) if $lock_required;
@@ -74,7 +74,7 @@ sub write_file {
     my ($filename, $content, $lock_required, $mtime) = @_;
     my $fname = $filename;
     $fname .= rand() if $lock_required;
-    open(my $fh, ">$fname")  or die "$filename: $!";
+    open(my $fh, '>', $fname)  or die "$filename: $!";
     binmode($fh);
     #flock($fh, 2) if $lock_required
     utf8::encode($content) if $Tenjin::USE_UTF8;
