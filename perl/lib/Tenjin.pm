@@ -572,11 +572,10 @@ package Tenjin::Template;
 
 sub new {
     my ($class, $filename, $opts) = @_;
-    my $escapefunc = defined($opts) ? $opts->{escapefunc} : undef;
     my $this = {
         'filename'   => $filename,
         'script'     => undef,
-        'escapefunc' => $escapefunc,
+        'escapefunc' => defined($opts) ? $opts->{escapefunc} : undef,
         'timestamp'  => undef,
         'args'       => undef,
     };
