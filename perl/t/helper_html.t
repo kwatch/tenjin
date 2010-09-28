@@ -150,11 +150,11 @@ spec_of "Tenjin::Helper::Html", sub {
             is tagattr('selected', 1==1, 'selected'), ' selected="selected"';
         };
 
-        it 'returns empty string if value is false value', sub {
-            is tagattr('id', 0),     '';
+        it 'returns empty string if value is empty string or undefined', sub {
+            is tagattr('id', 0),     ' id="0"';
             is tagattr('id', ""),    '';
             is tagattr('id', undef), '';
-            is tagattr('id', 0,     123), '';
+            is tagattr('id', 0,     123), ' id="123"';
             is tagattr('id', "",    123), '';
             is tagattr('id', undef, 123), '';
         };

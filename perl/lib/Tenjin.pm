@@ -276,7 +276,7 @@ sub text2html {
 
 sub tagattr {   ## [experimental]
     my ($name, $expr, $value) = @_;
-    return '' unless $expr;
+    return '' if $expr eq '';
     $value = $expr unless defined $value;
     " $name=\"".escape_html($value)."\"";   # returns
 }
@@ -380,7 +380,7 @@ sub text2html {
 
 sub tagattr {   ## [experimental]
     my ($name, $expr, $value) = @_;
-    return safe_str('') unless $expr;
+    return safe_str('') if $expr eq '';
     $value = $expr unless defined $value;
     safe_str(" $name=\"".safe_escape($value)."\"");   # return
 }
