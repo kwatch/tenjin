@@ -511,7 +511,7 @@ sub to_func {    # returns closure
     my ($_klass, $_script, $_filename) = @_;
     $_script = ($_script =~ /\A.*\Z/s) && $& if $Tenjin::BYPASS_TAINT;
     my $_s = $_filename ? "# line 1 \"$_filename\"\n" : '';  # line directive
-    $_s = "${_s}sub { my (\$_context) = \@_; $_script }";
+    $_s = $_s . "sub { my (\$_context) = \@_; " . $_script . " }";
     return eval($_s) unless $Tenjin::USE_STRICT;
     use strict;
     return eval($_s);
@@ -683,8 +683,7 @@ sub parse_stmt {
 
 sub capture_stmt {
     my ($this, $pi, $lspace, $mspace, $stmt, $rspace) = @_;
-    $mspace = '' if $mspace eq ' ';
-    $stmt = $mspace . $stmt if $mspace;
+    $stmt = $mspace . $stmt if $mspace && $mspace ne ' ';
     return $lspace, $stmt, $rspace;
 }
 
