@@ -286,7 +286,7 @@ sub tagattrs {   ## [experimental]
     my (%attrs) = @_;
     my $s = "";
     while (my ($k, $v) = each %attrs) {
-        $s .= " $k=\"".escape_html($v)."\"" if defined $v;
+        $s .= " $k=\"".escape_html($v)."\""; # unless $v eq '';
     }
     $s;  # returns
 }
@@ -390,7 +390,7 @@ sub tagattrs {   ## [experimental]
     my (%attrs) = @_;
     my $s = "";
     while (my ($k, $v) = each %attrs) {
-        $s .= " $k=\"".safe_escape($v)."\"" if defined $v;
+        $s .= " $k=\"".safe_escape($v)."\""; # unless $v eq '';
     }
     safe_str($s);  # return
 }

@@ -135,7 +135,7 @@ spec_of "Tenjin::Helper::SafeHtml", sub {
             is $ret->{value}, ' a="&quot;A&quot;" b="&quot;B&quot;"';
             my $ret = tagattrs('title', undef);
             isa_ok $ret, 'Tenjin::SafeStr';
-            is $ret->{value}, '';
+            is $ret->{value}, ' title=""';
         };
 
         it "accepts SafeStr object", sub {

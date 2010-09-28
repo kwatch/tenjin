@@ -11,7 +11,7 @@ BEGIN {
 
 use strict;
 use Data::Dumper;
-use Test::More tests => 33;
+use Test::More tests => 34;
 use Specofit;
 use Tenjin;
 $Tenjin::USE_STRICT = 1;
@@ -174,6 +174,7 @@ spec_of "Tenjin::Helper::Html", sub {
 
         it "doesn't skip attributes even when attributes have false-value", sub {
             is tagattrs(name=>"", id=>0), ' name="" id="0"';
+            is tagattrs(value=>undef), ' value=""';
         };
 
         it "escapes html special chars in attribute values", sub {
