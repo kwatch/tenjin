@@ -37,14 +37,14 @@ Release 1.0.0 (2010-??-??)
         </body>
       </html>
 
-  * (IMPORTANT!!) SafeTemplate class supported. Using it, only '${var}' is
-    allowed and '#{var}' is denied. This means that SafeTemplate class
-    enforces you to escape value in any time.
+  * (IMPORTANT!!) SafeTemplate and SafeEngine classes are supported.
+    Using them, only '${var}' is allowed and '#{var}' is denied.
+    This means that these classes enforces you to escape values in any time.
     See
       http://www.kuwata-lab.com/tejin/pytenjin-users-guide.html#safe-template
     for details.
 
-  * If 'trace=True' is passed to Template class (or Engine class, output
+  * If 'trace=True' is passed to Template class (or Engine class), output
     string will contain template file name. For example:
 
        <!-- ***** begin: hello.pyhtml ***** -->
@@ -53,10 +53,17 @@ Release 1.0.0 (2010-??-??)
        </div>
        <!-- ***** end: hello.pyhtml ***** -->
 
-  * If you set 'tenjin.Engine.prefer_fullpath' to True (and clear template
-    cache files), all of template filenames are treated as full path name.
-    This means that if you got error on template file, it's filename will
-    be reported in full path.
+  * tenjin.Engine now helps M17N of templates. If you pass 'lang' option to
+    Engine, it will generates cache files for each langs from a file.
+    This feature is intened to use with preprocessing in order to reduce
+    catalog expantion cost (such as '${_("Hello")}')
+
+        ## for lang='en'
+        engine = tenjin.Engine(lang='en', preprocess=True)
+	enginer.render('index.pyhtml')  # generates 'index.pyhtml.en.cache'
+        ## for lang='fr'
+        engine = tenjin.Engine(lang='fr', preprocess=True)
+	enginer.render('index.pyhtml')  # generates 'index.pyhtml.fr.cache'
 
 
 * [Changes]
