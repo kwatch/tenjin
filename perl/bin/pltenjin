@@ -201,8 +201,8 @@ sub execute {
             #print $out, $err, "\n";
             $_ = $out || $err;
             my $syntax_ok = ($_ =~ /syntax OK$/);
-            print "*** $filename - ok\n"   if $syntax_ok && !$flag_quiet;
-            print "*** $filename - NG\n$_" unless $syntax_ok;
+            print "$filename - ok.\n"   if $syntax_ok && !$flag_quiet;
+            print "$filename - NG.\n$_" unless $syntax_ok;
         }
         elsif ($ntimes) {   # for benchmark
             my $n = $ntimes;
