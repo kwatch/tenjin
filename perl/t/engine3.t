@@ -11,7 +11,7 @@ BEGIN {
 
 use strict;
 use Data::Dumper;
-use Test::More tests => 38;
+use Test::More tests => 39;
 use Specofit;
 use File::Path;
 use Tenjin;
@@ -47,6 +47,11 @@ spec_of "Tenjin::Engine", sub {
 
         spec "return cache file path.", sub {
             is $e->cachename('foo.plhtml'), 'foo.plhtml.cache';
+        };
+
+        spec "if lang is provided then add it to cache filename.", sub {
+            $e->{lang} = 'fr';
+            is $e->cachename('foo.plhtml'), 'foo.plhtml.fr.cache';
         };
 
     };

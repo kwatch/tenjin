@@ -1359,7 +1359,7 @@ our $FINDER = Tenjin::FileFinder->new();
 sub new {
     my ($class, $options) = @_;
     my $this = {};
-    for my $key (qw[prefix postfix layout path cache store finder preprocess templateclass preprocessorclass]) {
+    for my $key (qw[prefix postfix layout path cache store finder preprocess templateclass preprocessorclass lang]) {
         $this->{$key} = delete($options->{$key});
         #$this->{$key} = $options->{$key};
     }
@@ -1381,8 +1381,10 @@ sub register_template {
 
 
 sub cachename {
-    #: return cache file path.
     my ($this, $filename) = @_;
+    #: if lang is provided then add it to cache filename.
+    return $filename . '.' . $this->{lang} . '.cache' if $this->{lang};
+    #: return cache file path.
     return $filename . '.cache';
 }
 
