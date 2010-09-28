@@ -30,6 +30,7 @@ package Tenjin;
 
 
 our $USE_STRICT     = undef;      # no effect; only for backward compatibility
+our $USE_UTF8       = 1;          # use utf8::encode() and utf8::decode()
 our $BYPASS_TAINT   = 1;          # unset if you like taint mode
 our $TEMPLATE_CLASS = 'Tenjin::Template';
 our $CONTEXT_CLASS  = 'Tenjin::Context';
@@ -64,6 +65,7 @@ sub read_file {
     flock($fh, 1) if $lock_required;
     read($fh, my $data, -s $filename);
     close($fh);
+    utf8::decode($data) if $Tenjin::USE_UTF8;
     return $data;
 }
 
@@ -75,6 +77,7 @@ sub write_file {
     open(my $fh, ">$fname")  or die "$filename: $!";
     binmode($fh);
     #flock($fh, 2) if $lock_required
+    utf8::encode($content) if $Tenjin::USE_UTF8;
     print $fh $content;
     close($fh);
     utime($mtime, $mtime, $fname) if $mtime;
