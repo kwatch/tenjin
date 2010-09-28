@@ -13,7 +13,7 @@ package Tenjin::NoTextTemplate;
 #use strict;
 use Data::Dumper;
 
-@ISA = ('Tenjin::Template');
+our @ISA = ('Tenjin::Template');
 
 sub new {
     my $class = shift;
