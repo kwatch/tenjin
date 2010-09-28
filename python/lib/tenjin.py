@@ -1477,7 +1477,6 @@ class Engine(object):
     preprocess = False
     preprocessorclass = Preprocessor
     timestamp_interval = 1  # seconds
-    prefer_fullpath = False    # if True then use fullpath when template error is reported
 
     def __init__(self, prefix=None, postfix=None, layout=None, path=None, cache=True, preprocess=None, templateclass=None, lang=None, finder=None, **kwargs):
         """Initializer of Engine class.
@@ -1622,8 +1621,6 @@ class Engine(object):
             #
             fullpath = self.finder.abspath(filepath)
             self._filepaths[filename] = (filepath, fullpath)
-        #: change template filename according to prefer_fullpath
-        template_fpath = self.prefer_fullpath and fullpath or filepath
         #: use full path as base of cache file path
         cachepath = self.cachename(fullpath)
         #: get template object from cache
@@ -1638,9 +1635,9 @@ class Engine(object):
             if self.preprocess:   ## required for preprocessing
                 if _context is None: _context = {}
                 if _globals is None: _globals = sys._getframe(1).f_globals
-                input = self._preprocess(input, template_fpath, _context, _globals)
+                input = self._preprocess(input, filepath, _context, _globals)
             #: create template object.
-            template = self._create_template(input, template_fpath, _context, _globals)
+            template = self._create_template(input, filepath, _context, _globals)
             #: set timestamp and filename of template object.
             template.timestamp = timestamp
             template._last_checked_at = _time()
@@ -1651,7 +1648,7 @@ class Engine(object):
         #else:
         #    template.compile()
         #:
-        template.filename = template_fpath
+        template.filename = filepath
         return template
 
     def include(self, template_name, append_to_buf=True, **kwargs):

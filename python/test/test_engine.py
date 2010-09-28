@@ -707,54 +707,54 @@ class EngineTest(object):
             not_ok ('foo.pyhtml').exists()
 
 
-    def test_prefer_fullpath(self):
-        fname = 'test_prefer_fullpath.pyhtml'
-        input = ( "<?py for x in items: ?>\n"
-                  "  <p>${x.length}</p>\n"
-                  "<?py #end ?>\n" )
-        context = {'items': ['A']}
-        engine = None
-        #
-        def _test(fname, input, expected):
-            write_file(fname, input)
-            engine = tenjin.Engine()
-            engine.cache.clear()
-            t = engine.get_template(fname)
-            ok (t.filename) == expected
-            ex = error_file = None
-            try:
-                engine.render(fname, context)
-            except:
-                ex = sys.exc_info()[1]
-                error_file = _filename_on_where_error_raised()
-            ok (ex) != None
-            ok (error_file) == expected
-            # read from cache
-            engine.cache.clear()
-            engine = tenjin.Engine()
-            t = engine.get_template(fname)
-            ok (t.filename) == expected
-        def _filename_on_where_error_raised():
-            import traceback
-            tb = sys.exc_info()[2]
-            arr = traceback.format_tb(tb)
-            msg = arr[-1]
-            m = re.search(r'File "(.*?)"', msg)
-            return m.group(1)
-        #
-        if "Engine.prefer_fullpath is False then set relative epath as template filename":
-            assert tenjin.Engine.prefer_fullpath == False
-            try:
-                _test(fname, input, expected=fname)
-            finally:
-                _remove_files([fname, fname + '.cache'])
-        if "Engine.prefer_fullpath is True then set fullpath as template filename":
-            tenjin.Engine.prefer_fullpath = True
-            try:
-                _test(fname, input, expected=os.path.join(os.getcwd(), fname))
-            finally:
-                tenjin.Engine.prefer_fullpath = False
-                _remove_files([fname, fname + '.cache'])
+    #def test_prefer_fullpath(self):
+    #    fname = 'test_prefer_fullpath.pyhtml'
+    #    input = ( "<?py for x in items: ?>\n"
+    #              "  <p>${x.length}</p>\n"
+    #              "<?py #end ?>\n" )
+    #    context = {'items': ['A']}
+    #    engine = None
+    #    #
+    #    def _test(fname, input, expected):
+    #        write_file(fname, input)
+    #        engine = tenjin.Engine()
+    #        engine.cache.clear()
+    #        t = engine.get_template(fname)
+    #        ok (t.filename) == expected
+    #        ex = error_file = None
+    #        try:
+    #            engine.render(fname, context)
+    #        except:
+    #            ex = sys.exc_info()[1]
+    #            error_file = _filename_on_where_error_raised()
+    #        ok (ex) != None
+    #        ok (error_file) == expected
+    #        # read from cache
+    #        engine.cache.clear()
+    #        engine = tenjin.Engine()
+    #        t = engine.get_template(fname)
+    #        ok (t.filename) == expected
+    #    def _filename_on_where_error_raised():
+    #        import traceback
+    #        tb = sys.exc_info()[2]
+    #        arr = traceback.format_tb(tb)
+    #        msg = arr[-1]
+    #        m = re.search(r'File "(.*?)"', msg)
+    #        return m.group(1)
+    #    #
+    #    if "Engine.prefer_fullpath is False then set relative epath as template filename":
+    #        assert tenjin.Engine.prefer_fullpath == False
+    #        try:
+    #            _test(fname, input, expected=fname)
+    #        finally:
+    #            _remove_files([fname, fname + '.cache'])
+    #    if "Engine.prefer_fullpath is True then set fullpath as template filename":
+    #        tenjin.Engine.prefer_fullpath = True
+    #        try:
+    #            _test(fname, input, expected=os.path.join(os.getcwd(), fname))
+    #        finally:
+    #            tenjin.Engine.prefer_fullpath = False
+    #            _remove_files([fname, fname + '.cache'])
 
 
     ##################
