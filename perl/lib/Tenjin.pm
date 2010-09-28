@@ -296,7 +296,7 @@ sub tagattrs {   ## [experimental]
 ##   nv('pair', 'Haru&Kyon')  #=> 'name="pair" value="Haru&amp;Kyon"'
 sub nv {   ## [experimental]
     my ($name, $value) = @_;
-    'name="'.$name.'" value="'.escape_html($value).'"';  # return
+    'name="'.escape_html($name).'" value="'.escape_html($value).'"';  # return
 }
 
 
@@ -398,7 +398,7 @@ sub tagattrs {   ## [experimental]
 
 sub nv {   ## [experimental]
     my ($name, $value) = @_;
-    safe_str('name="'.$name.'" value="'.safe_escape($value).'"');  # return
+    safe_str('name="'.safe_escape($name).'" value="'.safe_escape($value).'"');  # return
 }
 
 

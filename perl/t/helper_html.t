@@ -11,7 +11,7 @@ BEGIN {
 
 use strict;
 use Data::Dumper;
-use Test::More tests => 34;
+use Test::More tests => 35;
 use Specofit;
 use Tenjin;
 $Tenjin::USE_STRICT = 1;
@@ -186,9 +186,14 @@ spec_of "Tenjin::Helper::Html", sub {
 
     spec_of "::nv()", sub {
 
-        it "returns name and value attributes", sub {
-            my $ret = nv('pair', 'Haru&Kyon');
-            is $ret, 'name="pair" value="Haru&amp;Kyon"';
+        it "returns name and value attributes with html escaping", sub {
+            my $ret = nv('pair', 'Haru x Kyon');
+            is $ret, 'name="pair" value="Haru x Kyon"';
+        };
+
+        it "escapes both name and value", sub {
+            my $ret = nv('<pair>', 'Haru&Kyon');
+            is $ret, 'name="&lt;pair&gt;" value="Haru&amp;Kyon"';
         };
 
     };
