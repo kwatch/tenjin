@@ -1540,7 +1540,7 @@ sub render {
     my $output;
     while (1) {
         my $template = $this->get_template($template_name, $context); # pass $context only for preprocessing
-        $output = $template->_render($context);
+        $output = $template->render($context);
         ! $@  or die "*** ERROR: $template->{filename}\n", $@;
         $layout = $context->{_layout} if exists $context->{_layout};
         $layout = $this->{layout} if $layout == 1;
