@@ -11,7 +11,7 @@ BEGIN {
 
 use strict;
 use Data::Dumper;
-use Test::More tests => 39;
+use Test::More tests => 40;
 use Specofit;
 use File::Path;
 use Tenjin;
@@ -336,6 +336,41 @@ spec_of "Tenjin::Engine", sub {
 
         };
 
+    };
+
+
+    spec "print tracing information if 'trace' option enabled", sub {
+        my $files = {
+            '_test_trace1.plhtml' => "<p>Hello [=\$name=]!</p>\n",
+            '_test_footer.plhtml' => "<p>copyright(c)</p>\n",
+            '_test_layout.plhtml' => "<body>\n"
+                                   . "[==\$_content==]\n"
+                                   . "<div><?pl include(':footer') ?></div>\n"
+                                   . "</body>\n",
+        };
+        my $expected = <<'END';
+<!-- ***** begin: _test_layout.plhtml ***** -->
+<body>
+<!-- ***** begin: _test_trace1.plhtml ***** -->
+<p>Hello Haruhi!</p>
+<!-- ***** end: _test_trace1.plhtml ***** -->
+<div><!-- ***** begin: _test_footer.plhtml ***** -->
+<p>copyright(c)</p>
+<!-- ***** end: _test_footer.plhtml ***** -->
+</div>
+</body>
+<!-- ***** end: _test_layout.plhtml ***** -->
+END
+        pre_task {
+            write_file($_, $files->{$_}) for keys %$files;
+        };
+        my $engine = Tenjin::Engine->new({trace=>1, cache=>0, layout=>':layout',
+                                          postfix=>'.plhtml', prefix=>'_test_'});
+        my $output = $engine->render(':trace1', {name=>'Haruhi'});
+        is $output, $expected;
+        post_task {
+            -f $_ && unlink $_ for keys %$files;
+        };
     };
 
 

@@ -10,7 +10,7 @@ BEGIN {
 }
 
 use strict;
-use Test::More tests => 33;
+use Test::More tests => 34;
 use Specofit;
 use Data::Dumper;
 use Tenjin strict=>1;
@@ -361,6 +361,16 @@ END
         pre_cond { ! $@ };
         eval { $t->render(); };
         should_eq($@, $expected);
+    };
+
+    it "prints tracing information if 'trace' option enabled", sub {
+        my $t = Tenjin::Template->new(undef, {trace=>1});
+        $t->convert("<p>Hello World</p>\n", "ex.plhtml");
+        my $output = $t->render();
+        my $expected = "<!-- ***** begin: ex.plhtml ***** -->\n"
+                     . "<p>Hello World</p>\n"
+                     . "<!-- ***** end: ex.plhtml ***** -->\n";
+        is $output, $expected;
     };
 
 };

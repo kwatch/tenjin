@@ -578,6 +578,7 @@ sub new {
         'escapefunc' => defined($opts) ? $opts->{escapefunc} : undef,
         'timestamp'  => undef,
         'args'       => undef,
+        'trace'      => defined($opts) ? $opts->{trace} : undef,
     };
     $this = bless($this, $class);
     if (defined($opts) && defined($opts->{input})) {
@@ -621,6 +622,11 @@ sub render {
     if ($@) {  # error happened
         my $template_filename = $this->{filename};
         die "*** ERROR: " . $this->{filename} . "\n", $@;
+    }
+    if ($this->{trace}) {
+        $output = "<!-- ***** begin: ".$this->{filename}." ***** -->\n"
+                . $output
+                . "<!-- ***** end: ".$this->{filename}." ***** -->\n";
     }
     return $output;
 }
