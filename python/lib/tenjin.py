@@ -158,7 +158,7 @@ if True:
                     def to_str(val,   _str=str, _unicode=unicode, _isa=isinstance, _encode=encode):
                         """Convert val into string or return '' if None. Unicode will be encoded into binary(=str)."""
                         if _isa(val, _str):     return val
-                        if val is None:                return ''
+                        if val is None:         return ''
                         if _isa(val, _unicode): return val.encode(_encode)  # unicode to binary(=str)
                         return _str(val)
             else:
