@@ -9,8 +9,9 @@
 ###
 
 
+use strict;
+
 package Tenjin::NoTextTemplate;
-#use strict;
 use Data::Dumper;
 
 our @ISA = ('Tenjin::Template');
@@ -72,8 +73,6 @@ sub add_expr {
 
 
 package Tenjin::Main;
-
-use strict;
 use Data::Dumper;
 use File::Basename;
 #use PadWalker;   # inspect local variables via stack-frame
