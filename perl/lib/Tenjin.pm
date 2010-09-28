@@ -637,6 +637,7 @@ sub convert_file {
 sub convert {
     my ($this, $input, $filename) = @_;
     $this->{filename} = $filename;
+    $this->{args} = undef;
     my @buf = $this->{escapefunc} ?
               ('my $_buf = ""; ', ) :
               ('my $_buf = ""; my $_V; ', );

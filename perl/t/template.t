@@ -10,7 +10,7 @@ BEGIN {
 }
 
 use strict;
-use Test::More tests => 31;
+use Test::More tests => 33;
 use Specofit;
 use Data::Dumper;
 use Tenjin strict=>1;
@@ -273,6 +273,14 @@ spec_of "Tenjin::Template::convert()", sub {
         and_it "doesn't compile script into closure automatically", sub {
             should_be_undef($t->{func});
         };
+    };
+
+    it "clears 'args' attr at the first to ignore before attr value", sub {
+        my $t = Tenjin::Template->new();
+        $t->convert("<?pl #\@ARGS x ?>");
+        is_deeply $t->{args}, ['x'];
+        $t->convert("<?pl #\@ARGS y ?>");
+        is_deeply $t->{args}, ['y'];
     };
 
 };
