@@ -784,7 +784,7 @@ class EngineTest(object):
             t = e1._create_template('<p>#{_content}</p>', '_views/layout.pyhtml')
             ok (t).is_a(tenjin.Template)
             ok (t.filename) == "_views/layout.pyhtml"
-            ok (t.script) == "_buf.extend(('''<p>''', to_str(_content), '''</p>''', ));"
+            ok (t.script) == "_extend(('''<p>''', to_str(_content), '''</p>''', ));"
 
     @_with_dummy_files
     def test__preprocess(self):

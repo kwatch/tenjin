@@ -240,7 +240,7 @@ class SafeEngineTest(object):
   <div>copyright(c)2010 kuwata-lab.com</div>
 '''[1:]
         expected_script = r"""
-_buf.extend(('''  <h1>''', safe_escape(to_str(title)), '''</h1>
+_extend(('''  <h1>''', safe_escape(to_str(title)), '''</h1>
   <ul>
     <li>Su</li>
     <li>M</li>

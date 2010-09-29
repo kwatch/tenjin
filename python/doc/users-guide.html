@@ -470,17 +470,17 @@ views/page.pyhtml.cache: data
       </div>
       <pre class="terminal">
 $ pytenjin <strong>-s</strong> views/page.pyhtml
-_buf = []; _buf.extend(('''&lt;h2&gt;''', escape(to_str(title)), '''&lt;/h2&gt;
+_buf = []; _extend = _buf.extend; _extend(('''&lt;h2&gt;''', escape(to_str(title)), '''&lt;/h2&gt;
 &lt;table&gt;\n''', ));
 i = 0
 for item in items:
     i += 1
     klass = i % 2 and 'odd' or 'even'
-    _buf.extend(('''  &lt;tr class="''', to_str(klass), '''"&gt;
+    _extend(('''  &lt;tr class="''', to_str(klass), '''"&gt;
     &lt;td&gt;''', escape(to_str(item)), '''&lt;/td&gt;
   &lt;/tr&gt;\n''', ));
 #endfor
-_buf.extend(('''&lt;/table&gt;\n''', ));
+_extend(('''&lt;/table&gt;\n''', ));
 print(''.join(_buf))
 </pre>
 
@@ -685,20 +685,20 @@ $ python main.py
       </div>
       <pre class="terminal">
 $ pytenjin -s views/page.pyhtml
-_buf = []
+_buf = []; _extend = _buf.extend
 <strong>title = _context.get('title'); items = _context.get('items'); </strong>
 _context['page_title'] = 'Tenjin: Layout Template Example'
-_buf.extend(('''&lt;h2&gt;''', escape(to_str(title)), '''&lt;/h2&gt;
+_extend(('''&lt;h2&gt;''', escape(to_str(title)), '''&lt;/h2&gt;
 &lt;table&gt;\n''', ));
 i = 0
 for item in items:
     i += 1
     klass = i % 2 and 'odd' or 'even'
-    _buf.extend(('''  &lt;tr class="''', to_str(klass), '''"&gt;
+    _extend(('''  &lt;tr class="''', to_str(klass), '''"&gt;
     &lt;td&gt;''', escape(to_str(item)), '''&lt;/td&gt;
   &lt;/tr&gt;\n''', ));
 #endfor
-_buf.extend(('''&lt;/table&gt;\n''', ));
+_extend(('''&lt;/table&gt;\n''', ));
 print(''.join(_buf))
 </pre><a name="test_051/views/_layout.pyhtml"></a>
 
@@ -724,9 +724,9 @@ print(''.join(_buf))
       </div>
       <pre class="terminal">
 $ pytenjin -s views/_layout.pyhtml
-_buf = []
+_buf = []; _extend = _buf.extend
 <strong>_content = _context.get('_content'); page_title = _context.get('page_title'); </strong>
-_buf.extend(('''&lt;!DOCTYPE&gt;
+_extend(('''&lt;!DOCTYPE&gt;
 &lt;html&gt;
   &lt;head&gt;
     &lt;meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /&gt;
@@ -902,7 +902,7 @@ print(html)
         <dt class="dt2">(A) Binary-based approach</dt>
 
         <dd class="dd2">
-          <p>Tenjin handles templates as binary file. For example, text "foo" will be converted into <code>_buf.exnted(('foo', ))</code>. In this approach, unicode object should be encoded into binary(=str) by <code>to_str()</code>.</p>
+          <p>Tenjin handles templates as binary file. For example, text "foo" will be converted into <code>_exnted(('foo', ))</code>. In this approach, unicode object should be encoded into binary(=str) by <code>to_str()</code>.</p>
           <pre class="program">
 to_str = tenjin.generate_tostrfunc(<strong>encode</strong>='utf-8')
    # ex. to_str(u'\u65e5\u672c\u8a9e') =&gt; '\xe6\x97\xa5\xe6\x9c\xac\xe8\xaa\x9e'
@@ -921,7 +921,7 @@ engine = tenjin.Engine()
         <dt class="dt2">(B) Unicode-based approach</dt>
 
         <dd class="dd2">
-          <p>You can hanlde templates as unicode string with <code>encoding</code> option for <code>tenjin.Engine()</code>. For example, text "foo" will be converted into <code>_buf.extend((<strong>u</strong>'foo', ))</code>. In this approach, binary(=str) should be decoded into unicode in <code>to_str()</code>.</p>
+          <p>You can hanlde templates as unicode string with <code>encoding</code> option for <code>tenjin.Engine()</code>. For example, text "foo" will be converted into <code>_extend((<strong>u</strong>'foo', ))</code>. In this approach, binary(=str) should be decoded into unicode in <code>to_str()</code>.</p>
           <pre class="program">
 to_str = tenjin.generate_tostrfunc(<strong>decode</strong>='utf-8')
    # ex. to_str('\xe6\x97\xa5\xe6\x9c\xac\xe8\xaa\x9e')  #=&gt; u'\u65e5\u672c\u8a9e'
@@ -1269,7 +1269,7 @@ SafeStr(var1) = <strong>&lt;b&gt;Hello&lt;/b&gt;</strong>
       <pre class="terminal">
 $ pytenjin -sb <strong>--safe</strong> safe-test.pyhtml
 var1 = _context.get('var1'); var2 = _context.get('var2'); 
-_buf.extend(('''var1 = ''', <strong>safe_escape</strong>(to_str(var1)), '''
+_extend(('''var1 = ''', <strong>safe_escape</strong>(to_str(var1)), '''
 var2 = ''', <strong>safe_escape</strong>(to_str(var2)), '''
 SafeStr(var1) = ''', to_str(var1), '''\n''', ));
 </pre>
@@ -1718,7 +1718,7 @@ print(html)
       <pre class="terminal">
 $ python pp-example1.py
 ------ converted script ------
-_buf.extend(('''## normal expression
+_extend(('''## normal expression
 value = ''', <strong>escape(to_str(value))</strong>, '''
 ## with preprocessing
 value = <strong>My Great Example</strong>\n''', ));
@@ -1747,7 +1747,7 @@ value = My Great Example
       <p>If you want to see preprocessing script (not preprocessed script), use '<code>pytenjin -sP</code>' command.</p><a name="test_preprocessing/result1c.output"></a>
       <pre class="terminal">
 $ pytenjin <strong>-sP</strong> -c 'value="My Great Example"' views/pp-example1.pyhtml
-_buf = []; _buf.extend(('''## normal expression
+_buf = []; _extend = _buf.extend; _extend(('''## normal expression
 value = ${value}
 ## with preprocessing
 value = ''', escape(to_str(_decode_params(value))), '''\n''', ));
@@ -1948,7 +1948,7 @@ m17n.pyhtml    m17n.pyhtml.<strong>en</strong>.cache    m17n.pyhtml.<strong>fr</
       </div>
       <pre class="terminal">
 $ pytenjin -a dump m17n.pyhtml.en.cache
-_buf.extend(('''&lt;div&gt;
+_extend(('''&lt;div&gt;
  &lt;p&gt;<strong>Hello</strong> ''', escape(to_str(username)), '''!&lt;/p&gt;
 &lt;/div&gt;\n''', ));
 </pre><a name="test_m17n/result_fr.output"></a>
@@ -1958,7 +1958,7 @@ _buf.extend(('''&lt;div&gt;
       </div>
       <pre class="terminal">
 $ pytenjin -a dump m17n.pyhtml.fr.cache
-_buf.extend(('''&lt;div&gt;
+_extend(('''&lt;div&gt;
  &lt;p&gt;<strong>Bonjour</strong> ''', escape(to_str(username)), '''!&lt;/p&gt;
 &lt;/div&gt;\n''', ));
 </pre><br>
@@ -2019,11 +2019,11 @@ example.pyhtml:4:1: '#endfor' expected but got '#endif'.
       </div>
       <pre class="terminal">
 $ pytenjin <strong>-s</strong> example.pyhtml
-_buf = []; _buf.extend(('''&lt;ul&gt;\n''', ));
+_buf = []; _extend = _buf.extend; _extend(('''&lt;ul&gt;\n''', ));
 for item in items:
-    _buf.extend(('''  &lt;li&gt;''', escape(to_str(item)), '''&lt;/li&gt;\n''', ));
+    _extend(('''  &lt;li&gt;''', escape(to_str(item)), '''&lt;/li&gt;\n''', ));
 #endfor
-_buf.extend(('''&lt;/ul&gt;\n''', ));
+_extend(('''&lt;/ul&gt;\n''', ));
 print(''.join(_buf))
 </pre>
 
@@ -2034,11 +2034,11 @@ print(''.join(_buf))
       </div>
       <pre class="terminal">
 $ pytenjin -s<strong>b</strong> example.pyhtml
-_buf.extend(('''&lt;ul&gt;\n''', ));
+_extend(('''&lt;ul&gt;\n''', ));
 for item in items:
-    _buf.extend(('''  &lt;li&gt;''', escape(to_str(item)), '''&lt;/li&gt;\n''', ));
+    _extend(('''  &lt;li&gt;''', escape(to_str(item)), '''&lt;/li&gt;\n''', ));
 #endfor
-_buf.extend(('''&lt;/ul&gt;\n''', ));
+_extend(('''&lt;/ul&gt;\n''', ));
 </pre><br>
       <a name="command-retrieve" id="command-retrieve"></a>
 
@@ -2352,7 +2352,7 @@ print(engine.get_template('page.pyhtml').script)
       </div>
       <pre class="program">
 $ python main.py
-_buf.extend(('''&lt;p&gt;
+_extend(('''&lt;p&gt;
   escaped:     ''', <strong>cgi.escape</strong>(<strong>str</strong>(value)), '''
   not escaped: ''', <strong>str</strong>(value), '''
 &lt;/p&gt;\n''', ));

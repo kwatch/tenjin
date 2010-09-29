@@ -382,17 +382,17 @@ You can get converted script by '{{,pytenjin -s,}}'.
 .? Show Python code
 .==================== test_020/result.output
 $ pytenjin {{*-s*}} views/page.pyhtml
-_buf = []; _buf.extend(('''<h2>''', escape(to_str(title)), '''</h2>
+_buf = []; _extend = _buf.extend; _extend(('''<h2>''', escape(to_str(title)), '''</h2>
 <table>\n''', ));
 i = 0
 for item in items:
     i += 1
     klass = i % 2 and 'odd' or 'even'
-    _buf.extend(('''  <tr class="''', to_str(klass), '''">
+    _extend(('''  <tr class="''', to_str(klass), '''">
     <td>''', escape(to_str(item)), '''</td>
   </tr>\n''', ));
 #endfor
-_buf.extend(('''</table>\n''', ));
+_extend(('''</table>\n''', ));
 print(''.join(_buf))
 .====================
 
@@ -416,17 +416,17 @@ print(template.script)
 .#+++
 .==================== test_021/result.output
 $ python main.py
-_buf.extend(('''<h2>''', escape(to_str(title)), '''</h2>
+_extend(('''<h2>''', escape(to_str(title)), '''</h2>
 <table>\n''', ));
 i = 0
 for item in items:
     i += 1
     klass = i % 2 and 'odd' or 'even'
-    _buf.extend(('''  <tr class="''', to_str(klass), '''">
+    _extend(('''  <tr class="''', to_str(klass), '''">
     <td>''', escape(to_str(item)), '''</td>
   </tr>\n''', ));
 #endfor
-_buf.extend(('''</table>\n''', ));
+_extend(('''</table>\n''', ));
 
 .====================
 .#---
@@ -604,20 +604,20 @@ For readability, it is recommended to declare context variables in your template
 .? Converted Python script
 .==================== test_050/result.output
 $ pytenjin -s views/page.pyhtml
-_buf = []
+_buf = []; _extend = _buf.extend
 {{*title = _context.get('title'); items = _context.get('items'); *}}
 _context['page_title'] = 'Tenjin: Layout Template Example'
-_buf.extend(('''<h2>''', escape(to_str(title)), '''</h2>
+_extend(('''<h2>''', escape(to_str(title)), '''</h2>
 <table>\n''', ));
 i = 0
 for item in items:
     i += 1
     klass = i % 2 and 'odd' or 'even'
-    _buf.extend(('''  <tr class="''', to_str(klass), '''">
+    _extend(('''  <tr class="''', to_str(klass), '''">
     <td>''', escape(to_str(item)), '''</td>
   </tr>\n''', ));
 #endfor
-_buf.extend(('''</table>\n''', ));
+_extend(('''</table>\n''', ));
 print(''.join(_buf))
 .====================
 
@@ -640,9 +640,9 @@ print(''.join(_buf))
 .? Converted Python script
 .==================== test_051/result.output
 $ pytenjin -s views/_layout.pyhtml
-_buf = []
+_buf = []; _extend = _buf.extend
 {{*_content = _context.get('_content'); page_title = _context.get('page_title'); *}}
-_buf.extend(('''<!DOCTYPE>
+_extend(('''<!DOCTYPE>
 <html>
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
@@ -847,7 +847,7 @@ Tenjin provides two approaches for encoding in Python 2.x.
 .% (A) Binary-based approach
    
    Tenjin handles templates as binary file.
-   For example, text "foo" will be converted into {{,_buf.exnted(('foo', )),}}.
+   For example, text "foo" will be converted into {{,_exnted(('foo', )),}}.
    In this approach, unicode object should be encoded into binary(=str) by {{,to_str(),}}.
    .--------------------
    to_str = tenjin.generate_tostrfunc({{*encode*}}='utf-8')
@@ -863,7 +863,7 @@ Tenjin provides two approaches for encoding in Python 2.x.
 .% (B) Unicode-based approach
    
    You can hanlde templates as unicode string with {{,encoding,}} option for {{,tenjin.Engine(),}}.
-   For example, text "foo" will be converted into {{,_buf.extend(({{*u*}}'foo', )),}}.
+   For example, text "foo" will be converted into {{,_extend(({{*u*}}'foo', )),}}.
    In this approach, binary(=str) should be decoded into unicode in {{,to_str(),}}.
    .--------------------
    to_str = tenjin.generate_tostrfunc({{*decode*}}='utf-8')
@@ -1140,7 +1140,7 @@ You can see it by {{,--safe,}} option for pytenjin command.{{({{,${SafeStr(var1)
 .==================== test_safe/result2.output
 $ pytenjin -sb {{*--safe*}} safe-test.pyhtml
 var1 = _context.get('var1'); var2 = _context.get('var2'); 
-_buf.extend(('''var1 = ''', {{*safe_escape*}}(to_str(var1)), '''
+_extend(('''var1 = ''', {{*safe_escape*}}(to_str(var1)), '''
 var2 = ''', {{*safe_escape*}}(to_str(var2)), '''
 SafeStr(var1) = ''', to_str(var1), '''\n''', ));
 .#SafeStr(var1) = ''', {{*safe_escape*}}(to_str(SafeStr(var1))), '''\n''', ));
@@ -1595,7 +1595,7 @@ print(html)
 .==================== test_preprocessing/result1a.output
 $ python pp-example1.py
 ------ converted script ------
-_buf.extend(('''## normal expression
+_extend(('''## normal expression
 value = ''', {{*escape(to_str(value))*}}, '''
 ## with preprocessing
 value = {{*My Great Example*}}\n''', ));
@@ -1623,7 +1623,7 @@ If you want to see preprocessing script (not preprocessed script), use '{{,pyten
 
 .==================== test_preprocessing/result1c.output
 $ pytenjin {{*-sP*}} -c 'value="My Great Example"' views/pp-example1.pyhtml
-_buf = []; _buf.extend(('''## normal expression
+_buf = []; _extend = _buf.extend; _extend(('''## normal expression
 value = ${value}
 ## with preprocessing
 value = ''', escape(to_str(_decode_params(value))), '''\n''', ));
@@ -1670,7 +1670,7 @@ print(''.join(_buf))
 .#.==================== test_preprocessing/result0.output
 .#$ python blog-main.py
 .#------ converted script ------
-.#_buf.extend(('''<h1>{{*My Great Blog*}}</h1>
+.#_extend(('''<h1>{{*My Great Blog*}}</h1>
 .#<p>
 .#  ''', escape(to_str('''Bonjor %s!''' % (user_name))), '''
 .#</p>\n''', ));
@@ -1732,7 +1732,7 @@ And the Python code is here. This shows that there is no for-loop.
 .==================== test_preprocessing/result2b.output
 $ pytenjin --preprocess -sb views/pp-example2.pyhtml
 chk = { params['state']: ' selected="selected"' }
-_buf.extend(('''<select name="state">
+_extend(('''<select name="state">
   <option value="">-</option>
   <option value="CA"''', to_str(chk.get('CA', '')), '''>California</option>
   <option value="FL"''', to_str(chk.get('FL', '')), '''>Florida</option>
@@ -1774,7 +1774,7 @@ $ pytenjin -P views/pp-example3.pyhtml
 .? Translated script code:
 .==================== test_preprocessing/result3b.output
 $ pytenjin --preprocess -sb views/pp-example3.pyhtml
-_buf.extend(('''<a href="/items/show/''', to_str(params["id"]), '''">Show ''', escape(to_str(params["name"])), '''</a>\n''', ));
+_extend(('''<a href="/items/show/''', to_str(params["id"]), '''">Show ''', escape(to_str(params["name"])), '''</a>\n''', ));
 .====================
 .#-----
 
@@ -1896,7 +1896,7 @@ And each cache files have different content.
 .? {{,_('Hello'),}} is translated into "Hello" in Engilish cache file
 .==================== test_m17n/result_en.output
 $ pytenjin -a dump m17n.pyhtml.en.cache
-_buf.extend(('''<div>
+_extend(('''<div>
  <p>{{*Hello*}} ''', escape(to_str(username)), '''!</p>
 </div>\n''', ));
 .====================
@@ -1904,7 +1904,7 @@ _buf.extend(('''<div>
 .? {{,_('Hello'),}} is translated into "Bonjour" in French cache file
 .==================== test_m17n/result_fr.output
 $ pytenjin -a dump m17n.pyhtml.fr.cache
-_buf.extend(('''<div>
+_extend(('''<div>
  <p>{{*Bonjour*}} ''', escape(to_str(username)), '''!</p>
 </div>\n''', ));
 .====================
@@ -1963,11 +1963,11 @@ Command-line option '-s' converts template file into Python script code.
 .? Result (-s)
 .==================== test_convert/result1.output
 $ pytenjin {{*-s*}} example.pyhtml
-_buf = []; _buf.extend(('''<ul>\n''', ));
+_buf = []; _extend = _buf.extend; _extend(('''<ul>\n''', ));
 for item in items:
-    _buf.extend(('''  <li>''', escape(to_str(item)), '''</li>\n''', ));
+    _extend(('''  <li>''', escape(to_str(item)), '''</li>\n''', ));
 #endfor
-_buf.extend(('''</ul>\n''', ));
+_extend(('''</ul>\n''', ));
 print(''.join(_buf))
 .====================
 
@@ -1979,11 +1979,11 @@ Option '-b' removes preamble ('{{,_buf = [],}}') and postamble ('{{,print "".joi
 .? Result (-sb)
 .==================== test_convert/result2.output
 $ pytenjin -s{{*b*}} example.pyhtml
-_buf.extend(('''<ul>\n''', ));
+_extend(('''<ul>\n''', ));
 for item in items:
-    _buf.extend(('''  <li>''', escape(to_str(item)), '''</li>\n''', ));
+    _extend(('''  <li>''', escape(to_str(item)), '''</li>\n''', ));
 #endfor
-_buf.extend(('''</ul>\n''', ));
+_extend(('''</ul>\n''', ));
 .====================
 
 
@@ -2291,7 +2291,7 @@ print(engine.get_template('page.pyhtml').script)
 .? Result
 .-------------------- test_escape/result.output
 $ python main.py
-_buf.extend(('''<p>
+_extend(('''<p>
   escaped:     ''', {{*cgi.escape*}}({{*str*}}(value)), '''
   not escaped: ''', {{*str*}}(value), '''
 </p>\n''', ));
