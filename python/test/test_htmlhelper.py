@@ -8,7 +8,7 @@ import sys, os, re
 
 from testcase_helper import *
 import tenjin
-from tenjin.helpers import escape, to_str
+from tenjin.helpers import escape, to_str, SafeStr
 
 
 class HtmlHelperTest(object):
@@ -23,6 +23,9 @@ class HtmlHelperTest(object):
         ok (tagattr('size', '', 'empty'))  == ''
         ok (tagattr('title', '<>&"'))      == ' title="&lt;&gt;&amp;&quot;"'
         ok (tagattr('title', '<>&"', escape=False)) == ' title="<>&""'
+        #
+        ok (tagattr('size', 20)).is_a(SafeStr)
+        ok (tagattr('size', '')).is_a(SafeStr)
 
     def test_tagattrs(self):
         tagattrs = tenjin.helpers.html.tagattrs
@@ -33,26 +36,40 @@ class HtmlHelperTest(object):
         ok (tagattrs(selected=1))             == ' selected="selected"'
         ok (tagattrs(disabled=True))          == ' disabled="disabled"'
         ok (tagattrs(checked='', selected=0, disabled=None)) == ''
+        #
+        ok (tagattrs(size=20)).is_a(SafeStr)
+        ok (tagattrs(size=None)).is_a(SafeStr)
 
     def test_checked(self):
         checked = tenjin.helpers.html.checked
         ok (checked(1==1)) == ' checked="checked"'
         ok (checked(1==0)) == ''
+        #
+        ok (checked(1==1)).is_a(SafeStr)
+        ok (checked(1==0)).is_a(SafeStr)
 
     def test_selected(self):
         selected = tenjin.helpers.html.selected
         ok (selected(1==1)) == ' selected="selected"'
         ok (selected(1==0)) == ''
+        #
+        ok (selected(1==1)).is_a(SafeStr)
+        ok (selected(1==0)).is_a(SafeStr)
 
     def test_disabled(self):
         disabled = tenjin.helpers.html.disabled
         ok (disabled(1==1)) == ' disabled="disabled"'
         ok (disabled(1==0)) == ''
+        #
+        ok (disabled(1==1)).is_a(SafeStr)
+        ok (disabled(1==0)).is_a(SafeStr)
 
     def test_nl2br(self):
         nl2br = tenjin.helpers.html.nl2br
         s = """foo\nbar\nbaz\n"""
         ok (nl2br(s)) == "foo<br />\nbar<br />\nbaz<br />\n"
+        #
+        ok (nl2br(s)).is_a(SafeStr)
 
     def test_text2html(self):
         text2html = tenjin.helpers.html.text2html
@@ -61,6 +78,8 @@ class HtmlHelperTest(object):
         ok (text2html(s)) == expected
         expected = "FOO<br />\n    BAR<br />\nBA     Z<br />\n"
         ok (text2html(s, False)) == expected
+        #
+        ok (text2html(s)).is_a(SafeStr)
 
     def test_nv(self):
         nv = tenjin.helpers.html.nv
@@ -70,6 +89,8 @@ class HtmlHelperTest(object):
         ok (nv('rank', 'A', checked=True))  == 'name="rank" value="A" checked="checked"'
         ok (nv('rank', 'A', disabled=10))   == 'name="rank" value="A" disabled="disabled"'
         ok (nv('rank', 'A', style="color:red")) == 'name="rank" value="A" style="color:red"'
+        #
+        ok (nv('rank', 'A')).is_a(SafeStr)
 
     def test_new_cycle(self):
         cycle = tenjin.helpers.html.new_cycle('odd', 'even')
@@ -85,6 +106,9 @@ class HtmlHelperTest(object):
         ok (cycle()) == 'A'
         ok (cycle()) == 'B'
         ok (cycle()) == 'C'
+        #
+        #ok (cycle()).is_a(SafeStr)
+        #ok (cycle()).is_a(SafeStr)
 
 
 if __name__ == '__main__':

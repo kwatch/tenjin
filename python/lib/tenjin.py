@@ -372,10 +372,10 @@ if True:
     def tagattr(name, expr, value=None, escape=True):
         """(experimental) Return ' name="value"' if expr is true value, else '' (empty string).
            If value is not specified, expr is used as value instead."""
-        if not expr and expr != 0: return ''
+        if not expr and expr != 0: return helpers.SafeStr('')
         if value is None: value = expr
         if escape: value = helpers.safe_escape(to_str(value))
-        return ' %s="%s"' % (name, value)
+        return helpers.SafeStr(' %s="%s"' % (name, value))
 
     def tagattrs(**kwargs):
         """(experimental) built html tag attribtes.
@@ -389,35 +389,37 @@ if True:
         if 'checked'  in kwargs: kwargs['checked']  = kwargs.pop('checked')  and 'checked'  or None
         if 'selected' in kwargs: kwargs['selected'] = kwargs.pop('selected') and 'selected' or None
         if 'disabled' in kwargs: kwargs['disabled'] = kwargs.pop('disabled') and 'disabled' or None
-        escape_html = helpers.safe_escape
-        return ''.join([ ' %s="%s"' % (k, escape_html(to_str(v)))
-                         for k, v in kwargs.items() if v or v == 0 ])
+        esc = helpers.safe_escape
+        s = ''.join([ ' %s="%s"' % (k, esc(to_str(v))) for k, v in kwargs.items() if v or v == 0 ])
+        return helpers.SafeStr(s)
 
     def checked(expr):
         """return ' checked="checked"' if expr is true."""
-        return expr and ' checked="checked"' or ''
+        return helpers.SafeStr(expr and ' checked="checked"' or '')
 
     def selected(expr):
         """return ' selected="selected"' if expr is true."""
-        return expr and ' selected="selected"' or ''
+        return helpers.SafeStr(expr and ' selected="selected"' or '')
 
     def disabled(expr):
         """return ' disabled="disabled"' if expr is true."""
-        return expr and ' disabled="disabled"' or ''
+        return helpers.SafeStr(expr and ' disabled="disabled"' or '')
 
     def nl2br(text):
         """replace "\n" to "<br />\n" and return it."""
         if not text:
-            return ''
-        return text.replace('\n', '<br />\n')
+            return helpers.SafeStr('')
+        return helpers.SafeStr(text.replace('\n', '<br />\n'))
 
     def text2html(text, use_nbsp=True):
         """(experimental) escape xml characters, replace "\n" to "<br />\n", and return it."""
         if not text:
-            return ''
+            return helpers.SafeStr('')
         s = helpers.safe_escape(text)
         if use_nbsp: s = s.replace('  ', ' &nbsp;')
-        return helpers.html.nl2br(s)
+        #return helpers.html.nl2br(s)
+        s = s.replace('\n', '<br />\n')
+        return helpers.SafeStr(s)
 
     def nv(name, value, sep=None, **kwargs):
         """(experimental) Build name and value attributes.
@@ -431,9 +433,11 @@ if True:
            >>> nv('rank', 'A', '.', klass='error', style='color:red')
            'name="rank" value="A" id="rank.A" class="error" style="color:red"'
         """
+        name  = helpers.safe_escape(name)
+        value = helpers.safe_escape(value)
         s = sep and 'name="%s" value="%s" id="%s"' % (name, value, name+sep+value) \
-                or  'name="%s" value="%s"'         % (name, helpers.safe_escape(value))
-        return kwargs and s + helpers.html.tagattrs(**kwargs) or s
+                or  'name="%s" value="%s"'         % (name, value)
+        return helpers.SafeStr(kwargs and s + helpers.html.tagattrs(**kwargs) or s)
 
     def new_cycle(*values):
         """Generate cycle object.
@@ -450,6 +454,8 @@ if True:
             while True:
                 yield values[i]
                 i = (i + 1) % n
+        #SafeStr, safe_escape = helpers.SafeStr, helpers.safe_escape
+        #values = [ isinstance(v, SafeStr) and v or SafeStr(safe_escape(v)) for v in values ]
         if   python2:  return gen(values).next
         elif python3:  return gen(values).__next__
 
