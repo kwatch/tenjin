@@ -1485,7 +1485,7 @@ class Engine(object):
     preprocessorclass = Preprocessor
     timestamp_interval = 1  # seconds
 
-    def __init__(self, prefix=None, postfix=None, layout=None, path=None, cache=True, preprocess=None, templateclass=None, lang=None, finder=None, **kwargs):
+    def __init__(self, prefix=None, postfix=None, layout=None, path=None, cache=True, preprocess=None, templateclass=None, preprocessorclass=None, lang=None, finder=None, **kwargs):
         """Initializer of Engine class.
 
            prefix:str (='')
@@ -1516,6 +1516,7 @@ class Engine(object):
         if postfix: self.postfix = postfix
         if layout:  self.layout  = layout
         if templateclass: self.templateclass = templateclass
+        if preprocessorclass: self.preprocessorclass = preprocessorclass
         if path is not None:  self.path = path
         if lang is not None:  self.lang = lang
         if finder is not None: self.finder = finder
