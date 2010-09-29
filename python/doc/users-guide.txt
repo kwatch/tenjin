@@ -29,7 +29,7 @@ Tenjin is a very fast and full-featured template engine implemented in pure Pyth
    .- {{<Capturing|#capturing>}}
    .- {{<Preprocessing|#preprocessing>}}
 .* Easy to learn
-   .- Because you can embed any Python statements or expression in your template files
+   .- Because you can embed any python statements or expression in your template files
    .- You don't have to study template-specific language
 .* Compact
    .- Only 1500 lines of code
@@ -322,6 +322,7 @@ views/page.pyhtml - ok.
 
 
 
+
 .$$ Template Syntax	| template-syntax
 
 You can write any Python statements or expression in yor template file, but there are several restrictions.
@@ -361,6 +362,7 @@ You can write any Python statements or expression in yor template file, but ther
 
 
 
+
 .$$ Show Converted Source Code	| source-code
 
 pyTenjin converts template files into Python script and executes it.
@@ -394,7 +396,8 @@ _buf.extend(('''</table>\n''', ));
 print(''.join(_buf))
 .====================
 
-If you specify '{{,-sb,}}' instead of '{{,-s,}}', neither preamble (= '{{,_buf = [];,}}') nor postamble (= '{{,print "".join(_buf),}}') are printed.
+
+If you specify '{{,-sb,}}' instead of '{{,-s,}}', neither preamble (= '_buf = [];,}}') nor postamble (= '{{,print("".join(_buf)),}}') are printed.
 See {{<Retrieve Embedded Code|#command-retrieve>}} section for more information.
 
 Or:
@@ -512,9 +515,10 @@ Tenjin supports nested layout template. See {{<Nested Layout Template|#nested-la
 
 .$$ Context Variables	| context-variables
 
-'{{,_context,}}' dictionary contains context data which are passed from main program into template file.
 
-Using '{{,_context,}}' dictionary, you can pass any data from template file to main program or layout template file.
+'{{,#<Erubis::Context:0x100518758>,}}' dictionary contains context data which are passed from main program into template file.
+
+Using '{{,#<Erubis::Context:0x100518758>,}}' dictionary, you can pass any data from template file to main program or layout template file.
 
 .? views/_layout.pyhtml
 .-------------------- test_040/views/_layout.pyhtml
@@ -586,14 +590,14 @@ For readability, it is recommended to declare context variables in your template
 <?py _context['page_title'] = 'Tenjin: Layout Template Example' ?>
 <h2>${title}</h2>
 <table>
-  <?py i = 0 ?>
-  <?py for item in items: ?>
-  <?py     i += 1 ?>
-  <?py     klass = i % 2 and 'odd' or 'even' ?> 
+<?py i = 0 ?>
+<?py for item in items: ?>
+<?py     i += 1 ?>
+<?py     klass = i % 2 and 'odd' or 'even' ?> 
   <tr class="#{klass}">
     <td>${item}</td>
   </tr>
-  <?py #endfor ?>
+<?py #endfor ?>
 </table>
 .--------------------
 
@@ -617,6 +621,7 @@ _buf.extend(('''</table>\n''', ));
 print(''.join(_buf))
 .====================
 
+
 .? views/page.pyhtml
 .-------------------- test_051/views/_layout.pyhtml
 {{*<?py #@ARGS _content, page_title ?>*}}
@@ -624,7 +629,7 @@ print(''.join(_buf))
 <html>
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-    <title>{{*${page_title}*}}</title>
+    <title>${page_title}</title>
   </head>
   <body>
 #{_content}
@@ -672,7 +677,6 @@ You can include other template files by {{,include(),}} helper function.
 	{{/kwargs/}} is passed to template as local variables.
 
 
-
 .? views/_layout.pyhtml
 .-------------------- test_060/views/_layout.pyhtml
 <?py #@ARGS _content, page_title ?>
@@ -705,7 +709,6 @@ You can include other template files by {{,include(),}} helper function.
   {{*copyright(c) 2010 kuwata-lab.com all rights reserved*}}
 {{*</address>*}}
 .--------------------
-
 
 .? Result
 .==================== test_060/result.output
@@ -747,7 +750,6 @@ $ python main.py
 
 If you specify template postfix, you can use template short name such as '{{,:views/page,}}' instead of '{{,views/page.pyhtml,}}'. Notice that template short name should start with '{{,:,}}'.
 
-
 .? main.py
 .-------------------- test_070/main.py
 ## import modules and helper functions
@@ -778,13 +780,12 @@ print(html)
     <title>${page_title}</title>
   </head>
   <body>
-<?py include({{*':_header'*}}) ?>
+<?py include({{*':_header'*}}, title=page_title) ?>
 #{_content}
 <?py include({{*':_footer'*}}) ?>
   </body>
 </html>
 .--------------------
-
 
 .#+++++
 .? Result
@@ -798,7 +799,7 @@ $ python main.py
   </head>
   <body>
 <div class="header">
-  <h1>Tenjin Example</h1>
+  <h1>Tenjin: Layout Template Example</h1>
 </div>
 <h2>Tenjin Example</h2>
 <table>
@@ -824,6 +825,7 @@ $ python main.py
 
 
 
+
 .$$ Template Encoding		| template-encoding
 
 If you want to specify encoding name of template file, add magic comment at 1st line in template file.
@@ -834,6 +836,7 @@ If you want to specify encoding name of template file, add magic comment at 1st 
 <html>
   ...
 .--------------------
+
 
 
 
@@ -894,6 +897,7 @@ engine = tenjin.Engine(encoding='utf-8')     ## handle template as unicode
 
 
 .$$ Helper Function	| helper-functions
+
 
 Tenjin provides some modules for helper functions.
 
@@ -968,9 +972,11 @@ Module {{,tenjin.helpers,}} provides basic helper functions.
 	Helper method for preprocessing. See {{<Preprocessing|#preprocessing>}} section for details.
 
 
+
 .$$$ tenjin.helpers.html module		| tenjin-helpers-html
 
 Module {{,tenjin.helpers.html,}} provides HTML specific helper functions.
+
 
 .: escape({{/str/}}), escape_html({{/str/}})
 	Escapes HTML special characters. Same as {{,tejin.helpers.escape(),}}.
@@ -1029,7 +1035,7 @@ Module {{,tenjin.helpers.html,}} provides HTML specific helper functions.
 	.--------------------
 
 .: text2html({{/str/}})
-	(experimental) Escapes xml characters and replace {{,"\n",}} into {{,"<br />\n",}}.
+   	(experimental) Escapes xml characters and replace {{,"\n",}} into {{,"<br />\n",}}.
 	.--------------------
 	>>> from tenjin.helpers.html import *
 	>>> text2html('<AAA>\nB&B\n"CCC"\n')
@@ -1037,7 +1043,7 @@ Module {{,tenjin.helpers.html,}} provides HTML specific helper functions.
 	.--------------------
 
 .: tagattr({{/name/}}, {{/expr/}}, {{/value/}}=None, {{/escape/}}=True)
-	(experimental) Returns {{,' name="value"',}} if {{/expr/}} is true value, else {{,'',}} (empty string).
+	{{*(experimental)*}} Returns {{,' name="value"',}} if {{/expr/}} is true value, else {{,'',}} (empty string).
 	If {{/value/}} is not specified, {{/expr/}} is used as value instead.
 	.--------------------
 	>>> from tenjin.helpers.html import *
@@ -1050,7 +1056,7 @@ Module {{,tenjin.helpers.html,}} provides HTML specific helper functions.
 	.--------------------
 
 .: tagattrs(**{{/kwargs/}})
-	(experimental) Builds html tag attribtes.
+	{{*(experimental)*}} Builds html tag attribtes.
 	.--------------------
 	>>> from tenjin.helpers.html import *
 	>>> tagattrs(klass='main', size=20)
@@ -1060,7 +1066,7 @@ Module {{,tenjin.helpers.html,}} provides HTML specific helper functions.
 	.--------------------
 
 .: nv({{/name/}}, {{/value/}}, {{/sep/}}=None, **{{/kwargs/}})
-	(experimental) Builds name and value attributes.
+	{{*(experimental)*}} Builds name and value attributes.
 	.--------------------
 	>>> from tenjin.helpers.html import *
 	>>> nv('rank', 'A')
@@ -1075,6 +1081,8 @@ Module {{,tenjin.helpers.html,}} provides HTML specific helper functions.
 
 
 
+
+
 .$ Advanced Features		| advanced-features
 
 
@@ -1083,7 +1091,7 @@ Module {{,tenjin.helpers.html,}} provides HTML specific helper functions.
 
 Tenjin provides SafeTemplate and SafeEngine class which enforces HTML escape.
 
-.* With these classes, {{,#{},}} is not allowed. Only {{,${},}} is available.
+.* With these classes, {{,#{...},}} is not allowed. Only {{,${...},}} is available.
 .* Use {{,${SafeStr(x)},}} instead of {{,#{x},}}.
 
 .? safe-test.pyhtml
@@ -1124,6 +1132,7 @@ var2 = {{*<b>Hello</b>*}}
 SafeStr(var1) = {{*<b>Hello</b>*}}
 
 .====================
+
 
 SafeTemplate class uses safe_escape() instead of escape().
 You can see it by {{,--safe,}} option for pytenjin command.{{({{,${SafeStr(var1)},}} is converted into Python code which does't use safe_escape() for performance reason.)}}
@@ -1341,6 +1350,7 @@ You can change this behaviour by setting {{,tenjin.Engine.cache,}} or passing ca
 For example, if you want to cache template object but want not to create '*.cache' file,
 use {{,tenjin.MemoryCacheStorage,}} object.
 
+
 .? example to change template caching
 .--------------------
 import tenjin
@@ -1389,7 +1399,7 @@ You can cache a certain part of HTML to improve performance. This is called as F
 .--------------------
 
 Tenjin stores fragments caches into memory by default.
-If you want to change or customize cache storage, see the following example.
+If you want to change or customize cache store, see the following example.
 
 .? main.py
 .-------------------- test_fragmentcache/main.py
@@ -1449,6 +1459,8 @@ $ cat cache.d/items/1
 
 .$$ Logging	| logging
 
+
+
 If you set logging object to {{,tenjin.logger,}}, Tenjin will report loading template files.
 
 For example:
@@ -1466,19 +1478,22 @@ from tenjin.helpers import *
 engine = tenjin.Engine()
 context = {'name': 'World'}
 html = engine.render('example.pyhtml', context)
+#print(html)
 .--------------------
+
+
 
 If you run it first time, Tenjin will report that template object is stored into cache file.
 
 .==================== test_logging/result1.output
-$ python ex-logger.py > /dev/null
+$ python ex-logger.py
 INFO:root:[tenjin.MarshalCacheStorage] {{*store cache (file='/home/user/example.pyhtml.cache')*}}
 .====================
 
 And if you run it again, Tenjin will report that template object is loaded from cache file.
 
 .==================== test_logging/result2.output
-$ python ex-logger.py > /dev/null
+$ python ex-logger.py
 INFO:root:[tenjin.MarshalCacheStorage] {{*load cache (file='/home/user/example.pyhtml.cache')*}}
 .====================
 
@@ -1542,12 +1557,12 @@ Notation of preprocessing:
 
 .: <?PY ... ?>
 	Preprocessing statement.
-.: #{{...}}
+.: #{{{}}{...}{{}}}
 	Preprocessing expression (without HTML escape)
-.: ${{...}}
+.: ${{{}}{...}{{}}}
 	Preprocessing expression (with HTML escape)
 
-The following shows difference between {{,${ {{/.../}} },}} and {{,${{ {{/.../}} }},}}.
+The following shows difference between {{,${...},}} and {{,${{{}}{...}{{}}},}}.
 
 .? views/pp-example1.pyhtml
 .-------------------- test_preprocessing/views/pp-example1.pyhtml
@@ -1671,7 +1686,7 @@ print(''.join(_buf))
 
 .$$$ Loop Expantion	| preprocessing-loop-expantion
 
-It is possible to evaluate some logics by '{{,<?PY ?>,}}' when convert template into Python script code.
+It is possible to evaluate some logics by '{{,<?PY ... ?>,}}' when convert template into Python script code.
 For example, you can expand loop in advance to improve performance.
 
 .? views/pp-example2.pyhtml
@@ -1733,7 +1748,8 @@ If you have errors on preprocessing, you should check source script by -Ps optio
 
 .$$$ Parameters		| preprocessing-parameters
 
-Assume that link_to() is a helper method which takes label and url and generate <a></a> tag. In this case, label and url can be parameterized by _p("...") and _P("..."). The former is converted into #{...} and the latter converted into ${...} by preprocessor.
+Assume that link_to() is a helper method which takes label and url and generate <a></a> tag.
+In this case, label and url can be parameterized by {{,_p("..."),}} and {{,_P("..."),}}. The former is converted into #{...} and the latter converted into ${...} by preprocessor.
 
 .? views/pp-example3.pyhtml
 .-------------------- test_preprocessing/views/pp-example3.pyhtml
@@ -1746,7 +1762,7 @@ Assume that link_to() is a helper method which takes label and url and generate 
 #{{link_to('Show '+{{*_P(*}}'params["name"]'{{*)*}}, '/items/show/'+{{*_p(*}}'params["id"]'{{*)*}})}}
 .--------------------
 
-The following shows that _P('...') and _p('...') are converted into ${...} and #{...} respectively.
+The following shows that {{,_P('...'),}} and {{,_p('...'),}} are converted into {{,${...},}} and {{,#{...},}} respectively.
 
 .? Preprocessed template:
 .==================== test_preprocessing/result3a.output
@@ -1877,14 +1893,16 @@ m17n.pyhtml    m17n.pyhtml.{{*en*}}.cache    m17n.pyhtml.{{*fr*}}.cache
 
 And each cache files have different content.
 
-.====================
-### "_('Hello')" is translated into "Hello" in Engilish cache file
+.? {{,_('Hello'),}} is translated into "Hello" in Engilish cache file
+.==================== test_m17n/result_en.output
 $ pytenjin -a dump m17n.pyhtml.en.cache
 _buf.extend(('''<div>
  <p>{{*Hello*}} ''', escape(to_str(username)), '''!</p>
 </div>\n''', ));
+.====================
 
-### "_('Hello')" is translated into "Bonjour" in French cache file
+.? {{,_('Hello'),}} is translated into "Bonjour" in French cache file
+.==================== test_m17n/result_fr.output
 $ pytenjin -a dump m17n.pyhtml.fr.cache
 _buf.extend(('''<div>
  <p>{{*Bonjour*}} ''', escape(to_str(username)), '''!</p>
@@ -1953,7 +1971,10 @@ _buf.extend(('''</ul>\n''', ));
 print(''.join(_buf))
 .====================
 
-Option '-b' removes preamble ('_buf = []') and postamble ('print "".join(_buf)').
+
+
+Option '-b' removes preamble ('{{,_buf = [],}}') and postamble ('{{,print "".join(_buf)),}}').
+
 
 .? Result (-sb)
 .==================== test_convert/result2.output
@@ -1969,7 +1990,7 @@ _buf.extend(('''</ul>\n''', ));
 
 .$$ Retrieve Embedded Code	| command-retrieve
 
-Tenjin allows you to retrieve embedded code from template files. This is aimed to help debugging template.
+Tenjin allows you to retrieve embedded code from template files in order to help template debugging.
 
 It is hard to debug large template files because HTML and embedded code are mixed in a file. Retrieving embedded code from template files will help you to debug large template files.
 
@@ -2213,10 +2234,10 @@ $ python trace-example.py
 
 This feature is very useful to specify template file from HTML output.
 
-If you want to enable this always, set tenjin.Engine.trace to True.
+If you like it, you can make it always enabled.
 
 .--------------------
-## trace is alwasy enabled
+## trace is always enabled
 tenjin.Engine.trace = True
 .--------------------
 
@@ -2251,7 +2272,7 @@ tenjin.Engine.trace = True
 
 It is able to specify function names of {{,escape(),}} and {{,to_str(),}} which are used in converted Python script.
 
-.? main.y
+.? main.py
 .-------------------- test_escape/main.py
 import tenjin
 from tenjin.helpers import *
@@ -2349,19 +2370,20 @@ But you can emulate it by capturing{{(Notice that capturing is useful but not so
 See {{<this section|#capturing>}} for details.
 
 
-.$$ Report Full Path Name of Template File  | tips-fullpath
-
-If you set tenjin.Engine.prefer_fullpath to True, Tenjin will use full-path name of template file.
-This affects to error reporting. You can get full path name of template file on error.
-
-.--------------------
-## report full-path name of template file when error raised
-tenjin.Engine.prefer_fullpath = True
-.--------------------
+.#.$$ Report Full Path Name of Template File  | tips-fullpath
+.#
+.#If you set tenjin.Engine.prefer_fullpath to True, Tenjin will use full-path name of template file.
+.#This affects to error reporting. You can get full path name of template file on error.
+.#
+.#.--------------------
+.### report full-path name of template file when error raised
+.#tenjin.Engine.prefer_fullpath = True
+.#.--------------------
 
 
 
 .$ Trouble shooting 	      | shooting
+
 
 
 
@@ -2448,7 +2470,7 @@ def getval(key):
 This will raise NameError, such as:
 
 .====================
-$ py ex.py
+$ python ex.py
 Traceback (most recent call last):
   File "ex.py", line 5, in <module>
     output = engine.render('ex.pyhtml', context)
@@ -2481,6 +2503,8 @@ def getval(key, {{*_values=values*}}):   # works very well!
 ?>
 <p>getval('A') = ${getval('A')}</p>
 .--------------------
+
+
 
 
 
