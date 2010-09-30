@@ -372,7 +372,7 @@ if True:
     def tagattr(name, expr, value=None, escape=True):
         """(experimental) Return ' name="value"' if expr is true value, else '' (empty string).
            If value is not specified, expr is used as value instead."""
-        if not expr: return ''
+        if not expr and expr != 0: return ''
         if value is None: value = expr
         if escape: value = helpers.safe_escape(to_str(value))
         return ' %s="%s"' % (name, value)
@@ -390,7 +390,8 @@ if True:
         if 'selected' in kwargs: kwargs['selected'] = kwargs.pop('selected') and 'selected' or None
         if 'disabled' in kwargs: kwargs['disabled'] = kwargs.pop('disabled') and 'disabled' or None
         escape_html = helpers.safe_escape
-        return ''.join([ ' %s="%s"' % (k, escape_html(to_str(v))) for k, v in kwargs.items() if v ])
+        return ''.join([ ' %s="%s"' % (k, escape_html(to_str(v)))
+                         for k, v in kwargs.items() if v or v == 0 ])
 
     def checked(expr):
         """return ' checked="checked"' if expr is true."""

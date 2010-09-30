@@ -16,16 +16,18 @@ class HtmlHelperTest(object):
     def test_tagattr(self):
         tagattr = tenjin.helpers.html.tagattr
         ok (tagattr('size', 20))           == ' size="20"'
-        ok (tagattr('size', 0))            == ''
+        ok (tagattr('size', 0))            == ' size="0"'
+        ok (tagattr('size', ''))           == ''
         ok (tagattr('size', 20, 'large'))  == ' size="large"'
-        ok (tagattr('size', 0, 'zero'))    == ''
+        ok (tagattr('size',  0, 'zero'))   == ' size="zero"'
+        ok (tagattr('size', '', 'empty'))  == ''
         ok (tagattr('title', '<>&"'))      == ' title="&lt;&gt;&amp;&quot;"'
         ok (tagattr('title', '<>&"', escape=False)) == ' title="<>&""'
 
     def test_tagattrs(self):
         tagattrs = tenjin.helpers.html.tagattrs
         ok (tagattrs(src="img.png", size=20)) == ' src="img.png" size="20"'
-        ok (tagattrs(src='', size=0))         == ''
+        ok (tagattrs(src='', size=0))         == ' size="0"'
         ok (tagattrs(klass='error'))          == ' class="error"'    # klass='error' => class="error"
         ok (tagattrs(checked='Y'))            == ' checked="checked"'
         ok (tagattrs(selected=1))             == ' selected="selected"'
