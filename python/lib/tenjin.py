@@ -1416,9 +1416,27 @@ helpers.__all__.extend(('not_cached', 'echo_cached'))
 
 
 ##
+## helper class to find and read template
+##
+class Finder(object):
+
+    def find(self, filename, dirs=None):
+        raise NotImplemenetedError("%s.find(): not implemented yet." % self.__class__.__name__)
+
+    def abspath(self, filename):
+        raise NotImplemenetedError("%s.abspath(): not implemented yet." % self.__class__.__name__)
+
+    def timestamp(self, filepath):
+        raise NotImplemenetedError("%s.timestamp(): not implemented yet." % self.__class__.__name__)
+    def read(self, filepath):
+        raise NotImplemenetedError("%s.timestamp(): not implemented yet." % self.__class__.__name__)
+
+
+
+##
 ## helper class to find and read files
 ##
-class FileFinder(object):
+class FileFinder(Finder):
 
     def find(self, filename, dirs=None):
         #: if dirs provided then search template file from it.
