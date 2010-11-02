@@ -181,6 +181,7 @@ class FragmentCacheTest(object):
 	</div>
 	"""[1:])
         self.tname = 'index.pyhtml'
+        self.tmpfiles = [self.tname]
         write_file(self.tname, pyhtml)
         self.root_dir = '_test.caches.d'
         os.mkdir(self.root_dir)
@@ -195,7 +196,10 @@ class FragmentCacheTest(object):
         tenjin.helpers.fragment_cache.prefix = 'fragment.'
 
     def after(self):
-        os.unlink(self.tname)
+        for tmpfile in self.tmpfiles:
+            for fname in [tmpfile, tmpfile + '.cache']:
+                if os.path.exists(fname):
+                    os.unlink(fname)
         shutil.rmtree(self.root_dir)
         tenjin.helpers.fragment_cache.store  = self._orig_store
         tenjin.helpers.fragment_cache.prefix = self._orig_preifx
@@ -268,49 +272,40 @@ class FragmentCacheTest(object):
     <li>B</li>
   </ul>
 """[1:]
-        expected_html = r"""
-<div>
-"""[1:] + expected_fragment + r"""
-</div>
-"""[1:]
-        _buf = []
-        cache_with = tenjin.helpers.fragment_cache.cache_with
-        engine = tenjin.Engine()
+        expected_html = "<div>\n" + expected_fragment + "</div>\n"
         file_name = "_test_cache_with.pyhtml"
-        fragment_cache_path = self.root_dir + '/fragment.items/123'
         f = open(file_name, "w")
-        try:
-            f.write(input)
-            f.flush()
-            ts = None
-            if "called at first time then cache fragment into file":
-                context = {'items': ['A','B']}
-                output = engine.render(file_name, context)
-                ok (output) == expected_html
-                ok (fragment_cache_path).is_file()
-                ok (_read_file(fragment_cache_path)) == expected_fragment
-                ts = os.path.getmtime(fragment_cache_path)
-            if "called at second time within lifetime then dont't render":
-                #now = time.time()
-                #os.utime(fragment_cache_path, (now-1, now-1))
-                time.sleep(1)
-                context = {'items': ['X','Y']}   # new context data
-                output = engine.render(file_name, context)
-                ok (output) == expected_html     # not changed
-                ok (os.path.getmtime(fragment_cache_path)) == ts
-            if "called after lifetime expired then render again":
-                #os.utime(fragment_cache_path, (now-3, now-3))
-                time.sleep(2)
-                context = {'items': ['X','Y']}   # new context data
-                output = engine.render(file_name, context)
-                edit = lambda s: s.replace('A', 'X').replace('B', 'Y')
-                ok (output) == edit(expected_html)   # changed!
-                ok (_read_file(fragment_cache_path)) == edit(expected_fragment)  # changed!
-                ok (os.path.getmtime(fragment_cache_path)) > ts
-        finally:
-            for fname in [file_name, file_name+'.cache']:
-                if os.path.isfile(fname):
-                    os.unlink(fname)
+        f.write(input)
+        f.close()
+        engine = tenjin.Engine()
+        self.tmpfiles.append(file_name)
+        fragment_cache_path = self.root_dir + '/fragment.items/123'
+        #
+        ts = None
+        if "called at first time then cache fragment into file":
+            context = {'items': ['A','B']}
+            output = engine.render(file_name, context)
+            ok (output) == expected_html
+            ok (fragment_cache_path).is_file()
+            ok (_read_file(fragment_cache_path)) == expected_fragment
+            ts = os.path.getmtime(fragment_cache_path)
+        if "called at second time within lifetime then dont't render":
+            #now = time.time()
+            #os.utime(fragment_cache_path, (now-1, now-1))
+            time.sleep(1)
+            context = {'items': ['X','Y']}   # new context data
+            output = engine.render(file_name, context)
+            ok (output) == expected_html     # not changed
+            ok (os.path.getmtime(fragment_cache_path)) == ts
+        if "called after lifetime expired then render again":
+            #os.utime(fragment_cache_path, (now-3, now-3))
+            time.sleep(2)
+            context = {'items': ['X','Y']}   # new context data
+            output = engine.render(file_name, context)
+            edit = lambda s: s.replace('A', 'X').replace('B', 'Y')
+            ok (output) == edit(expected_html)   # changed!
+            ok (_read_file(fragment_cache_path)) == edit(expected_fragment)  # changed!
+            ok (os.path.getmtime(fragment_cache_path)) > ts
 
 
 if __name__ == '__main__':
