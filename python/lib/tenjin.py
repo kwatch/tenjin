@@ -1373,7 +1373,8 @@ class FragmentCacheHelper(object):
         if prefix   is not None:  self.prefix   = prefix
 
     def not_cached(self, cache_key, lifetime=None):
-        """html fragment cache helper. see document of FragmentCacheHelper class."""
+        """(obsolete. use cache_with() instead of this.)
+           html fragment cache helper. see document of FragmentCacheHelper class."""
         context = sys._getframe(1).f_locals['_context']
         context['_cache_key'] = cache_key
         key = self.prefix and self.prefix + cache_key or cache_key
@@ -1391,7 +1392,8 @@ class FragmentCacheHelper(object):
             return True
 
     def echo_cached(self):
-        """html fragment cache helper. see document of FragmentCacheHelper class."""
+        """(obsolete. use cache_with() instead of this.)
+           html fragment cache helper. see document of FragmentCacheHelper class."""
         f_locals = sys._getframe(1).f_locals
         context = f_locals['_context']
         cache_key = context.pop('_cache_key')
@@ -1405,6 +1407,7 @@ class FragmentCacheHelper(object):
         f_locals['_buf'].append(value)
 
     def functions(self):
+        """(obsolete. use cache_with() instead of this.)"""
         return (self.not_cached, self.echo_cached)
 
     def cache_with(self, cache_key, lifetime=None):
