@@ -1407,11 +1407,26 @@ class FragmentCacheHelper(object):
     def functions(self):
         return (self.not_cached, self.echo_cached)
 
+    def cache_with(self, cache_key, lifetime=None):
+        key = self.prefix and self.prefix + cache_key or cache_key
+        _buf = sys._getframe(1).f_locals['_buf']
+        value = self.store.get(key)
+        if value:
+            if logger: logger.debug('[tenjin.cache_with] %r: cache found.' % (cache_key, ))
+            _buf.append(value)
+        else:
+            if logger: logger.debug('[tenjin.cache_with] %r: expired or not cached yet.' % (cache_key, ))
+            _buf_len = len(_buf)
+            yield None
+            value = ''.join(_buf[_buf_len:])
+            self.store.set(key, value, lifetime)
+
 ## you can change default store by 'tenjin.helpers.fragment_cache.store = ...'
 helpers.fragment_cache = FragmentCacheHelper(MemoryBaseStore())
 helpers.not_cached  = helpers.fragment_cache.not_cached
 helpers.echo_cached = helpers.fragment_cache.echo_cached
-helpers.__all__.extend(('not_cached', 'echo_cached'))
+helpers.cache_with  = helpers.fragment_cache.cache_with
+helpers.__all__.extend(('not_cached', 'echo_cached', 'cache_with'))
 
 
 
