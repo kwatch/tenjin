@@ -1438,8 +1438,22 @@ helpers.__all__.extend(('not_cached', 'echo_cached', 'cache_with'))
 ##
 class Finder(object):
 
+    def exists(self, filepath):
+        raise NotImplemenetedError("%s.exists(): not implemented yet." % self.__class__.__name__)
+
     def find(self, filename, dirs=None):
-        raise NotImplemenetedError("%s.find(): not implemented yet." % self.__class__.__name__)
+        #: if dirs provided then search template file from it.
+        if dirs:
+            for dirname in dirs:
+                filepath = os.path.join(dirname, filename)
+                if self.exists(filepath):
+                    return filepath
+        #: if dirs not provided then just return filename if file exists.
+        else:
+            if self.exists(filename):
+                return filename
+        #: if file not found then return None.
+        return None
 
     def abspath(self, filename):
         raise NotImplemenetedError("%s.abspath(): not implemented yet." % self.__class__.__name__)
@@ -1456,19 +1470,9 @@ class Finder(object):
 ##
 class FileFinder(Finder):
 
-    def find(self, filename, dirs=None):
-        #: if dirs provided then search template file from it.
-        if dirs:
-            for dirname in dirs:
-                filepath = os.path.join(dirname, filename)
-                if os.path.isfile(filepath):
-                    return filepath
-        #: if dirs not provided then just return filename if file exists.
-        else:
-            if os.path.isfile(filename):
-                return filename
-        #: if file not found then return None.
-        return None
+    def exists(self, filepath):
+        #: return True if filepath exists as a file.
+        return os.path.isfile(filepath)
 
     def abspath(self, filepath):
         #: return full-path of filepath
