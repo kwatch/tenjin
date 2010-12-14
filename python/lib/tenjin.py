@@ -55,12 +55,17 @@ def _write_binary_file(filename, content):
     try:
         if random is None: from random import random
         tmpfile = filename + str(random())[1:]
-        f = open(tmpfile, 'wb')
+        f = open(tmpfile, 'w+b')
         f.write(content)
     finally:
-        if f:
+         if f:
             f.close()
-            os.rename(tmpfile, filename)
+            import os
+            try:
+                os.rename(tmpfile, filename)
+            except:
+                os.remove(filename)
+                os.rename(tmpfile, filename)
 
 def _read_binary_file(filename):
     f = None
