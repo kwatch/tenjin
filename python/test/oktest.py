@@ -3,35 +3,45 @@
 ###
 ### oktest.py -- new style test utility
 ###
-### $Release: 0.5.0 $
-### $Copyright: copyright(c) 2010 kuwata-lab.com all rights reserved $
+### $Release: 0.6.0 $
+### $Copyright: copyright(c) 2010-2011 kuwata-lab.com all rights reserved $
 ### $License: MIT License $
 ###
 
-__all__ = ('ok', 'not_ok', 'run', 'chdir', 'spec', 'using',
-           'dummy_file', 'dummy_dir', 'dummy_values', 'dummy_attrs', 'dummy_environ_vars')
+__all__ = ('ok', 'not_ok', 'run', 'spec',)
 
 import sys, os, re, types, traceback
 
 python2 = sys.version_info[0] == 2
 python3 = sys.version_info[0] == 3
 if python2:
+    from cStringIO import StringIO
     def _is_string(val):
         return isinstance(val, (str, unicode))
     def _is_class(obj):
         return isinstance(obj, (types.TypeType, types.ClassType))
+    def _is_unbound(method):
+        return not method.im_self
+    def _func_name(func):
+        return func.func_name
     def _func_firstlineno(func):
-        return func.im_func.func_code.co_firstlineno
+        func = getattr(func, 'im_func', func)
+        return func.func_code.co_firstlineno
     def _read_file(fname):
         f = open(fname)
         s = f.read()
         f.close()
         return s
 if python3:
+    from io import StringIO
     def _is_string(val):
         return isinstance(val, (str, bytes))
     def _is_class(obj):
         return isinstance(obj, (type, ))
+    def _is_unbound(method):
+        return not method.__self__
+    def _func_name(func):
+        return func.__name__
     def _func_firstlineno(func):
         return func.__code__.co_firstlineno
     def _read_file(fname, encoding='utf-8'):
@@ -45,6 +55,16 @@ if python3:
 def _get_location(depth=0):
     frame = sys._getframe(depth+1)
     return (frame.f_code.co_filename, frame.f_lineno)
+
+def _new_module(name, local_vars, helper=None):
+    mod = type(sys)(name)
+    sys.modules[name] = mod
+    mod.__dict__.update(local_vars)
+    if helper and getattr(mod, '__all__', None):
+        for k in mod.__all__:
+            helper.__dict__[k] = mod.__dict__[k]
+        helper.__all__ += mod.__all__
+    return mod
 
 
 __unittest = True    # see unittest.TestResult._is_relevant_tb_level()
@@ -140,7 +160,7 @@ class AssertionObject(object):
         diff = None
         if isinstance(msg, tuple):
             msg, diff = msg
-        if self._bool == False:
+        if self._bool is False:
             msg = 'not ' + msg
         if postfix:
             msg += postfix
@@ -408,7 +428,7 @@ class TestRunner(object):
 TEST_RUNNER = TestRunner
 
 
-TARGET_PATTERN = '.*Test(Case)?$'
+TARGET_PATTERN = '.*(Test|TestCase|_TC)$'
 
 def run(*targets):
     if len(targets) == 0:
@@ -424,6 +444,8 @@ def run(*targets):
             rexp = _is_string(arg) and re.compile(arg) or arg
             if vars is None: vars = sys._getframe(1).f_locals
             klasses = [ vars[k] for k in vars if rexp.search(k) and _is_class(vars[k]) ]
+            if TESTCLASS_SORT_KEY:
+                klasses.sort(key=TESTCLASS_SORT_KEY)
             target_list.extend(klasses)
         else:
             raise Exception("%r: not a class nor pattern string." % arg)
@@ -436,6 +458,17 @@ def run(*targets):
 
 
 OUT = sys.stdout
+
+
+def _min_firstlineno_of_methods(klass):
+    func_types = (types.FunctionType, types.MethodType)
+    d = klass.__dict__
+    linenos = [ _func_firstlineno(d[k]) for k in d
+                if k.startswith('test') and type(d[k]) in func_types ]
+    return linenos and min(linenos) or -1
+
+TESTCLASS_SORT_KEY = _min_firstlineno_of_methods
+
 
 
 ##
@@ -640,10 +673,10 @@ if os.environ.get('OKTEST_REPORTER'):
         raise ValueError("%s: reporter class not found." % os.environ.get('OKTEST_REPORTER'))
 
 
-##
-## helpers
-##
 
+##
+## _Context
+##
 class _Context(object):
 
     def __enter__(self, *args):
@@ -657,159 +690,447 @@ class _Context(object):
         try:
             func(*args)
         finally:
-            self.__exit__()
+            self.__exit__(sys.exc_info())
 
 
-class DummyFile(_Context):
 
-    def __init__(self, filename, content):
-        self.filename = filename
-        self.path     = os.path.abspath(filename)
-        self.content  = content
-
-    def __enter__(self, *args):
-        f = open(self.path, 'w')
-        try:
-            f.write(self.content)
-        finally:
-            f.close()
-        return self
-
-    def __exit__(self, *args):
-        os.unlink(self.path)
-
-
-class DummyDir(_Context):
-
-    def __init__(self, dirname):
-        self.dirname = dirname
-        self.path    = os.path.abspath(dirname)
-
-    def __enter__(self, *args):
-        os.mkdir(self.path)
-        return self
-
-    def __exit__(self, *args):
-        import shutil
-        shutil.rmtree(self.path)
-
-
-class DummyValues(_Context):
-
-    def __init__(self, dictionary, items_=None, **kwargs):
-        self.dict = dictionary
-        self.items = {}
-        if isinstance(items_, dict):
-            self.items.update(items_)
-        if kwargs:
-            self.items.update(kwargs)
-
-    def __enter__(self):
-        self.original = d = {}
-        for k in self.items:
-            if k in self.dict:
-                d[k] = self.dict[k]
-        self.dict.update(self.items)
-        return self
-
-    def __exit__(self, *args):
-        for k in self.items:
-            if k in self.original:
-                self.dict[k] = self.original[k]
-            else:
-                del self.dict[k]
-        self.__dict__.clear()
-
-
-class Chdir(_Context):
-
-    def __init__(self, dirname):
-        self.dirname = dirname
-        self.path    = os.path.abspath(dirname)
-        self.back_to = os.getcwd()
-
-    def __enter__(self, *args):
-        os.chdir(self.path)
-        return self
-
-    def __exit__(self, *args):
-        os.chdir(self.back_to)
-
-
+##
+## spec()
+##
 class Spec(_Context):
 
     def __init__(self, desc):
         self.desc = desc
 
+    def __iter__(self):
+        self.__enter__()
+        #try:
+        #    yield self  # (Python2.4) SyntaxError: 'yield' not allowed in a 'try' block with a 'finally' clause
+        #finally:
+        #    self.__exit__(sys.exc_info())
+        ex = None
+        try:
+            yield self
+        except:
+            ex = None
+        self.__exit__(sys.exc_info())
+        if ex:
+            raise ex
 
-class Using(_Context):
-    """ex.
-         class MyTest(object):
-            pass
-         with oktest.Using(MyTest):
-            def test_1(self):
-              ok (1+1) == 2
-         if __name__ == '__main__':
-            oktest.run(MyTest)
-    """
-    def __init__(self, klass):
-        self.klass = klass
-
-    def __enter__(self):
-        self.locals = sys._getframe(1).f_locals
-        self.start_names = self.locals.keys()
-        if python3: self.start_names = list(self.start_names)
-        return self
-
-    def __exit__(self, *args):
-        curr_names = self.locals.keys()
-        diff_names = list(set(curr_names) - set(self.start_names))
-        for name in diff_names:
-            setattr(self.klass, name, self.locals[name])
-
-
-def dummy_file(filename, content):
-    return DummyFile(filename, content)
-
-def dummy_dir(dirname):
-    return DummyDir(dirname)
-
-def dummy_values(dictionary, items_=None, **kwargs):
-    return DummyValues(dictionary, items_, **kwargs)
-
-def dummy_attrs(object, items_=None, **kwargs):
-    return DummyValues(object.__dict__, items_, **kwargs)
-
-def dummy_environ_vars(**kwargs):
-    return DummyValues(os.environ, **kwargs)
-
-def chdir(path):
-    return Chdir(path)
 
 def spec(desc):
     return Spec(desc)
 
-def using(klass):
-    return Using(klass)
 
 
 ##
-## undocumented
+## helpers
 ##
+def _dummy():
 
-def flatten(arr, type=(list, tuple)):
-    L = []
-    for x in arr:
-        if isinstance(x, type):
-            L.extend(flatten(x))
-        else:
-            L.append(x)
-    return L
+    __all__ = ('chdir', 'using')
 
-def rm_rf(*fnames):
-    for fname in flatten(fnames):
-        if os.path.isfile(fname):
-            os.unlink(fname)
-        elif os.path.isdir(fname):
-            from shutil import rmtree
-            rmtree(fname)
+
+    class Chdir(_Context):
+
+        def __init__(self, dirname):
+            self.dirname = dirname
+            self.path    = os.path.abspath(dirname)
+            self.back_to = os.getcwd()
+
+        def __enter__(self, *args):
+            os.chdir(self.path)
+            return self
+
+        def __exit__(self, *args):
+            os.chdir(self.back_to)
+
+
+    class Using(_Context):
+        """ex.
+             class MyTest(object):
+                pass
+             with oktest.Using(MyTest):
+                def test_1(self):
+                  ok (1+1) == 2
+             if __name__ == '__main__':
+                oktest.run(MyTest)
+        """
+        def __init__(self, klass):
+            self.klass = klass
+
+        def __enter__(self):
+            self.locals = sys._getframe(1).f_locals
+            self.start_names = self.locals.keys()
+            if python3: self.start_names = list(self.start_names)
+            return self
+
+        def __exit__(self, *args):
+            curr_names = self.locals.keys()
+            diff_names = list(set(curr_names) - set(self.start_names))
+            for name in diff_names:
+                setattr(self.klass, name, self.locals[name])
+
+
+    def chdir(path):
+        return Chdir(path)
+
+    def using(klass):
+        return Using(klass)
+
+
+    def flatten(arr, type=(list, tuple)):   ## undocumented
+        L = []
+        for x in arr:
+            if isinstance(x, type):
+                L.extend(flatten(x))
+            else:
+                L.append(x)
+        return L
+
+    def rm_rf(*fnames):                     ## undocumented
+        for fname in flatten(fnames):
+            if os.path.isfile(fname):
+                os.unlink(fname)
+            elif os.path.isdir(fname):
+                from shutil import rmtree
+                rmtree(fname)
+
+
+    return locals()
+
+
+helper = _new_module('oktest.helper', _dummy())
+del _dummy
+
+
+
+##
+## dummy
+##
+def _dummy():
+
+    __all__ = ('dummy_file', 'dummy_dir', 'dummy_values', 'dummy_attrs', 'dummy_environ_vars', 'dummy_io')
+
+
+    class DummyFile(_Context):
+
+        def __init__(self, filename, content):
+            self.filename = filename
+            self.path     = os.path.abspath(filename)
+            self.content  = content
+
+        def __enter__(self, *args):
+            f = open(self.path, 'w')
+            try:
+                f.write(self.content)
+            finally:
+                f.close()
+            return self
+
+        def __exit__(self, *args):
+            os.unlink(self.path)
+
+
+    class DummyDir(_Context):
+
+        def __init__(self, dirname):
+            self.dirname = dirname
+            self.path    = os.path.abspath(dirname)
+
+        def __enter__(self, *args):
+            os.mkdir(self.path)
+            return self
+
+        def __exit__(self, *args):
+            import shutil
+            shutil.rmtree(self.path)
+
+
+    class DummyValues(_Context):
+
+        def __init__(self, dictionary, items_=None, **kwargs):
+            self.dict = dictionary
+            self.items = {}
+            if isinstance(items_, dict):
+                self.items.update(items_)
+            if kwargs:
+                self.items.update(kwargs)
+
+        def __enter__(self):
+            self.original = d = {}
+            for k in self.items:
+                if k in self.dict:
+                    d[k] = self.dict[k]
+            self.dict.update(self.items)
+            return self
+
+        def __exit__(self, *args):
+            for k in self.items:
+                if k in self.original:
+                    self.dict[k] = self.original[k]
+                else:
+                    del self.dict[k]
+            self.__dict__.clear()
+
+
+    class DummyIO(_Context):
+
+        def __init__(self, stdin_content=None):
+            self.stdin_content = stdin_content
+
+        def __enter__(self):
+            self.stdout, sys.stdout = sys.stdout, StringIO()
+            self.stderr, sys.stderr = sys.stderr, StringIO()
+            if self.stdin_content is not None:
+                self.stdin, sys.stdin  = sys.stdin, StringIO(self.stdin_content)
+            return self
+
+        def __exit__(self, *args):
+            sout, serr = sys.stdout.getvalue(), sys.stderr.getvalue()
+            sys.stdout, self.stdout = self.stdout, sys.stdout.getvalue()
+            sys.stderr, self.stderr = self.stderr, sys.stderr.getvalue()
+            if self.stdin_content is not None:
+                sys.stdin = self.stdin
+
+
+    def dummy_file(filename, content):
+        return DummyFile(filename, content)
+
+    def dummy_dir(dirname):
+        return DummyDir(dirname)
+
+    def dummy_values(dictionary, items_=None, **kwargs):
+        return DummyValues(dictionary, items_, **kwargs)
+
+    def dummy_attrs(object, items_=None, **kwargs):
+        return DummyValues(object.__dict__, items_, **kwargs)
+
+    def dummy_environ_vars(**kwargs):
+        return DummyValues(os.environ, **kwargs)
+
+    def dummy_io(stdin_content=None, func=None, *args, **kwargs):
+        obj = dummy.DummyIO(stdin_content)
+        if func is None:
+            return obj    # for with-statement
+        obj.__enter__()
+        try:
+            func(*args, **kwargs)
+        finally:
+            obj.__exit__()
+        #return obj.stdout, obj.stderr
+        return obj
+
+
+    return locals()
+
+
+dummy = _new_module('oktest.dummy', _dummy(), helper)
+del _dummy
+
+
+
+##
+## Tracer
+##
+def _dummy():
+
+    __all__ = ('Tracer', )
+
+
+    class Call(object):
+
+        def __init__(self, receiver=None, name=None, args=None, kwargs=None, ret=None):
+            self.receiver = receiver
+            self.name   = name     # method name
+            self.args   = args
+            self.kwargs = kwargs
+            self.ret    = ret
+
+        def __repr__(self):
+            #return '%s(args=%r, kwargs=%r, ret=%r)' % (self.name, self.args, self.kwargs, self.ret)
+            buf = []; a = buf.append
+            a("%s(" % self.name)
+            for arg in self.args:
+                a(repr(arg))
+                a(", ")
+            for k in self.kwargs:
+                a("%s=%s" % (k, repr(self.kwargs[k])))
+                a(", ")
+            if buf[-1] == ", ":  buf.pop()
+            a(") #=> %s" % repr(self.ret))
+            return "".join(buf)
+
+        def __iter__(self):
+            yield self.receiver
+            yield self.name
+            yield self.args
+            yield self.kwargs
+            yield self.ret
+
+        def list(self):
+            return list(self)
+
+        def tuple(self):
+            return tuple(self)
+
+        def __eq__(self, other):
+            if isinstance(other, list):
+                return list(self) == other
+            elif isinstance(other, tuple):
+                return tuple(self) == other
+            elif isinstance(other, self.__class__):
+                return self.name == other.name and self.args == other.args \
+                    and self.kwargs == other.kwargs and self.ret == other.ret
+            else:
+                return False
+
+        def __ne__(self, other):
+            return not self.__eq__(other)
+
+
+    class FakeObject(object):
+
+        def __init__(self, **kwargs):
+            self._calls = self.__calls = []
+            for name in kwargs:
+                setattr(self, name, self.__new_method(name, kwargs[name]))
+
+        def __new_method(self, name, val):
+            fake_obj = self
+            if isinstance(val, types.FunctionType):
+                func = val
+                def f(self, *args, **kwargs):
+                    r = Call(fake_obj, name, args, kwargs, None)
+                    fake_obj.__calls.append(r)
+                    r.ret = func(self, *args, **kwargs)
+                    return r.ret
+            else:
+                def f(self, *args, **kwargs):
+                    r = Call(fake_obj, name, args, kwargs, val)
+                    fake_obj.__calls.append(r)
+                    return val
+            f.func_name = f.__name__ = name
+            if python2: return types.MethodType(f, self, self.__class__)
+            if python3: return types.MethodType(f, self)
+
+
+    class Tracer(object):
+        """trace function or method call to record arguments and return value.
+           see README.txt for details.
+        """
+
+        def __init__(self):
+            self.calls = []
+
+        def __getitem__(self, index):
+            return self.calls[index]
+
+        def __len__(self):
+            return len(self.calls)
+
+        def __iter__(self):
+            return self.calls.__iter__()
+
+        def _copy_attrs(self, func, newfunc):
+            for k in ('func_name', '__name__', '__doc__'):
+                if hasattr(func, k):
+                    setattr(newfunc, k, getattr(func, k))
+
+        def _wrap_func(self, func, block):
+            tr = self
+            def newfunc(*args, **kwargs):                # no 'self'
+                call = Call(None, _func_name(func), args, kwargs, None)
+                tr.calls.append(call)
+                if block:
+                    ret = block(func, *args, **kwargs)
+                else:
+                    ret = func(*args, **kwargs)
+                #newfunc._return = ret
+                call.ret = ret
+                return ret
+            self._copy_attrs(func, newfunc)
+            return newfunc
+
+        def _wrap_method(self, method_obj, block):
+            func = method_obj
+            tr = self
+            def newfunc(self, *args, **kwargs):          # has 'self'
+                call = Call(self, _func_name(func), args, kwargs, None)
+                tr.calls.append(call)
+                if _is_unbound(func): args = (self, ) + args   # call with 'self' if unbound method
+                if block:
+                    ret = block(func, *args, **kwargs)
+                else:
+                    ret = func(*args, **kwargs)
+                call.ret = ret
+                return ret
+            self._copy_attrs(func, newfunc)
+            if python2:  return types.MethodType(newfunc, func.im_self, func.im_class)
+            if python3:  return types.MethodType(newfunc, func.__self__)
+
+        def trace_func(self, func):
+            newfunc = self._wrap_func(func, None)
+            return newfunc
+
+        def fake_func(self, func, block):
+            newfunc = self._wrap_func(func, block)
+            return newfunc
+
+        def trace_method(self, obj, *method_names):
+            for method_name in method_names:
+                method_obj = getattr(obj, method_name, None)
+                if method_obj is None:
+                    raise ValueError("%s: no method found on %r." % (method_name, obj))
+                setattr(obj, method_name, self._wrap_method(method_obj, None))
+            return None
+
+        def fake_method(self, obj, **kwargs):
+            def _new_block(ret_val):
+                def _block(*args, **kwargs):
+                    return ret_val
+                return _block
+            def _dummy_method(obj, name):
+                fn = lambda *args, **kwargs: None
+                fn.__name__ = name
+                if python2: fn.func_name = name
+                if python2: return types.MethodType(fn, obj, type(obj))
+                if python3: return types.MethodType(fn, obj)
+            for method_name in kwargs:
+                method_obj = getattr(obj, method_name, None)
+                if method_obj is None:
+                    method_obj = _dummy_method(obj, method_name)
+                block = kwargs[method_name]
+                if not isinstance(block, types.FunctionType):
+                    block = _new_block(block)
+                setattr(obj, method_name, self._wrap_method(method_obj, block))
+            return None
+
+        def trace(self, target, *args):
+            if type(target) is types.FunctionType:       # function
+                func = target
+                return self.trace_func(func)
+            else:
+                obj = target
+                return self.trace_method(obj, *args)
+
+        def fake(self, target, *args, **kwargs):
+            if type(target) is types.FunctionType:       # function
+                func = target
+                block = args and args[0] or None
+                return self.fake_func(func, block)
+            else:
+                obj = target
+                return self.fake_method(obj, **kwargs)
+
+        def fake_obj(self, **kwargs):
+            obj = FakeObject(**kwargs)
+            obj._calls = obj._FakeObject__calls = self.calls
+            return obj
+
+
+    return locals()
+
+
+tracer = _new_module('oktest.tracer', _dummy(), helper)
+del _dummy
