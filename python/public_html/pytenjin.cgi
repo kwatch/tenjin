@@ -172,7 +172,9 @@ class TenjinApp(object):
         ex = sys.exc_info()[1]
         sys.stderr.write("*** %s: %s\n" % (ex.__class__.__name__, str(ex)))
         import traceback
-        traceback.print_exc(file=sys.stderr)
+        lst = traceback.format_exception(*sys.exc_info())
+        traceback_str = ''.join(lst)   # or traceback.format_exc()  # >=2.4
+        sys.stderr.write(traceback_str)
         buf = []; a = buf.append
         a("<h1>500 Internal Server Error</h1>\n")
         if config.debug:
@@ -184,9 +186,7 @@ class TenjinApp(object):
             #a("  span.first { font-weight: bold; font-size: x-large; }\n")
             #a("</style>\n")
             a("<pre class=\"backtrace\">\n")
-            lst = traceback.format_exception(*sys.exc_info())
-            a(h(''.join(lst)))
-            #or a(h(traceback.format_exc()))   # >=2.4
+            a(h(traceback_str))
             a("</pre>\n")
         output = ''.join(buf)
         headers = [('Content-Type', 'text/html')]
