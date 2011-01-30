@@ -22,9 +22,7 @@
 ## $License: MIT License $
 ##
 
-import sys
-import os
-import re
+import sys, os
 import tenjin
 from tenjin.helpers import *
 from tenjin.helpers.html import *
@@ -118,7 +116,7 @@ class TenjinApp(object):
         file_path = self._file_path(req_path, script_name)   # ex. 'hello.pyhtml'
         if not file_path.endswith('.html'):            # expected '*.html'
             raise HttpError('500 Internal Error', 'invalid .htaccess configuration.')
-        template_path = re.sub(r'\.html$', '.pyhtml', file_path)
+        template_path = file_path[:-5] + '.pyhtml'     # replace '.html' to '.pyhtml'
         if not os.path.isfile(template_path):          # file not found
             raise HttpError('404 Not Found', "%s: not found." % req_path)
         if os.path.basename(template_path)[0] == '_':  # deny access to '_*' (ex. _layout.pyhtml)
