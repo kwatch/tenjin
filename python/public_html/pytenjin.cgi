@@ -75,18 +75,18 @@ class TenjinApp(object):
         self.status = '200 OK'
         self.headers = { 'Content-Type': 'text/html; charset=%s' % self.encoding }
 
-    def _script_name(self, env):
+    def _script_name(self, environ):
         ## get script name and request path
-        script_name = env.get('SCRIPT_NAME')    # ex. '/A/B/pytenjin.cgi'
+        script_name = environ.get('SCRIPT_NAME')   # ex. '/A/B/pytenjin.cgi'
         if not script_name:
             raise HttpError('500 Internal Error', "ENV['SCRIPT_NAME'] is not set.")
         return script_name
 
-    def _request_path(self, env):
-        req_uri = env.get('REQUEST_URI')        # ex. '/A/B/C/foo.html?x=1'
+    def _request_path(self, environ):
+        req_uri = environ.get('REQUEST_URI')       # ex. '/A/B/C/foo.html?x=1'
         if not req_uri:
             raise HttpError('500 Internal Error', "ENV['REQUEST_URI'] is not set.")
-        req_path  = req_uri.split('?', 1)[0]    # ex. ('/A/B/C/foo.html', 'x=1')
+        req_path  = req_uri.split('?', 1)[0]       # ex. ('/A/B/C/foo.html', 'x=1')
         ## normalize request path and redirect if necessary
         normalized = os.path.normpath(req_path)
         if req_path[-1] == '/':
@@ -108,13 +108,13 @@ class TenjinApp(object):
             file_path += "index.html"
         return file_path
 
-    def main(self, env):
+    def main(self, environ):
         ## simulate CGI in command-line to debug your *.pyhtml file
-        #env['SCRIPT_NAME'] = '/A/B/pytenjin.cgi'
-        #env['REQUEST_URI'] = '/A/B/hello.html'
+        #environ['SCRIPT_NAME'] = '/A/B/pytenjin.cgi'
+        #environ['REQUEST_URI'] = '/A/B/hello.html'
         ## get request info
-        script_name = self._script_name(env)           # ex. '/A/B/pytenjin.cgi'
-        req_path    = self._request_path(env)          # ex. '/A/B/hello.html'
+        script_name = self._script_name(environ)       # ex. '/A/B/pytenjin.cgi'
+        req_path    = self._request_path(environ)      # ex. '/A/B/hello.html'
         ## deny direct access to pytenjin.cgi
         if req_path == script_name:
             raise HttpError('403 Forbidden', "#{req_path}: not accessable.")
@@ -135,18 +135,18 @@ class TenjinApp(object):
         output = self.engine.render(template_path, context)
         return output
 
-    def __call__(self, env, start_response):
-        self.env = env
+    def __call__(self, environ, start_response):
+        self.environ = environ
         self.start_response = start_response
         try:
-            return self.handle_request(env, start_response)
+            return self.handle_request(environ, start_response)
         except HttpError:
-            return self.handle_http_error(env, start_response)
+            return self.handle_http_error(environ, start_response)
         except Exception:
-            return self.handle_exception(env, start_response)
+            return self.handle_exception(environ, start_response)
 
-    def handle_request(self, env, start_response):
-        output = self.main(env)
+    def handle_request(self, environ, start_response):
+        output = self.main(environ)
         if python2:
             if isinstance(output, unicode):
                 output = output.encode(self.encoding)
@@ -160,7 +160,7 @@ class TenjinApp(object):
         start_response(self.status, headers)
         return [output]
 
-    def handle_http_error(self, env, start_response):
+    def handle_http_error(self, environ, start_response):
         ex = sys.exc_info()[1]
         buf = []; a = buf.append
         a("<h1>%s</h1>\n" % h(ex.status))
@@ -172,7 +172,7 @@ class TenjinApp(object):
         start_response(ex.status, headers)
         return [output]
 
-    def handle_exception(self, env, start_response):
+    def handle_exception(self, environ, start_response):
         ex = sys.exc_info()[1]
         sys.stderr.write("*** %s: %s\n" % (ex.__class__.__name__, str(ex)))
         import traceback
