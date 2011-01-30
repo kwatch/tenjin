@@ -1,7 +1,7 @@
 ## enable mod_rewrite
 RewriteEngine on
-## deny access to *.rb, *.rbhtml, and *.cache
-RewriteRule \.(rb|rbhtml|cache)$ - [R=404,L]
+## deny access to *.py, *.pyhtml, and *.cache
+RewriteRule \.(py|pyhtml|cache)$ - [R=404,L]
 ## rewrite only if requested file is not found
 RewriteCond %{SCRIPT_FILENAME} !-f
 ## handle request to *.html by pytenjin.cgi

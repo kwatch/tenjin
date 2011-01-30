@@ -112,7 +112,7 @@ class TenjinApp(object):
         return file_path
 
     def main(self, env):
-        ## simulate CGI in command-line to debug your *.rbhtml file
+        ## simulate CGI in command-line to debug your *.pyhtml file
         env['SCRIPT_NAME'] = '/A/B/pytenjin.cgi'
         env['REQUEST_URI'] = '/A/B/hello.html'
         ## get request info
@@ -128,7 +128,7 @@ class TenjinApp(object):
         template_path = re.sub(r'\.html$', '.pyhtml', file_path)
         if not os.path.isfile(template_path):          # file not found
             raise HttpError('404 Not Found', "%s: not found." % req_path)
-        if os.path.basename(template_path)[0] == '_':  # deny access to '_*' (ex. _layout.rbhtml)
+        if os.path.basename(template_path)[0] == '_':  # deny access to '_*' (ex. _layout.pyhtml)
             raise HttpError('403 Forbidden', "%s: not accessable." % req_path)
         ## context object
         context = {
