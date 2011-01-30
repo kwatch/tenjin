@@ -30,6 +30,8 @@ h = tenjin.helpers.html.escape_html
 
 python2 = sys.version_info[0] == 2
 python3 = sys.version_info[0] == 3
+if python3:
+    unicode = str
 
 
 class Config(object):
@@ -143,12 +145,8 @@ class TenjinApp(object):
 
     def _handle_request(self, environ, start_response):
         output = self.main(environ)
-        if python2:
-            if isinstance(output, unicode):
-                output = output.encode(self.encoding)
-        elif python3:
-            if isinstance(output, str):
-                output = output.encode(self.encoding)
+        if isinstance(output, unicode):
+            output = output.encode(self.encoding)
         headers = [ (k, self.headers[k]) for k in self.headers ]
         if not self.headers.get('Content-Length'):
             headers.append(('Content-Length', str(len(output))))
