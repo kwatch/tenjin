@@ -56,6 +56,10 @@ if config.encoding != 'utf-8':
     to_str = tenjin.generate_tostrfunc(encode=config.encoding)
 
 
+def report_error(message):
+    sys.stderr.write(message)
+
+
 class HttpError(Exception):
 
     def __init__(self, status, text, headers=None):
@@ -157,7 +161,7 @@ class TenjinApp(object):
         ex = sys.exc_info()[1]
         ch = ex.status[0]
         if ch == '4' or ch == '5':   # 4xx or 5xx
-            sys.stderr.write("*** [pytenjin.cgi] %s: %s\n" % (ex.status, ex.text))
+            report_error("*** [pytenjin.cgi] %s: %s\n" % (ex.status, ex.text))
         buf = []; a = buf.append
         a("<h1>%s</h1>\n" % h(ex.status))
         a("<p>%s</p>\n" % h(ex.text))
@@ -170,11 +174,11 @@ class TenjinApp(object):
 
     def _handle_exception(self, environ, start_response):
         ex = sys.exc_info()[1]
-        sys.stderr.write("*** %s: %s\n" % (ex.__class__.__name__, str(ex)))
+        report_error("*** [pytenjin.cgi] %s: %s\n" % (ex.__class__.__name__, str(ex)))
         import traceback
         lst = traceback.format_exception(*sys.exc_info())
         traceback_str = ''.join(lst)   # or traceback.format_exc()  # >=2.4
-        sys.stderr.write(traceback_str)
+        report_error(traceback_str)
         buf = []; a = buf.append
         a("<h1>500 Internal Server Error</h1>\n")
         if config.debug:
