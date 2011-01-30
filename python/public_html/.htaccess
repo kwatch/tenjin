@@ -4,8 +4,11 @@ RewriteEngine on
 RewriteRule \.(py|pyhtml|cache)$ - [R=404,L]
 ## rewrite only if requested file is not found
 RewriteCond %{SCRIPT_FILENAME} !-f
-## handle request to *.html by pytenjin.cgi
-RewriteRule \.html$ pytenjin.cgi
-## handle request to root or other directory by pytenjin.cgi
-RewriteRule ^$ pytenjin.cgi
-RewriteRule /$ pytenjin.cgi
+## handle request to *.html or directory by pytenjin.cgi
+RewriteRule \.html$ /~yourname/pytenjin.cgi
+RewriteRule ^$      /~yourname/pytenjin.cgi
+RewriteRule /$      /~yourname/pytenjin.cgi
+## or
+#RewriteRule \.html$ pytenjin.cgi
+#RewriteRule ^$      pytenjin.cgi
+#RewriteRule /$      pytenjin.cgi
