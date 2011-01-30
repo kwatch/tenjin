@@ -77,13 +77,13 @@ class TenjinApp(object):
         ## get script name and request path
         script_name = environ.get('SCRIPT_NAME')   # ex. '/A/B/pytenjin.cgi'
         if not script_name:
-            raise HttpError('500 Internal Error', "environ['SCRIPT_NAME'] is not set.")
+            raise HttpError('500 Internal Server Error', "environ['SCRIPT_NAME'] is not set.")
         return script_name
 
     def _request_path(self, environ):
         req_uri = environ.get('REQUEST_URI')       # ex. '/A/B/C/foo.html?x=1'
         if not req_uri:
-            raise HttpError('500 Internal Error', "environ['REQUEST_URI'] is not set.")
+            raise HttpError('500 Internal Server Error', "environ['REQUEST_URI'] is not set.")
         req_path  = req_uri.split('?', 1)[0]       # ex. ('/A/B/C/foo.html', 'x=1')
         ## normalize request path and redirect if necessary
         normalized = os.path.normpath(req_path)
@@ -119,7 +119,7 @@ class TenjinApp(object):
         ## template file path
         file_path = self._file_path(req_path, script_name)   # ex. 'hello.pyhtml'
         if not file_path.endswith('.html'):            # expected '*.html'
-            raise HttpError('500 Internal Error', 'invalid .htaccess configuration.')
+            raise HttpError('500 Internal Server Error', 'invalid .htaccess configuration.')
         template_path = file_path[:-5] + '.pyhtml'     # replace '.html' to '.pyhtml'
         if not os.path.isfile(template_path):          # file not found
             raise HttpError('404 Not Found', "%s: not found." % req_path)
