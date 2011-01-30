@@ -47,11 +47,11 @@ debug = 'HTTP_X_FORWARDED_FOR' not in os.environ and \
 
 class HttpError(Exception):
 
-  def __init__(self, status, text, headers=None):
-      Exception.__init__(self, "%s: %s" % (status, text))
-      self.status  = status
-      self.text    = text
-      self.headers = headers
+    def __init__(self, status, text, headers=None):
+        Exception.__init__(self, "%s: %s" % (status, text))
+        self.status  = status
+        self.text    = text
+        self.headers = headers
 
 
 class TenjinApp(object):
