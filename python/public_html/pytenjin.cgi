@@ -8,17 +8,13 @@
 ##
 ##    $ tar xzf Tenjin-X.X.X.tar.gz
 ##    $ cd Tenjin-X.X.X/
-##    $ cp lib/tenjin.py ~/public_html/
-##    $ cd public_html/
-##    $ cp pytenjin.cgi .htaccess *.pyhtml ~/public_html/
-##    $ chmod a+x ~/public_html/pytenjin.cgi
-##    $ cat ~/public_html/.htaccess
-##    RewriteEngine on
-##    RewriteRule \.(py|pyhtml|cache)$ - [R=404,L]
-##    RewriteCond %{SCRIPT_FILENAME} !-f
-##    RewriteRule \.html$ pytenjin.cgi
-##    RewriteRule ^$ pytenjin.cgi
-##    RewriteRule /$ pytenjin.cgi
+##    $ cp lib/tenjin.py       ~/public_html/
+##    $ cp public/pytenjin.cgi ~/public_html/
+##    $ cp public/.htaccess    ~/public_html/
+##    $ cp public/*.pyhtml     ~/public_html/
+##    $ cd ~/public_html/
+##    $ chmod a+x pytenjin.cgi
+##    $ vi .htaccess   # edit '/~yourname/' and so on
 ##
 ##
 ## $Release: $
