@@ -146,9 +146,8 @@ class TenjinApp(object):
             if isinstance(output, unicode):
                 output = output.encode(self.encoding)
         elif python3:
-            #if isinstance(output, str):
-            #    output = output.encode(self.encoding)
-            sys.stderr.write("\033[0;31m*** debug: type(output)=%r\033[0m\n" % (type(output), ))
+            if isinstance(output, str):
+                output = output.encode(self.encoding)
         headers = [ (k, self.headers[k]) for k in self.headers ]
         if not self.headers.get('Content-Length'):
             headers.append(('Content-Length', str(len(output))))
