@@ -139,13 +139,13 @@ class TenjinApp(object):
         self.environ = environ
         self.start_response = start_response
         try:
-            return self.handle_request(environ, start_response)
+            return self._handle_request(environ, start_response)
         except HttpError:
-            return self.handle_http_error(environ, start_response)
+            return self._handle_http_error(environ, start_response)
         except Exception:
-            return self.handle_exception(environ, start_response)
+            return self._handle_exception(environ, start_response)
 
-    def handle_request(self, environ, start_response):
+    def _handle_request(self, environ, start_response):
         output = self.main(environ)
         if python2:
             if isinstance(output, unicode):
@@ -160,7 +160,7 @@ class TenjinApp(object):
         start_response(self.status, headers)
         return [output]
 
-    def handle_http_error(self, environ, start_response):
+    def _handle_http_error(self, environ, start_response):
         ex = sys.exc_info()[1]
         ch = ex.status[0]
         if ch == '4' or ch == '5':   # 4xx or 5xx
@@ -175,7 +175,7 @@ class TenjinApp(object):
         start_response(ex.status, headers)
         return [output]
 
-    def handle_exception(self, environ, start_response):
+    def _handle_exception(self, environ, start_response):
         ex = sys.exc_info()[1]
         sys.stderr.write("*** %s: %s\n" % (ex.__class__.__name__, str(ex)))
         import traceback
