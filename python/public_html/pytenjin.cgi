@@ -185,7 +185,9 @@ class TenjinApp(object):
             #a("  span.first { font-weight: bold; font-size: x-large; }\n")
             a("</style>\n")
             a("<pre class=\"backtrace\">\n")
-            traceback.print_exc(file=sys.stdout)
+            lst = traceback.format_exception(*sys.exc_info())
+            a(h(''.join(lst)))
+            #or a(h(traceback.format_exc()))   # >=2.4
             a("</pre>\n")
         output = ''.join(buf)
         headers = [('Content-Type', 'text/html')]
