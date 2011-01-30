@@ -79,13 +79,13 @@ class TenjinApp(object):
         ## get script name and request path
         script_name = environ.get('SCRIPT_NAME')   # ex. '/A/B/pytenjin.cgi'
         if not script_name:
-            raise HttpError('500 Internal Error', "ENV['SCRIPT_NAME'] is not set.")
+            raise HttpError('500 Internal Error', "environ['SCRIPT_NAME'] is not set.")
         return script_name
 
     def _request_path(self, environ):
         req_uri = environ.get('REQUEST_URI')       # ex. '/A/B/C/foo.html?x=1'
         if not req_uri:
-            raise HttpError('500 Internal Error', "ENV['REQUEST_URI'] is not set.")
+            raise HttpError('500 Internal Error', "environ['REQUEST_URI'] is not set.")
         req_path  = req_uri.split('?', 1)[0]       # ex. ('/A/B/C/foo.html', 'x=1')
         ## normalize request path and redirect if necessary
         normalized = os.path.normpath(req_path)
@@ -117,7 +117,7 @@ class TenjinApp(object):
         req_path    = self._request_path(environ)      # ex. '/A/B/hello.html'
         ## deny direct access to pytenjin.cgi
         if req_path == script_name:
-            raise HttpError('403 Forbidden', "#{req_path}: not accessable.")
+            raise HttpError('403 Forbidden', "%s: not accessable." % req_path)
         ## template file path
         file_path = self._file_path(req_path, script_name)   # ex. 'hello.pyhtml'
         if not file_path.endswith('.html'):            # expected '*.html'
