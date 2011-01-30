@@ -141,11 +141,9 @@ class TenjinApp(object):
         try:
             return self.handle_request(env, start_response)
         except HttpError:
-            ex = sys.exc_info()[1]
-            return self.handle_http_error(ex)
+            return self.handle_http_error(env, start_response)
         except Exception:
-            ex = sys.exc_info()[1]
-            return self.handle_exception(ex)
+            return self.handle_exception(env, start_response)
 
     def handle_request(self, env, start_response):
         output = self.main(env)
@@ -162,7 +160,8 @@ class TenjinApp(object):
         start_response(self.status, headers)
         return [output]
 
-    def handle_http_error(self, ex):
+    def handle_http_error(self, env, start_response):
+        ex = sys.exc_info()[1]
         buf = []; a = buf.append
         a("<h1>%s</h1>\n" % h(ex.status))
         a("<p>%s</p>\n" % h(ex.text))
@@ -170,10 +169,11 @@ class TenjinApp(object):
         d = ex.headers
         headers = d and [ (k, d[k]) for k in d ] or []
         headers.append(('Content-Type', 'text/html'))
-        self.start_response(ex.status, headers)
+        start_response(ex.status, headers)
         return [output]
 
-    def handle_exception(self, ex):
+    def handle_exception(self, env, start_response):
+        ex = sys.exc_info()[1]
         sys.stderr.write("*** %s: %s\n" % (ex.__class__.__name__, str(ex)))
         import traceback
         traceback.print_exc(file=sys.stderr)
@@ -194,7 +194,7 @@ class TenjinApp(object):
             a("</pre>\n")
         output = ''.join(buf)
         headers = [('Content-Type', 'text/html')]
-        self.start_response("500 Internal Server Error", headers)
+        start_response("500 Internal Server Error", headers)
         return [output]
 
 
