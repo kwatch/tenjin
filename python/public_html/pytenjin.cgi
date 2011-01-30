@@ -139,25 +139,28 @@ class TenjinApp(object):
         self.env = env
         self.start_response = start_response
         try:
-            output = self.main(env)
-            if python2:
-                if isinstance(output, unicode):
-                    output = output.encode(self.encoding)
-            elif python3:
-                #if isinstance(output, str):
-                #    output = output.encode(self.encoding)
-                sys.stderr.write("\033[0;31m*** debug: type(output)=%r\033[0m\n" % (type(output), ))
-            headers = [ (k, self.headers[k]) for k in self.headers ]
-            if not self.headers.get('Content-Length'):
-                headers.append(('Content-Length', str(len(output))))
-            self.start_response(self.status, headers)
-            return [output]
+            return self.handle_request(env, start_response)
         except HttpError:
             ex = sys.exc_info()[1]
             return self.handle_http_error(ex)
         except Exception:
             ex = sys.exc_info()[1]
             return self.handle_exception(ex)
+
+    def handle_request(self, env, start_response):
+        output = self.main(env)
+        if python2:
+            if isinstance(output, unicode):
+                output = output.encode(self.encoding)
+        elif python3:
+            #if isinstance(output, str):
+            #    output = output.encode(self.encoding)
+            sys.stderr.write("\033[0;31m*** debug: type(output)=%r\033[0m\n" % (type(output), ))
+        headers = [ (k, self.headers[k]) for k in self.headers ]
+        if not self.headers.get('Content-Length'):
+            headers.append(('Content-Length', str(len(output))))
+        start_response(self.status, headers)
+        return [output]
 
     def handle_http_error(self, ex):
         buf = []; a = buf.append
