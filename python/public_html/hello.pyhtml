@@ -1,31 +1,13 @@
-<?py # -*- coding: utf-8 -*-
+<?py # -*- coding: utf-8 -*- ?>
+<?py #@ARGS self ?>
+<?py
 
-import sys
-import os
 import cgi
 
 form = cgi.FieldStorage()
 name = form.getfirst('name') or 'World'
+_context['page_title'] = 'Hello'
 
 ?>
-<style type="text/css">
-  table.env {
-    border-collapse: collapse;
-  }
-  table.env th, table.env td {
-    border: solid 1px #DDD;
-  }
-</style>
 
 <h1>Hello ${name}!</h1>
-
-<table class="env">
-  <tbody>
-    <?py cycle = new_cycle('odd', 'even') ?>
-    <?py for key in sorted(os.environ.keys()): ?>
-    <tr class="${cycle()}">
-      <td>${key}</td><td>${os.environ[key]}</td>
-    </tr>
-    <?py #endfor ?>
-  </tbody>
-</table>
