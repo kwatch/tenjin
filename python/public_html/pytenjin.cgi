@@ -38,11 +38,11 @@ class Config(object):
 
     encoding = 'utf-8'
     headers  = {}
-    #debug = os.environ.get('SERVER_ADDR') == '::1'   # set debug mode true when on localhost
-    debug = 'HTTP_X_FORWARDED_FOR' not in os.environ and \
-            os.environ.get('SERVER_ADDR') == os.environ.get('REMOTE_ADDR')
-    #debug = True
-    tenjin_class = tenjin.SafeEngine    # or tenjin.Engine
+    #debug   = os.environ.get('SERVER_ADDR') == '::1'   # set debug mode true when on localhost
+    debug    = 'HTTP_X_FORWARDED_FOR' not in os.environ and \
+               os.environ.get('SERVER_ADDR') == os.environ.get('REMOTE_ADDR')
+    #debug   = True
+    tenjin_class   = tenjin.SafeEngine    # or tenjin.Engine
     tenjin_options = {
         'layout':        '_layout.pyhtml',
         #'encoding':      encoding,
