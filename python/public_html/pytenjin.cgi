@@ -130,6 +130,7 @@ class TenjinApp(object):
         ## context object
         context = {
             'self': self,
+            'environ': environ,
         }
         ## render template
         output = self.engine.render(template_path, context)
