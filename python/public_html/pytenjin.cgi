@@ -178,7 +178,7 @@ class TenjinApp(object):
         import traceback
         traceback.print_exc(file=sys.stderr)
         buf = []; a = buf.append
-        a("<h1>500 Internal Error</h1>\n")
+        a("<h1>500 Internal Server Error</h1>\n")
         if debug:
             a("<h3>%s: %s</h3>\n" % (h(ex.__class__.__name__), h(str(ex))))
             a("<style type=\"text/css\">\n")
@@ -192,7 +192,7 @@ class TenjinApp(object):
             a("</pre>\n")
         output = ''.join(buf)
         headers = [('Content-Type', 'text/html')]
-        self.start_response("500 Internal Error", headers)
+        self.start_response("500 Internal Server Error", headers)
         return [output]
 
 
