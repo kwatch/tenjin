@@ -88,15 +88,12 @@ class TenjinApp(object):
             raise HttpError('500 Internal Error', "ENV['REQUEST_URI'] is not set.")
         req_path  = req_uri.split('?', 1)[0]    # ex. ('/A/B/C/foo.html', 'x=1')
         ## normalize request path and redirect if necessary
-        req_path2 = req_path
-        req_path2 = req_path2.replace(r'\\', '/')      # ex. '\A\B\C' -> '/A/B/C'
-        req_path2 = re.sub(r'//+', '/', req_path2)     # ex. '/A///B//C' -> '/A/B/C'
-        #while True:
-        #    s = re.sub(r'/[^\/]+/\.\./', '/', req_path2)  # ex. '/A/../B' -> '/B'
-        #    if s == req_path2: break
-        #    req_path2 = s
-        if req_path != req_path2:
-            raise HttpError.new('302 Found', req_path2, {'Location': req_path2})
+        normalized = os.path.normpath(req_path)
+        if req_path[-1] == '/':
+            normalized += '/'
+        if req_path != normalized:
+            #raise HttpError('404 Not Found', "%s: not found." % req_path)
+            raise HttpError('302 Found', normalized, {'Location': normalized})
         return req_path
 
     def _file_path(self, req_path, script_name):
