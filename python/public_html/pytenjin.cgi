@@ -170,7 +170,7 @@ class TenjinApp(object):
         d = ex.headers
         headers = d and [ (k, d[k]) for k in d ] or []
         headers.append(('Content-Type', 'text/html'))
-        start_response(ex.status, headers)
+        self.start_response(ex.status, headers)
         return [output]
 
     def handle_exception(self, ex):
