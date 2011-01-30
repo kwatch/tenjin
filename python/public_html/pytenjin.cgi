@@ -113,8 +113,8 @@ class TenjinApp(object):
 
     def main(self, env):
         ## simulate CGI in command-line to debug your *.pyhtml file
-        env['SCRIPT_NAME'] = '/A/B/pytenjin.cgi'
-        env['REQUEST_URI'] = '/A/B/hello.html'
+        #env['SCRIPT_NAME'] = '/A/B/pytenjin.cgi'
+        #env['REQUEST_URI'] = '/A/B/hello.html'
         ## get request info
         script_name = self._script_name(env)           # ex. '/A/B/pytenjin.cgi'
         req_path    = self._request_path(env)          # ex. '/A/B/hello.html'
