@@ -133,7 +133,7 @@ class TenjinApp(object):
 
     def __call__(self, environ, start_response):
         self.environ = environ
-        self.start_response = start_response
+        #self.start_response = start_response
         try:
             return self._handle_request(environ, start_response)
         except HttpError:
