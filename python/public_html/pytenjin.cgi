@@ -162,6 +162,9 @@ class TenjinApp(object):
 
     def handle_http_error(self, environ, start_response):
         ex = sys.exc_info()[1]
+        ch = ex.status[0]
+        if ch == '4' or ch == '5':   # 4xx or 5xx
+            sys.stderr.write("*** [pytenjin.cgi] %s: %s\n" % (ex.status, ex.text))
         buf = []; a = buf.append
         a("<h1>%s</h1>\n" % h(ex.status))
         a("<p>%s</p>\n" % h(ex.text))
