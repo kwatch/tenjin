@@ -31,12 +31,27 @@ h = tenjin.helpers.html.escape_html
 python2 = sys.version_info[0] == 2
 python3 = sys.version_info[0] == 3
 
-encoding = 'utf-8'
-headers = {}
-#debug = os.environ.get('SERVER_ADDR') == '::1'   # set debug mode true when on localhost
-debug = 'HTTP_X_FORWARDED_FOR' not in os.environ and \
-        os.environ.get('SERVER_ADDR') == os.environ.get('REMOTE_ADDR')
-#debug = True
+
+class Config(object):
+
+    encoding = 'utf-8'
+    headers  = {}
+    #debug = os.environ.get('SERVER_ADDR') == '::1'   # set debug mode true when on localhost
+    debug = 'HTTP_X_FORWARDED_FOR' not in os.environ and \
+            os.environ.get('SERVER_ADDR') == os.environ.get('REMOTE_ADDR')
+    #debug = True
+    tenjin_class = tenjin.SafeEngine    # or tenjin.Engine
+    tenjin_options = {
+        'layout':        '_layout.pyhtml',
+        #'encoding':      encoding,
+        'cache':         False,         # set True for performance
+        'preprocess':    False,
+    }
+
+config = Config()
+
+if config.encoding != 'utf-8':
+    to_str = tenjin.generate_tostrfunc(encode=config.encoding)
 
 
 class HttpError(Exception):
@@ -50,24 +65,11 @@ class HttpError(Exception):
 
 class TenjinApp(object):
 
-    encoding = 'utf-8'
-    engineclass = tenjin.SafeEngine    # or tenjin.Engine
-    engineopts = {
-        'cache': False,          # set True for performance
-        'preprocess': False,
-    }
-
-    def __init__(self, encoding='utf-8', engineclass=None, engineopts=None):
-        if engineclass is not None:
-            self.engineclass = engineclass
-        self.engineopts = opts = self.__class__.engineopts.copy()
-        if engineopts:
-            opts.merge(engineopts)
-        if 'layout' not in opts and os.path.isfile('_layout.pyhtml'):
-            opts['layout'] = '_layout.pyhtml'
-        self.engine = self.engineclass(**opts)
+    def __init__(self):
+        self.engine = config.tenjin_class(**config.tenjin_options)
         self.status = '200 OK'
-        self.headers = { 'Content-Type': 'text/html; charset=%s' % self.encoding }
+        self.headers = { 'Content-Type': 'text/html; charset=%s' % config.encoding }
+        self.headers.update(config.headers)
 
     def _script_name(self, environ):
         ## get script name and request path
@@ -176,7 +178,7 @@ class TenjinApp(object):
         traceback.print_exc(file=sys.stderr)
         buf = []; a = buf.append
         a("<h1>500 Internal Server Error</h1>\n")
-        if debug:
+        if config.debug:
             a("<h3>%s: %s</h3>\n" % (h(ex.__class__.__name__), h(str(ex))))
             #a("<style type=\"text/css\">\n")
             #a("  pre.backtrace { font-size: large; }\n")
