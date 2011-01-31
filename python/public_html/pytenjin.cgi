@@ -85,63 +85,56 @@ class TenjinApp(object):
 
     content_type = property(__get_content_type, __set_content_type)
 
-    def _script_name(self, environ):
-        ## get script name and request path
-        script_name = environ.get('SCRIPT_NAME')   # ex. '/A/B/pytenjin.cgi'
+    def main(self, environ):
+        ## script name
+        script_name = environ.get('SCRIPT_NAME')       # ex. '/A/B/pytenjin.cgi'
         if not script_name:
             raise HttpError('500 Internal Server Error', "environ['SCRIPT_NAME'] is not set.")
-        return script_name
-
-    def _request_path(self, environ):
-        req_uri = environ.get('REQUEST_URI')       # ex. '/A/B/C/foo.html?x=1'
+        ## request path
+        req_uri = environ.get('REQUEST_URI')           # ex. '/A/B/C/foo.html?x=1'
         if not req_uri:
             raise HttpError('500 Internal Server Error', "environ['REQUEST_URI'] is not set.")
-        req_path  = req_uri.split('?', 1)[0]       # ex. ('/A/B/C/foo.html', 'x=1')
+        req_path  = req_uri.split('?', 1)[0]           # ex. ('/A/B/C/foo.html', 'x=1')
+        self._check_request_path(req_path)
+        ## template file path
+        template_path = self._find_template(req_path, script_name)  # ex. hello.pyhtml
+        if not os.path.isfile(template_path):          # file not found
+            raise HttpError('404 Not Found', "%s: not found." % req_path)
+        ## render template
+        return self._render_template(template_path)
+
+    def _check_request_path(self, req_path):
         ## normalize request path and redirect if necessary
         normalized = os.path.normpath(req_path)
         if req_path[-1] == '/':
             normalized += '/'
-        if req_path != normalized:
+        if normalized != req_path:
             #raise HttpError('404 Not Found', "%s: not found." % req_path)
             raise HttpError('302 Found', normalized, {'Location': normalized})
-        return req_path
+        ## deny access to private file (such as _layout.html)
+        basename = os.path.basename(req_path)
+        if basename.startswith('_'):
+            raise HttpError('403 Forbidden', "%s: not accessable." % req_path)
+        ## deny direct access to pytenjin.cgi
+        if basename == 'pytenjin.cgi':
+            raise HttpError('403 Forbidden', "%s: not accessable." % req_path)
 
-    def _file_path(self, req_path, script_name):
+    def _find_template(self, req_path, script_name):
         base_path = os.path.dirname(script_name)       # ex. '/A/B'
         assert req_path.startswith(base_path)
-        ## if file_path is a directory, add 'index.html'
         file_path = req_path[len(base_path)+1:]        # ex. 'C/foo.html'
         if not file_path:                              # access to root dir
-            file_path = "index.html"
-        elif os.path.isdir(file_path):                 # access to directory
+            return "index.pyhtml"
+        if os.path.isdir(file_path):                   # access to directory
             assert file_path[-1] == '/'
-            file_path += "index.html"
-        return file_path
+            return file_path + "index.html"
+        return re.sub(r'\.(\w+)$', r'.py\1', file_path)  # replace '.html' to '.pyhtml'
 
-    def main(self, environ):
-        ## simulate CGI in command-line to debug your *.pyhtml file
-        #environ['SCRIPT_NAME'] = '/A/B/pytenjin.cgi'
-        #environ['REQUEST_URI'] = '/A/B/hello.html'
-        ## get request info
-        script_name = self._script_name(environ)       # ex. '/A/B/pytenjin.cgi'
-        req_path    = self._request_path(environ)      # ex. '/A/B/hello.html'
-        ## deny direct access to pytenjin.cgi
-        if req_path == script_name:
-            raise HttpError('403 Forbidden', "%s: not accessable." % req_path)
-        ## template file path
-        file_path = self._file_path(req_path, script_name)   # ex. 'hello.html'
-        template_path = re.sub(r'\.(\w+)$', r'.py\1', file_path)  # replace '.html' to '.pyhtml'
-        if not os.path.isfile(template_path):          # file not found
-            raise HttpError('404 Not Found', "%s: not found." % req_path)
-        if os.path.basename(template_path)[0] == '_':  # deny access to '_*' (ex. _layout.pyhtml)
-            raise HttpError('403 Forbidden', "%s: not accessable." % req_path)
-        ## context object
+    def _render_template(self, template_path):
         context = {
             'self': self,
         }
-        ## render template
-        output = self.engine.render(template_path, context)
-        return output
+        return self.engine.render(template_path, context)
 
     def __call__(self, environ, start_response):
         self.environ = environ
