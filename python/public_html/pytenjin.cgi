@@ -149,7 +149,7 @@ class TenjinApp(object):
     def _handle_request(self, environ, start_response):
         output = self.main(environ)
         if isinstance(output, unicode):
-            output = output.encode(self.encoding)
+            output = output.encode(config.encoding)
         headers = [ (k, self.headers[k]) for k in self.headers ]
         if not self.headers.get('Content-Length'):
             headers.append(('Content-Length', str(len(output))))
