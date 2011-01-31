@@ -1,14 +1,11 @@
 ## enable mod_rewrite
 RewriteEngine on
 ## deny access to *.py, *.pyhtml, and *.cache
-RewriteRule \.(py|pyhtml|cache)$ - [R=404,L]
+RewriteRule \.py[a-z0-9]*$ - [R=404,L]
+RewriteRule \.cache$       - [R=404,L]
 ## rewrite only if requested file is not found
 RewriteCond %{SCRIPT_FILENAME} !-f
 ## handle request to *.html or directory by pytenjin.cgi
-RewriteRule \.html$ /~yourname/pytenjin.cgi
-RewriteRule ^$      /~yourname/pytenjin.cgi
-RewriteRule /$      /~yourname/pytenjin.cgi
+RewriteRule ^.*$ /~yourname/pytenjin.cgi
 ## or
-#RewriteRule \.html$ pytenjin.cgi
-#RewriteRule ^$      pytenjin.cgi
-#RewriteRule /$      pytenjin.cgi
+#RewriteRule ^.*$ pytenjin.cgi
