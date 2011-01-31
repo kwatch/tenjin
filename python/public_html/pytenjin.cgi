@@ -77,6 +77,14 @@ class TenjinApp(object):
         self.headers = { 'Content-Type': 'text/html; charset=%s' % config.encoding }
         self.headers.update(config.headers)
 
+    def __get_content_type(self):
+        return self.headers['Content-Type']
+
+    def __set_content_type(self, value):
+        self.headers['Content-Type'] = value
+
+    content_type = property(__get_content_type, __set_content_type)
+
     def _script_name(self, environ):
         ## get script name and request path
         script_name = environ.get('SCRIPT_NAME')   # ex. '/A/B/pytenjin.cgi'
