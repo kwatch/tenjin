@@ -155,6 +155,28 @@ class EncodingTest(object):
             expected_output = u"**あ**\nあ\n"
         )
 
+    def test_set_template_encoding(self):
+        assert tenjin.Template.encoding == None
+        assert tenjin.helpers.to_str is tenjin.to_str
+        assert tenjin.helpers.to_str(u'日本語') == '日本語'
+        assert tenjin.helpers.to_str('日本語') == '日本語'
+        try:
+            Template_encoding = tenjin.Template.encoding
+            tenjin_to_str = tenjin.helpers.to_str
+            #
+            tenjin.set_template_encoding('utf-8')
+            #
+            ok (tenjin.Template.encoding) == 'utf-8'
+            ok (tenjin.to_str) != tenjin_to_str
+            ok (tenjin.helpers.to_str) != tenjin_to_str
+            ok (tenjin.helpers.to_str).is_(tenjin.to_str)
+            ok (tenjin.helpers.to_str(u'日本語')) == u'日本語'
+            ok (tenjin.helpers.to_str('日本語')) == u'日本語'
+        finally:
+            tenjin.Template.encoding = Template_encoding
+            tenjin.helpers.to_str = tenjin_to_str
+            tenjin.to_str         = tenjin_to_str
+
 
 if __name__ == '__main__':
     run()

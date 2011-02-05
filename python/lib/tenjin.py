@@ -485,6 +485,24 @@ del escape_html, tagattr, tagattrs, checked, selected, disabled, nl2br, text2htm
 del mod
 
 
+##
+## utility function to set default encoding of template files
+##
+
+def set_template_encoding(encoding):
+    """Set default encoding of template files.
+       This should be called before importing helper functions.
+       ex.
+          ## I like template files to be unicode-base like Django.
+          import tenjin
+          tenjin.set_template_encoding('utf-8')  # should be called before importing helpers
+          from tenjin.helpers import *
+    """
+    global to_str
+    if Template.encoding != encoding:
+        Template.encoding = encoding
+        to_str = helpers.to_str = helpers.generate_tostrfunc(decode=encoding)
+
 
 ##
 ## Template class
