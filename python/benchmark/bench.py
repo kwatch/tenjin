@@ -963,9 +963,10 @@ def load_context_data(datafile):
     if encoding: s = s.decode(encoding)
     context = {}
     exec(s, globals(), context)
-    if 'items' in context and 'items2' in context:
-        k = mode == 'dict' and 'items' or 'items2'
-        context['stocks'] = context[k]
+    #if 'items' in context and 'items2' in context:
+    #    k = mode == 'dict' and 'items' or 'items2'
+    #    context['stocks'] = context[k]
+    context['stocks'] = context['items']
     return context
 
 

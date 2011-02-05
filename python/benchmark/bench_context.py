@@ -1,4 +1,4 @@
-items = [
+data = [
     {
         'name':   'Adobe Systems',
         'name2':  'Adobe Systems Inc.',
@@ -191,5 +191,8 @@ class StockInfo:
         self.price  = price
         self.change = change
         self.ratio  = ratio
+        self.s_price  = '%.2f' % price
+        self.s_change = '%.2f' % change
+        self.s_ratio  = '%.2f' % ratio
 
-items2 = [StockInfo(**item) for item in items]
+items = [StockInfo(**d) for d in data]
