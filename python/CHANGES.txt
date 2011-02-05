@@ -44,6 +44,24 @@ Release 1.0.0 (2010-??-??)
       http://www.kuwata-lab.com/tejin/pytenjin-users-guide.html#safe-template
     for details.
 
+  * (IMPORTANT!!) New function 'tenjin.set_template_encoding()' is provided.
+    If you prefer templates to be unicode-base like Django, call it before
+    importing helpers.
+
+       ##
+       import tenjin
+       tenjin.set_template_encoding('utf-8')  # call before importing helpers
+       from tenjin.helpers import *
+       ## The above is same as:
+       #import tenjin
+       #Template.encoding = 'utf-8'
+       #tenjin.helpers.to_str = tenjin.helpers.generate_tostrfunc(decode='utf-8')
+       #from tenjin.helpers import *
+
+    Notice that you should not write '<?py # coding: utf-8 ?>' into template
+    files if you call tenjin.set_template_encoding(). If you wrote it,
+    SyntaxError exception would be raised.
+
   * If 'trace=True' is passed to Template class (or Engine class), output
     string will contain template file name. For example:
 
