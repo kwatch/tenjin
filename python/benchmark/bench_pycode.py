@@ -83,12 +83,13 @@ for file_name in glob.glob(__file__.replace('.py', '/pycode*.py')):
         return local_vars['_result']
     f.__name__ = name
     f.__doc__  = desc
+    f._skip    = None
     benchmark_functions.append(f)
 
 if not webext:
-    indices = [ i for i, func in enumerable(benchmark_functions) if func.name.find('webext') >= 0 ]
-    for i in indices:
-        del benchmark_functions[i]
+    for func in benchmark_functions:
+        if func.__name__.find('webext') >= 0:
+            func._skip = '** skipped: webext is not installed **'
 
 
 ##
@@ -97,6 +98,8 @@ if not webext:
 if benchmark_functions:
     expected = benchmark_functions[0](items)
     for func in benchmark_functions:
+        if func._skip:
+            continue
         actual = func(items)
         if actual != expected:
             import difflib
@@ -106,16 +109,14 @@ if benchmark_functions:
 
 
 ##
-##
-##
-
-
-##
 ## do benchmarks
 ##
 for bm in Benchmarker(loop=10000, cycle=1, extra=0):
     for func in benchmark_functions:
-        bm.run(func, items)
+        if func._skip:
+            bm.skip(func, func._skip)
+        else:
+            bm.run(func, items)
 
 ##
 ## output example
