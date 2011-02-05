@@ -839,7 +839,7 @@ class EngineTest(object):
         filepath  = '_views/blog/index.pyhtml'
         fullpath  = os.getcwd() + filepath
         cachepath = fullpath + '.cache'
-        assert not_ok (cachepath).exists()
+        assert not os.path.exists(cachepath)
         t = None
         if spec("return template object.") and \
            spec("accept template_name such as ':index'."):
