@@ -3,7 +3,7 @@ README
 ======
 
 :Release:	$Release$
-:Copyright:	$Copyright$
+:Copyright:	$Copyright: copyright(c) 2007-2010 kuwata-lab.com all rights reserved. $
 :URL:		http://www.kuwata-lab.com/tenjin/
 
 
@@ -117,4 +117,4 @@ See `other examples`_ .
 License
 -------
 
-MIT License.
+$Lincense: MIT License $
