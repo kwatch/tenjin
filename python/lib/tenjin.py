@@ -550,7 +550,7 @@ class Template(object):
     escapefunc = 'escape'
     tostrfunc  = 'to_str'
     indent     = 4
-    preamble   = None    # "_buf = []"
+    preamble   = None    # "_buf = []; _expand = _buf.expand; _to_str = to_str; _escape = escape"
     postamble  = None    # "print ''.join(_buf)"
     smarttrim  = None
     args       = None
@@ -579,7 +579,7 @@ class Template(object):
              Indent width.
            preamble:str or bool (=None)
              Preamble string which is inserted into python code.
-             If true, '_buf = []' is used insated.
+             If true, '_buf = []; _extend = _buf.extend' is used insated.
            postamble:str or bool (=None)
              Postamble string which is appended to python code.
              If true, 'print("".join(_buf))' is used instead.
@@ -596,7 +596,8 @@ class Template(object):
         if smarttrim  is not None:  self.smarttrim  = smarttrim
         if trace      is not None:  self.trace      = trace
         #
-        if preamble  is True:  self.preamble = "_buf = []; _extend = _buf.extend"
+        if preamble  is True:  self.preamble = "_buf = []; _extend = _buf.extend; _to_str = %s; _escape = %s" % \
+                                                        (self.tostrfunc or 'None', self.escapefunc or 'None')
         if postamble is True:  self.postamble = "print(''.join(_buf))"
         if input:
             self.convert(input, filename)
@@ -822,9 +823,11 @@ class Template(object):
         if flag_escape is None:
             buf.extend((code, ", "))
         elif flag_escape is False:
-            buf.extend((self.tostrfunc, "(", code, "), "))
+            #buf.extend((self.tostrfunc, "(", code, "), "))
+            buf.extend((self.tostrfunc and "_to_str(" or "(", code, "), "))
         else:
-            buf.extend((self.escapefunc, "(", self.tostrfunc, "(", code, ")), "))
+            #buf.extend((self.escapefunc, "(", self.tostrfunc, "(", code, ")), "))
+            buf.extend((self.escapefunc and "_escape(" or "(", self.tostrfunc and "_to_str(" or "(", code, ")), "))
 
     def add_stmt(self, buf, code):
         if not code: return
@@ -975,6 +978,10 @@ class Template(object):
             _buf = []
         locals['_buf'] = _buf
         locals['_extend'] = _buf.extend
+        k = self.tostrfunc
+        locals['_to_str'] = locals.get(k) or globals.get(k)
+        k = self.escapefunc
+        locals['_escape'] = locals.get(k) or globals.get(k)
         if not self.bytecode:
             self.compile()
         if self.trace:

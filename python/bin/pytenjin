@@ -56,9 +56,10 @@ class NoTextTemplate(tenjin.Template):
             buf.extend((code, "; ", ))
         elif flag_escape is False:
             #buf.extend(("_extend((", self.tostrfunc, "(", code, "), )); "))
-            buf.extend((self.tostrfunc, "(", code, "); ", ))
+            #buf.extend((self.tostrfunc, "(", code, "); ", ))
+            buf.extend((self.tostrfunc and "_to_str(" or "(", code, "); ", ))
         else:
-            buf.extend((self.escapefunc, "(", self.tostrfunc, "(", code, ")); "))
+            buf.extend((self.escapefunc and "_escape(" or "(", self.tostrfunc and "_to_str(" or "(", code, ")); "))
 
     def parse_exprs(self, buf, input, is_bol=False):
         if not input:
