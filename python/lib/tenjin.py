@@ -222,35 +222,32 @@ if True:
 
     def echo(string):
         """add string value into _buf. this is equivarent to '#{string}'."""
-        frame = sys._getframe(1)
-        context = frame.f_locals
-        context['_buf'].append(string)
+        lvars = sys._getframe(1).f_locals   # local variables
+        lvars['_buf'].append(string)
 
     def start_capture(varname=None, _depth=1):
         """(obsolete) start capturing with name."""
-        frame = sys._getframe(_depth)
-        context = frame.f_locals
-        context['_buf_tmp']    = context['_buf']
-        context['_extend_tmp'] = context['_extend']
-        context['_capture_varname'] = varname
+        lvars = sys._getframe(_depth).f_locals   # local variables
+        lvars['_buf_tmp']    = lvars['_buf']
+        lvars['_extend_tmp'] = lvars['_extend']
+        lvars['_capture_varname'] = varname
         _buf2 = []
-        context['_buf']    = _buf2
-        context['_extend'] = _buf2.extend
+        lvars['_buf']    = _buf2
+        lvars['_extend'] = _buf2.extend
 
     def stop_capture(store_to_context=True, _depth=1):
         """(obsolete) stop capturing and return the result of capturing.
            if store_to_context is True then the result is stored into _context[varname].
         """
-        frame = sys._getframe(_depth)
-        context = frame.f_locals
-        result = ''.join(context['_buf'])
-        context['_buf']    = context.pop('_buf_tmp')
-        context['_extend'] = context.pop('_extend_tmp')
-        varname = context.pop('_capture_varname')
+        lvars = sys._getframe(_depth).f_locals
+        result = ''.join(lvars['_buf'])
+        lvars['_buf']    = lvars.pop('_buf_tmp')
+        lvars['_extend'] = lvars.pop('_extend_tmp')
+        varname = lvars.pop('_capture_varname')
         if varname:
-            context[varname] = result
+            lvars[varname] = result
             if store_to_context:
-                context['_context'][varname] = result
+                lvars['_context'][varname] = result
         return result
 
     def capture_as(name, store_to_context=True):
@@ -278,11 +275,10 @@ if True:
            if captured string is found then append it to _buf and return True,
            else return False.
         """
-        frame = sys._getframe(_depth)
-        context = frame.f_locals
-        if name in context:
-            _buf = context['_buf']
-            _buf.append(context[name])
+        lvars = sys._getframe(_depth).f_locals   # local variables
+        if name in lvars:
+            _buf = lvars['_buf']
+            _buf.append(lvars[name])
             return True
         return False
 
