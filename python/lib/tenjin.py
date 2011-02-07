@@ -981,9 +981,9 @@ class Template(object):
         locals['_buf'] = _buf
         locals['_extend'] = _buf.extend
         k = self.tostrfunc
-        locals['_to_str'] = locals.get(k) or globals.get(k)
+        locals['_to_str'] = k and (locals.get(k) or globals.get(k) or _raise(ValueError, "%s(): no such function." % (k, )))
         k = self.escapefunc
-        locals['_escape'] = locals.get(k) or globals.get(k)
+        locals['_escape'] = k and (locals.get(k) or globals.get(k) or _raise(ValueError, "%s(): no such function." % (k, )))
         if not self.bytecode:
             self.compile()
         if self.trace:
