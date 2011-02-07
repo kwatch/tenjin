@@ -487,6 +487,7 @@ if True:
     mod.escape_html = escape_html
     mod.escape_xml = escape_html   # for backward compatibility
     mod.escape     = escape_html
+    mod.escape.__name__ = 'escape'
     mod.tagattr    = tagattr
     mod.tagattrs   = tagattrs
     mod.checked    = checked
@@ -549,8 +550,8 @@ class Template(object):
     ## default value of attributes
     filename   = None
     encoding   = None
-    escapefunc = 'escape'
-    tostrfunc  = 'to_str'
+    escapefunc = staticmethod(helpers.escape)
+    tostrfunc  = staticmethod(helpers.to_str)
     indent     = 4
     preamble   = None    # "_buf = []; _expand = _buf.expand; _to_str = to_str; _escape = escape"
     postamble  = None    # "print ''.join(_buf)"
@@ -598,8 +599,10 @@ class Template(object):
         if smarttrim  is not None:  self.smarttrim  = smarttrim
         if trace      is not None:  self.trace      = trace
         #
-        if preamble  is True:  self.preamble = "_buf = []; _extend = _buf.extend; _to_str = %s; _escape = %s" % \
-                                                        (self.tostrfunc or 'None', self.escapefunc or 'None')
+        if preamble  is True:
+            tostrname  = hasattr(self.tostrfunc,  '__call__') and self.tostrfunc.__name__  or self.tostrfunc or 'None'
+            escapename = hasattr(self.escapefunc, '__call__') and self.escapefunc.__name__ or self.escapefunc or 'None'
+            self.preamble = "_buf = []; _extend = _buf.extend; _to_str = %s; _escape = %s" % (tostrname, escapename)
         if postamble is True:  self.postamble = "print(''.join(_buf))"
         if input:
             self.convert(input, filename)
@@ -980,10 +983,8 @@ class Template(object):
             _buf = []
         locals['_buf'] = _buf
         locals['_extend'] = _buf.extend
-        k = self.tostrfunc
-        locals['_to_str'] = k and (locals.get(k) or globals.get(k) or _raise(ValueError, "%s(): no such function." % (k, )))
-        k = self.escapefunc
-        locals['_escape'] = k and (locals.get(k) or globals.get(k) or _raise(ValueError, "%s(): no such function." % (k, )))
+        locals['_to_str'] = hasattr(self.tostrfunc, '__call__')  and self.tostrfunc  or self._get_function(self.tostrfunc,  locals, globals)
+        locals['_escape'] = hasattr(self.escapefunc, '__call__') and self.escapefunc or self._get_function(self.escapefunc, locals, globals)
         if not self.bytecode:
             self.compile()
         if self.trace:
@@ -1005,6 +1006,14 @@ class Template(object):
                 logger.error("[tenjin.Template] (_buf=%r)" % (_buf, ))
                 raise
 
+    def _get_function(self, func_name, locals, globals):
+        if not func_name:
+            return func_name
+        func = locals.get(func_name) or globals.get(func_name)
+        if not func:
+            raise ValueError("%s(): no such function." % (func_name, ))
+        return func
+
     def compile(self):
         """compile self.script into self.bytecode"""
         self.bytecode = compile(self.script, self.filename or '(tenjin)', 'exec')
@@ -1023,7 +1032,7 @@ class SafeTemplate(Template):
          engine = tenjin.Engine()
          output = engine.render('hello.pyhtml', {'value':'<>&"'})
     """
-    escapefunc = 'safe_escape'
+    escapefunc = staticmethod(helpers.safe_escape)
 
     def get_expr_and_escapeflag(self, match):
         expr = match.group(2)
@@ -1079,7 +1088,7 @@ class Preprocessor(Template):
 
 class SafePreprocessor(Preprocessor):
 
-    escapefunc = 'safe_escape'
+    escapefunc = staticmethod(helpers.safe_escape)
 
     def get_expr_and_escapeflag(self, match):
         if match.group(1) == '#':
