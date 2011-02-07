@@ -227,7 +227,7 @@ if True:
         context['_buf'].append(string)
 
     def start_capture(varname=None, _depth=1):
-        """start capturing with name."""
+        """(obsolete) start capturing with name."""
         frame = sys._getframe(_depth)
         context = frame.f_locals
         context['_buf_tmp']    = context['_buf']
@@ -237,9 +237,8 @@ if True:
         context['_buf']    = _buf2
         context['_extend'] = _buf2.extend
 
-
     def stop_capture(store_to_context=True, _depth=1):
-        """stop capturing and return the result of capturing.
+        """(obsolete) stop capturing and return the result of capturing.
            if store_to_context is True then the result is stored into _context[varname].
         """
         frame = sys._getframe(_depth)
@@ -253,6 +252,26 @@ if True:
             if store_to_context:
                 context['_context'][varname] = result
         return result
+
+    def capture(name, store_to_context=True):
+        """capture partial of template.
+           ex.
+              <?py for _ in capture('sidemenu'): ?>
+                <ul>
+                  <li>Top</li>
+                </ul>
+              <?py #endfor ?>
+              <?py echo(sidemenu) ?>
+        """
+        lvars = sys._getframe(1).f_locals   # local variables
+        _buf_old = lvars['_buf']
+        _buf_new = []
+        lvars['_buf'], lvars['_extend'] = _buf_new, _buf_new.extend
+        yield None
+        lvars['_buf'], lvars['_extend'] = _buf_old, _buf_old.extend
+        lvars[name] = captured = ''.join(_buf_new)
+        if store_to_context:
+            lvars['_context'][name] = captured
 
     def captured_as(name, _depth=1):
         """helper method for layout template.
@@ -317,6 +336,7 @@ if True:
     mod.echo               = echo
     mod.start_capture      = start_capture
     mod.stop_capture       = stop_capture
+    mod.capture            = capture
     mod.captured_as        = captured_as
     mod._p                 = _p
     mod._P                 = _P
@@ -324,7 +344,7 @@ if True:
     mod.SafeStr            = SafeStr
     mod.safe_escape        = safe_escape
     mod.__all__ = ['escape', 'to_str', 'echo', 'generate_tostrfunc',
-                   'start_capture', 'stop_capture', 'captured_as',
+                   'start_capture', 'stop_capture', 'capture', 'captured_as',
                    '_p', '_P', '_decode_params', 'SafeStr', 'safe_escape',
                    ]
 

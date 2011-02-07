@@ -4,6 +4,7 @@
 ###
 
 from oktest import ok, not_ok, run, spec
+from oktest.helper import dummy_file
 import sys, os, re, time, marshal, shutil
 from glob import glob
 try:    import cPickle as pickle
@@ -233,6 +234,35 @@ class EngineTest(object):
             ok (output) == expected
         finally:
             _remove_files([layout_filename, content_filename])
+
+
+    def test_capture(self):
+        filename  = '.test.capture.pyhtml'
+        content   = ("<div>\n"
+                     "<?py for _ in capture('sidemenu'): ?>\n"
+                     "  <ul>\n"
+                     "  <?py for item in items: ?>\n"
+                     "    <li>${item}</li>\n"
+                     "  <?py #endfor ?>\n"
+                     "  </ul>\n"
+                     "<?py #endfor ?>\n"
+                     "</div>\n")
+        expected1 = ("<div>\n"
+                     "</div>\n")
+        expected2 = ("  <ul>\n"
+                     "    <li>A</li>\n"
+                     "    <li>B</li>\n"
+                     "    <li>C</li>\n"
+                     "  </ul>\n")
+        d = dummy_file(filename, content).__enter__()
+        try:
+            context = {'items': ['A', 'B', 'C']}
+            engine = tenjin.Engine()
+            output = engine.render(filename, context)
+            ok (output) == expected1
+            ok (context['sidemenu']) == expected2
+        finally:
+            d.__exit__(*sys.exc_info())
 
 
     def test_captured_as(self):
