@@ -236,10 +236,10 @@ class EngineTest(object):
             _remove_files([layout_filename, content_filename])
 
 
-    def test_capture(self):
-        filename  = '.test.capture.pyhtml'
+    def test_capture_as(self):
+        filename  = '.test.capture_as.pyhtml'
         content   = ("<div>\n"
-                     "<?py for _ in capture('sidemenu'): ?>\n"
+                     "<?py for _ in capture_as('sidemenu'): ?>\n"
                      "  <ul>\n"
                      "  <?py for item in items: ?>\n"
                      "    <li>${item}</li>\n"

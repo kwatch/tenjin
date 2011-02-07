@@ -253,10 +253,10 @@ if True:
                 context['_context'][varname] = result
         return result
 
-    def capture(name, store_to_context=True):
+    def capture_as(name, store_to_context=True):
         """capture partial of template.
            ex.
-              <?py for _ in capture('sidemenu'): ?>
+              <?py for _ in capture_as('sidemenu'): ?>
                 <ul>
                   <li>Top</li>
                 </ul>
@@ -336,7 +336,7 @@ if True:
     mod.echo               = echo
     mod.start_capture      = start_capture
     mod.stop_capture       = stop_capture
-    mod.capture            = capture
+    mod.capture_as         = capture_as
     mod.captured_as        = captured_as
     mod._p                 = _p
     mod._P                 = _P
@@ -344,7 +344,7 @@ if True:
     mod.SafeStr            = SafeStr
     mod.safe_escape        = safe_escape
     mod.__all__ = ['escape', 'to_str', 'echo', 'generate_tostrfunc',
-                   'start_capture', 'stop_capture', 'capture', 'captured_as',
+                   'start_capture', 'stop_capture', 'capture_as', 'captured_as',
                    '_p', '_P', '_decode_params', 'SafeStr', 'safe_escape',
                    ]
 
