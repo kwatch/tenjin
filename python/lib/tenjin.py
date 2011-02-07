@@ -133,6 +133,8 @@ def _create_module(module_name):
     sys.modules[module_name] = mod
     return mod
 
+def _raise(exception_class, *args):
+    raise exception_class(*args)
 
 
 ##
