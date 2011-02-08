@@ -507,8 +507,9 @@ del mod
 ##
 ## utility function to set default encoding of template files
 ##
+_template_encoding = (None, 'utf-8')    # encodings for decode and encode
 
-def set_template_encoding(encoding):
+def set_template_encoding(decode=None, encode=None):
     """Set default encoding of template files.
        This should be called before importing helper functions.
        ex.
@@ -517,10 +518,21 @@ def set_template_encoding(encoding):
           tenjin.set_template_encoding('utf-8')  # should be called before importing helpers
           from tenjin.helpers import *
     """
-    global to_str
-    if Template.encoding != encoding:
-        Template.encoding = encoding
-        to_str = helpers.to_str = helpers.generate_tostrfunc(decode=encoding)
+    global _template_encoding, to_str
+    if _template_encoding == (decode, encode):
+        return
+    if decode and encode:
+        raise ValueError("set_template_encoding(): cannot specify both decode and encode.")
+    if not decode and not encode:
+        raise ValueError("set_template_encoding(): decode or encode should be specified.")
+    if decode:
+        Template.encoding = decode    # unicode base template
+        helpers.to_str = to_str = helpers.generate_tostrfunc(decode=decode)
+    else:
+        Template.encoding = None      # binary base template
+        helpers.to_str = to_str = helpers.generate_tostrfunc(encode=encode)
+    Template.tostrfunc = staticmethod(to_str)
+    _template_encoding = (decode, encode)
 
 
 ##
