@@ -150,9 +150,11 @@ class Main(object):
                 tenjin.set_template_encoding(encode=_encoding)
             elif python3:
                 tenjin.set_template_encoding(decode=_encoding)
+            globals()['to_str'] = tenjin.helpers.to_str
         encoding = properties.get('encoding')
         if encoding:
             tenjin.set_template_encoding(decode=encoding)
+            globals()['to_str'] = tenjin.helpers.to_str
 
         ## add '.' to sys.path
         sys.path.append('.')

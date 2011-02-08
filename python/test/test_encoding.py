@@ -30,7 +30,7 @@ class EncodingTest(object):
             #decode = encodings.get('decode')
             #if encode or decode:
             #    tenjin.set_template_encoding(encode=encode, decode=decode)
-            tenjin.Template.tostrfunc = staticmethod(to_str)
+            #tenjin.Template.tostrfunc = staticmethod(to_str)
             context = {'to_str': to_str}
             template.render(context, _buf=buf)
             ok (buf) == expected_buf
@@ -53,7 +53,7 @@ class EncodingTest(object):
         finally:
             tenjin.to_str             = bkup['to_str']
             tenjin.helpers.to_str     = bkup['helpers.to_str']
-            tenjin.Template.tostrfunc = staticmethod(bkup['Template.tostrfunc'])
+            #tenjin.Template.tostrfunc = staticmethod(bkup['Template.tostrfunc'])
 
     def test_with_binary_template_and_binary_data(self):
         t = tenjin.Template()
@@ -185,14 +185,14 @@ class EncodingTest(object):
             ok (tenjin.Template.encoding) == 'utf-8'
             ok (tenjin.helpers.to_str(u'日本語')) == u'日本語'
             ok (tenjin.helpers.to_str('日本語')) == u'日本語'
-            ok (tenjin.Template().tostrfunc).is_(tenjin.helpers.to_str)
+            #ok (tenjin.Template().tostrfunc).is_(tenjin.helpers.to_str)
             ok (tenjin.to_str).is_(tenjin.helpers.to_str)
             #
             tenjin.set_template_encoding(encode='utf-8')
             ok (tenjin.Template.encoding) == None
             ok (tenjin.helpers.to_str(u'日本語')) == '日本語'
             ok (tenjin.helpers.to_str('日本語')) == '日本語'
-            ok (tenjin.Template().tostrfunc).is_(tenjin.helpers.to_str)
+            #ok (tenjin.Template().tostrfunc).is_(tenjin.helpers.to_str)
             ok (tenjin.to_str).is_(tenjin.helpers.to_str)
         finally:
             tenjin.Template.encoding = Template_encoding
