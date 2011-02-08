@@ -3,7 +3,7 @@
 ###
 ### oktest.py -- new style test utility
 ###
-### $Release: 0.6.0 $
+### $Release: 0.7.0 $
 ### $Copyright: copyright(c) 2010-2011 kuwata-lab.com all rights reserved $
 ### $License: MIT License $
 ###
@@ -79,6 +79,8 @@ __unittest = True    # see unittest.TestResult._is_relevant_tb_level()
 #        self.diff = diff
 #
 
+ASSERTION_ERROR = AssertionError
+
 
 def ex2msg(ex):
     #return ex.message   # deprecated since Python 2.6
@@ -92,9 +94,13 @@ def _msg(target, op, other=None):
     if   op.endswith('()'):   msg = '%r%s'     % (target, op)
     elif op.startswith('.'):  msg = '%r%s(%r)' % (target, op, other)
     else:                     msg = '%r %s %r' % (target, op, other)
+    msg += " : failed."
     if op == '==' and target != other and _is_string(target) and _is_string(other):
         if DIFF:
-            if python2 or isinstance(target, str) and isinstance(other, str):
+            #if python2 or isinstance(target, str) and isinstance(other, str):
+            is_a = isinstance
+            if (            is_a(target, str)     and is_a(other, str)    )  or \
+               (python2 and is_a(target, unicode) and is_a(other, unicode)):
                 diff = _diff(target, other)
                 return (msg, diff)
     return msg
@@ -120,7 +126,17 @@ def _diff(target, other):
     return ''.join(unified_diff(expected, actual, 'expected', 'actual', n=2))
 
 
-def assertion_op(func):
+def assertion(func):
+    """decorator to declare assertion function.
+       ex.
+         @oktest.assertion
+         def startswith(self, arg):
+           boolean = self.target.startswith(arg)
+           if boolean != self.expected:
+             self.failed("%r.startswith(%r) : failed." % (self.target, arg))
+         #
+         ok ("Sasaki").startswith("Sas")
+    """
     def deco(self, *args):
         self._tested = True
         return func(self, *args)
@@ -128,6 +144,7 @@ def assertion_op(func):
         deco.func_name = func.func_name
     deco.__name__ = func.__name__
     deco.__doc__ = func.__doc__
+    setattr(AssertionObject, func.__name__, deco)
     return deco
 
 
@@ -137,221 +154,310 @@ def assertion_op(func):
 
 class AssertionObject(object):
 
-    def __init__(self, value, _bool=True):
-        self.value = value
-        self._bool = _bool
+    def __init__(self, target, expected=True):
+        self.target = target
+        self.expected = expected
         self._tested = False
         self._location = None
 
     def __del__(self):
         if self._tested is False:
-            msg = "%s() is called but not tested." % (self._bool and 'ok' or 'not_ok')
+            msg = "%s() is called but not tested." % (self.expected and 'ok' or 'not_ok')
             if self._location:
                 msg += " (file '%s', line %s)" % self._location
             #import warnings; warnings.warn(msg)
             sys.stderr.write("*** warning: oktest: %s\n" % msg)
 
     #def not_(self):
-    #    self._bool = not self._bool
+    #    self.expected = not self.expected
     #    return self
 
-    def _failed(self, msg, postfix=' : failed.', depth=2):
+    def failed(self, msg, depth=2):
         file, line = _get_location(depth + 1)
         diff = None
         if isinstance(msg, tuple):
             msg, diff = msg
-        if self._bool is False:
+        if self.expected is False:
             msg = 'not ' + msg
-        if postfix:
-            msg += postfix
         raise self._assertion_error(msg, file, line, diff)
 
     def _assertion_error(self, msg, file, line, diff):
         #return TestFailed(msg, file=file, line=line, diff=diff)
-        ex = AssertionError(msg)
+        ex = ASSERTION_ERROR(msg)
         ex.file = file;  ex.line = line;  ex.diff = diff
+        ex._raised_by_oktest = True
         return ex
 
-    @assertion_op
+    @property
+    def should(self):           # UNDOCUMENTED
+        """(experimental) allows user to call True/False method as assertion.
+           ex.
+             ok ("SOS").should.startswith("S")   # same as ok ("SOS".startswith("S")) == True
+             ok ("123").should.isdigit()         # same as ok ("123".isdigit()) == True
+        """
+        return Should(self, self.expected)
+
+    @property
+    def should_not(self):       # UNDOCUMENTED
+        """(experimental) allows user to call True/False method as assertion.
+           ex.
+             ok ("SOS").should_not.startswith("X")   # same as ok ("SOS".startswith("X")) == False
+             ok ("123").should_not.isalpha()         # same as ok ("123".isalpha()) == False
+        """
+        return Should(self, not self.expected)
+
+
+def _f():
+
+    @assertion
     def __eq__(self, other):
-        if (self.value == other) == self._bool:  return True
-        self._failed(_msg(self.value, '==', other))
+        boolean = self.target == other
+        if boolean == self.expected:  return True
+        self.failed(_msg(self.target, '==', other))
 
-    @assertion_op
+    @assertion
     def __ne__(self, other):
-        if (self.value != other) == self._bool:  return True
-        self._failed(_msg(self.value, '!=', other))
+        boolean = self.target != other
+        if boolean == self.expected:  return True
+        self.failed(_msg(self.target, '!=', other))
 
-    @assertion_op
+    @assertion
     def __gt__(self, other):
-        if (self.value > other) == self._bool:  return True
-        self._failed(_msg(self.value, '>', other))
+        boolean = self.target > other
+        if boolean == self.expected:  return True
+        self.failed(_msg(self.target, '>', other))
 
-    @assertion_op
+    @assertion
     def __ge__(self, other):
-        if (self.value >= other) == self._bool:  return True
-        self._failed(_msg(self.value, '>=', other))
+        boolean = self.target >= other
+        if boolean == self.expected:  return True
+        self.failed(_msg(self.target, '>=', other))
 
-    @assertion_op
+    @assertion
     def __lt__(self, other):
-        if (self.value < other) == self._bool:  return True
-        self._failed(_msg(self.value, '<', other))
+        boolean = self.target < other
+        if boolean == self.expected:  return True
+        self.failed(_msg(self.target, '<', other))
 
-    @assertion_op
+    @assertion
     def __le__(self, other):
-        if (self.value <= other) == self._bool:  return True
-        self._failed(_msg(self.value, '<=', other))
+        boolean = self.target <= other
+        if boolean == self.expected:  return True
+        self.failed(_msg(self.target, '<=', other))
 
-    @assertion_op
+    @assertion
     def in_delta(self, other, delta):
-        if (self.value <= other - delta) == self._bool:
-            self._failed(_msg(self.value, '>', other - delta))
-        if (self.value >= other + delta) == self._bool:
-            self._failed(_msg(self.value, '<', other + delta))
+        boolean = self.target > other - delta
+        if boolean != self.expected:
+            self.failed(_msg(self.target, '>', other - delta))
+        boolean = self.target < other + delta
+        if boolean != self.expected:
+            self.failed(_msg(self.target, '<', other + delta))
         return True
 
-#    @assertion_op
+#    @assertion
 #    def __contains__(self, other):
-#        if (self.value in other) == self._bool:  return True
-#        self._failed(_msg(self.value, 'in', other))
-    @assertion_op
+#        boolean = self.target in other
+#        if boolean == self.expected:  return True
+#        self.failed(_msg(self.target, 'in', other))
+
+    @assertion
     def in_(self, other):
-        if (self.value in other) == self._bool:  return True
-        self._failed(_msg(self.value, 'in', other))
+        boolean = self.target in other
+        if boolean == self.expected:  return True
+        self.failed(_msg(self.target, 'in', other))
 
-    @assertion_op
+    @assertion
     def not_in(self, other):  # DEPRECATED
-        if (self.value not in other) == self._bool:  return True
-        self._failed(_msg(self.value, 'not in', other))
+        boolean = self.target not in other
+        if boolean == self.expected:  return True
+        self.failed(_msg(self.target, 'not in', other))
 
-    @assertion_op
+    @assertion
     def contains(self, other):
-        if (other in self.value) == self._bool:  return True
-        self._failed(_msg(other, 'in', self.value))
+        boolean = other in self.target
+        if boolean == self.expected:  return True
+        self.failed(_msg(other, 'in', self.target))
 
-    @assertion_op
+    @assertion
     def not_contain(self, other):  # DEPRECATED
-        if (other in self.value) == self._bool:  return True
-        self._failed(_msg(other, 'not in', self.value))
+        boolean = other in self.target
+        if boolean == self.expected:  return True
+        self.failed(_msg(other, 'not in', self.target))
 
-    @assertion_op
+    @assertion
     def is_(self, other):
-        if (self.value is other) == self._bool:  return True
-        self._failed(_msg(self.value, 'is', other))
+        boolean = self.target is other
+        if boolean == self.expected:  return True
+        self.failed(_msg(self.target, 'is', other))
 
-    @assertion_op
+    @assertion
     def is_not(self, other):
-        if (self.value is not other) == self._bool:  return True
-        self._failed(_msg(self.value, 'is not', other))
+        boolean = self.target is not other
+        if boolean == self.expected:  return True
+        self.failed(_msg(self.target, 'is not', other))
 
-    @assertion_op
+    @assertion
     def is_a(self, other):
-        if (isinstance(self.value, other)) == self._bool:  return True
-        self._failed("isinstance(%r, %s)" % (self.value, other.__name__))
+        boolean = isinstance(self.target, other)
+        if boolean == self.expected:  return True
+        self.failed("isinstance(%r, %s) : failed." % (self.target, other.__name__))
 
-    @assertion_op
+    @assertion
     def is_not_a(self, other):  # DEPRECATED
-        if (not isinstance(self.value, other)) == self._bool:  return True
-        self._failed("not isinstance(%r, %s)" % (self.value, other.__name__))
+        boolean = not isinstance(self.target, other)
+        if boolean == self.expected:  return True
+        self.failed("not isinstance(%r, %s) : failed." % (self.target, other.__name__))
 
-    @assertion_op
-    def hasattr(self, name):
-        if hasattr(self.value, name) == self._bool:  return True
-        self._failed("hasattr(%r, %r)" % (self.value, name))
+    @assertion
+    def has_attr(self, name):
+        boolean = hasattr(self.target, name)
+        if boolean == self.expected:  return True
+        self.failed("hasattr(%r, %r) : failed." % (self.target, name))
 
-    @assertion_op
+    @assertion
     def matches(self, pattern):
         if isinstance(pattern, type(re.compile('x'))):
-            if bool(pattern.search(self.value)) == self._bool:  return True
-            self._failed("re.search(%r, %r)" % (pattern.pattern, self.value))
+            boolean = bool(pattern.search(self.target))
+            if boolean == self.expected:  return True
+            self.failed("re.search(%r, %r) : failed." % (pattern.pattern, self.target))
         else:
-            if bool(re.search(pattern, self.value)) == self._bool:  return True
-            self._failed("re.search(%r, %r)" % (pattern, self.value))
+            boolean = bool(re.search(pattern, self.target))
+            if boolean == self.expected:  return True
+            self.failed("re.search(%r, %r) : failed." % (pattern, self.target))
 
-    @assertion_op
+    @assertion
     def not_match(self, pattern):  # DEPRECATED
         if isinstance(pattern, type(re.compile('x'))):
-            if (not pattern.search(self.value)) == self._bool:  return True
-            self._failed("not re.search(%r, %r)" % (pattern.pattern, self.value))
+            boolean = not pattern.search(self.target)
+            if boolean == self.expected:  return True
+            self.failed("not re.search(%r, %r) : failed." % (pattern.pattern, self.target))
         else:
-            if (not re.search(pattern, self.value)) == self._bool:  return True
-            self._failed("not re.search(%r, %r)" % (pattern, self.value))
+            boolean = not re.search(pattern, self.target)
+            if boolean == self.expected:  return True
+            self.failed("not re.search(%r, %r) : failed." % (pattern, self.target))
 
-    @assertion_op
+    @assertion
     def is_file(self):
-        if (os.path.isfile(self.value)) == self._bool:  return True
-        self._failed('os.path.isfile(%r)' % self.value)
+        boolean = os.path.isfile(self.target)
+        if boolean == self.expected:  return True
+        self.failed('os.path.isfile(%r) : failed.' % self.target)
 
-    @assertion_op
+    @assertion
     def is_not_file(self):  # DEPRECATED
-        if (not os.path.isfile(self.value)) == self._bool:  return True
-        self._failed('not os.path.isfile(%r)' % self.value)
+        boolean = not os.path.isfile(self.target)
+        if boolean == self.expected:  return True
+        self.failed('not os.path.isfile(%r) : failed.' % self.target)
 
-    @assertion_op
+    @assertion
     def is_dir(self):
-        if (os.path.isdir(self.value)) == self._bool:  return True
-        self._failed('os.path.isdir(%r)' % self.value)
+        boolean = os.path.isdir(self.target)
+        if boolean == self.expected:  return True
+        self.failed('os.path.isdir(%r) : failed.' % self.target)
 
-    @assertion_op
+    @assertion
     def is_not_dir(self):  # DEPRECATED
-        if (not os.path.isdir(self.value)) == self._bool:  return True
-        self._failed('not os.path.isdir(%r)' % self.value)
+        boolean = not os.path.isdir(self.target)
+        if boolean == self.expected:  return True
+        self.failed('not os.path.isdir(%r) : failed.' % self.target)
 
-    @assertion_op
+    @assertion
     def exists(self):
-        if (os.path.exists(self.value)) == self._bool:  return True
-        self._failed('os.path.exists(%r)' % self.value)
+        boolean = os.path.exists(self.target)
+        if boolean == self.expected:  return True
+        self.failed('os.path.exists(%r) : failed.' % self.target)
 
-    @assertion_op
+    @assertion
     def not_exist(self):  # DEPRECATED
-        if (not os.path.exists(self.value)) == self._bool:  return True
-        self._failed('not os.path.exists(%r)' % self.value)
+        boolean = not os.path.exists(self.target)
+        if boolean == self.expected:  return True
+        self.failed('not os.path.exists(%r) : failed.' % self.target)
 
-    @assertion_op
+    @assertion
     def raises(self, exception_class, errmsg=None):
-        return self._raise_or_not(exception_class, errmsg, self._bool)
+        return self._raise_or_not(exception_class, errmsg, self.expected)
 
-    @assertion_op
-    def not_raise(self, exception_class=Exception):  # DEPRECATED
-        return self._raise_or_not(exception_class, None, not self._bool)
+    @assertion
+    def not_raise(self, exception_class=Exception):
+        return self._raise_or_not(exception_class, None, not self.expected)
 
     def _raise_or_not(self, exception_class, errmsg, flag_raise):
-        if flag_raise:
-            try:
-                self.value()
-            except:
-                ex = sys.exc_info()[1]
-                self.value.exception = ex
+        ex = None
+        try:
+            self.target()
+        except:
+            ex = sys.exc_info()[1]
+            if isinstance(ex, AssertionError) and not hasattr(ex, '_raised_by_oktest'):
+                raise
+            self.target.exception = ex
+            if flag_raise:
                 if not isinstance(ex, exception_class):
-                    self._failed('%s%r is kind of %s' % (ex.__class__.__name__, ex.args, exception_class.__name__), depth=3)
+                    self.failed('%s%r is kind of %s : failed.' % (ex.__class__.__name__, ex.args, exception_class.__name__), depth=3)
                     #raise
-                if errmsg is None or str(ex) == errmsg:  # don't use ex2msg(ex)!
-                    return
-                #self._failed("expected %r but got %r" % (errmsg, str(ex)))
-                self._failed("%r == %r" % (str(ex), errmsg), depth=3)   # don't use ex2msg(ex)!
-            self._failed('%s should be raised' % exception_class.__name__, depth=3)
-        else:
-            try:
-                self.value()
-            except:
-                ex = sys.exc_info()[1]
-                self.value.exception = ex
+                if errmsg is not None and str(ex) != errmsg:   # don't use ex2msg(ex)!
+                    #self.failed("expected %r but got %r" % (errmsg, str(ex)))
+                    self.failed("%r == %r : failed." % (str(ex), errmsg), depth=3)   # don't use ex2msg(ex)!
+            else:
                 if isinstance(ex, exception_class):
-                    self._failed('%s should not be raised' % exception_class.__name__, depth=3)
+                    self.failed('%s should not be raised : failed.' % exception_class.__name__, depth=3)
+        else:
+            if flag_raise and ex is None:
+                self.failed('%s should be raised : failed.' % exception_class.__name__, depth=3)
+        return True
+
+    AssertionObject._raise_or_not = _raise_or_not
+    AssertionObject.hasattr = has_attr    # for backward compatibility
+
+_f()
+del _f
 
 
 ASSERTION_OBJECT = AssertionObject
 
 
-def ok(value):
-    obj = ASSERTION_OBJECT(value, True)
+def ok(target):
+    obj = ASSERTION_OBJECT(target, True)
     obj._location = _get_location(1)
     return obj
 
-def not_ok(value):
-    obj = ASSERTION_OBJECT(value, False)
+def not_ok(target):
+    obj = ASSERTION_OBJECT(target, False)
     obj._location = _get_location(1)
     return obj
+
+
+class Should(object):
+
+    def __init__(self, assertion_object, expected=None):
+        self.assertion_object = assertion_object
+        if expected is None:
+            expected = assertion_object.expected
+        self.expected = expected
+
+    def __getattr__(self, key):
+        ass = self.assertion_object
+        tested = ass._tested
+        ass._tested = True
+        val = getattr(ass.target, key)
+        if not hasattr(val, '__call__'):
+            msg = "%s.%s: not a callable." % (type(ass.target).__name__, key)
+            raise ValueError(msg)
+        ass._tested = tested
+        def f(*args, **kwargs):
+            ass._tested = True
+            ret = val(*args, **kwargs)
+            if ret not in (True, False):
+                msg = "%r.%s(): expected to return True or False but it returned %r." \
+                      % (ass.target, val.__name__, ret)
+                raise ValueError(msg)
+            if ret != self.expected:
+                buf = [ repr(arg) for arg in args ]
+                buf.extend([ "%s=%r" % (k, kwargs[k]) for k in kwargs ])
+                msg = "%r.%s(%s) : failed." % (ass.target, val.__name__, ", ".join(buf))
+                if self.expected is False:
+                    msg = "not " + msg
+                ass.failed(msg)
+        return f
 
 
 class TestRunner(object):
@@ -361,67 +467,81 @@ class TestRunner(object):
         if reporter is None:  reporter = REPORTER()
         self.reporter = reporter
 
-    def run(self):
-        klass = self.klass
-        reporter = self.reporter
-        ## gather test methods
-        tuples = []   # pairs of method name and function
-        for k in dir(klass):
-            v = getattr(klass, k)
+    def _test_name(self, name):
+        return re.sub(r'^test_?', '', name)
+
+    def _gather_test_methods(self):
+        pairs = []   # pairs of method name and function
+        for k in dir(self.klass):
+            v = getattr(self.klass, k)
             if k.startswith('test') and hasattr(v, '__call__'):
-                tuples.append((k, v))
+                pairs.append((k, v))
         ## filer by $TEST environment variable
         pattern = os.environ.get('TEST')
-        def _test_name(name):
-            return re.sub(r'^test_?', '', name)
         if pattern:
             regexp = re.compile(pattern)
-            tuples = [ t for t in tuples if regexp.search(_test_name(t[0])) ]
+            pairs = [ t for t in pairs if regexp.search(self._test_name(t[0])) ]
         ## sort by linenumber
-        tuples.sort(key=lambda t: _func_firstlineno(t[1]))
-        ## invoke before_all()
-        reporter.before_all(klass)
+        pairs.sort(key=lambda t: _func_firstlineno(t[1]))
+        return pairs
+
+    def _new_testcase_object(self, method_name, func):
+        try:
+            obj = self.klass()
+        except ValueError:     # unittest.TestCase raises ValueError
+            obj = self.klass(method_name)
+        obj.__name__ = self._test_name(method_name)
+        obj._testMethodName = method_name    # unittest.TestCase compatible
+        obj._testMethodDoc = func.__doc__    # unittest.TestCase compatible
+        return obj
+
+    def _invoke_before_all(self, klass):
+        self.reporter.before_all(klass)
         if hasattr(klass, 'before_all'):
             klass.before_all()
-        ## invoke test methods
+
+    def _invoke_before(self, obj):
+        self.reporter.before(obj)
+        if   hasattr(obj, 'before'):       obj.before()
+        elif hasattr(obj, 'before_each'):  obj.before_each()  # for backward compatibility
+        elif hasattr(obj, 'setUp'):        obj.setUp()
+
+    def _invoke_after(self, obj):
+        if   hasattr(obj, 'after'):       obj.after()
+        elif hasattr(obj, 'after_each'):  obj.after_each()  # for backward compatibility
+        elif hasattr(obj, 'tearDown'):    obj.tearDown()
+        self.reporter.after(obj)
+
+    def _invoke_after_all(self, klass):
+        if hasattr(klass, 'after_all'):
+            klass.after_all()
+        self.reporter.after_all(klass)
+
+    def run(self):
+        test_methods = self._gather_test_methods()
+        self._invoke_before_all(self.klass)
         count = 0
-        for method_name, func in tuples:
-            ## create instance object for each test
-            try:
-                obj = klass()
-            except ValueError:     # unittest.TestCase raises ValueError
-                obj = klass(method_name)
-            obj.__name__ = _test_name(method_name)
-            obj._testMethodName = method_name    # unittest.TestCase compatible
-            obj._testMethodDoc = func.__doc__    # unittest.TestCase compatible
-            ## invoke before() or setUp()
-            reporter.before(obj)
-            if   hasattr(obj, 'before'):       obj.before()
-            elif hasattr(obj, 'before_each'):  obj.before_each()  # for backward compatibility
-            elif hasattr(obj, 'setUp'):        obj.setUp()
+        for method_name, func in test_methods:
+            obj = self._new_testcase_object(method_name, func)
+            self._invoke_before(obj)
             try:
                 try:
                     func(obj)
-                    reporter.print_ok(obj)
+                    self.reporter.print_ok(obj)
                 #except TestFailed, ex:
-                except AssertionError:
+                except ASSERTION_ERROR:
                     ex = sys.exc_info()[1]
+                    if not hasattr(ex, '_raised_by_oktest'):
+                        raise
                     count += 1
-                    reporter.print_failed(obj, ex)
+                    self.reporter.print_failed(obj, ex)
                 except Exception:
                     ex = sys.exc_info()[1]
                     count += 1
-                    reporter.print_error(obj, ex)
+                    self.reporter.print_error(obj, ex)
             finally:
-                ## invoke after() or tearDown()
-                if   hasattr(obj, 'after'):       obj.after()
-                elif hasattr(obj, 'after_each'):  obj.after_each()  # for backward compatibility
-                elif hasattr(obj, 'tearDown'):    obj.tearDown()
-                reporter.after(obj)
-        ## invoke after_all()
-        if hasattr(klass, 'after_all'):
-            klass.after_all()
-        reporter.after_all(klass)
+                self._invoke_after(obj)
+        self._invoke_after_all(self.klass)
         return count
 
 
@@ -433,28 +553,30 @@ TARGET_PATTERN = '.*(Test|TestCase|_TC)$'
 def run(*targets):
     if len(targets) == 0:
         targets = (TARGET_PATTERN, )
-    target_list = []
+    count = 0
+    for klass in _target_classes(targets):
+        runner = TEST_RUNNER(klass, REPORTER())
+        count += runner.run()
+    return count
+
+def _target_classes(targets):
+    target_classes = []
     rexp_type = type(re.compile('x'))
     vars = None
     for arg in targets:
         if _is_class(arg):
             klass = arg
-            target_list.append(klass)
+            target_classes.append(klass)
         elif _is_string(arg) or isinstance(arg, rexp_type):
             rexp = _is_string(arg) and re.compile(arg) or arg
-            if vars is None: vars = sys._getframe(1).f_locals
+            if vars is None: vars = sys._getframe(2).f_locals
             klasses = [ vars[k] for k in vars if rexp.search(k) and _is_class(vars[k]) ]
             if TESTCLASS_SORT_KEY:
                 klasses.sort(key=TESTCLASS_SORT_KEY)
-            target_list.extend(klasses)
+            target_classes.extend(klasses)
         else:
-            raise Exception("%r: not a class nor pattern string." % arg)
-    #
-    count = 0
-    for klass in target_list:
-        runner = TEST_RUNNER(klass, REPORTER())
-        count += runner.run()
-    return count
+            raise ValueError("%r: not a class nor pattern string." % (arg, ))
+    return target_classes
 
 
 OUT = sys.stdout
@@ -690,7 +812,7 @@ class _Context(object):
         try:
             func(*args)
         finally:
-            self.__exit__(sys.exc_info())
+            self.__exit__(*sys.exc_info())
 
 
 
@@ -707,13 +829,13 @@ class Spec(_Context):
         #try:
         #    yield self  # (Python2.4) SyntaxError: 'yield' not allowed in a 'try' block with a 'finally' clause
         #finally:
-        #    self.__exit__(sys.exc_info())
+        #    self.__exit__(*sys.exc_info())
         ex = None
         try:
             yield self
         except:
             ex = None
-        self.__exit__(sys.exc_info())
+        self.__exit__(*sys.exc_info())
         if ex:
             raise ex
 
@@ -772,8 +894,9 @@ def _dummy():
                 setattr(self.klass, name, self.locals[name])
 
 
-    def chdir(path):
-        return Chdir(path)
+    def chdir(path, func=None):
+        cd = Chdir(path)
+        return func is not None and cd(func) or cd
 
     def using(klass):
         return Using(klass)
@@ -882,16 +1005,14 @@ def _dummy():
         def __enter__(self):
             self.stdout, sys.stdout = sys.stdout, StringIO()
             self.stderr, sys.stderr = sys.stderr, StringIO()
-            if self.stdin_content is not None:
-                self.stdin, sys.stdin  = sys.stdin, StringIO(self.stdin_content)
+            self.stdin,  sys.stdin  = sys.stdin,  StringIO(self.stdin_content or "")
             return self
 
         def __exit__(self, *args):
             sout, serr = sys.stdout.getvalue(), sys.stderr.getvalue()
             sys.stdout, self.stdout = self.stdout, sys.stdout.getvalue()
             sys.stderr, self.stderr = self.stderr, sys.stderr.getvalue()
-            if self.stdin_content is not None:
-                sys.stdin = self.stdin
+            sys.stdin,  self.stdin  = self.stdin,  self.stdin_content
 
 
     def dummy_file(filename, content):
@@ -909,7 +1030,7 @@ def _dummy():
     def dummy_environ_vars(**kwargs):
         return DummyValues(os.environ, **kwargs)
 
-    def dummy_io(stdin_content=None, func=None, *args, **kwargs):
+    def dummy_io(stdin_content="", func=None, *args, **kwargs):
         obj = dummy.DummyIO(stdin_content)
         if func is None:
             return obj    # for with-statement
@@ -917,7 +1038,7 @@ def _dummy():
         try:
             func(*args, **kwargs)
         finally:
-            obj.__exit__()
+            obj.__exit__(*sys.exc_info())
         #return obj.stdout, obj.stderr
         return obj
 
@@ -940,6 +1061,8 @@ def _dummy():
 
     class Call(object):
 
+        __repr_style = None
+
         def __init__(self, receiver=None, name=None, args=None, kwargs=None, ret=None):
             self.receiver = receiver
             self.name   = name     # method name
@@ -949,6 +1072,10 @@ def _dummy():
 
         def __repr__(self):
             #return '%s(args=%r, kwargs=%r, ret=%r)' % (self.name, self.args, self.kwargs, self.ret)
+            if self.__repr_style == 'list':
+                return repr(self.list())
+            if self.__repr_style == 'tuple':
+                return repr(self.tuple())
             buf = []; a = buf.append
             a("%s(" % self.name)
             for arg in self.args:
@@ -976,8 +1103,10 @@ def _dummy():
 
         def __eq__(self, other):
             if isinstance(other, list):
+                self.__repr_style = 'list'
                 return list(self) == other
             elif isinstance(other, tuple):
+                self.__repr_style = 'tuple'
                 return tuple(self) == other
             elif isinstance(other, self.__class__):
                 return self.name == other.name and self.args == other.args \
