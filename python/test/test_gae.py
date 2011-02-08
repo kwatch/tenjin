@@ -113,7 +113,7 @@ else:
             script = (
                 "_extend(('''<ul>\\n''', ));\n"
                 "for item in items:\n"
-                "    _extend(('''  <li>''', escape(to_str(item)), '''</li>\\n''', ));\n"
+                "    _extend(('''  <li>''', _escape(_to_str(item)), '''</li>\\n''', ));\n"
                 "#endfor\n"
                 "_extend(('''</ul>\\n''', ));\n"
             )

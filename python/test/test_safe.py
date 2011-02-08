@@ -72,10 +72,10 @@ class SafeTemplateTest(object):
                           "'#{item}': '#{}' is not available in SafeTemplate.")
         if "converted then use 'safe_escape()' instead of 'escape()'":
             t = tenjin.SafeTemplate(input="<p>${item}</p>")
-            ok (t.script) == "_extend(('''<p>''', safe_escape(to_str(item)), '''</p>''', ));"
+            ok (t.script) == "_extend(('''<p>''', _escape(_to_str(item)), '''</p>''', ));"
         if "${SafeStr(...)} exists then skips to escape by safe_escape()":
             t = tenjin.SafeTemplate(input="<p>${SafeStr(foo())}</p>")
-            ok (t.script) == "_extend(('''<p>''', to_str(foo()), '''</p>''', ));"
+            ok (t.script) == "_extend(('''<p>''', _to_str(foo()), '''</p>''', ));"
 
     def test_FUNCTEST_of_render(self):
         if "rendered then avoid escape of SafeStr object":
@@ -118,11 +118,11 @@ class SafePreprocessorTest(object):
     expected_script = r"""
 _extend(('''<h1>0</h1>\n''', ));
 for item in items:
-    _extend(('''<p>''', safe_escape(to_str(item)), '''</p>\n''', ));
+    _extend(('''<p>''', _escape(_to_str(item)), '''</p>\n''', ));
 #end
 _extend(('''<h1>1</h1>\n''', ));
 for item in items:
-    _extend(('''<p>''', safe_escape(to_str(item)), '''</p>\n''', ));
+    _extend(('''<p>''', _escape(_to_str(item)), '''</p>\n''', ));
 #end
 """[1:]
 
@@ -240,7 +240,7 @@ class SafeEngineTest(object):
   <div>copyright(c)2010 kuwata-lab.com</div>
 '''[1:]
         expected_script = r"""
-_extend(('''  <h1>''', safe_escape(to_str(title)), '''</h1>
+_extend(('''  <h1>''', _escape(_to_str(title)), '''</h1>
   <ul>
     <li>Su</li>
     <li>M</li>

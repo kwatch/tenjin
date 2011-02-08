@@ -30,7 +30,7 @@ class PreprocessTest(object):
 	_extend(('''<select>
 	<?py curr = params.get(\'wday\') ?>\n''', ));
 	for i, wday in enumerate(WEEKDAY):
-	    _extend(('''  <option value="''', to_str(_decode_params(i)), '''"#{selected(curr==''', to_str(_decode_params(i)), ''')}>''', escape(to_str(_decode_params(wday))), '''</option>\n''', ));
+	    _extend(('''  <option value="''', _to_str(_decode_params(i)), '''"#{selected(curr==''', _to_str(_decode_params(i)), ''')}>''', _escape(_to_str(_decode_params(wday))), '''</option>\n''', ));
 	#endfor
 	_extend(('''</select>\n''', ));
 	"""[1:].replace("\t", "")

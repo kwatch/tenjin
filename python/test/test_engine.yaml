@@ -666,13 +666,13 @@
   script1: |6
 	_extend(('''<p>\n''', ));
 	x = _context.get('x'); y = _context.get('y'); z = _context.get('z'); 
-	_extend(('''  x = ''', to_str(x), ''', y = ''', to_str(y), ''', z = ''', to_str(z), '''
+	_extend(('''  x = ''', _to_str(x), ''', y = ''', _to_str(y), ''', z = ''', _to_str(z), '''
 	</p>\n''', ));
 
   cache1: |
 	_extend(('''<p>\n''', ));
 	x = _context.get('x'); y = _context.get('y'); z = _context.get('z'); 
-	_extend(('''  x = ''', to_str(x), ''', y = ''', to_str(y), ''', z = ''', to_str(z), '''
+	_extend(('''  x = ''', _to_str(x), ''', y = ''', _to_str(y), ''', z = ''', _to_str(z), '''
 	</p>\n''', ));
 
   args1: [ x, y, z ]
@@ -686,13 +686,13 @@
   script2: |6
 	_extend(('''<p>\n''', ));
 	
-	_extend(('''  x = ''', to_str(x), ''', y = ''', to_str(y), ''', z = ''', to_str(z), '''
+	_extend(('''  x = ''', _to_str(x), ''', y = ''', _to_str(y), ''', z = ''', _to_str(z), '''
 	</p>\n''', ));
 
   cache2: |6
 	_extend(('''<p>\n''', ));
 	
-	_extend(('''  x = ''', to_str(x), ''', y = ''', to_str(y), ''', z = ''', to_str(z), '''
+	_extend(('''  x = ''', _to_str(x), ''', y = ''', _to_str(y), ''', z = ''', _to_str(z), '''
 	</p>\n''', ));
 
   args2: [ ]
@@ -944,9 +944,9 @@
         chk = { params['state']: ' checked="checked"' }
         _extend(('''<select name="state">
           <option value="">-</option>
-          <option value="CA"''', to_str(chk.get('CA', '')), '''>California</option>
-          <option value="FL"''', to_str(chk.get('FL', '')), '''>Florida</option>
-          <option value="NY"''', to_str(chk.get('NY', '')), '''>New York</option>
+          <option value="CA"''', _to_str(chk.get('CA', '')), '''>California</option>
+          <option value="FL"''', _to_str(chk.get('FL', '')), '''>Florida</option>
+          <option value="NY"''', _to_str(chk.get('NY', '')), '''>New York</option>
         </select>\n''', ));
 
   cache2: |
@@ -958,7 +958,7 @@
   cache3: |
         _extend(('''<html>
           <body>
-            <h1>''', escape(to_str(title)), '''</h1>\n''', ));
+            <h1>''', _escape(_to_str(title)), '''</h1>\n''', ));
         echo(_content)
         _extend(('''  </body>
         </html>\n''', ));

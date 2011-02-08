@@ -39,8 +39,8 @@
             else:
                 color = '#FFF'
             #endif
-            _extend(('''   <tr bgcolor="''', to_str(color), '''">
-            <td>''', escape(to_str(item)), '''</td>
+            _extend(('''   <tr bgcolor="''', _to_str(color), '''">
+            <td>''', _escape(_to_str(item)), '''</td>
            </tr>\n''', ));
         #endfor
         _extend(('''  </table>
@@ -134,8 +134,8 @@
                 color = '#FFF'
             #endif
         
-            _extend(('''   <tr bgcolor="''', to_str(color), '''">
-            <td>''', escape(to_str(item)), '''</td>
+            _extend(('''   <tr bgcolor="''', _to_str(color), '''">
+            <td>''', _escape(_to_str(item)), '''</td>
            </tr>\n''', ));
         
         #endfor
@@ -186,9 +186,9 @@
             i += 1
             _extend(('''  <li>''', ));
             if user.get('email'):
-                _extend(('''<a href="mailto:''', escape(to_str(user['email'])), '''">''', escape(to_str(user['name'])), '''</a>''', ));
+                _extend(('''<a href="mailto:''', _escape(_to_str(user['email'])), '''">''', _escape(_to_str(user['name'])), '''</a>''', ));
             else:
-                _extend((escape(to_str(user['name'])), ));
+                _extend((_escape(_to_str(user['name'])), ));
             #endif
             _extend(('''</li>\n''', ));
         #endfor
@@ -217,7 +217,7 @@
         _extend(('''<ul>\n''', ));
         for i in range(1,4):
             _extend(('''<li>
-        ''', to_str(i), '''
+        ''', _to_str(i), '''
         </li>\n''', ));
         #endfor
         _extend(('''</ul>\n''', ));
@@ -262,7 +262,7 @@
           
             _extend(('''<p>\n''', ));
             if i % 2 == 1:
-                _extend(('''<span>''', to_str(item), '''</span>\n''', ));
+                _extend(('''<span>''', _to_str(item), '''</span>\n''', ));
             #endif
             _extend(('''</p>\n''', ));
         
@@ -306,8 +306,8 @@
 
   source: |6
         for value in range(0,3):
-            _extend((to_str(value), '''^
-        i = ''', to_str(value), '''\r\n''', ));
+            _extend((_to_str(value), '''^
+        i = ''', _to_str(value), '''\r\n''', ));
         #end
 
   expected: |
@@ -340,8 +340,8 @@
         
         for value in range(0,3):
         
-            _extend(('''i = ''', to_str(value), '''^
-        ''', to_str(value), '''\r\n''', ));
+            _extend(('''i = ''', _to_str(value), '''^
+        ''', _to_str(value), '''\r\n''', ));
         
         #end
         
@@ -371,9 +371,9 @@
         </ul>
 
   source: |
-        _buf = []; _extend = _buf.extend; _extend(('''<ul>\n''', ));
+        _buf = []; _extend = _buf.extend; _to_str = to_str; _escape = escape; _extend(('''<ul>\n''', ));
         for i in range(0,3):
-            _extend(('''<li>''', to_str(i), '''</li>\n''', ));
+            _extend(('''<li>''', _to_str(i), '''</li>\n''', ));
         #end
         _extend(('''</ul>\n''', ));
         print(''.join(_buf))
@@ -390,9 +390,9 @@
         <?py #end ?>
 
   source: |
-        _buf = []; _extend = _buf.extend
+        _buf = []; _extend = _buf.extend; _to_str = to_str; _escape = escape
         for i in range(0,3):
-            _extend((to_str(i), '''\n''', ));
+            _extend((_to_str(i), '''\n''', ));
         #end
         print(''.join(_buf))
 
@@ -407,8 +407,8 @@
         ${value}
 
   source: |6
-        _extend((to_str(value), '''
-        ''', cgi.escape(to_str(value)), '''\n''', ));
+        _extend((_to_str(value), '''
+        ''', _escape(_to_str(value)), '''\n''', ));
 
 
 ###
@@ -420,8 +420,8 @@
         #{value}
         ${value}
   source: |6
-        _extend((str(value), '''
-        ''', escape(str(value)), '''\n''', ));
+        _extend((_to_str(value), '''
+        ''', _escape(_to_str(value)), '''\n''', ));
 
 
 ###
@@ -437,7 +437,7 @@
 
   source: |
         for i in range(0,3):
-          _extend(('''i = ''', to_str(value), '''\n''', ));
+          _extend(('''i = ''', _to_str(value), '''\n''', ));
         #end
 
 
@@ -456,10 +456,10 @@
         </ul>
 
   source: |
-        _extend((u'''こんにちは''', escape(to_str(user)), u'''!
+        _extend((u'''こんにちは''', _escape(_to_str(user)), u'''!
         <ul>\n''', ));
         for ch in [u'日', u'本', u'語', u'']:
-            _extend((u'''  <li>''', to_str(ch), u'''</li>\n''', ));
+            _extend((u'''  <li>''', _to_str(ch), u'''</li>\n''', ));
         #end
         _extend((u'''</ul>\n''', ));
 
@@ -484,7 +484,7 @@
         <?py #end ?>
   source: |
         for i in range(0,3)
-            _buf.append(to_str(i))
+            _buf.append(_to_str(i))
         #end
   exception:    SyntaxError
   errormsg:     invalid syntax
@@ -497,7 +497,7 @@
         ${var}
 
   source: &source_escape1 |6
-        _extend((escape(to_str(var)), '''\n''', ));
+        _extend((_escape(_to_str(var)), '''\n''', ));
 
   expected: |
         &amp; &lt; &gt; &quot;
@@ -514,8 +514,8 @@
         ${var},${flag},${flag2}
 
   source: |6
-        _extend((to_str(var), ''',''', to_str(flag), ''',''', to_str(flag2), '''
-        ''', escape(to_str(var)), ''',''', escape(to_str(flag)), ''',''', escape(to_str(flag2)), '''\n''', ));
+        _extend((_to_str(var), ''',''', _to_str(flag), ''',''', _to_str(flag2), '''
+        ''', _escape(_to_str(var)), ''',''', _escape(_to_str(flag)), ''',''', _escape(_to_str(flag2)), '''\n''', ));
 
   expected: |
         ,True,False
@@ -536,10 +536,10 @@
         </ul>
 
   source: |6
-        _buf = []; _extend = _buf.extend; _extend(('''<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN">\n''', ));
+        _buf = []; _extend = _buf.extend; _to_str = to_str; _escape = escape; _extend(('''<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN">\n''', ));
         name = _context.get('name'); x = _context.get('x'); y = _context.get('y'); z = _context.get('z'); 
-        _extend(('''<span>hello ''', to_str(name), '''</span>
-          <span>hello ''', to_str(name2), '''</span>
+        _extend(('''<span>hello ''', _to_str(name), '''</span>
+          <span>hello ''', _to_str(name2), '''</span>
         </ul>\n''', ));
         print(''.join(_buf))
 
@@ -607,7 +607,7 @@
         _extend(('''<select name="state">
           <option value="">-</option>\n''', ));
         for code in codes:
-            _extend(('''  <option value="''', to_str(_decode_params(code)), '''"#{chk.get(''', to_str(_decode_params(repr(code))), ''', \'\')}>''', escape(to_str(_decode_params(states[code]))), '''</option>\n''', ));
+            _extend(('''  <option value="''', _to_str(_decode_params(code)), '''"#{chk.get(''', _to_str(_decode_params(repr(code))), ''', \'\')}>''', _escape(_to_str(_decode_params(states[code]))), '''</option>\n''', ));
         #endfor
         _extend(('''</select>\n''', ));
 
@@ -632,16 +632,16 @@
         <?PY #end ?>
         #{{link_to('<b>Create</b>', '/items/create')}}
         #{{link_to('"Show '+_P("item['name']")+'"', '/items/show/'+_p("item['id']"))}}
-        #{{escape('<b>'+_P('item["name"]')+'</b>')}}
+        #{{_escape('<b>'+_P('item["name"]')+'</b>')}}
 
   source: |6
         def link_to(label, url):
             import urllib
             return '<a href="%s">%s</a>' % (urllib.quote(url), label)
         #end
-        _extend((to_str(_decode_params(link_to('<b>Create</b>', '/items/create'))), '''
-        ''', to_str(_decode_params(link_to('"Show '+_P("item['name']")+'"', '/items/show/'+_p("item['id']")))), '''
-        ''', to_str(_decode_params(escape('<b>'+_P('item["name"]')+'</b>'))), '''\n''', ));
+        _extend((_to_str(_decode_params(link_to('<b>Create</b>', '/items/create'))), '''
+        ''', _to_str(_decode_params(link_to('"Show '+_P("item['name']")+'"', '/items/show/'+_p("item['id']")))), '''
+        ''', _to_str(_decode_params(_escape('<b>'+_P('item["name"]')+'</b>'))), '''\n''', ));
 
   expected: |6
         <a href="/items/create"><b>Create</b></a>
@@ -677,20 +677,20 @@
         #{"M"}
 
   source: |6
-        _extend((to_str("A"), 
-        to_str("B"), 
-        to_str("C"), 
-        '''foo''', to_str("D"), '''
-        ''', to_str("E"), '''bar
-        ''', to_str("F"), to_str("G"), ));
+        _extend((_to_str("A"), 
+        _to_str("B"), 
+        _to_str("C"), 
+        '''foo''', _to_str("D"), '''
+        ''', _to_str("E"), '''bar
+        ''', _to_str("F"), _to_str("G"), ));
         if True:
-            _extend((to_str("H"), 
-        to_str("I"), 
-        to_str("J"), ));
+            _extend((_to_str("H"), 
+        _to_str("I"), 
+        _to_str("J"), ));
         #end
-        _extend((escape(to_str("K")), '''
-        ''', escape(to_str("L")), '''
-        ''', to_str("M"), ));
+        _extend((_escape(_to_str("K")), '''
+        ''', _escape(_to_str("L")), '''
+        ''', _to_str("M"), ));
 
   expected: |-
         ABCfooD

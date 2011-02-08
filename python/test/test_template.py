@@ -47,10 +47,12 @@ class TemplateTest(object):
                 if source:    source   = source.replace(ch, "\r")
                 if expected:  expected = expected.replace(ch, "\r")
             if testopts.get('escapefunc') == 'cgi.escape':
-                import cgi
-                context['escape'] = cgi.escape
+                #import cgi
+                #context['escape'] = cgi.escape
+                pass
             if testopts.get('tostrfunc') == 'str':
-                context['to_str'] = str
+                #context['to_str'] = str
+                pass
             if 'encoding' in testopts:
                 encoding = testopts.get('encoding')
             if 'templateclass' in testopts:
@@ -201,7 +203,7 @@ class TemplateTest(object):
 #if True: ## dummy
 #      if items:
 #        for item in items:
-#            _extend(('''      <li>''', to_str(item), '''</li>\n''', ));
+#            _extend(('''      <li>''', _to_str(item), '''</li>\n''', ));
 #        #endfor
 #      #endif
 #      _extend(('''    </ul>
@@ -224,7 +226,7 @@ class TemplateTest(object):
         script = r"""_extend(('''<!DOCTYPE>
 <ul>\n''', ));
 for item in items:
-    _extend(('''  <li>''', to_str(item), '''</li>\n''', ));
+    _extend(('''  <li>''', _to_str(item), '''</li>\n''', ));
 #endfor
 _extend(('''</ul>\n''', ));
 """
@@ -245,6 +247,52 @@ _extend(('''</ul>\n''', ));
             t = tenjin.Template(filename, input=input, trace=True)
             output = t.render({'name':'world'})
             ok (output) == expected
+
+    def test_option_tostrfunc(self):
+        input = "<p>Hello #{name}!</p>"
+        if "passed tostrfunc option then use it":
+            globals()['my_str'] = lambda s: s.upper()
+            t = tenjin.Template(None, input=input, tostrfunc='my_str')
+            output = t.render({'name': 'Haruhi'})
+            ok (output) == "<p>Hello HARUHI!</p>"
+            ok (t.script) == "_extend(('''<p>Hello ''', _to_str(name), '''!</p>''', ));"
+            globals().pop('my_str')
+        if "passed False or empty string as tostrfunc option then no function is used":
+            for v in [False, '']:
+                t = tenjin.Template(None, input=input, tostrfunc=v)
+                output = t.render({'name': 'Haruhi'})
+                ok (output) == "<p>Hello Haruhi!</p>"
+                ok (t.script) == "_extend(('''<p>Hello ''', (name), '''!</p>''', ));"
+                #
+                def f(): t.render({'name': 123})
+                ok (f).raises(TypeError, 'sequence item 1: expected string, int found')
+        if "passed wrong function name as tostrfunc option then raises error":
+            t = tenjin.Template(None, input=input, tostrfunc='johnsmith')
+            def f(): t.render({'name': 'Haruhi'})
+            #ok (f).raises(TypeError, "'NoneType' object is not callable")
+            ok (f).raises(ValueError, "johnsmith(): no such function.")
+
+    def test_option_escapefunc(self):
+        input = "<p>Hello ${name}!</p>"
+        if "passed escapefunc option then use it":
+            globals()['my_escape'] = lambda s: s.lower()
+            t = tenjin.Template(None, input=input, escapefunc='my_escape')
+            output = t.render({'name': 'Haruhi'})
+            ok (output) == "<p>Hello haruhi!</p>"
+            ok (t.script) == "_extend(('''<p>Hello ''', _escape(_to_str(name)), '''!</p>''', ));"
+            globals().pop('my_escape')
+        if "passed False or empty string as escapefunc option then no function is used":
+            for v in [False, '']:
+                t = tenjin.Template(None, input=input, escapefunc=v)
+                output = t.render({'name': 'Haru&Kyon'})
+                ok (output) == "<p>Hello Haru&Kyon!</p>"
+                ok (t.script) == "_extend(('''<p>Hello ''', (_to_str(name)), '''!</p>''', ));"
+        if "passed wrong function name as tostrfunc option then raises error":
+            t = tenjin.Template(None, input=input, escapefunc='kyonsmith')
+            def f(): t.render({'name': 'Haruhi'})
+            #ok (f).raises(TypeError, "'NoneType' object is not callable")
+            ok (f).raises(ValueError, "kyonsmith(): no such function.")
+
 
 
 if __name__ == '__main__':

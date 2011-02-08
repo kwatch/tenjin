@@ -16,39 +16,55 @@ from tenjin.helpers import *
 class EncodingTest(object):
 
 
-    def _test_render(self, template=None, to_str=None,
+    def _test_render(self, template=None, to_str=None, encodings={},
                      expected_buf=None, expected_output=None,
                      expected_errcls=None, expected_errmsg=None):
-        buf = []
-        context = {'to_str': to_str}
-        template.render(context, _buf=buf)
-        ok (buf) == expected_buf
-        if expected_errcls:
-            def f():
-                template.render(context)
-            ok (f).raises(expected_errcls)
-            ex = f.exception
-            if expected_errmsg:
-                ok (str(ex)) == expected_errmsg
-        elif expected_output:
-            def f():
-                lambda: template.render(context)
-            ok (f).not_raise()
-            output = template.render(context)
-            ok (output) == expected_output
-            ok (output).is_a(type(output))
-        else:
-            raise "*** internal error"
+        bkup = {
+            'to_str': tenjin.to_str,
+            'helpers.to_str': tenjin.helpers.to_str,
+            'Template.tostrfunc': tenjin.Template.tostrfunc,
+        }
+        try:
+            buf = []
+            #encode = encodings.get('encode')
+            #decode = encodings.get('decode')
+            #if encode or decode:
+            #    tenjin.set_template_encoding(encode=encode, decode=decode)
+            tenjin.Template.tostrfunc = staticmethod(to_str)
+            context = {'to_str': to_str}
+            template.render(context, _buf=buf)
+            ok (buf) == expected_buf
+            if expected_errcls:
+                def f():
+                    template.render(context)
+                ok (f).raises(expected_errcls)
+                ex = f.exception
+                if expected_errmsg:
+                    ok (str(ex)) == expected_errmsg
+            elif expected_output:
+                def f():
+                    lambda: template.render(context)
+                ok (f).not_raise()
+                output = template.render(context)
+                ok (output) == expected_output
+                ok (output).is_a(type(output))
+            else:
+                raise "*** internal error"
+        finally:
+            tenjin.to_str             = bkup['to_str']
+            tenjin.helpers.to_str     = bkup['helpers.to_str']
+            tenjin.Template.tostrfunc = staticmethod(bkup['Template.tostrfunc'])
 
     def test_with_binary_template_and_binary_data(self):
         t = tenjin.Template()
         input = "**あ**\n#{'あ'}\n"
-        script = "_extend(('''**\xe3\x81\x82**\n''', to_str('\xe3\x81\x82'), '''\\n''', ));\n"
+        script = "_extend(('''**\xe3\x81\x82**\n''', _to_str('\xe3\x81\x82'), '''\\n''', ));\n"
         ok (t.convert(input)) == script
         ## do nothing in to_str()
         self._test_render(
             template        = t,
             to_str          = tenjin.generate_tostrfunc(encode=None, decode=None),
+            encodings       = dict(encode=None, decode=None),
             expected_buf    = ['**\xe3\x81\x82**\n', '\xe3\x81\x82', '\n'],
             expected_output = "**あ**\nあ\n"
         )
@@ -56,6 +72,7 @@ class EncodingTest(object):
         self._test_render(
             template        = t,
             to_str          = tenjin.generate_tostrfunc(encode='utf-8', decode=None),
+            encodings       = dict(encode='utf-8', decode=None),
             expected_buf    = ['**\xe3\x81\x82**\n', '\xe3\x81\x82', '\n'],
             expected_output = "**あ**\nあ\n"
         )
@@ -63,6 +80,7 @@ class EncodingTest(object):
         self._test_render(
             template        = t,
             to_str          = tenjin.generate_tostrfunc(encode=None, decode='utf-8'),
+            encodings       = dict(encode=None, decode='utf-8'),
             expected_buf    = ['**\xe3\x81\x82**\n', u'\u3042', '\n'],
             expected_errcls = UnicodeDecodeError,
             expected_errmsg = "'ascii' codec can't decode byte 0xe3 in position 2: ordinal not in range(128)"
@@ -71,7 +89,7 @@ class EncodingTest(object):
     def test_with_unicode_template_and_binary_data(self):
         t = tenjin.Template(encoding='utf-8')
         input = "**あ**\n#{'あ'}\n"
-        script = u"_extend((u'''**\u3042**\n''', to_str('\u3042'), u'''\\n''', ));\n"
+        script = u"_extend((u'''**\u3042**\n''', _to_str('\u3042'), u'''\\n''', ));\n"
         ok (t.convert(input)) == script
         ## do nothing in to_str()
         self._test_render(
@@ -100,7 +118,7 @@ class EncodingTest(object):
     def test_binary_template_with_unicode_data(self):
         t = tenjin.Template()
         input = "**あ**\n#{u'あ'}\n"
-        script = "_extend(('''**\xe3\x81\x82**\n''', to_str(u'\xe3\x81\x82'), '''\\n''', ));\n"
+        script = "_extend(('''**\xe3\x81\x82**\n''', _to_str(u'\xe3\x81\x82'), '''\\n''', ));\n"
         ok (t.convert(input)) == script
         ## do nothing in to_str()
         self._test_render(
@@ -130,7 +148,7 @@ class EncodingTest(object):
     def test_unicode_template_with_unicode_data(self):
         t = tenjin.Template(encoding='utf-8')
         input = "**あ**\n#{u'あ'}\n"
-        script = u"_extend((u'''**\u3042**\n''', to_str(u'\u3042'), u'''\\n''', ));\n"
+        script = u"_extend((u'''**\u3042**\n''', _to_str(u'\u3042'), u'''\\n''', ));\n"
         ok (t.convert(input)) == script
         ## do nothing in to_str()
         self._test_render(
@@ -160,18 +178,22 @@ class EncodingTest(object):
         assert tenjin.helpers.to_str is tenjin.to_str
         assert tenjin.helpers.to_str(u'日本語') == '日本語'
         assert tenjin.helpers.to_str('日本語') == '日本語'
+        Template_encoding = tenjin.Template.encoding
+        tenjin_to_str = tenjin.helpers.to_str
         try:
-            Template_encoding = tenjin.Template.encoding
-            tenjin_to_str = tenjin.helpers.to_str
-            #
             tenjin.set_template_encoding('utf-8')
-            #
             ok (tenjin.Template.encoding) == 'utf-8'
-            ok (tenjin.to_str) != tenjin_to_str
-            ok (tenjin.helpers.to_str) != tenjin_to_str
-            ok (tenjin.helpers.to_str).is_(tenjin.to_str)
             ok (tenjin.helpers.to_str(u'日本語')) == u'日本語'
             ok (tenjin.helpers.to_str('日本語')) == u'日本語'
+            ok (tenjin.Template().tostrfunc).is_(tenjin.helpers.to_str)
+            ok (tenjin.to_str).is_(tenjin.helpers.to_str)
+            #
+            tenjin.set_template_encoding(encode='utf-8')
+            ok (tenjin.Template.encoding) == None
+            ok (tenjin.helpers.to_str(u'日本語')) == '日本語'
+            ok (tenjin.helpers.to_str('日本語')) == '日本語'
+            ok (tenjin.Template().tostrfunc).is_(tenjin.helpers.to_str)
+            ok (tenjin.to_str).is_(tenjin.helpers.to_str)
         finally:
             tenjin.Template.encoding = Template_encoding
             tenjin.helpers.to_str = tenjin_to_str

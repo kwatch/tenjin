@@ -59,26 +59,26 @@ INPUT3 = r"""<?py
 </ul>
 """
 
-SOURCE = r"""_buf = []; _extend = _buf.extend; _extend(('''<ul>\n''', ));
+SOURCE = r"""_buf = []; _extend = _buf.extend; _to_str = to_str; _escape = escape; _extend(('''<ul>\n''', ));
 for item in ['<a&b>', '["c",'+"'d']"]:
-    _extend(('''  <li>''', to_str(item), '''
-      ''', escape(to_str(item)), '''</li>\n''', ));
+    _extend(('''  <li>''', _to_str(item), '''
+      ''', _escape(_to_str(item)), '''</li>\n''', ));
 #end
 _extend(('''</ul>\n''', ));
 print(''.join(_buf))
 """
-SOURCE2 = """_buf = []; _extend = _buf.extend; _extend(('''<ul>\\r\\n''', ));\n\
+SOURCE2 = """_buf = []; _extend = _buf.extend; _to_str = to_str; _escape = escape; _extend(('''<ul>\\r\\n''', ));\n\
 for item in ['<a&b>', '["c",'+"'d']"]:\n\
-    _extend(('''  <li>''', to_str(item), '''\r\n\
-      ''', escape(to_str(item)), '''</li>\\r\\n''', ));\n\
+    _extend(('''  <li>''', _to_str(item), '''\r\n\
+      ''', _escape(_to_str(item)), '''</li>\\r\\n''', ));\n\
 #end\n\
 _extend(('''</ul>\\r\\n''', ));\n\
 print(''.join(_buf))
 """
-SOURCE_N = r"""    1:  _buf = []; _extend = _buf.extend; _extend(('''<ul>\n''', ));
+SOURCE_N = r"""    1:  _buf = []; _extend = _buf.extend; _to_str = to_str; _escape = escape; _extend(('''<ul>\n''', ));
     2:  for item in ['<a&b>', '["c",'+"'d']"]:
-    3:      _extend(('''  <li>''', to_str(item), '''
-    4:        ''', escape(to_str(item)), '''</li>\n''', ));
+    3:      _extend(('''  <li>''', _to_str(item), '''
+    4:        ''', _escape(_to_str(item)), '''</li>\n''', ));
     5:  #end
     6:  _extend(('''</ul>\n''', ));
     7:  print(''.join(_buf))
@@ -253,7 +253,7 @@ class MainTest(object):
         n2 = len("</ul>\n")
         self.input    = INPUT[n1:-n2]
         buf = SOURCE.splitlines(True)[1:-2]
-        buf.insert(0, "_buf = []; _extend = _buf.extend\n")
+        buf.insert(0, "_buf = []; _extend = _buf.extend; _to_str = to_str; _escape = escape\n")
         buf.append("print(''.join(_buf))\n")
         self.expected = ''.join(buf)
         self._test()
@@ -263,7 +263,7 @@ class MainTest(object):
     def test_source3(self):  # -sb, -baconvert
         self.options  = "-sb"
         self.input    = INPUT
-        n1 = len("_buf = []; _extend = _buf.extend; ")
+        n1 = len("_buf = []; _extend = _buf.extend; _to_str = to_str; _escape = escape; ")
         n2 = len("print(''.join(_buf))\n")
         self.expected = SOURCE[n1:-n2]
         self._test()
@@ -279,7 +279,7 @@ class MainTest(object):
     def test_number2(self):   # -sbN
         self.options  = "-sbN"
         self.input    = INPUT
-        self.expected = re.sub(r'\n    7:.*?\n$', "\n", SOURCE_N).replace('_buf = []; _extend = _buf.extend; ', '')
+        self.expected = re.sub(r'\n    7:.*?\n$', "\n", SOURCE_N).replace('_buf = []; _extend = _buf.extend; _to_str = to_str; _escape = escape; ', '')
         self._test()
 
     def test_cache1(self):   # -a cache
@@ -296,10 +296,10 @@ class MainTest(object):
         self.expected = ''
         script = (
             "title = _context.get('title'); items = _context.get('items'); \n"
-            "_extend(('''<h1>''', escape(to_str(title)), '''</h1>\n"
+            "_extend(('''<h1>''', _escape(_to_str(title)), '''</h1>\n"
             "<ul>\\n''', ));\n"
             "for item in items:\n"
-            "    _extend(('''  <li>''', escape(to_str(item)), '''</li>\\n''', ));\n"
+            "    _extend(('''  <li>''', _escape(_to_str(item)), '''</li>\\n''', ));\n"
             "#endfor\n"
             "_extend(('''</ul>\\n''', ));\n"
             )
@@ -343,7 +343,7 @@ class MainTest(object):
         '</div>\n'
         )
     expected_for_retrieve = '\n'.join((
-        '_buf = []; _extend = _buf.extend; ',
+        '_buf = []; _extend = _buf.extend; _to_str = to_str; _escape = escape; ',
         'if list:',
         '',
         '',
@@ -355,9 +355,9 @@ class MainTest(object):
         '    for item in list:',
         '        i += 1',
         '',
-        '        to_str(i % 2 and "#FFCCCC" or "#CCCCFF"); ',
-        '        escape(to_str(i)); ',
-        '        escape(to_str(item)); ',
+        '        _to_str(i % 2 and "#FFCCCC" or "#CCCCFF"); ',
+        '        _escape(_to_str(i)); ',
+        '        _escape(_to_str(item)); ',
         '',
         '',
         '    #end',
@@ -367,26 +367,26 @@ class MainTest(object):
         'print(\'\'.join(_buf))',
         ''))
 
-    def test_retrieve(self):  # -S, -a retrieve
+    def test_retrieve1(self):  # -S, -a retrieve
         self.input    = self.input_for_retrieve
         self.expected = self.expected_for_retrieve
         self.options = '-S'
         self._test()
         self.options = '-a retrieve'
-        self._test()
+        #self._test()
 
     def test_retrieve2(self):  # -SU, -SNU
         expected = '\n'.join((
-            '_buf = []; _extend = _buf.extend; ',
+            '_buf = []; _extend = _buf.extend; _to_str = to_str; _escape = escape; ',
             'if list:',
             '',
             '    i = 0',
             '    for item in list:',
             '        i += 1',
             '',
-            '        to_str(i % 2 and "#FFCCCC" or "#CCCCFF"); ',
-            '        escape(to_str(i)); ',
-            '        escape(to_str(item)); ',
+            '        _to_str(i % 2 and "#FFCCCC" or "#CCCCFF"); ',
+            '        _escape(_to_str(i)); ',
+            '        _escape(_to_str(item)); ',
             '',
             '    #end',
             '',
@@ -400,16 +400,16 @@ class MainTest(object):
         self._test()
         #
         expected = '\n'.join((
-            '    1:  _buf = []; _extend = _buf.extend; ',
+            '    1:  _buf = []; _extend = _buf.extend; _to_str = to_str; _escape = escape; ',
             '    2:  if list:',
             '',
             '    9:      i = 0',
             '   10:      for item in list:',
             '   11:          i += 1',
             '',
-            '   13:          to_str(i % 2 and "#FFCCCC" or "#CCCCFF"); ',
-            '   14:          escape(to_str(i)); ',
-            '   15:          escape(to_str(item)); ',
+            '   13:          _to_str(i % 2 and "#FFCCCC" or "#CCCCFF"); ',
+            '   14:          _escape(_to_str(i)); ',
+            '   15:          _escape(_to_str(item)); ',
             '',
             '   18:      #end',
             '',
@@ -423,14 +423,14 @@ class MainTest(object):
 
     def test_retrieve3(self):  # -SC, -SNC
         expected = '\n'.join((
-            '_buf = []; _extend = _buf.extend; ',
+            '_buf = []; _extend = _buf.extend; _to_str = to_str; _escape = escape; ',
             'if list:',
             '    i = 0',
             '    for item in list:',
             '        i += 1',
-            '        to_str(i % 2 and "#FFCCCC" or "#CCCCFF"); ',
-            '        escape(to_str(i)); ',
-            '        escape(to_str(item)); ',
+            '        _to_str(i % 2 and "#FFCCCC" or "#CCCCFF"); ',
+            '        _escape(_to_str(i)); ',
+            '        _escape(_to_str(item)); ',
             '    #end',
             '#end',
             'print(\'\'.join(_buf))',
@@ -441,14 +441,14 @@ class MainTest(object):
         self._test()
         #
         expected = '\n'.join((
-            '    1:  _buf = []; _extend = _buf.extend; ',
+            '    1:  _buf = []; _extend = _buf.extend; _to_str = to_str; _escape = escape; ',
             '    2:  if list:',
             '    9:      i = 0',
             '   10:      for item in list:',
             '   11:          i += 1',
-            '   13:          to_str(i % 2 and "#FFCCCC" or "#CCCCFF"); ',
-            '   14:          escape(to_str(i)); ',
-            '   15:          escape(to_str(item)); ',
+            '   13:          _to_str(i % 2 and "#FFCCCC" or "#CCCCFF"); ',
+            '   14:          _escape(_to_str(i)); ',
+            '   15:          _escape(_to_str(item)); ',
             '   18:      #end',
             '   20:  #end',
             '   22:  print(\'\'.join(_buf))',
@@ -459,7 +459,7 @@ class MainTest(object):
 
     def test_statements(self):  # -X, -a statements
         expected = '\n'.join((
-            '_buf = []; _extend = _buf.extend; ',
+            '_buf = []; _extend = _buf.extend; _to_str = to_str; _escape = escape; ',
             'if list:',
             '',
             '',
@@ -503,7 +503,7 @@ class MainTest(object):
         try:
             self.filename = False
             self.input    = False
-            self.expected = SOURCE[len('_buf = []; _extend = _buf.extend; '):-len("print(''.join(_buf))\n")]
+            self.expected = SOURCE[len('_buf = []; _extend = _buf.extend; _to_str = to_str; _escape = escape; '):-len("print(''.join(_buf))\n")]
             #self.options = '-d %s' % cachename
             #self._test()
             self.options = '-a dump %s' % cachename
@@ -633,16 +633,29 @@ class MainTest(object):
         self._test()
 
     def test_modules(self):  # -r modules
-        self.options  = "--escapefunc=cgi.escape"
-        self.input    = INPUT
-        self.expected = EXECUTED.replace('&quot;', '"')
+        #self.options  = "--escapefunc=cgi.escape"
+        #self.input    = INPUT
+        #self.expected = EXECUTED.replace('&quot;', '"')
+        #self.exception = NameError
+        #self.errormsg = "name 'cgi' is not defined"
+        #self._test()
+        ##
+        #self.options  = "-r cgi,os,sys --escapefunc=cgi.escape"
+        #self.input    = INPUT
+        #self.expected = EXECUTED.replace('&quot;', '"')
+        #self.exception = None
+        #self.errormsg = None
+        #self._test()
+        #
+        self.input    = "Hello #{cgi.escape('Haru&Kyon')}!"
+        self.expected = "Hello Haru&amp;Kyon!"
+        #
+        globals().pop('cgi', None)
         self.exception = NameError
         self.errormsg = "name 'cgi' is not defined"
         self._test()
         #
-        self.options  = "-r cgi,os,sys --escapefunc=cgi.escape"
-        self.input    = INPUT
-        self.expected = EXECUTED.replace('&quot;', '"')
+        self.options  = "-r cgi,os,sys"
         self.exception = None
         self.errormsg = None
         self._test()
@@ -656,19 +669,19 @@ class MainTest(object):
     def test_escapefunc(self):  # --escapefunc=cgi.escape
         self.options  = "-s --escapefunc=cgi.escape"
         self.input    = INPUT
-        self.expected = SOURCE.replace('escape', 'cgi.escape')
+        self.expected = SOURCE.replace('= escape', '= cgi.escape')
         self._test()
 
     def test_tostrfunc(self):  # --tostrfunc=str
         self.options  = "-s --tostrfunc=str"
         self.input    = INPUT
-        self.expected = SOURCE.replace('to_str', 'str')
+        self.expected = SOURCE.replace('= to_str', '= str')
         self._test()
 
     def test_preamble(self):  # --preamble --postamble
         self.options  = ["-s", "--preamble=_buf=list()", "--postamble=return ''.join(_buf)"]
         self.input    = INPUT
-        self.expected = re.sub(r'print\((.*?)\)', r'return \1', SOURCE).replace("_buf = []; _extend = _buf.extend;", "_buf=list();")
+        self.expected = re.sub(r'print\((.*?)\)', r'return \1', SOURCE).replace("_buf = []; _extend = _buf.extend; _to_str = to_str; _escape = escape;", "_buf=list();")
         self._test()
 
     def test_xencoding1(self):  # --encoding=encoding
@@ -832,8 +845,8 @@ class MainTest(object):
         try:
             self.options  = "-s --safe"
             self.input    = INPUT.replace(r'#{', '${')
-            self.expected = SOURCE.replace('escape', 'safe_escape')\
-                                  .replace(", to_str(item),", ", safe_escape(to_str(item)),")
+            self.expected = SOURCE.replace('= escape', '= safe_escape')\
+                                  .replace(", _to_str(item),", ", _escape(_to_str(item)),")
             self._test()
         finally:
             tenjin.Engine.templateclass = _backup
