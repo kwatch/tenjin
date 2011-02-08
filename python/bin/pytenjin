@@ -147,13 +147,12 @@ class Main(object):
             _encoding = options['k']
             tostrfunc = properties.get('tostrfunc', 'to_str')
             if python2:
-                _to_str = tenjin.generate_tostrfunc(encode=_encoding)
+                tenjin.set_template_encoding(encode=_encoding)
             elif python3:
-                _to_str = tenjin.generate_tostrfunc(decode=_encoding)
-            globals()[tostrfunc] = _to_str
+                tenjin.set_template_encoding(decode=_encoding)
         encoding = properties.get('encoding')
         if encoding:
-            globals()['to_str'] = tenjin.generate_tostrfunc(decode=encoding)
+            tenjin.set_template_encoding(decode=encoding)
 
         ## add '.' to sys.path
         sys.path.append('.')
