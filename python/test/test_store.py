@@ -254,10 +254,10 @@ class FragmentCacheTest(object):
         ok (tupl[0]) == fragment_cache.not_cached
         ok (tupl[1]) == fragment_cache.echo_cached
 
-    def test_cache_with(self):
+    def test_cache_as(self):
         input = r"""
 <div>
-<?py for _ in cache_with('items/123', 2): ?>
+<?py for _ in cache_as('items/123', 2): ?>
   <ul>
     <?py for item in items: ?>
     <li>${item}</li>
@@ -273,7 +273,7 @@ class FragmentCacheTest(object):
   </ul>
 """[1:]
         expected_html = "<div>\n" + expected_fragment + "</div>\n"
-        file_name = "_test_cache_with.pyhtml"
+        file_name = "_test_cache_as.pyhtml"
         f = open(file_name, "w")
         f.write(input)
         f.close()

@@ -1407,7 +1407,7 @@ class FragmentCacheHelper(object):
         if prefix   is not None:  self.prefix   = prefix
 
     def not_cached(self, cache_key, lifetime=None):
-        """(obsolete. use cache_with() instead of this.)
+        """(obsolete. use cache_as() instead of this.)
            html fragment cache helper. see document of FragmentCacheHelper class."""
         context = sys._getframe(1).f_locals['_context']
         context['_cache_key'] = cache_key
@@ -1426,7 +1426,7 @@ class FragmentCacheHelper(object):
             return True
 
     def echo_cached(self):
-        """(obsolete. use cache_with() instead of this.)
+        """(obsolete. use cache_as() instead of this.)
            html fragment cache helper. see document of FragmentCacheHelper class."""
         f_locals = sys._getframe(1).f_locals
         context = f_locals['_context']
@@ -1441,18 +1441,18 @@ class FragmentCacheHelper(object):
         f_locals['_buf'].append(value)
 
     def functions(self):
-        """(obsolete. use cache_with() instead of this.)"""
+        """(obsolete. use cache_as() instead of this.)"""
         return (self.not_cached, self.echo_cached)
 
-    def cache_with(self, cache_key, lifetime=None):
+    def cache_as(self, cache_key, lifetime=None):
         key = self.prefix and self.prefix + cache_key or cache_key
         _buf = sys._getframe(1).f_locals['_buf']
         value = self.store.get(key)
         if value:
-            if logger: logger.debug('[tenjin.cache_with] %r: cache found.' % (cache_key, ))
+            if logger: logger.debug('[tenjin.cache_as] %r: cache found.' % (cache_key, ))
             _buf.append(value)
         else:
-            if logger: logger.debug('[tenjin.cache_with] %r: expired or not cached yet.' % (cache_key, ))
+            if logger: logger.debug('[tenjin.cache_as] %r: expired or not cached yet.' % (cache_key, ))
             _buf_len = len(_buf)
             yield None
             value = ''.join(_buf[_buf_len:])
@@ -1462,8 +1462,8 @@ class FragmentCacheHelper(object):
 helpers.fragment_cache = FragmentCacheHelper(MemoryBaseStore())
 helpers.not_cached  = helpers.fragment_cache.not_cached
 helpers.echo_cached = helpers.fragment_cache.echo_cached
-helpers.cache_with  = helpers.fragment_cache.cache_with
-helpers.__all__.extend(('not_cached', 'echo_cached', 'cache_with'))
+helpers.cache_as    = helpers.fragment_cache.cache_as
+helpers.__all__.extend(('not_cached', 'echo_cached', 'cache_as'))
 
 
 
