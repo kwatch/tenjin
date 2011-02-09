@@ -257,6 +257,11 @@ _extend(('''</ul>\n''', ));
             ok (output) == "<p>Hello HARUHI!</p>"
             ok (t.script) == "_extend(('''<p>Hello ''', _to_str(name), '''!</p>''', ));"
             globals().pop('my_str')
+            #
+            t = tenjin.Template(None, input=input, tostrfunc='str')
+            output = t.render({'name': None})
+            ok (output) == "<p>Hello None!</p>"
+            ok (t.script) == "_extend(('''<p>Hello ''', _to_str(name), '''!</p>''', ));"
         if "passed False or empty string as tostrfunc option then no function is used":
             for v in [False, '']:
                 t = tenjin.Template(None, input=input, tostrfunc=v)

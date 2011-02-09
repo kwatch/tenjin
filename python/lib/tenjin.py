@@ -34,7 +34,7 @@ __license__  = "MIT License"
 __all__      = ['Template', 'Engine', 'helpers', ]
 
 
-import re, sys, os, time, marshal
+import re, sys, os, time, marshal, __builtin__
 from time import time as _time
 from os.path import getmtime as _getmtime
 from os.path import isfile as _isfile
@@ -1022,7 +1022,7 @@ class Template(object):
             return func_name
         if hasattr(func_name, '__call__'):
             return func_name
-        func = locals.get(func_name) or globals.get(func_name)
+        func = locals.get(func_name) or globals.get(func_name) or getattr(__builtin__, func_name, None)
         if not func:
             raise ValueError("%s(): no such function." % (func_name, ))
         return func
