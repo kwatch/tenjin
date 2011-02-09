@@ -1,3 +1,5 @@
+<?py # coding: utf-8 ?>
+<?py #@ARGS items ?>
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
           "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
@@ -51,30 +53,41 @@ thead {
     </tr>
    </thead>
    <tbody>
-{% for item in items %}
-    <tr class="{% cycle odd,even %}">
-     <td style="text-align: center">{{ forloop.counter }}</td>
+    <?py n = 0 ?>
+    <?py for item in items: ?>
+    <?py     n += 1 ?>
+    <tr class="${n % 2 == 0 and 'even' or 'odd'}">
+     <td style="text-align: center">${n}</td>
      <td>
-      <a href="/stocks/{{ item.symbol }}">{{ item.symbol }}</a>
+      <a href="/stocks/${item.symbol}">${item.symbol}</a>
      </td>
      <td>
-      <a href="{{ item.url }}">{{ item.name }}</a>
+      <a href="${item.url}">${item.name}</a>
      </td>
      <td>
-      <strong>{{ item.price }}</strong>
+      <strong>${item.price}</strong>
      </td>
-    {% if item.is_minus %}
-     <td class="minus">{{ item.change }}</td>
-     <td class="minus">{{ item.ratio }}</td>
-    {% else %}
-     <td>{{ item.change }}</td>
-     <td>{{ item.ratio }}</td>
-    {% endif %}
+     <?py if item.change < 0.0: ?>
+     <td class="minus">${item.change}</td>
+     <td class="minus">${item.ratio}</td>
+     <?py else: ?>
+     <td>${item.change}</td>
+     <td>${item.ratio}</td>
+     <?py #endif ?>
     </tr>
-{% endfor %}
+    <?py #endfor ?>
    </tbody>
   </table>
-  <p style="font-size:small">(template: bench_django.html)</p>
+  <div>
+   <form action="" method="post">
+    <?py if items: ?>
+    <input type="submit" name="submit_clear" value="Clear Seed Data" />
+    <?py else: ?>
+    <input type="submit" name="submit_create" value="Create Seed Data" />
+    <?py #endif ?>
+   </form>
+  </div>
+  <p style="font-size:small">(template: register.pyhtml)</p>
 
  </body>
 </html>

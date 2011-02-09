@@ -61,14 +61,14 @@ thead {
       <a href="{{ item.url|escape }}">{{ item.name|escape }}</a>
      </td>
      <td>
-      <strong>{{ item.s_price|escape }}</strong>
+      <strong>{{ item.price|escape }}</strong>
      </td>
-    {% if item.minus_ %}
-     <td class="minus">{{ item.s_change|escape }}</td>
-     <td class="minus">{{ item.s_ratio|escape }}</td>
+    {% if item.is_minus %}
+     <td class="minus">{{ item.change|escape }}</td>
+     <td class="minus">{{ item.ratio|escape }}</td>
     {% else %}
-     <td>{{ item.s_change|escape }}</td>
-     <td>{{ item.s_ratio|escape }}</td>
+     <td>{{ item.change|escape }}</td>
+     <td>{{ item.ratio|escape }}</td>
     {% endif %}
     </tr>
 {% endfor %}
