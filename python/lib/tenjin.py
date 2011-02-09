@@ -1024,7 +1024,17 @@ class Template(object):
             return func_name
         func = locals.get(func_name) or globals.get(func_name) or getattr(__builtin__, func_name, None)
         if not func:
-            raise ValueError("%s(): no such function." % (func_name, ))
+            items = func_name.split('.')
+            obj = locals.get(items[0]) or globals.get(items[0]) or getattr(__builtin__, items[0], None)
+            if not obj:
+                raise ValueError("%s(): no such function." % (func_name, ))
+            for item in items[1:]:
+                if not hasattr(obj, item):
+                    raise ValueError("%s(): no such function." % (func_name, ))
+                obj = getattr(obj, item)
+            func = obj
+            if not hasattr(func, '__call__'):
+                raise TypeError("%s: not a function." % (func_name, ))
         return func
 
     def compile(self):
