@@ -88,10 +88,18 @@ else:
                 ok (tenjin.helpers.fragment_cache.store).is_a(tenjin.gae.GaeMemcacheStore)
             if "called then change fragment cache prefix to 'fragment.'":
                 ok (tenjin.helpers.fragment_cache.prefix) == 'fragment.'
-            if "caleed then use version id as memcache namespace":
+            if "called then use version id as memcache namespace":
                 expected = 'dev123'
                 ok (tenjin.Engine.cache.namespace) == expected
                 ok (tenjin.helpers.fragment_cache.store.namespace) == expected
+            if "$CURRENT_VERSION_ID is missing then uses dummy value.":
+                try:
+                    os.environ.pop('CURRENT_VERSION_ID')
+                    tenjin.gae.init()
+                    ok (tenjin.Engine.cache.namespace) == '1'
+                finally:
+                    self.before()
+                    tenjin.gae.init()
 
         def test_11_render(self):
             filename = "test_11_render.pyhtml"

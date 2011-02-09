@@ -1945,7 +1945,7 @@ def init():
     if not memcache:
         from google.appengine.api import memcache
     ## avoid cache confliction between versions
-    ver = os.environ.get('CURRENT_VERSION_ID').split('.')[0]
+    ver = os.environ.get('CURRENT_VERSION_ID', '1.1').split('.')[0]
     Engine.cache = gae.GaeMemcacheCacheStorage(namespace=ver)
     ## set fragment cache store
     helpers.fragment_cache.store    = gae.GaeMemcacheStore(namespace=ver)
