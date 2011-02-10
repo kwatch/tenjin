@@ -74,7 +74,7 @@ class TenjinApp(object):
     def __init__(self):
         self.engine = config.tenjin_class(**config.tenjin_options)
         self.status = '200 OK'
-        self.headers = { 'Content-Type': 'text/html; charset=%s' % config.encoding }
+        self.headers = { 'Content-Type': 'text/html;charset=%s' % config.encoding }
         self.headers.update(config.headers)
 
     def __get_content_type(self):
