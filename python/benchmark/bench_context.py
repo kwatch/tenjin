@@ -195,4 +195,8 @@ class StockInfo:
         self.s_change = '%.2f' % change
         self.s_ratio  = '%.2f' % ratio
 
+    def is_minus(self):
+        return self.change < 0.0
+
+
 items = [StockInfo(**d) for d in data]
