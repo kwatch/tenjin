@@ -470,14 +470,14 @@ views/page.pyhtml.cache: data
       </div>
       <pre class="terminal">
 $ pytenjin <strong>-s</strong> views/page.pyhtml
-_buf = []; _extend = _buf.extend; _extend(('''&lt;h2&gt;''', escape(to_str(title)), '''&lt;/h2&gt;
+_buf = []; _extend = _buf.extend; _to_str = to_str; _escape = escape; _extend(('''&lt;h2&gt;''', _escape(_to_str(title)), '''&lt;/h2&gt;
 &lt;table&gt;\n''', ));
 i = 0
 for item in items:
     i += 1
     klass = i % 2 and 'odd' or 'even'
-    _extend(('''  &lt;tr class="''', to_str(klass), '''"&gt;
-    &lt;td&gt;''', escape(to_str(item)), '''&lt;/td&gt;
+    _extend(('''  &lt;tr class="''', _to_str(klass), '''"&gt;
+    &lt;td&gt;''', _escape(_to_str(item)), '''&lt;/td&gt;
   &lt;/tr&gt;\n''', ));
 #endfor
 _extend(('''&lt;/table&gt;\n''', ));
@@ -588,9 +588,9 @@ engine.render('page.pyhtml', context, <strong>layout=False</strong>)
 
       <h3 class="section2">Context Variables</h3>
 
-      <p>'<code>#&lt;Erubis::Context:0x100518758&gt;</code>' dictionary contains context data which are passed from main program into template file.</p>
+      <p>'<code>#&lt;Erubis::Context:0x10059f410&gt;</code>' dictionary contains context data which are passed from main program into template file.</p>
 
-      <p>Using '<code>#&lt;Erubis::Context:0x100518758&gt;</code>' dictionary, you can pass any data from template file to main program or layout template file.</p><a name="test_040/views/_layout.pyhtml"></a>
+      <p>Using '<code>#&lt;Erubis::Context:0x10059f410&gt;</code>' dictionary, you can pass any data from template file to main program or layout template file.</p><a name="test_040/views/_layout.pyhtml"></a>
 
       <div class="program_caption">
         views/_layout.pyhtml
@@ -688,14 +688,14 @@ $ pytenjin -s views/page.pyhtml
 _buf = []; _extend = _buf.extend
 <strong>title = _context.get('title'); items = _context.get('items'); </strong>
 _context['page_title'] = 'Tenjin: Layout Template Example'
-_extend(('''&lt;h2&gt;''', escape(to_str(title)), '''&lt;/h2&gt;
+_extend(('''&lt;h2&gt;''', _escape(_to_str(title)), '''&lt;/h2&gt;
 &lt;table&gt;\n''', ));
 i = 0
 for item in items:
     i += 1
     klass = i % 2 and 'odd' or 'even'
-    _extend(('''  &lt;tr class="''', to_str(klass), '''"&gt;
-    &lt;td&gt;''', escape(to_str(item)), '''&lt;/td&gt;
+    _extend(('''  &lt;tr class="''', _to_str(klass), '''"&gt;
+    &lt;td&gt;''', _escape(_to_str(item)), '''&lt;/td&gt;
   &lt;/tr&gt;\n''', ));
 #endfor
 _extend(('''&lt;/table&gt;\n''', ));
@@ -730,10 +730,10 @@ _extend(('''&lt;!DOCTYPE&gt;
 &lt;html&gt;
   &lt;head&gt;
     &lt;meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /&gt;
-    &lt;title&gt;''', escape(to_str(page_title)), '''&lt;/title&gt;
+    &lt;title&gt;''', _escape(_to_str(page_title)), '''&lt;/title&gt;
   &lt;/head&gt;
   &lt;body&gt;
-''', to_str(_content), '''
+''', _to_str(_content), '''
   &lt;/body&gt;
 &lt;/html&gt;\n''', ));
 print(''.join(_buf))
@@ -1267,11 +1267,13 @@ SafeStr(var1) = <strong>&lt;b&gt;Hello&lt;/b&gt;</strong>
 
       <p>SafeTemplate class uses safe_escape() instead of escape(). You can see it by <code>--safe</code> option for pytenjin command.<sup>(<a href="#fnref:1" name="fnlink:1" id="fnlink:1">*1</a>)</sup></p><a name="test_safe/result2.output"></a>
       <pre class="terminal">
-$ pytenjin -sb <strong>--safe</strong> safe-test.pyhtml
+$ pytenjin -s <strong>--safe</strong> safe-test.pyhtml
+_buf = []; _extend = _buf.extend; _to_str = to_str; _escape = <strong>safe_escape</strong>
 var1 = _context.get('var1'); var2 = _context.get('var2'); 
-_extend(('''var1 = ''', <strong>safe_escape</strong>(to_str(var1)), '''
-var2 = ''', <strong>safe_escape</strong>(to_str(var2)), '''
-SafeStr(var1) = ''', to_str(var1), '''\n''', ));
+_extend(('''var1 = ''', _escape(_to_str(var1)), '''
+var2 = ''', _safe_escape(_to_str(var2)), '''
+SafeStr(var1) = ''', _to_str(var1), '''\n''', ));
+''.join(_buf)
 </pre>
 
       <p>Here is the definition of safe_escape(). It is very simple and you can customize it freely.</p>
@@ -1719,7 +1721,7 @@ print(html)
 $ python pp-example1.py
 ------ converted script ------
 _extend(('''## normal expression
-value = ''', <strong>escape(to_str(value))</strong>, '''
+value = ''', <strong>_escape(_to_str(value))</strong>, '''
 ## with preprocessing
 value = <strong>My Great Example</strong>\n''', ));
 
@@ -1750,7 +1752,7 @@ $ pytenjin <strong>-sP</strong> -c 'value="My Great Example"' views/pp-example1.
 _buf = []; _extend = _buf.extend; _extend(('''## normal expression
 value = ${value}
 ## with preprocessing
-value = ''', escape(to_str(_decode_params(value))), '''\n''', ));
+value = ''', _escape(_to_str(_decode_params(value))), '''\n''', ));
 print(''.join(_buf))
 </pre><br>
       <a name="preprocessing-loop-expantion" id="preprocessing-loop-expantion"></a>
@@ -1949,7 +1951,7 @@ m17n.pyhtml    m17n.pyhtml.<strong>en</strong>.cache    m17n.pyhtml.<strong>fr</
       <pre class="terminal">
 $ pytenjin -a dump m17n.pyhtml.en.cache
 _extend(('''&lt;div&gt;
- &lt;p&gt;<strong>Hello</strong> ''', escape(to_str(username)), '''!&lt;/p&gt;
+ &lt;p&gt;<strong>Hello</strong> ''', _escape(_to_str(username)), '''!&lt;/p&gt;
 &lt;/div&gt;\n''', ));
 </pre><a name="test_m17n/result_fr.output"></a>
 
@@ -1959,7 +1961,7 @@ _extend(('''&lt;div&gt;
       <pre class="terminal">
 $ pytenjin -a dump m17n.pyhtml.fr.cache
 _extend(('''&lt;div&gt;
- &lt;p&gt;<strong>Bonjour</strong> ''', escape(to_str(username)), '''!&lt;/p&gt;
+ &lt;p&gt;<strong>Bonjour</strong> ''', _escape(_to_str(username)), '''!&lt;/p&gt;
 &lt;/div&gt;\n''', ));
 </pre><br>
       <br>
@@ -2021,7 +2023,7 @@ example.pyhtml:4:1: '#endfor' expected but got '#endif'.
 $ pytenjin <strong>-s</strong> example.pyhtml
 _buf = []; _extend = _buf.extend; _extend(('''&lt;ul&gt;\n''', ));
 for item in items:
-    _extend(('''  &lt;li&gt;''', escape(to_str(item)), '''&lt;/li&gt;\n''', ));
+    _extend(('''  &lt;li&gt;''', _escape(_to_str(item)), '''&lt;/li&gt;\n''', ));
 #endfor
 _extend(('''&lt;/ul&gt;\n''', ));
 print(''.join(_buf))
@@ -2036,7 +2038,7 @@ print(''.join(_buf))
 $ pytenjin -s<strong>b</strong> example.pyhtml
 _extend(('''&lt;ul&gt;\n''', ));
 for item in items:
-    _extend(('''  &lt;li&gt;''', escape(to_str(item)), '''&lt;/li&gt;\n''', ));
+    _extend(('''  &lt;li&gt;''', _escape(_to_str(item)), '''&lt;/li&gt;\n''', ));
 #endfor
 _extend(('''&lt;/ul&gt;\n''', ));
 </pre><br>
@@ -2078,8 +2080,8 @@ i = 0
 for item in items:
     i += 1
 
-    to_str(i); 
-    escape(to_str(item)); 
+    _to_str(i); 
+    _escape(_to_str(item)); 
 
 #endfor
 

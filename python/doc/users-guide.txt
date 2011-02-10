@@ -382,14 +382,14 @@ You can get converted script by '{{,pytenjin -s,}}'.
 .? Show Python code
 .==================== test_020/result.output
 $ pytenjin {{*-s*}} views/page.pyhtml
-_buf = []; _extend = _buf.extend; _extend(('''<h2>''', escape(to_str(title)), '''</h2>
+_buf = []; _extend = _buf.extend; _to_str = to_str; _escape = escape; _extend(('''<h2>''', _escape(_to_str(title)), '''</h2>
 <table>\n''', ));
 i = 0
 for item in items:
     i += 1
     klass = i % 2 and 'odd' or 'even'
-    _extend(('''  <tr class="''', to_str(klass), '''">
-    <td>''', escape(to_str(item)), '''</td>
+    _extend(('''  <tr class="''', _to_str(klass), '''">
+    <td>''', _escape(_to_str(item)), '''</td>
   </tr>\n''', ));
 #endfor
 _extend(('''</table>\n''', ));
@@ -416,14 +416,14 @@ print(template.script)
 .#+++
 .==================== test_021/result.output
 $ python main.py
-_extend(('''<h2>''', escape(to_str(title)), '''</h2>
+_extend(('''<h2>''', _escape(_to_str(title)), '''</h2>
 <table>\n''', ));
 i = 0
 for item in items:
     i += 1
     klass = i % 2 and 'odd' or 'even'
-    _extend(('''  <tr class="''', to_str(klass), '''">
-    <td>''', escape(to_str(item)), '''</td>
+    _extend(('''  <tr class="''', _to_str(klass), '''">
+    <td>''', _escape(_to_str(item)), '''</td>
   </tr>\n''', ));
 #endfor
 _extend(('''</table>\n''', ));
@@ -516,9 +516,9 @@ Tenjin supports nested layout template. See {{<Nested Layout Template|#nested-la
 .$$ Context Variables	| context-variables
 
 
-'{{,#<Erubis::Context:0x100518758>,}}' dictionary contains context data which are passed from main program into template file.
+'{{,#<Erubis::Context:0x10059f410>,}}' dictionary contains context data which are passed from main program into template file.
 
-Using '{{,#<Erubis::Context:0x100518758>,}}' dictionary, you can pass any data from template file to main program or layout template file.
+Using '{{,#<Erubis::Context:0x10059f410>,}}' dictionary, you can pass any data from template file to main program or layout template file.
 
 .? views/_layout.pyhtml
 .-------------------- test_040/views/_layout.pyhtml
@@ -604,17 +604,17 @@ For readability, it is recommended to declare context variables in your template
 .? Converted Python script
 .==================== test_050/result.output
 $ pytenjin -s views/page.pyhtml
-_buf = []; _extend = _buf.extend
+_buf = []; _extend = _buf.extend; _to_str = to_str; _escape = escape
 {{*title = _context.get('title'); items = _context.get('items'); *}}
 _context['page_title'] = 'Tenjin: Layout Template Example'
-_extend(('''<h2>''', escape(to_str(title)), '''</h2>
+_extend(('''<h2>''', _escape(_to_str(title)), '''</h2>
 <table>\n''', ));
 i = 0
 for item in items:
     i += 1
     klass = i % 2 and 'odd' or 'even'
-    _extend(('''  <tr class="''', to_str(klass), '''">
-    <td>''', escape(to_str(item)), '''</td>
+    _extend(('''  <tr class="''', _to_str(klass), '''">
+    <td>''', _escape(_to_str(item)), '''</td>
   </tr>\n''', ));
 #endfor
 _extend(('''</table>\n''', ));
@@ -640,16 +640,16 @@ print(''.join(_buf))
 .? Converted Python script
 .==================== test_051/result.output
 $ pytenjin -s views/_layout.pyhtml
-_buf = []; _extend = _buf.extend
+_buf = []; _extend = _buf.extend; _to_str = to_str; _escape = escape
 {{*_content = _context.get('_content'); page_title = _context.get('page_title'); *}}
 _extend(('''<!DOCTYPE>
 <html>
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-    <title>''', escape(to_str(page_title)), '''</title>
+    <title>''', _escape(_to_str(page_title)), '''</title>
   </head>
   <body>
-''', to_str(_content), '''
+''', _to_str(_content), '''
   </body>
 </html>\n''', ));
 print(''.join(_buf))
@@ -1138,12 +1138,14 @@ SafeTemplate class uses safe_escape() instead of escape().
 You can see it by {{,--safe,}} option for pytenjin command.{{({{,${SafeStr(var1)},}} is converted into Python code which does't use safe_escape() for performance reason.)}}
 
 .==================== test_safe/result2.output
-$ pytenjin -sb {{*--safe*}} safe-test.pyhtml
+$ pytenjin -s {{*--safe*}} safe-test.pyhtml
+_buf = []; _extend = _buf.extend; _to_str = to_str; _escape = {{*safe_escape*}}
 var1 = _context.get('var1'); var2 = _context.get('var2'); 
-_extend(('''var1 = ''', {{*safe_escape*}}(to_str(var1)), '''
-var2 = ''', {{*safe_escape*}}(to_str(var2)), '''
-SafeStr(var1) = ''', to_str(var1), '''\n''', ));
-.#SafeStr(var1) = ''', {{*safe_escape*}}(to_str(SafeStr(var1))), '''\n''', ));
+_extend(('''var1 = ''', _escape(_to_str(var1)), '''
+var2 = ''', _escape(_to_str(var2)), '''
+SafeStr(var1) = ''', _to_str(var1), '''\n''', ));
+.#SafeStr(var1) = ''', _escape(_to_str(SafeStr(var1))), '''\n''', ));
+print(''.join(_buf))
 .====================
 
 Here is the definition of safe_escape(). It is very simple and you can customize it freely.
@@ -1596,7 +1598,7 @@ print(html)
 $ python pp-example1.py
 ------ converted script ------
 _extend(('''## normal expression
-value = ''', {{*escape(to_str(value))*}}, '''
+value = ''', {{*_escape(_to_str(value))*}}, '''
 ## with preprocessing
 value = {{*My Great Example*}}\n''', ));
 
@@ -1623,10 +1625,10 @@ If you want to see preprocessing script (not preprocessed script), use '{{,pyten
 
 .==================== test_preprocessing/result1c.output
 $ pytenjin {{*-sP*}} -c 'value="My Great Example"' views/pp-example1.pyhtml
-_buf = []; _extend = _buf.extend; _extend(('''## normal expression
+_buf = []; _extend = _buf.extend; _to_str = to_str; _escape = escape; _extend(('''## normal expression
 value = ${value}
 ## with preprocessing
-value = ''', escape(to_str(_decode_params(value))), '''\n''', ));
+value = ''', _escape(_to_str(_decode_params(value))), '''\n''', ));
 print(''.join(_buf))
 .====================
 
@@ -1672,7 +1674,7 @@ print(''.join(_buf))
 .#------ converted script ------
 .#_extend(('''<h1>{{*My Great Blog*}}</h1>
 .#<p>
-.#  ''', escape(to_str('''Bonjor %s!''' % (user_name))), '''
+.#  ''', _escape(_to_str('''Bonjor %s!''' % (user_name))), '''
 .#</p>\n''', ));
 .#
 .#------ rendered html ------
@@ -1734,11 +1736,11 @@ $ pytenjin --preprocess -sb views/pp-example2.pyhtml
 chk = { params['state']: ' selected="selected"' }
 _extend(('''<select name="state">
   <option value="">-</option>
-  <option value="CA"''', to_str(chk.get('CA', '')), '''>California</option>
-  <option value="FL"''', to_str(chk.get('FL', '')), '''>Florida</option>
-  <option value="HI"''', to_str(chk.get('HI', '')), '''>Hawaii</option>
-  <option value="NY"''', to_str(chk.get('NY', '')), '''>New York</option>
-  <option value="TX"''', to_str(chk.get('TX', '')), '''>Texas</option>
+  <option value="CA"''', _to_str(chk.get('CA', '')), '''>California</option>
+  <option value="FL"''', _to_str(chk.get('FL', '')), '''>Florida</option>
+  <option value="HI"''', _to_str(chk.get('HI', '')), '''>Hawaii</option>
+  <option value="NY"''', _to_str(chk.get('NY', '')), '''>New York</option>
+  <option value="TX"''', _to_str(chk.get('TX', '')), '''>Texas</option>
 </select>\n''', ));
 .====================
 
@@ -1774,7 +1776,7 @@ $ pytenjin -P views/pp-example3.pyhtml
 .? Translated script code:
 .==================== test_preprocessing/result3b.output
 $ pytenjin --preprocess -sb views/pp-example3.pyhtml
-_extend(('''<a href="/items/show/''', to_str(params["id"]), '''">Show ''', escape(to_str(params["name"])), '''</a>\n''', ));
+_extend(('''<a href="/items/show/''', _to_str(params["id"]), '''">Show ''', _escape(_to_str(params["name"])), '''</a>\n''', ));
 .====================
 .#-----
 
@@ -1897,7 +1899,7 @@ And each cache files have different content.
 .==================== test_m17n/result_en.output
 $ pytenjin -a dump m17n.pyhtml.en.cache
 _extend(('''<div>
- <p>{{*Hello*}} ''', escape(to_str(username)), '''!</p>
+ <p>{{*Hello*}} ''', _escape(_to_str(username)), '''!</p>
 </div>\n''', ));
 .====================
 
@@ -1905,7 +1907,7 @@ _extend(('''<div>
 .==================== test_m17n/result_fr.output
 $ pytenjin -a dump m17n.pyhtml.fr.cache
 _extend(('''<div>
- <p>{{*Bonjour*}} ''', escape(to_str(username)), '''!</p>
+ <p>{{*Bonjour*}} ''', _escape(_to_str(username)), '''!</p>
 </div>\n''', ));
 .====================
 
@@ -1963,9 +1965,9 @@ Command-line option '-s' converts template file into Python script code.
 .? Result (-s)
 .==================== test_convert/result1.output
 $ pytenjin {{*-s*}} example.pyhtml
-_buf = []; _extend = _buf.extend; _extend(('''<ul>\n''', ));
+_buf = []; _extend = _buf.extend; _to_str = to_str; _escape = escape; _extend(('''<ul>\n''', ));
 for item in items:
-    _extend(('''  <li>''', escape(to_str(item)), '''</li>\n''', ));
+    _extend(('''  <li>''', _escape(_to_str(item)), '''</li>\n''', ));
 #endfor
 _extend(('''</ul>\n''', ));
 print(''.join(_buf))
@@ -1981,7 +1983,7 @@ Option '-b' removes preamble ('{{,_buf = [],}}') and postamble ('{{,print "".joi
 $ pytenjin -s{{*b*}} example.pyhtml
 _extend(('''<ul>\n''', ));
 for item in items:
-    _extend(('''  <li>''', escape(to_str(item)), '''</li>\n''', ));
+    _extend(('''  <li>''', _escape(_to_str(item)), '''</li>\n''', ));
 #endfor
 _extend(('''</ul>\n''', ));
 .====================
@@ -2020,8 +2022,8 @@ i = 0
 for item in items:
     i += 1
 
-    to_str(i); 
-    escape(to_str(item)); 
+    _to_str(i); 
+    _escape(_to_str(item)); 
 
 #endfor
 
@@ -2276,7 +2278,8 @@ It is able to specify function names of {{,escape(),}} and {{,to_str(),}} which 
 .-------------------- test_escape/main.py
 import tenjin
 from tenjin.helpers import *
-engine = tenjin.Engine(path=['views'], {{*escapefunc='cgi.escape', tostrfunc='str'*}})
+import cgi
+engine = tenjin.Engine(path=['views'], {{*escapefunc=cgi.escape, tostrfunc=str*}})
 print(engine.get_template('page.pyhtml').script)
 .--------------------
 
@@ -2292,11 +2295,15 @@ print(engine.get_template('page.pyhtml').script)
 .-------------------- test_escape/result.output
 $ python main.py
 _extend(('''<p>
-  escaped:     ''', {{*cgi.escape*}}({{*str*}}(value)), '''
-  not escaped: ''', {{*str*}}(value), '''
+.#  escaped:     ''', {{*cgi*}}({{*str*}}(value)), '''
+.#  not escaped: ''', {{*str*}}(value), '''
+  escaped:     ''', _escape(_to_str(value)), '''
+  not escaped: ''', _to_str(value), '''
 </p>\n''', ));
 
 .--------------------
+
+In the above case, {{,cgi.escape(),}} and {{,str(),}} don't appear, but pyTenjin sets {{,_to_str = str; _escape = cgi.escape;,}} internally when rendering templates.
 
 If you need faster version of {{,to_str(),}} and {{,escape(),}}, see {{<next section|#webext>}}.
 
