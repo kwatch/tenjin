@@ -11,7 +11,7 @@
      <td>
       <strong>{{ item.price|safe }}</strong>
      </td>
-    {% if item.change  %}
+    {% if item.is_minus %}
      <td class="minus">{{ item.change|safe }}</td>
      <td class="minus">{{ item.ratio|safe }}</td>
     {% else %}
