@@ -1,9 +1,7 @@
    <tbody>
-<?py
-n = 0
-for item in stocks:
-    n += 1
- ?>
+   <?py n = 0 ?>
+   <?py for item in stocks: ?>
+   <?py     n += 1 ?>
     <tr class="#{n % 2 == 0 and 'even' or 'odd'}">
      <td style="text-align: center">#{n}</td>
      <td>
@@ -23,7 +21,5 @@ for item in stocks:
      <td>#{item['ratio']}</td>
     <?py #endif ?>
     </tr>
-<?py
-#endfor
- ?>
+   <?py #endfor ?>
    </tbody>
