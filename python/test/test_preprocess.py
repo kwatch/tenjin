@@ -12,6 +12,8 @@ import tenjin
 #from tenjin.helpers import escape, to_str
 from tenjin.helpers import *
 
+lvars = "_extend=_buf.extend;_to_str=to_str;_escape=escape; "
+
 
 class PreprocessTest(object):
 
@@ -25,7 +27,7 @@ class PreprocessTest(object):
 	<?PY #endfor ?>
 	</select>
 	"""[1:].replace("\t", "")
-        script = r"""
+        script = lvars + r"""
 	WEEKDAY = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 	_extend(('''<select>
 	<?py curr = params.get(\'wday\') ?>\n''', ));

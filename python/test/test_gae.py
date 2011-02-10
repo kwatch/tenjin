@@ -12,6 +12,8 @@ from oktest import *
 import tenjin
 from tenjin.helpers import *
 
+lvars = "_extend=_buf.extend;_to_str=to_str;_escape=escape; "
+
 
 ## Python 2.6 warns that GAE SDK uses deprecated modules
 def _suppress_warnings():
@@ -118,7 +120,7 @@ else:
                 "  <li>CCC</li>\n"
                 "</ul>\n"
             )
-            script = (
+            script = lvars + (
                 "_extend(('''<ul>\\n''', ));\n"
                 "for item in items:\n"
                 "    _extend(('''  <li>''', _escape(_to_str(item)), '''</li>\\n''', ));\n"

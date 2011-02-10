@@ -214,6 +214,7 @@ class TemplateTest(object):
 #        actual = t.convert(input)
 #        ok (actual) == expected
 
+    lvars = "_extend=_buf.extend;_to_str=to_str;_escape=escape; "
 
     def test_input(self):
         input = r"""<!DOCTYPE>
@@ -223,7 +224,7 @@ class TemplateTest(object):
 <?py #endfor ?>
 </ul>
 """
-        script = r"""_extend(('''<!DOCTYPE>
+        script = self.lvars + r"""_extend(('''<!DOCTYPE>
 <ul>\n''', ));
 for item in items:
     _extend(('''  <li>''', _to_str(item), '''</li>\n''', ));
@@ -255,7 +256,8 @@ _extend(('''</ul>\n''', ));
             t = tenjin.Template(None, input=input, tostrfunc='my_str')
             output = t.render({'name': 'Haruhi'})
             ok (output) == "<p>Hello HARUHI!</p>"
-            ok (t.script) == "_extend(('''<p>Hello ''', _to_str(name), '''!</p>''', ));"
+            ok (t.script) == self.lvars.replace('=to_str', '=my_str') + \
+                             "_extend(('''<p>Hello ''', _to_str(name), '''!</p>''', ));"
             globals().pop('my_str')
             #
             t = tenjin.Template(None, input=input, tostrfunc='str')
@@ -265,20 +267,20 @@ _extend(('''</ul>\n''', ));
             t = tenjin.Template(None, input=input, tostrfunc='str.upper')
             output = t.render({'name': 'sos'})
             ok (output) == "<p>Hello SOS!</p>"
-        if "passed False or empty string as tostrfunc option then no function is used":
-            for v in [False, '']:
-                t = tenjin.Template(None, input=input, tostrfunc=v)
-                output = t.render({'name': 'Haruhi'})
-                ok (output) == "<p>Hello Haruhi!</p>"
-                ok (t.script) == "_extend(('''<p>Hello ''', (name), '''!</p>''', ));"
-                #
-                def f(): t.render({'name': 123})
-                ok (f).raises(TypeError, 'sequence item 1: expected string, int found')
+        if "passed False as tostrfunc option then no function is used":
+            t = tenjin.Template(None, input=input, tostrfunc=False)
+            output = t.render({'name': 'Haruhi'})
+            ok (output) == "<p>Hello Haruhi!</p>"
+            ok (t.script) == self.lvars.replace('=to_str', '=False') + \
+                             "_extend(('''<p>Hello ''', (name), '''!</p>''', ));"
+            #
+            def f(): t.render({'name': 123})
+            ok (f).raises(TypeError, 'sequence item 1: expected string, int found')
         if "passed wrong function name as tostrfunc option then raises error":
             t = tenjin.Template(None, input=input, tostrfunc='johnsmith')
             def f(): t.render({'name': 'Haruhi'})
             #ok (f).raises(TypeError, "'NoneType' object is not callable")
-            ok (f).raises(ValueError, "johnsmith(): no such function.")
+            ok (f).raises(NameError, "name 'johnsmith' is not defined")
 
     def test_option_escapefunc(self):
         input = "<p>Hello ${name}!</p>"
@@ -287,7 +289,8 @@ _extend(('''</ul>\n''', ));
             t = tenjin.Template(None, input=input, escapefunc='my_escape')
             output = t.render({'name': 'Haruhi'})
             ok (output) == "<p>Hello haruhi!</p>"
-            ok (t.script) == "_extend(('''<p>Hello ''', _escape(_to_str(name)), '''!</p>''', ));"
+            ok (t.script) == self.lvars.replace('=escape', '=my_escape') + \
+                             "_extend(('''<p>Hello ''', _escape(_to_str(name)), '''!</p>''', ));"
             globals().pop('my_escape')
             #
             global cgi
@@ -295,17 +298,17 @@ _extend(('''</ul>\n''', ));
             t = tenjin.Template(None, input=input, escapefunc='cgi.escape')
             output = t.render({'name': '&<>"'})
             ok (output) == "<p>Hello &amp;&lt;&gt;\"!</p>"
-        if "passed False or empty string as escapefunc option then no function is used":
-            for v in [False, '']:
-                t = tenjin.Template(None, input=input, escapefunc=v)
-                output = t.render({'name': 'Haru&Kyon'})
-                ok (output) == "<p>Hello Haru&Kyon!</p>"
-                ok (t.script) == "_extend(('''<p>Hello ''', (_to_str(name)), '''!</p>''', ));"
+        if "passed False as escapefunc option then no function is used":
+            t = tenjin.Template(None, input=input, escapefunc=False)
+            output = t.render({'name': 'Haru&Kyon'})
+            ok (output) == "<p>Hello Haru&Kyon!</p>"
+            ok (t.script) == self.lvars.replace('=escape', '=False') + \
+                             "_extend(('''<p>Hello ''', (_to_str(name)), '''!</p>''', ));"
         if "passed wrong function name as tostrfunc option then raises error":
             t = tenjin.Template(None, input=input, escapefunc='kyonsmith')
             def f(): t.render({'name': 'Haruhi'})
             #ok (f).raises(TypeError, "'NoneType' object is not callable")
-            ok (f).raises(ValueError, "kyonsmith(): no such function.")
+            ok (f).raises(NameError, "name 'kyonsmith' is not defined")
 
 
 

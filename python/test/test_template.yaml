@@ -28,7 +28,7 @@
         </html>
 
   source: &convert1_source |6
-        _extend(('''<html>
+        _extend=_buf.extend;_to_str=to_str;_escape=escape; _extend(('''<html>
          <body>
           <table>\n''', ));
         i = 0
@@ -121,7 +121,7 @@
         </html>
 
   source: |6
-        _extend(('''<html>
+        _extend=_buf.extend;_to_str=to_str;_escape=escape; _extend(('''<html>
          <body>
           <table>\n''', ));
         
@@ -173,7 +173,7 @@
         </ul>
 
   source: |6
-        
+        _extend=_buf.extend;_to_str=to_str;_escape=escape; 
         users = [
         {'name': 'Foo', 'email': 'foo@mail.com'},
         {'name': 'Bar',},
@@ -214,7 +214,7 @@
         </ul>
 
   source: |6
-        _extend(('''<ul>\n''', ));
+        _extend=_buf.extend;_to_str=to_str;_escape=escape; _extend(('''<ul>\n''', ));
         for i in range(1,4):
             _extend(('''<li>
         ''', _to_str(i), '''
@@ -255,7 +255,7 @@
            ?>
 
   source: |6
-        
+        _extend=_buf.extend;_to_str=to_str;_escape=escape; 
         i = 0
         for item in ['a', 'b', 'c']:
             i += 1
@@ -288,7 +288,7 @@
         r"a'b'\n"
 
   source: |6
-        _extend(('''\'foo\' and \'bar\'
+        _extend=_buf.extend;_to_str=to_str;_escape=escape; _extend(('''\'foo\' and \'bar\'
         r"a\'b\'\\n"\n''', ));
 
   expected: *quotation1_input
@@ -305,6 +305,7 @@
         <?py #end ?>^
 
   source: |6
+        _extend=_buf.extend;_to_str=to_str;_escape=escape; 
         for value in range(0,3):
             _extend((_to_str(value), '''^
         i = ''', _to_str(value), '''\r\n''', ));
@@ -336,7 +337,7 @@
         </p>^
 
   source: |6
-        _extend(('''<p>\r\n''', ));
+        _extend=_buf.extend;_to_str=to_str;_escape=escape; _extend(('''<p>\r\n''', ));
         
         for value in range(0,3):
         
@@ -371,7 +372,7 @@
         </ul>
 
   source: |
-        _buf = []; _extend = _buf.extend; _to_str = to_str; _escape = escape; _extend(('''<ul>\n''', ));
+        _buf = []; _extend=_buf.extend;_to_str=to_str;_escape=escape; _extend(('''<ul>\n''', ));
         for i in range(0,3):
             _extend(('''<li>''', _to_str(i), '''</li>\n''', ));
         #end
@@ -390,7 +391,8 @@
         <?py #end ?>
 
   source: |
-        _buf = []; _extend = _buf.extend; _to_str = to_str; _escape = escape
+        _buf = []
+	_extend=_buf.extend;_to_str=to_str;_escape=escape; 
         for i in range(0,3):
             _extend((_to_str(i), '''\n''', ));
         #end
@@ -407,7 +409,7 @@
         ${value}
 
   source: |6
-        _extend((_to_str(value), '''
+        _extend=_buf.extend;_to_str=to_str;_escape=cgi.escape; _extend((_to_str(value), '''
         ''', _escape(_to_str(value)), '''\n''', ));
 
 
@@ -420,7 +422,7 @@
         #{value}
         ${value}
   source: |6
-        _extend((_to_str(value), '''
+        _extend=_buf.extend;_to_str=str;_escape=escape; _extend((_to_str(value), '''
         ''', _escape(_to_str(value)), '''\n''', ));
 
 
@@ -436,6 +438,7 @@
         <?py #end ?>
 
   source: |
+        _extend=_buf.extend;_to_str=to_str;_escape=escape; 
         for i in range(0,3):
           _extend(('''i = ''', _to_str(value), '''\n''', ));
         #end
@@ -456,7 +459,7 @@
         </ul>
 
   source: |
-        _extend((u'''こんにちは''', _escape(_to_str(user)), u'''!
+        _extend=_buf.extend;_to_str=to_str;_escape=escape; _extend((u'''こんにちは''', _escape(_to_str(user)), u'''!
         <ul>\n''', ));
         for ch in [u'日', u'本', u'語', u'']:
             _extend((u'''  <li>''', _to_str(ch), u'''</li>\n''', ));
@@ -483,6 +486,7 @@
         #{i}
         <?py #end ?>
   source: |
+        _extend=_buf.extend;_to_str=to_str;_escape=escape; 
         for i in range(0,3)
             _buf.append(_to_str(i))
         #end
@@ -497,7 +501,7 @@
         ${var}
 
   source: &source_escape1 |6
-        _extend((_escape(_to_str(var)), '''\n''', ));
+        _extend=_buf.extend;_to_str=to_str;_escape=escape; _extend((_escape(_to_str(var)), '''\n''', ));
 
   expected: |
         &amp; &lt; &gt; &quot;
@@ -514,7 +518,7 @@
         ${var},${flag},${flag2}
 
   source: |6
-        _extend((_to_str(var), ''',''', _to_str(flag), ''',''', _to_str(flag2), '''
+        _extend=_buf.extend;_to_str=to_str;_escape=escape; _extend((_to_str(var), ''',''', _to_str(flag), ''',''', _to_str(flag2), '''
         ''', _escape(_to_str(var)), ''',''', _escape(_to_str(flag)), ''',''', _escape(_to_str(flag2)), '''\n''', ));
 
   expected: |
@@ -536,7 +540,7 @@
         </ul>
 
   source: |6
-        _buf = []; _extend = _buf.extend; _to_str = to_str; _escape = escape; _extend(('''<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN">\n''', ));
+        _buf = []; _extend=_buf.extend;_to_str=to_str;_escape=escape; _extend(('''<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN">\n''', ));
         name = _context.get('name'); x = _context.get('x'); y = _context.get('y'); z = _context.get('z'); 
         _extend(('''<span>hello ''', _to_str(name), '''</span>
           <span>hello ''', _to_str(name2), '''</span>
@@ -557,7 +561,7 @@
         <p>hello</p>
 
   source: |6
-        _extend(('''<!DOCTYPE>\n''', ));
+        _extend=_buf.extend;_to_str=to_str;_escape=escape; _extend(('''<!DOCTYPE>\n''', ));
         
         _extend(('''<p>hello</p>\n''', ));
 
@@ -597,7 +601,7 @@
         </select>
 
   source: |6
-        states = { "CA": "California",
+        _extend=_buf.extend;_to_str=to_str;_escape=escape; states = { "CA": "California",
         "NY": "New York",
         "FL": "Florida", }
         #
@@ -635,6 +639,7 @@
         #{{_escape('<b>'+_P('item["name"]')+'</b>')}}
 
   source: |6
+        _extend=_buf.extend;_to_str=to_str;_escape=escape; 
         def link_to(label, url):
             import urllib
             return '<a href="%s">%s</a>' % (urllib.quote(url), label)
@@ -677,7 +682,7 @@
         #{"M"}
 
   source: |6
-        _extend((_to_str("A"), 
+        _extend=_buf.extend;_to_str=to_str;_escape=escape; _extend((_to_str("A"), 
         _to_str("B"), 
         _to_str("C"), 
         '''foo''', _to_str("D"), '''

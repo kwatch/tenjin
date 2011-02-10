@@ -664,13 +664,13 @@
 	</p>
 
   script1: |6
-	_extend(('''<p>\n''', ));
+	_extend=_buf.extend;_to_str=to_str;_escape=escape; _extend(('''<p>\n''', ));
 	x = _context.get('x'); y = _context.get('y'); z = _context.get('z'); 
 	_extend(('''  x = ''', _to_str(x), ''', y = ''', _to_str(y), ''', z = ''', _to_str(z), '''
 	</p>\n''', ));
 
   cache1: |
-	_extend(('''<p>\n''', ));
+	_extend=_buf.extend;_to_str=to_str;_escape=escape; _extend(('''<p>\n''', ));
 	x = _context.get('x'); y = _context.get('y'); z = _context.get('z'); 
 	_extend(('''  x = ''', _to_str(x), ''', y = ''', _to_str(y), ''', z = ''', _to_str(z), '''
 	</p>\n''', ));
@@ -684,13 +684,13 @@
 	</p>
 
   script2: |6
-	_extend(('''<p>\n''', ));
+	_extend=_buf.extend;_to_str=to_str;_escape=escape; _extend(('''<p>\n''', ));
 	
 	_extend(('''  x = ''', _to_str(x), ''', y = ''', _to_str(y), ''', z = ''', _to_str(z), '''
 	</p>\n''', ));
 
   cache2: |6
-	_extend(('''<p>\n''', ));
+	_extend=_buf.extend;_to_str=to_str;_escape=escape; _extend(('''<p>\n''', ));
 	
 	_extend(('''  x = ''', _to_str(x), ''', y = ''', _to_str(y), ''', z = ''', _to_str(z), '''
 	</p>\n''', ));
@@ -941,7 +941,7 @@
         </html>
 
   cache1: |
-        chk = { params['state']: ' checked="checked"' }
+        _extend=_buf.extend;_to_str=to_str;_escape=escape; chk = { params['state']: ' checked="checked"' }
         _extend(('''<select name="state">
           <option value="">-</option>
           <option value="CA"''', _to_str(chk.get('CA', '')), '''>California</option>
@@ -950,13 +950,13 @@
         </select>\n''', ));
 
   cache2: |
-        _extend(('''<form action="create">\n''', ));
+        _extend=_buf.extend;_to_str=to_str;_escape=escape; _extend(('''<form action="create">\n''', ));
         include(':form')
         _extend(('''  <input type="submit" value="&quot;Create&quot;">
         </form>\n''', ));
 
   cache3: |
-        _extend(('''<html>
+        _extend=_buf.extend;_to_str=to_str;_escape=escape; _extend(('''<html>
           <body>
             <h1>''', _escape(_to_str(title)), '''</h1>\n''', ));
         echo(_content)
@@ -964,7 +964,7 @@
         </html>\n''', ));
 
   cache4: |
-        _extend(('''<form action="update">
+        _extend=_buf.extend;_to_str=to_str;_escape=escape; _extend(('''<form action="update">
         <select name="state">
           <option value="">-</option>
           <option value="CA">California</option>
