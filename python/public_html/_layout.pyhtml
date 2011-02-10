@@ -1,6 +1,6 @@
 <?py # -*- coding: utf-8 -*- ?>
 <?py #@ARGS _content, page_title ?>
-<!DOCTYPE>
+<!DOCTYPE html>
 <html>
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
