@@ -3,7 +3,7 @@
 ### $Copyright$
 ###
 
-from oktest import ok, not_ok, run
+from oktest import ok, not_ok, run, spec
 import sys, os, re
 
 from testcase_helper import *
@@ -309,6 +309,86 @@ _extend(('''</ul>\n''', ));
             def f(): t.render({'name': 'Haruhi'})
             #ok (f).raises(TypeError, "'NoneType' object is not callable")
             ok (f).raises(NameError, "name 'kyonsmith' is not defined")
+
+
+    def test_localvars_assignments_without_args_declaration(self):
+        def _convert(input):
+            return tenjin.Template(input=input).script
+        if spec("add local vars assignments before text only once."):
+            input = r"""
+<p>
+  <?py x = 10 ?>
+</p>
+"""[1:]
+            expected = r"""
+_extend=_buf.extend;_to_str=to_str;_escape=escape; _extend(('''<p>\n''', ));
+x = 10
+_extend(('''</p>\n''', ));
+"""[1:]
+            ok (_convert(input)) == expected
+        if spec("skips comments at the first lines."):
+            input = r"""
+<?py # coding: utf-8 ?>
+<?py      ### comment ?>
+<p>
+  <?py x = 10 ?>
+</p>
+"""[1:]
+            expected = r"""
+# coding: utf-8
+### comment
+_extend=_buf.extend;_to_str=to_str;_escape=escape; _extend(('''<p>\n''', ));
+x = 10
+_extend(('''</p>\n''', ));
+"""[1:]
+            ok (_convert(input)) == expected
+        if spec("adds local vars assignments before statements."):
+            input = r"""
+<?py for item in items: ?>
+  <?py x = 10 ?>
+<?py #endfor ?>
+</p>
+"""[1:]
+            expected = r"""
+_extend=_buf.extend;_to_str=to_str;_escape=escape; 
+for item in items:
+    x = 10
+#endfor
+_extend(('''</p>\n''', ));
+"""[1:]
+            ok (_convert(input)) == expected
+
+    def test_localvars_assignments_with_args_declaration(self):
+        def _convert(input):
+            return tenjin.Template(input=input).script
+        if spec("args declaration exists before text then local vars assignments apprears at the same line with text."):
+            input = r"""
+<?py # coding: utf-8 ?>
+<?py #@ARGS items ?>
+<p>
+  <?py x = 10 ?>
+</p>
+"""[1:]
+            expected = r"""
+# coding: utf-8
+items = _context.get('items'); 
+_extend=_buf.extend;_to_str=to_str;_escape=escape; _extend(('''<p>\n''', ));
+x = 10
+_extend(('''</p>\n''', ));
+"""[1:]
+            ok (_convert(input)) == expected
+        if spec("args declaration exists before statement then local vars assignments apprears at the same line with args declaration."):
+            input = r"""
+<?py # coding: utf-8 ?>
+<?py #@ARGS items ?>
+  <?py x = 10 ?>
+"""[1:]
+            expected = r"""
+# coding: utf-8
+_extend=_buf.extend;_to_str=to_str;_escape=escape; items = _context.get('items'); 
+x = 10
+"""[1:]
+            ok (_convert(input)) == expected
 
 
 
