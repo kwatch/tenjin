@@ -34,7 +34,7 @@ __license__  = "MIT License"
 __all__      = ['Template', 'Engine', 'helpers', ]
 
 
-import re, sys, os, time, marshal, __builtin__
+import re, sys, os, time, marshal
 from time import time as _time
 from os.path import getmtime as _getmtime
 from os.path import isfile as _isfile
@@ -530,7 +530,6 @@ def set_template_encoding(decode=None, encode=None):
     else:
         Template.encoding = None      # binary base template
         helpers.to_str = to_str = helpers.generate_tostrfunc(encode=encode)
-    #Template.tostrfunc = staticmethod(to_str)
     _template_encoding = (decode, encode)
 
 
@@ -561,8 +560,8 @@ class Template(object):
     ## default value of attributes
     filename   = None
     encoding   = None
-    escapefunc = 'escape'   # or staticmethod(helpers.escape)
-    tostrfunc  = 'to_str'   # or staticmethod(helpers.to_str)
+    escapefunc = 'escape'
+    tostrfunc  = 'to_str'
     indent     = 4
     preamble   = None    # "_buf = []; _expand = _buf.expand; _to_str = to_str; _escape = escape"
     postamble  = None    # "print ''.join(_buf)"
@@ -593,7 +592,7 @@ class Template(object):
              Indent width.
            preamble:str or bool (=None)
              Preamble string which is inserted into python code.
-             If true, '_buf = []; _extend = _buf.extend' is used insated.
+             If true, '_buf = []; ' is used insated.
            postamble:str or bool (=None)
              Postamble string which is appended to python code.
              If true, 'print("".join(_buf))' is used instead.
@@ -610,10 +609,7 @@ class Template(object):
         if smarttrim  is not None:  self.smarttrim  = smarttrim
         if trace      is not None:  self.trace      = trace
         #
-        if preamble  is True:
-            tostrname  = hasattr(self.tostrfunc,  '__call__') and self.tostrfunc.__name__  or self.tostrfunc or 'None'
-            escapename = hasattr(self.escapefunc, '__call__') and self.escapefunc.__name__ or self.escapefunc or 'None'
-            self.preamble = "_buf = []; _extend = _buf.extend; _to_str = %s; _escape = %s" % (tostrname, escapename)
+        if preamble  is True:  self.preamble  = "_buf = []"
         if postamble is True:  self.postamble = "print(''.join(_buf))"
         if input:
             self.convert(input, filename)
@@ -636,11 +632,15 @@ class Template(object):
                 self.newline = "\r\n"
             else:
                 self.newline = "\n"
+        self._localvars_assignments_added = False
+
+    def _localvars_assignments(self):
+        return "_extend=_buf.extend;_to_str=%s;_escape=%s; " % (self.tostrfunc, self.escapefunc)
 
     def before_convert(self, buf):
         if self.preamble:
-            buf.append(self.preamble)
-            buf.append(self.input.startswith('<?py') and "\n" or "; ")
+            eol = self.input.startswith('<?py') and "\n" or "; "
+            buf.append(self.preamble + eol)
 
     def after_convert(self, buf):
         if self.postamble:
@@ -727,7 +727,11 @@ class Template(object):
                 code = (code or "") + "\n"
             if code:
                 code = self.statement_hook(code)
-                self.add_stmt(buf, code)
+                m = self._match_to_args_declaration(code)
+                if m:
+                    self._add_args_declaration(buf, m)
+                else:
+                    self.add_stmt(buf, code)
         rest = input[index:]
         if rest:
             self.parse_exprs(buf, rest)
@@ -735,26 +739,28 @@ class Template(object):
 
     def statement_hook(self, stmt):
         """expand macros and parse '#@ARGS' in a statement."""
-        stmt = stmt.replace("\r\n", "\n")   # Python can't handle "\r\n" in code
-        if self.args is None:
-            args_pattern = r'^ *#@ARGS(?:[ \t]+(.*?))?$'
-            m = re.match(args_pattern, stmt)
-            if m:
-                arr = (m.group(1) or '').split(',')
-                args = [];  declares = []
-                for s in arr:
-                    arg = s.strip()
-                    if not s: continue
-                    if not re.match('^[a-zA-Z_]\w*$', arg):
-                        raise ValueError("%r: invalid template argument." % arg)
-                    args.append(arg)
-                    declares.append("%s = _context.get('%s'); " % (arg, arg))
-                self.args = args
-                nl = stmt[m.end():]
-                if nl: declares.append(nl)
-                return ''.join(declares)
-        ##
-        return stmt
+        return stmt.replace("\r\n", "\n")   # Python can't handle "\r\n" in code
+
+    def _match_to_args_declaration(self, stmt):
+        if self.args is not None:
+            return None
+        args_pattern = r'^ *#@ARGS(?:[ \t]+(.*?))?$'
+        return re.match(args_pattern, stmt)
+
+    def _add_args_declaration(self, buf, m):
+        arr = (m.group(1) or '').split(',')
+        args = [];  declares = []
+        for s in arr:
+            arg = s.strip()
+            if not s: continue
+            if not re.match('^[a-zA-Z_]\w*$', arg):
+                raise ValueError("%r: invalid template argument." % arg)
+            args.append(arg)
+            declares.append("%s = _context.get('%s'); " % (arg, arg))
+        self.args = args
+        #nl = stmt[m.end():]
+        #if nl: declares.append(nl)
+        buf.append(''.join(declares) + "\n")
 
     EXPR_PATTERN = None
 
@@ -807,8 +813,14 @@ class Template(object):
             buf.append("\n")
 
     def start_text_part(self, buf):
+        self._add_localvars_assignments_to_text(buf)
         #buf.append("_buf.extend((")
         buf.append("_extend((")
+
+    def _add_localvars_assignments_to_text(self, buf):
+        if not self._localvars_assignments_added:
+            self._localvars_assignments_added = True
+            buf.append(self._localvars_assignments())
 
     def stop_text_part(self, buf):
         buf.append("));")
@@ -851,6 +863,21 @@ class Template(object):
         if lines[-1][-1] != "\n":
             lines[-1] = lines[-1] + "\n"
         buf.extend(lines)
+        self._add_localvars_assignments_to_stmts(buf)
+
+    def _add_localvars_assignments_to_stmts(self, buf):
+        if self._localvars_assignments_added:
+            return
+        for index, stmt in enumerate(buf):
+            if not re.match(r'^[ \t]*(\#|_buf = \[\])', stmt):
+                break
+        else:
+            return
+        self._localvars_assignments_added = True
+        if re.match(r'^[ \t]*(if|for|while|def|with|class)\b', stmt):
+            buf.insert(index, self._localvars_assignments() + "\n")
+        else:
+            buf[index] = self._localvars_assignments() + buf[index]
 
 
     _START_WORDS = dict.fromkeys(('for', 'if', 'while', 'def', 'try:', 'with', 'class'), True)
@@ -993,9 +1020,6 @@ class Template(object):
         if _buf is None:
             _buf = []
         locals['_buf'] = _buf
-        locals['_extend'] = _buf.extend
-        locals['_to_str'] = self._get_function(self.tostrfunc,  locals, globals)
-        locals['_escape'] = self._get_function(self.escapefunc, locals, globals)
         if not self.bytecode:
             self.compile()
         if self.trace:
@@ -1017,26 +1041,6 @@ class Template(object):
                 logger.error("[tenjin.Template] (_buf=%r)" % (_buf, ))
                 raise
 
-    def _get_function(self, func_name, locals, globals):
-        if not func_name:
-            return func_name
-        if hasattr(func_name, '__call__'):
-            return func_name
-        func = locals.get(func_name) or globals.get(func_name) or getattr(__builtin__, func_name, None)
-        if not func:
-            items = func_name.split('.')
-            obj = locals.get(items[0]) or globals.get(items[0]) or getattr(__builtin__, items[0], None)
-            if not obj:
-                raise ValueError("%s(): no such function." % (func_name, ))
-            for item in items[1:]:
-                if not hasattr(obj, item):
-                    raise ValueError("%s(): no such function." % (func_name, ))
-                obj = getattr(obj, item)
-            func = obj
-            if not hasattr(func, '__call__'):
-                raise TypeError("%s: not a function." % (func_name, ))
-        return func
-
     def compile(self):
         """compile self.script into self.bytecode"""
         self.bytecode = compile(self.script, self.filename or '(tenjin)', 'exec')
@@ -1055,7 +1059,7 @@ class SafeTemplate(Template):
          engine = tenjin.Engine()
          output = engine.render('hello.pyhtml', {'value':'<>&"'})
     """
-    escapefunc = 'safe_escape'  # or staticmethod(helpers.safe_escape)
+    escapefunc = 'safe_escape'
 
     def get_expr_and_escapeflag(self, match):
         expr = match.group(2)
@@ -1111,7 +1115,7 @@ class Preprocessor(Template):
 
 class SafePreprocessor(Preprocessor):
 
-    escapefunc = 'safe_escape'  # staticmethod(helpers.safe_escape)
+    escapefunc = 'safe_escape'
 
     def get_expr_and_escapeflag(self, match):
         if match.group(1) == '#':
