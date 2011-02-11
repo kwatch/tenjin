@@ -1144,10 +1144,10 @@ class SafePreprocessor(Preprocessor):
 
 def use_new_notation(flag=True):
     """Switch embedded expression notations from '${ }' and '#{ }' to '{= =}' and '{== ==}'."""
-    pat1 = flag and r'\{=(?:=(.*?)=|(.*?))=\}'   or r'\#\{(.*?)\}|\$\{(.*?)\}'
-    pat2 = flag and r'\{#=(?:=(.*?)=|(.*?))=#\}' or r'\#\{\{(.*?)\}\}|\$\{\{(.*?)\}\}'
-    Template.EXPR_PATTERN     = re.compile(pat1, re.S)
-    Preprocessor.EXPR_PATTERN = re.compile(pat2, re.S)
+    attr = flag and '_new_expr_pattern' or '_old_expr_pattern'
+    for klass in [Template, Preprocessor]:
+        klass.EXPR_PATTERN = None
+        klass._curr_expr_pattern = getattr(klass, attr)
 
 
 ##
