@@ -114,7 +114,7 @@ class SafeTemplateTest(object):
 class SafePreprocessorTest(object):
 
     input = ( "<?PY for i in range(2): ?>\n"
-              "<h1>{|=i=|}</h1>\n"
+              "<h1>{#=i=#}</h1>\n"
               "<?py for item in items: ?>\n"
               "<p>{=item=}</p>\n"
               "<?py #end ?>\n"
@@ -141,12 +141,12 @@ for item in items:
 
     def test_get_expr_and_escapeflag(self):
         t = tenjin.SafePreprocessor()
-        if "matched expression is '{|=...=|}' then returns expr string and True":
-            m = t.expr_pattern().search("<p>{|=item=|}</p>")
+        if "matched expression is '{#=...=#}' then returns expr string and True":
+            m = t.expr_pattern().search("<p>{#=item=#}</p>")
             ret = t.get_expr_and_escapeflag(m)
             ok (ret) == ('item', True)
-        if "matched expression is '{|==...==|}' then returns expr string and False":
-            m = t.expr_pattern().search("<p>{|==item==|}</p>")
+        if "matched expression is '{#==...==#}' then returns expr string and False":
+            m = t.expr_pattern().search("<p>{#==item==#}</p>")
             ret = t.get_expr_and_escapeflag(m)
             ok (ret) == ('item', False)
 
@@ -212,10 +212,10 @@ class SafeEngineTest(object):
   <h1>{=title=}</h1>
   <ul>
   <?PY for wday in WDAYS: ?>
-    <li>{|=wday=|}</li>
+    <li>{#=wday=#}</li>
   <?PY #endfor ?>
   <ul>
-  <div>{|=COPYRIGHT=|}</div>
+  <div>{#=COPYRIGHT=#}</div>
 '''[1:]
         expected_output = r'''
   <h1>SafeEngine Example</h1>

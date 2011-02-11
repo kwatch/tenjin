@@ -1147,7 +1147,7 @@ class SafePreprocessor(Preprocessor):
     def expr_pattern(self):
         pat = SafePreprocessor.EXPR_PATTERN
         if not pat:   # re.compile() is heavy weight, so make it lazy
-            pat = SafePreprocessor.EXPR_PATTERN = re.compile(r'\{\|=(?:=(.*?)=|(.*?))=\|\}', re.S)
+            pat = SafePreprocessor.EXPR_PATTERN = re.compile(r'\{\#=(?:=(.*?)=|(.*?))=\#\}', re.S)
         return pat
 
     def get_expr_and_escapeflag(self, match):
