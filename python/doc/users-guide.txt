@@ -1089,34 +1089,45 @@ Module {{,tenjin.helpers.html,}} provides HTML specific helper functions.
 
 .$$ Safe Template		| safe-template
 
-Tenjin provides SafeTemplate and SafeEngine class which enforces HTML escape.
 
-.* With these classes, {{,#{...},}} is not allowed. Only {{,${...},}} is available.
-.* Use {{,${SafeStr(x)},}} instead of {{,#{x},}}.
+
+Tenjin provides SafeTemplate and SafeEngine class which enforces HTML escape.
+These are similar to Django's feature.
+
+With these classes, embedded expression notation is changed.
+
+.* Use {{,{=...=},}} instead of {{,${...},}}
+.* Use {{,{==...==},}} instead of {{,#{...},}}
+
+The reason of this change is that current notation can't allow user to embed curlie brackets (for example {{,${"Hello {0}!".format(user.name)},}} will be parse error in current version).
+
 
 .? safe-test.pyhtml
 .-------------------- test_safe/safe-test.pyhtml
 <?py #@ARGS var1, var2 ?>
-var1 = ${var1}
-var2 = ${var2}
-SafeStr(var1) = ${{{*SafeStr(*}}var1{{*)*}}}
+(escaped)
+  var1 = {{*{=*}}var1{{*=}*}}
+  var2 = {{*{=*}}var2{{*=}*}}
+(not escaped)
+  var1 = {{*{==*}}var1{{*==}*}}
+  var2 = {{*{==*}}var2{{*==}*}}
 .--------------------
 
 .? main.py
 .-------------------- test_safe/main.py
-## import safe_escape() and SafeStr class
+## import safe_escape() and mark_as_escaped()
 import tenjin
-from tenjin.helpers import to_str, {{*safe_escape*}}, {{*SafeStr*}}
+from tenjin.helpers import to_str, {{*safe_escape*}}, {{*mark_as_escaped*}}
     # or form tenjin.helpers import *
 
 ## use SafeEngine class instead Engine class
 ## (SafeEngine class uses SafeTemplate class internally)
 engine = tenjin.{{*SafeEngine*}}()
 
-## if you want NOT escape a certain value, wrap by SafeStr
+## if you want NOT escape a certain value, wrap by mark_as_escaped()
 context = {
   'var1': '<b>Hello</b>',
-  'var2': {{*SafeStr(*}}'<b>Hello</b>'{{*)*}},
+  'var2': {{*mark_as_escaped(*}}'<b>Hello</b>'{{*)*}},
 }
 
 ## render template
@@ -1127,35 +1138,43 @@ print(output)
 .? Result
 .==================== test_safe/result.output
 $ python main.py
-var1 = &lt;b&gt;Hello&lt;/b&gt;
-var2 = {{*<b>Hello</b>*}}
-SafeStr(var1) = {{*<b>Hello</b>*}}
+(escaped)
+  var1 = &lt;b&gt;Hello&lt;/b&gt;
+  var2 = {{*<b>Hello</b>*}}
+(not escaped)
+  var1 = <b>Hello</b>
+  var2 = <b>Hello</b>
 
 .====================
 
 
 SafeTemplate class uses safe_escape() instead of escape().
-You can see it by {{,--safe,}} option for pytenjin command.{{({{,${SafeStr(var1)},}} is converted into Python code which does't use safe_escape() for performance reason.)}}
+You can see it by {{,--safe,}} option for pytenjin command.{{({{,${mark_as_escaped(var1)},}} is converted into Python code which does't use safe_escape() for performance reason.)}}
 
 .==================== test_safe/result2.output
 $ pytenjin -s {{*--safe*}} safe-test.pyhtml
 _buf = []
 var1 = _context.get('var1'); var2 = _context.get('var2'); 
-_extend=_buf.extend;_to_str=to_str;_escape={{*safe_escape*}}; _extend(('''var1 = ''', _escape(_to_str(var1)), '''
-var2 = ''', _escape(_to_str(var2)), '''
-SafeStr(var1) = ''', _to_str(var1), '''\n''', ));
-.#SafeStr(var1) = ''', _escape(_to_str(SafeStr(var1))), '''\n''', ));
+_extend=_buf.extend;_to_str=to_str;_escape={{*safe_escape*}}; _extend(('''(escaped)
+  var1 = ''', {{*_escape*}}(_to_str(var1)), '''
+  var2 = ''', {{*_escape*}}(_to_str(var2)), '''
+(not escaped)
+  var1 = ''', {{*_to_str*}}(var1), '''
+  var2 = ''', {{*_to_str*}}(var2), '''\n''', ));
 print(''.join(_buf))
 .====================
 
-Here is the definition of safe_escape(). It is very simple and you can customize it freely.
-
-.--------------------
-def safe_escape(s):
-    if isinstance(s, SafeStr):
-        return s.value
-    return escape(s)
-.--------------------
+.#Here is the definition of safe_escape(). It is very simple and you can customize it freely.
+.#
+.#.--------------------
+.#def safe_escape(s):
+.#    if isinstance(s, EscapedStr):
+.#        return s
+.#    if isinstance(s, EscapedUnicode):
+.#        return EscapedStr(to_str(s))
+.#    return EscapedStr(escape(to_str(s)))
+.#.--------------------
+.#
 
 
 

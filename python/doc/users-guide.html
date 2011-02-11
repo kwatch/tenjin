@@ -1212,41 +1212,48 @@ u'hoge'
 
       <h3 class="section2">Safe Template</h3>
 
-      <p>Tenjin provides SafeTemplate and SafeEngine class which enforces HTML escape.</p>
+      <p>Tenjin provides SafeTemplate and SafeEngine class which enforces HTML escape. These are similar to Django's feature.</p>
+
+      <p>With these classes, embedded expression notation is changed.</p>
 
       <ul type="disc">
-        <li>With these classes, <code>#{...}</code> is not allowed. Only <code>${...}</code> is available.</li>
+        <li>Use <code>{=...=}</code> instead of <code>${...}</code></li>
 
-        <li>Use <code>${SafeStr(x)}</code> instead of <code>#{x}</code>.</li>
-      </ul><a name="test_safe/safe-test.pyhtml"></a>
+        <li>Use <code>{==...==}</code> instead of <code>#{...}</code></li>
+      </ul>
+
+      <p>The reason of this change is that current notation can't allow user to embed curlie brackets (for example <code>${"Hello {0}!".format(user.name)}</code> will be parse error in current version).</p><a name="test_safe/safe-test.pyhtml"></a>
 
       <div class="program_caption">
         safe-test.pyhtml
       </div>
       <pre class="program">
 &lt;?py #@ARGS var1, var2 ?&gt;
-var1 = ${var1}
-var2 = ${var2}
-SafeStr(var1) = ${<strong>SafeStr(</strong>var1<strong>)</strong>}
+(escaped)
+  var1 = <strong>{=</strong>var1<strong>=}</strong>
+  var2 = <strong>{=</strong>var2<strong>=}</strong>
+(not escaped)
+  var1 = <strong>{==</strong>var1<strong>==}</strong>
+  var2 = <strong>{==</strong>var2<strong>==}</strong>
 </pre><a name="test_safe/main.py"></a>
 
       <div class="program_caption">
         main.py
       </div>
       <pre class="program">
-## import safe_escape() and SafeStr class
+## import safe_escape() and mark_as_escaped()
 import tenjin
-from tenjin.helpers import to_str, <strong>safe_escape</strong>, <strong>SafeStr</strong>
+from tenjin.helpers import to_str, <strong>safe_escape</strong>, <strong>mark_as_escaped</strong>
     # or form tenjin.helpers import *
 
 ## use SafeEngine class instead Engine class
 ## (SafeEngine class uses SafeTemplate class internally)
 engine = tenjin.<strong>SafeEngine</strong>()
 
-## if you want NOT escape a certain value, wrap by SafeStr
+## if you want NOT escape a certain value, wrap by mark_as_escaped()
 context = {
   'var1': '&lt;b&gt;Hello&lt;/b&gt;',
-  'var2': <strong>SafeStr(</strong>'&lt;b&gt;Hello&lt;/b&gt;'<strong>)</strong>,
+  'var2': <strong>mark_as_escaped(</strong>'&lt;b&gt;Hello&lt;/b&gt;'<strong>)</strong>,
 }
 
 ## render template
@@ -1259,9 +1266,12 @@ print(output)
       </div>
       <pre class="terminal">
 $ python main.py
-var1 = &amp;lt;b&amp;gt;Hello&amp;lt;/b&amp;gt;
-var2 = <strong>&lt;b&gt;Hello&lt;/b&gt;</strong>
-SafeStr(var1) = <strong>&lt;b&gt;Hello&lt;/b&gt;</strong>
+(escaped)
+  var1 = &amp;lt;b&amp;gt;Hello&amp;lt;/b&amp;gt;
+  var2 = <strong>&lt;b&gt;Hello&lt;/b&gt;</strong>
+(not escaped)
+  var1 = &lt;b&gt;Hello&lt;/b&gt;
+  var2 = &lt;b&gt;Hello&lt;/b&gt;
 
 </pre>
 
@@ -1270,25 +1280,20 @@ SafeStr(var1) = <strong>&lt;b&gt;Hello&lt;/b&gt;</strong>
 $ pytenjin -s <strong>--safe</strong> safe-test.pyhtml
 _buf = []
 var1 = _context.get('var1'); var2 = _context.get('var2'); 
-_extend=_buf.extend;_to_str=to_str;_escape=<strong>safe_escape</strong>; _extend(('''var1 = ''', _escape(_to_str(var1)), '''
-var2 = ''', _escape(_to_str(var2)), '''
-SafeStr(var1) = ''', _to_str(var1), '''\n''', ));
+_extend=_buf.extend;_to_str=to_str;_escape=<strong>safe_escape</strong>; _extend(('''(escaped)
+  var1 = ''', <strong>_escape</strong>(_to_str(var1)), '''
+  var2 = ''', <strong>_escape</strong>(_to_str(var2)), '''
+(not escaped)
+  var1 = ''', <strong>_to_str</strong>(var1), '''
+  var2 = ''', <strong>_to_str</strong>(var2), '''\n''', ));
 print(''.join(_buf))
-</pre>
-
-      <p>Here is the definition of safe_escape(). It is very simple and you can customize it freely.</p>
-      <pre class="program">
-def safe_escape(s):
-    if isinstance(s, SafeStr):
-        return s.value
-    return escape(s)
 </pre>
 
       <div class="footnote">
         <dl compact>
           <dt>(<a name="fnref:1" href="#fnlink:1" id="fnref:1">*1</a>)</dt>
 
-          <dd><code>${SafeStr(var1)}</code> is converted into Python code which does't use safe_escape() for performance reason.</dd>
+          <dd><code>${mark_as_escaped(var1)}</code> is converted into Python code which does't use safe_escape() for performance reason.</dd>
         </dl>
       </div><br>
       <a name="nested-layout-template" id="nested-layout-template"></a>
