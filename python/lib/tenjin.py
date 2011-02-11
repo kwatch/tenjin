@@ -161,13 +161,23 @@ if True:
                         """Convert val into string or return '' if None. Unicode will be encoded into binary(=str)."""
                         if _isa(val, _str):     return val
                         if val is None:         return ''
-                        if _isa(val, _unicode): return val.encode(_encode)  # unicode to binary(=str)
+                        #if _isa(val, _unicode): return val.encode(_encode)  # unicode to binary(=str)
+                        if _isa(val, _unicode):
+                            if _isa(val, EscapedUnicode):
+                                return EscapedStr(val.encode(_encode))
+                            else:
+                                return val.encode(_encode)  # unicode to binary(=str)
                         return _str(val)
             else:
                 if decode:
                     def to_str(val,   _str=str, _unicode=unicode, _isa=isinstance, _decode=decode):
                         """Convert val into string or return '' if None. Binary(=str) will be decoded into unicode."""
-                        if _isa(val, _str):     return val.decode(_decode)  # binary(=str) to unicode
+                        #if _isa(val, _str):     return val.decode(_decode)  # binary(=str) to unicode
+                        if _isa(val, _str):
+                            if _isa(val, EscapedStr):
+                                return EscapedUnicode(val.decode(_decode))
+                            else:
+                                return val.decode(_decode)
                         if val is None:         return ''
                         if _isa(val, _unicode): return val
                         return _unicode(val)

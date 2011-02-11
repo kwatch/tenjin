@@ -9,6 +9,7 @@ import sys, os, re
 import tenjin
 from tenjin.helpers import *
 
+python2 = sys.version_info[0] == 2
 python3 = sys.version_info[0] == 3
 
 lvars = "_extend=_buf.extend;_to_str=to_str;_escape=safe_escape; "
@@ -93,9 +94,19 @@ class SafeTemplateTest(object):
 
     def test_FUNCTEST_of_render(self):
         if "rendered then avoid escaping of escaped object":
-            t = tenjin.SafeTemplate(input=self.input)
-            context = self.context.copy()
-            ok (t.render(context)) == self.expected
+            input    = "var1: ${var1}, var2: ${var2}\n"
+            context  = {'var1': '<>&"', 'var2': mark_as_escaped('<>&"')}
+            expected = "var1: &lt;&gt;&amp;&quot;, var2: <>&\"\n"
+            t = tenjin.SafeTemplate(input=input)
+            ok (t.render(context)) == expected
+            #
+            if python2:
+                u = unicode
+                input    = "var1: ${var1}, var2: ${var2}\n"
+                context  = {'var1': u('<>&"'), 'var2': mark_as_escaped(u('<>&"'))}
+                expected = "var1: &lt;&gt;&amp;&quot;, var2: <>&\"\n"
+                t = tenjin.SafeTemplate(input=input)
+                ok (t.render(context)) == expected
 
     def test_FUNCTEST_with_engine(self):
         fname = 'test_safe_template.pyhtml'
