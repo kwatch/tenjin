@@ -3,7 +3,7 @@
 ### $Copyright$
 ###
 
-from oktest import ok, not_ok, run
+from oktest import ok, not_ok, run, spec
 import sys, os, re
 
 import tenjin
@@ -14,32 +14,44 @@ python3 = sys.version_info[0] == 3
 lvars = "_extend=_buf.extend;_to_str=to_str;_escape=safe_escape; "
 
 
-class SafeStrTest(object):
+class EscapedStrTest(object):
 
-    def test___init__(self):
-        if "arg is a string then keeps it to 'value' attr":
-            s = '<foo>'
-            ok (SafeStr(s).value).is_(s)
-        if "arg is not a basestring then raises error":
-            def f(): SafeStr(123)
-            ok (f).raises(TypeError, "123 is not a string.")
-            def f(): SafeStr(None)
-            ok (f).raises(TypeError, "None is not a string.")
+    def test_mark_as_escaped(self):
+        if "arg is a str then returns EscapedStr object.":
+            ok (mark_as_escaped("<foo>")).is_a(EscapedStr)
+        if "arg is a unicode then returns EscapedUnicode object.":
+            ok (mark_as_escaped(u"<foo>")).is_a(EscapedUnicode)
+        if "arg is not a basestring then returns TypeError.":
+            def f(): mark_as_escaped(123)
+            ok (f).raises(TypeError, "mark_as_escaped(123): expected str or unicode.")
+        if "arg is never escaped.":
+            ok (mark_as_escaped("<foo>")) == "<foo>"
+            ok (mark_as_escaped(u"<foo>")) == u"<foo>"
 
-    def test___str__(self):
-        if "called then returns itself":
-            hs = SafeStr('foo')
-            ok (hs.__str__()).is_(hs)
-            ok (str(hs)).is_(hs)
-
-    def test___unicode__(str):
-        if python3:
-            return
-        if "called then returns itself":
-            hs = SafeStr('foo')
-            ok (hs.__unicode__()).is_(hs)
-            #ok (unicode(hs)) == u'foo'
-            ok (unicode(hs)) == 'foo'.decode('utf-8')
+    def test_safe_escape(self):
+        if "arg is EscapedStr then returns it as-is.":
+            obj = EscapedStr("<foo>")
+            ok (safe_escape(obj)).is_(obj)
+        if "arg is EscapedUnicode then converts it into EscapedStr.":
+            obj = EscapedUnicode(u"<foo>")
+            ok (safe_escape(obj)).is_not(obj)
+            ok (safe_escape(obj)).is_a(EscapedStr)
+            ok (safe_escape(obj)) == "<foo>"
+        if "arg is not escaped then escapes it and returns EscapedStr.":
+            ret = safe_escape("<foo>")
+            ok (ret) == "&lt;foo&gt;"
+            ok (ret).is_a(EscapedStr)
+        if "arg is unicode then encoded by to_str() and returns EscapedStr.":
+            ret = safe_escape(u"<foo>")
+            ok (ret) == "&lt;foo&gt;"
+            ok (ret).is_a(EscapedStr)
+        if "arg is not a basestring then calls to_str() and escape(), and returns EscapedStr":
+            ret = safe_escape(None)
+            ok (ret) == ""
+            ok (ret).is_a(EscapedStr)
+            ret = safe_escape(123)
+            ok (ret) == "123"
+            ok (ret).is_a(EscapedStr)
 
 
 class SafeTemplateTest(object):
@@ -47,7 +59,7 @@ class SafeTemplateTest(object):
     input = ( "<?py for item in items: ?>\n"
               "<p>${item}</p>\n"
               "<?py #end ?>\n" )
-    context = { 'items': [ '<>&"', SafeStr('<>&"') ] }
+    context = { 'items': [ '<>&"', mark_as_escaped('<>&"') ] }
     expected = ( "<p>&lt;&gt;&amp;&quot;</p>\n"
                  "<p><>&\"</p>\n" )
 
@@ -62,8 +74,8 @@ class SafeTemplateTest(object):
             def f(): t.get_expr_and_escapeflag(m)
             ok (f).raises(tenjin.TemplateSyntaxError,
                           "'#{item}': '#{}' is not available in SafeTemplate.")
-        if "expr is 'SafeStr(x)' then returns 'x' instead of expr":
-            m = t.expr_pattern().search("<p>${SafeStr(foo())}</p>")
+        if "expr is 'mark_as_escaped(x)' then returns 'x' instead of expr":
+            m = t.expr_pattern().search("<p>${mark_as_escaped(foo())}</p>")
             ret = t.get_expr_and_escapeflag(m)
             ok (ret) == ('foo()', False)
 
@@ -75,12 +87,12 @@ class SafeTemplateTest(object):
         if "converted then use 'safe_escape()' instead of 'escape()'":
             t = tenjin.SafeTemplate(input="<p>${item}</p>")
             ok (t.script) == lvars + "_extend(('''<p>''', _escape(_to_str(item)), '''</p>''', ));"
-        if "${SafeStr(...)} exists then skips to escape by safe_escape()":
-            t = tenjin.SafeTemplate(input="<p>${SafeStr(foo())}</p>")
+        if "${mark_as_escaped(...)} exists then skips to escape by safe_escape()":
+            t = tenjin.SafeTemplate(input="<p>${mark_as_escaped(foo())}</p>")
             ok (t.script) == lvars + "_extend(('''<p>''', _to_str(foo()), '''</p>''', ));"
 
     def test_FUNCTEST_of_render(self):
-        if "rendered then avoid escape of SafeStr object":
+        if "rendered then avoid escaping of escaped object":
             t = tenjin.SafeTemplate(input=self.input)
             context = self.context.copy()
             ok (t.render(context)) == self.expected
@@ -108,7 +120,7 @@ class SafePreprocessorTest(object):
               "<p>${item}</p>\n"
               "<?py #end ?>\n"
               "<?PY #end ?>\n" )
-    context = { 'items': [ '<>&"', SafeStr('<>&"') ] }
+    context = { 'items': [ '<>&"', mark_as_escaped('<>&"') ] }
     expected = ( "<h1>1</h1>\n"
                  "<?py for item in items: ?>\n"
                  "<p>${item}</p>\n"
@@ -189,19 +201,19 @@ class SafeEngineTest(object):
         input = r"""
 <p>v1=${v1}</p>
 <p>v2=${v2}</p>
-<p>SafeStr(v1)=${SafeStr(v1)}</p>
-<p>SafeStr(v2)=${SafeStr(v2)}</p>
+<p>mark_as_escaped(v1)=${mark_as_escaped(v1)}</p>
+<p>mark_as_escaped(v2)=${mark_as_escaped(v2)}</p>
 """[1:]
         expected = r"""
 <p>v1=&lt;&amp;&gt;</p>
 <p>v2=<&></p>
-<p>SafeStr(v1)=<&></p>
-<p>SafeStr(v2)=<&></p>
+<p>mark_as_escaped(v1)=<&></p>
+<p>mark_as_escaped(v2)=<&></p>
 """[1:]
         @_with_template(fname, input)
         def f():
             engine = tenjin.SafeEngine()
-            context = { 'v1': '<&>', 'v2': SafeStr('<&>'), }
+            context = { 'v1': '<&>', 'v2': mark_as_escaped('<&>'), }
             output = engine.render(fname, context)
             ok (output) == expected
         f()

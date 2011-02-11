@@ -312,21 +312,42 @@ if True:
         s = re.sub(r'<`\$(.*?)\$`>', r'${\1}', s)
         return s
 
-    class SafeStr(str):
-        """string class to avoid escape in template"""
-        def __init__(self, s):
-            if not isinstance(s, _basestring):
-                raise TypeError("%r is not a string." % (s, ))
-            self.value = s
-        def __str__(self):
-            return self
-        def __unicode__(self):
-            return self
+    class Escaped(object):
+        """marking class that object is already escaped."""
+        pass
 
-    def safe_escape(s):
-        if isinstance(s, helpers.SafeStr):
-            return s.value
-        return helpers.escape(s)
+    class EscapedStr(str):
+        """string class to avoid escape in template"""
+        pass
+
+    class EscapedUnicode(unicode):
+        """unicode class to avoid escape in template"""
+        pass
+
+    def mark_as_escaped(s):
+        if isinstance(s, str):
+            return EscapedStr(s)
+        if isinstance(s, unicode):
+            return EscapedUnicode(s)
+        raise TypeError("mark_as_escaped(%r): expected str or unicode." % (s, ))
+
+    def safe_escape(value):
+        if isinstance(value, EscapedStr):
+            return value
+        if isinstance(value, EscapedUnicode):
+            #return EscapedStr(value.encode(_encoding))
+            return EscapedStr(helpers.to_str(value))
+        #return EscapedStr(helpers.escape(helpers.to_str(value)))
+        return helpers.mark_as_escaped(helpers.escape(helpers.to_str(value)))
+        ## or
+        #if isinstance(value, str):
+        #    return EscapedStr(helpers.escape(value))
+        #if isinstance(value, unicode):
+        #    return EscapedStr(helpers.escape(value.encode(encoding)))
+        #if value is None:
+        #    return EscapedStr("")
+        #else:
+        #    return EscapedStr(str(value))
 
     mod = _create_module('tenjin.helpers')
     mod.to_str             = to_str
@@ -339,16 +360,21 @@ if True:
     mod._p                 = _p
     mod._P                 = _P
     mod._decode_params     = _decode_params
-    mod.SafeStr            = SafeStr
+    mod.Escaped            = Escaped
+    mod.EscapedStr         = EscapedStr
+    mod.EscapedUnicode     = EscapedUnicode
+    mod.mark_as_escaped    = mark_as_escaped
     mod.safe_escape        = safe_escape
     mod.__all__ = ['escape', 'to_str', 'echo', 'generate_tostrfunc',
                    'start_capture', 'stop_capture', 'capture_as', 'captured_as',
-                   '_p', '_P', '_decode_params', 'SafeStr', 'safe_escape',
+                   '_p', '_P', '_decode_params',
+                   'Escaped', 'EscapedStr', 'EscapedUnicode', 'mark_as_escaped', 'safe_escape',
                    ]
 
 helpers = mod
-del echo, start_capture, stop_capture, captured_as, _p, _P, _decode_params, SafeStr, safe_escape
+del echo, start_capture, stop_capture, captured_as, _p, _P, _decode_params, safe_escape
 #del to_str, generate_tostrfunc
+#del Escaped, EscapedStr, EscapedUnicode, mark_as_escaped
 del mod
 
 
@@ -395,10 +421,10 @@ if True:
     def tagattr(name, expr, value=None, escape=True):
         """(experimental) Return ' name="value"' if expr is true value, else '' (empty string).
            If value is not specified, expr is used as value instead."""
-        if not expr and expr != 0: return helpers.SafeStr('')
+        if not expr and expr != 0: return helpers.mark_as_escaped('')
         if value is None: value = expr
-        if escape: value = helpers.safe_escape(to_str(value))
-        return helpers.SafeStr(' %s="%s"' % (name, value))
+        if escape: value = helpers.safe_escape(value)
+        return helpers.mark_as_escaped(' %s="%s"' % (name, value))
 
     def tagattrs(**kwargs):
         """(experimental) built html tag attribtes.
@@ -413,36 +439,36 @@ if True:
         if 'selected' in kwargs: kwargs['selected'] = kwargs.pop('selected') and 'selected' or None
         if 'disabled' in kwargs: kwargs['disabled'] = kwargs.pop('disabled') and 'disabled' or None
         esc = helpers.safe_escape
-        s = ''.join([ ' %s="%s"' % (k, esc(to_str(v))) for k, v in kwargs.items() if v or v == 0 ])
-        return helpers.SafeStr(s)
+        s = ''.join([ ' %s="%s"' % (k, esc(v)) for k, v in kwargs.items() if v or v == 0 ])
+        return helpers.mark_as_escaped(s)
 
     def checked(expr):
         """return ' checked="checked"' if expr is true."""
-        return helpers.SafeStr(expr and ' checked="checked"' or '')
+        return helpers.mark_as_escaped(expr and ' checked="checked"' or '')
 
     def selected(expr):
         """return ' selected="selected"' if expr is true."""
-        return helpers.SafeStr(expr and ' selected="selected"' or '')
+        return helpers.mark_as_escaped(expr and ' selected="selected"' or '')
 
     def disabled(expr):
         """return ' disabled="disabled"' if expr is true."""
-        return helpers.SafeStr(expr and ' disabled="disabled"' or '')
+        return helpers.mark_as_escaped(expr and ' disabled="disabled"' or '')
 
     def nl2br(text):
         """replace "\n" to "<br />\n" and return it."""
         if not text:
-            return helpers.SafeStr('')
-        return helpers.SafeStr(text.replace('\n', '<br />\n'))
+            return helpers.mark_as_escaped('')
+        return helpers.mark_as_escaped(text.replace('\n', '<br />\n'))
 
     def text2html(text, use_nbsp=True):
         """(experimental) escape xml characters, replace "\n" to "<br />\n", and return it."""
         if not text:
-            return helpers.SafeStr('')
+            return helpers.mark_as_escaped('')
         s = helpers.safe_escape(text)
         if use_nbsp: s = s.replace('  ', ' &nbsp;')
         #return helpers.html.nl2br(s)
         s = s.replace('\n', '<br />\n')
-        return helpers.SafeStr(s)
+        return helpers.mark_as_escaped(s)
 
     def nv(name, value, sep=None, **kwargs):
         """(experimental) Build name and value attributes.
@@ -460,7 +486,8 @@ if True:
         value = helpers.safe_escape(value)
         s = sep and 'name="%s" value="%s" id="%s"' % (name, value, name+sep+value) \
                 or  'name="%s" value="%s"'         % (name, value)
-        return helpers.SafeStr(kwargs and s + helpers.html.tagattrs(**kwargs) or s)
+        html = kwargs and s + helpers.html.tagattrs(**kwargs) or s
+        return helpers.mark_as_escaped(html)
 
     def new_cycle(*values):
         """Generate cycle object.
@@ -477,8 +504,6 @@ if True:
             while True:
                 yield values[i]
                 i = (i + 1) % n
-        #SafeStr, safe_escape = helpers.SafeStr, helpers.safe_escape
-        #values = [ isinstance(v, SafeStr) and v or SafeStr(safe_escape(v)) for v in values ]
         if   python2:  return gen(values).next
         elif python3:  return gen(values).__next__
 
@@ -1050,7 +1075,7 @@ class Template(object):
 ## secure template class
 ##
 class SafeTemplate(Template):
-    """Deny '#{}' and allow only '${}'. Use '${SafeStr(x)}' instead of '#{x}'.
+    """Deny '#{}' and allow only '${}'. Use '${mark_as_escaped(x)}' instead of '#{x}'.
        usage.
          import tenjin
          from tenjin.helpers import *
@@ -1069,7 +1094,7 @@ class SafeTemplate(Template):
         #return expr, True      # always escapes expresion value
         global _safe_str_rexp
         if not _safe_str_rexp:
-            _safe_str_rexp = re.compile(r'^\s*SafeStr\((.*)\)\s*$')  # or r'^SafeStr\([^\)]*\)$'
+            _safe_str_rexp = re.compile(r'^\s*mark_as_escaped\((.*)\)\s*$')  # or r'^mark_as_escaped\([^\)]*\)$'
         m = _safe_str_rexp.match(expr)
         if m:
             expr = m.group(1)
