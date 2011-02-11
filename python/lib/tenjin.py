@@ -1106,11 +1106,8 @@ class SafeTemplate(Template):
         if not _safe_str_rexp:
             _safe_str_rexp = re.compile(r'^\s*mark_as_escaped\((.*)\)\s*$')  # or r'^mark_as_escaped\([^\)]*\)$'
         m = _safe_str_rexp.match(expr)
-        if m:
-            expr = m.group(1)
-            return expr, False    # skip escape
-        else:
-            return expr, True     # escapes by safe_escape()
+        ## False means 'skip escaping', True means 'escapes by safe_escape()'
+        return m and (m.group(1), False) or (expr, True)
 
 _safe_str_rexp = None
 
