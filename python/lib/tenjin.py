@@ -1096,20 +1096,19 @@ class SafeTemplate(Template):
     """
     escapefunc = 'safe_escape'
 
+    _safe_str_rexp = re.compile(r'^\s*mark_as_escaped\((.*)\)\s*$')  # or r'^mark_as_escaped\([^\)]*\)$'
+
     def get_expr_and_escapeflag(self, match):
         expr = match.group(2)
         if match.group(1) == '#':
             msg = "'#{%s}': '#{}' is not available in %s."
             raise TemplateSyntaxError(msg % (expr, self.__class__.__name__))
-        #return expr, True      # always escapes expresion value
-        global _safe_str_rexp
-        if not _safe_str_rexp:
-            _safe_str_rexp = re.compile(r'^\s*mark_as_escaped\((.*)\)\s*$')  # or r'^mark_as_escaped\([^\)]*\)$'
-        m = _safe_str_rexp.match(expr)
-        ## False means 'skip escaping', True means 'escapes by safe_escape()'
-        return m and (m.group(1), False) or (expr, True)
-
-_safe_str_rexp = None
+        ## always escapes expresion value
+        #return expr, True
+        ## skip escaping html if expr matches to 'mark_as_escaped()'
+        m = self._safe_str_rexp.match(expr)
+        return m and (m.group(1), False) or (expr, True)  # False means 'not escape'
+                                                          # True means 'escape by safe_escape()'
 
 
 ##
