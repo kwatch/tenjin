@@ -342,12 +342,12 @@ if True:
         raise TypeError("mark_as_escaped(%r): expected str or unicode." % (s, ))
 
     def safe_escape(value):
-        if isinstance(value, EscapedStr):
+        if isinstance(value, Escaped):
             return value
-        if isinstance(value, EscapedUnicode):
-            #return EscapedStr(value.encode(_encoding))
-            return EscapedStr(helpers.to_str(value))
-        #return EscapedStr(helpers.escape(helpers.to_str(value)))
+        if isinstance(value, str):
+            return EscapedStr(helpers.escape(value))
+        if isinstance(value, unicode):
+            return EscapedUnicode(helpers.escape(value))
         return helpers.mark_as_escaped(helpers.escape(helpers.to_str(value)))
         ## or
         #if isinstance(value, str):

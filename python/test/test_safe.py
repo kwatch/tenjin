@@ -30,22 +30,19 @@ class EscapedStrTest(object):
             ok (mark_as_escaped(u"<foo>")) == u"<foo>"
 
     def test_safe_escape(self):
-        if "arg is EscapedStr then returns it as-is.":
+        if "arg is escaped then returns it as-is.":
             obj = EscapedStr("<foo>")
             ok (safe_escape(obj)).is_(obj)
-        if "arg is EscapedUnicode then converts it into EscapedStr.":
             obj = EscapedUnicode(u"<foo>")
-            ok (safe_escape(obj)).is_not(obj)
-            ok (safe_escape(obj)).is_a(EscapedStr)
-            ok (safe_escape(obj)) == "<foo>"
-        if "arg is not escaped then escapes it and returns EscapedStr.":
+            ok (safe_escape(obj)).is_(obj)
+        if "arg is not escaped then escapes it and returns escaped object.":
             ret = safe_escape("<foo>")
             ok (ret) == "&lt;foo&gt;"
             ok (ret).is_a(EscapedStr)
-        if "arg is unicode then encoded by to_str() and returns EscapedStr.":
+            #
             ret = safe_escape(u"<foo>")
-            ok (ret) == "&lt;foo&gt;"
-            ok (ret).is_a(EscapedStr)
+            ok (ret) == u"&lt;foo&gt;"
+            ok (ret).is_a(EscapedUnicode)
         if "arg is not a basestring then calls to_str() and escape(), and returns EscapedStr":
             ret = safe_escape(None)
             ok (ret) == ""

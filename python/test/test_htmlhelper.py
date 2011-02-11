@@ -10,7 +10,7 @@ import sys, os, re
 
 from testcase_helper import *
 import tenjin
-from tenjin.helpers import escape, to_str, EscapedStr, mark_as_escaped
+from tenjin.helpers import escape, to_str, EscapedStr, EscapedUnicode, mark_as_escaped
 
 
 class HtmlHelperTest(object):
@@ -99,8 +99,8 @@ class HtmlHelperTest(object):
         #
         ok (nv('rank', 'A')).is_a(EscapedStr)
         #
-        ok (nv(u"名前", u"なまえ")) == 'name="名前" value="なまえ"'
-        ok (nv(u"名前", u"なまえ")).is_a(EscapedStr)
+        ok (nv(u"名前", u"なまえ")) == u'name="名前" value="なまえ"'
+        ok (nv(u"名前", u"なまえ")).is_a(EscapedUnicode)
 
     def test_new_cycle(self):
         cycle = tenjin.helpers.html.new_cycle('odd', 'even')
