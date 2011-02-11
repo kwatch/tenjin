@@ -326,11 +326,11 @@ if True:
         """marking class that object is already escaped."""
         pass
 
-    class EscapedStr(str):
+    class EscapedStr(str, Escaped):
         """string class to avoid escape in template"""
         pass
 
-    class EscapedUnicode(unicode):
+    class EscapedUnicode(unicode, Escaped):
         """unicode class to avoid escape in template"""
         pass
 
