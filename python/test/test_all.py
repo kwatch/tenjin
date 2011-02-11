@@ -21,6 +21,7 @@ def main(verbose):
         "test_encoding",
         "test_store",
         "test_gae",
+        "test_tenjin",
         "test_users_guide",
         "test_examples",
     ]

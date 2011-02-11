@@ -1148,6 +1148,25 @@ class SafePreprocessor(Preprocessor):
         return not_esc_expr is None and (esc_expr, True) or (not_esc_expr, False)
 
 
+def use_new_notation(flag=True):
+    """Switch embedded expression notations from '${ }' and '#{ }' to '{= =}' and '{== ==}'."""
+    if flag:
+        pat1 = r'\{=(?:=(.*?)=|(.*?))=\}'
+        pat2 = r'\{#=(?:=(.*?)=|(.*?))=#\}'
+        def get_expr_and_escapeflag(self, match):
+            not_esc_expr, esc_expr = match.group(1), match.group(2)
+            return not_esc_expr is None and (esc_expr, True) or (not_esc_expr, False)
+    else:
+        pat1 = r'([#$])\{(.*?)\}'
+        pat2 = r'([#$])\{\{(.*?)\}\}'
+        def get_expr_and_escapeflag(self, match):
+            prefix, expr = match.group(1), match.group(2)
+            return expr, prefix == '$'
+    Template.EXPR_PATTERN     = re.compile(pat1, re.S)
+    Preprocessor.EXPR_PATTERN = re.compile(pat2, re.S)
+    Template.get_expr_and_escapeflag = get_expr_and_escapeflag
+
+
 ##
 ## cache storages
 ##
