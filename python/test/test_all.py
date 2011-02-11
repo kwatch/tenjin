@@ -4,7 +4,7 @@
 ###
 
 
-import sys
+import sys, os, glob
 python3 = sys.version_info[0] == 3
 python2 = sys.version_info[0] == 2
 
@@ -19,19 +19,22 @@ def main(verbose):
         "test_htmlhelper",
         "test_main",
         "test_encoding",
+        "test_finder",
         "test_store",
         "test_gae",
         "test_tenjin",
         "test_users_guide",
         "test_examples",
     ]
+    #filenames = glob.glob(os.path.dirname(__file__) + '/test_*.py')
+    #assert len(filenames) - 1 == len(basenames)
+
     if python3:
         basenames.remove("test_encoding")
         basenames.remove("test_gae")
 
     if verbose:
 
-        import os
         for basename in basenames:
             print('')
             print("************************************************* " + basename)
