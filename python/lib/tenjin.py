@@ -1085,30 +1085,24 @@ class Template(object):
 ## secure template class
 ##
 class SafeTemplate(Template):
-    """Deny '#{}' and allow only '${}'. Use '${mark_as_escaped(x)}' instead of '#{x}'.
-       usage.
-         import tenjin
-         from tenjin.helpers import *
-         from tenjin.helpers.html import SafeTemplate, to_html
-         tenjin.Engine.templateclass = SafeTemplate
-         engine = tenjin.Engine()
-         output = engine.render('hello.pyhtml', {'value':'<>&"'})
+    """Uses 'safe_escape()' instead of 'escape()'.
+       In addition, embedded expression notation is changed.
+       * Use {=...=} instead of ${...}
+       * Use {==...==} instead of #{...}
     """
     escapefunc = 'safe_escape'
 
-    _safe_str_rexp = re.compile(r'^\s*mark_as_escaped\((.*)\)\s*$')  # or r'^mark_as_escaped\([^\)]*\)$'
+    EXPR_PATTERN = None # re.compile(r'\{=(?:=(.*?)=|(.*?))=\}', re.S)
+
+    def expr_pattern(self):
+        rexp = self.EXPR_PATTERN
+        if not rexp:   # make re.compile() to be lazy (because it is heavy weight)
+            rexp = SafeTemplate.EXPR_PATTERN = re.compile(r'\{=(?:=(.*?)=|(.*?))=\}', re.S)
+        return rexp
 
     def get_expr_and_escapeflag(self, match):
-        expr = match.group(2)
-        if match.group(1) == '#':
-            msg = "'#{%s}': '#{}' is not available in %s."
-            raise TemplateSyntaxError(msg % (expr, self.__class__.__name__))
-        ## always escapes expresion value
-        #return expr, True
-        ## skip escaping html if expr matches to 'mark_as_escaped()'
-        m = self._safe_str_rexp.match(expr)
-        return m and (m.group(1), False) or (expr, True)  # False means 'not escape'
-                                                          # True means 'escape by safe_escape()'
+        not_esc_expr, esc_expr = match.group(1), match.group(2)
+        return not_esc_expr is None and (esc_expr, True) or (not_esc_expr, False)
 
 
 ##
@@ -1148,11 +1142,17 @@ class SafePreprocessor(Preprocessor):
 
     escapefunc = 'safe_escape'
 
+    EXPR_PATTERN = None
+
+    def expr_pattern(self):
+        pat = SafePreprocessor.EXPR_PATTERN
+        if not pat:   # re.compile() is heavy weight, so make it lazy
+            pat = SafePreprocessor.EXPR_PATTERN = re.compile(r'\{\|=(?:=(.*?)=|(.*?))=\|\}', re.S)
+        return pat
+
     def get_expr_and_escapeflag(self, match):
-        if match.group(1) == '#':
-            msg = "'#{{%s}}': '#{{}}' is not available in %s."
-            raise TemplateSyntaxError(msg % (match.group(2), self.__class__.__name__))
-        return match.group(2), True
+        not_esc_expr, esc_expr = match.group(1), match.group(2)
+        return not_esc_expr is None and (esc_expr, True) or (not_esc_expr, False)
 
 
 ##

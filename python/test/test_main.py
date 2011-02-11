@@ -843,9 +843,10 @@ class MainTest(object):
         _backup = tenjin.Engine.templateclass
         try:
             self.options  = "-s --safe"
-            self.input    = INPUT.replace(r'#{', '${')
-            self.expected = SOURCE.replace('=escape', '=safe_escape')\
-                                  .replace(", _to_str(item),", ", _escape(_to_str(item)),")
+            self.input    = INPUT
+            self.input    = re.sub(r'#{(.*?)}', r'{==\1==}', self.input)
+            self.input    = re.sub(r'\${(.*?)}', r'{=\1=}', self.input)
+            self.expected = SOURCE.replace('=escape', '=safe_escape')
             self._test()
         finally:
             tenjin.Engine.templateclass = _backup
