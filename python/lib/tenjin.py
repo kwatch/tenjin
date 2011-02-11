@@ -800,10 +800,12 @@ class Template(object):
     EXPR_PATTERN = None
 
     def expr_pattern(self):
-        pat = Template.EXPR_PATTERN
-        if not pat:   # make re.compile() to be lazy (because it is heavy weight)
-            pat = Template.EXPR_PATTERN = re.compile(r'([#$])\{(.*?)\}', re.S)
-        return pat
+        return self.EXPR_PATTERN or self._compile_expr_pattern(r'([#$])\{(.*?)\}', re.S)
+
+    def _compile_expr_pattern(self, pattern, flag, classattr='EXPR_PATTERN'):
+        rexp = re.compile(pattern, flag)
+        setattr(self.__class__, classattr, rexp)
+        return rexp
 
     def get_expr_and_escapeflag(self, match):
         return match.group(2), match.group(1) == '$'
@@ -1095,10 +1097,7 @@ class SafeTemplate(Template):
     EXPR_PATTERN = None # re.compile(r'\{=(?:=(.*?)=|(.*?))=\}', re.S)
 
     def expr_pattern(self):
-        rexp = self.EXPR_PATTERN
-        if not rexp:   # make re.compile() to be lazy (because it is heavy weight)
-            rexp = SafeTemplate.EXPR_PATTERN = re.compile(r'\{=(?:=(.*?)=|(.*?))=\}', re.S)
-        return rexp
+        return self.EXPR_PATTERN or self._compile_expr_pattern(r'\{=(?:=(.*?)=|(.*?))=\}', re.S)
 
     def get_expr_and_escapeflag(self, match):
         not_esc_expr, esc_expr = match.group(1), match.group(2)
@@ -1123,10 +1122,7 @@ class Preprocessor(Template):
     EXPR_PATTERN = None
 
     def expr_pattern(self):
-        pat = Preprocessor.EXPR_PATTERN
-        if not pat:   # re.compile() is heavy weight, so make it lazy
-            pat = Preprocessor.EXPR_PATTERN = re.compile(r'([#$])\{\{(.*?)\}\}', re.S)
-        return Preprocessor.EXPR_PATTERN
+        return self.EXPR_PATTERN or self._compile_expr_pattern(r'([#$])\{\{(.*?)\}\}', re.S)
 
     #def get_expr_and_escapeflag(self, match):
     #    return match.group(2), match.group(1) == '$'
@@ -1145,10 +1141,7 @@ class SafePreprocessor(Preprocessor):
     EXPR_PATTERN = None
 
     def expr_pattern(self):
-        pat = SafePreprocessor.EXPR_PATTERN
-        if not pat:   # re.compile() is heavy weight, so make it lazy
-            pat = SafePreprocessor.EXPR_PATTERN = re.compile(r'\{\#=(?:=(.*?)=|(.*?))=\#\}', re.S)
-        return pat
+        return self.EXPR_PATTERN or self._compile_expr_pattern(r'\{\#=(?:=(.*?)=|(.*?))=\#\}', re.S)
 
     def get_expr_and_escapeflag(self, match):
         not_esc_expr, esc_expr = match.group(1), match.group(2)
