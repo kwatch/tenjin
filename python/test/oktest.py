@@ -316,13 +316,14 @@ def _f():
         self.failed("hasattr(%r, %r) : failed." % (self.target, name))
 
     @assertion
-    def matches(self, pattern):
+    def matches(self, pattern, flags=0):
         if isinstance(pattern, type(re.compile('x'))):
             boolean = bool(pattern.search(self.target))
             if boolean == self.expected:  return True
             self.failed("re.search(%r, %r) : failed." % (pattern.pattern, self.target))
         else:
-            boolean = bool(re.search(pattern, self.target))
+            rexp = re.compile(pattern, flags)
+            boolean = bool(rexp.search(self.target))
             if boolean == self.expected:  return True
             self.failed("re.search(%r, %r) : failed." % (pattern, self.target))
 
@@ -810,7 +811,7 @@ class _Context(object):
     def __call__(self, func, *args):
         self.__enter__()
         try:
-            func(*args)
+            return func(*args)
         finally:
             self.__exit__(*sys.exc_info())
 
