@@ -800,7 +800,7 @@ class Template(object):
     EXPR_PATTERN = None
 
     def expr_pattern(self):
-        return self.EXPR_PATTERN or self._compile_expr_pattern(r'([#$])\{(.*?)\}', re.S)
+        return self.EXPR_PATTERN or self._compile_expr_pattern(r'\#\{(.*?)\}|\$\{(.*?)\}', re.S)
 
     def _compile_expr_pattern(self, pattern, flag, classattr='EXPR_PATTERN'):
         rexp = re.compile(pattern, flag)
@@ -808,7 +808,8 @@ class Template(object):
         return rexp
 
     def get_expr_and_escapeflag(self, match):
-        return match.group(2), match.group(1) == '$'
+        not_esc_expr, esc_expr = match.group(1), match.group(2)
+        return not_esc_expr is None and (esc_expr, True) or (not_esc_expr, False)
 
     def parse_exprs(self, buf, input, is_bol=False):
         buf2 = []
@@ -1094,14 +1095,10 @@ class SafeTemplate(Template):
     """
     escapefunc = 'safe_escape'
 
-    EXPR_PATTERN = None # re.compile(r'\{=(?:=(.*?)=|(.*?))=\}', re.S)
+    EXPR_PATTERN = None
 
     def expr_pattern(self):
         return self.EXPR_PATTERN or self._compile_expr_pattern(r'\{=(?:=(.*?)=|(.*?))=\}', re.S)
-
-    def get_expr_and_escapeflag(self, match):
-        not_esc_expr, esc_expr = match.group(1), match.group(2)
-        return not_esc_expr is None and (esc_expr, True) or (not_esc_expr, False)
 
 
 ##
@@ -1122,10 +1119,7 @@ class Preprocessor(Template):
     EXPR_PATTERN = None
 
     def expr_pattern(self):
-        return self.EXPR_PATTERN or self._compile_expr_pattern(r'([#$])\{\{(.*?)\}\}', re.S)
-
-    #def get_expr_and_escapeflag(self, match):
-    #    return match.group(2), match.group(1) == '$'
+        return self.EXPR_PATTERN or self._compile_expr_pattern(r'\#\{\{(.*?)\}\}|\$\{\{(.*?)\}\}', re.S)
 
     def add_expr(self, buf, code, flag_escape=None):
         if not code or code.isspace():
@@ -1142,10 +1136,6 @@ class SafePreprocessor(Preprocessor):
 
     def expr_pattern(self):
         return self.EXPR_PATTERN or self._compile_expr_pattern(r'\{\#=(?:=(.*?)=|(.*?))=\#\}', re.S)
-
-    def get_expr_and_escapeflag(self, match):
-        not_esc_expr, esc_expr = match.group(1), match.group(2)
-        return not_esc_expr is None and (esc_expr, True) or (not_esc_expr, False)
 
 
 def use_new_notation(flag=True):
