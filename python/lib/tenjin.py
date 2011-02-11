@@ -800,9 +800,9 @@ class Template(object):
     EXPR_PATTERN = None
 
     def expr_pattern(self):
-        return self.EXPR_PATTERN or self._compile_expr_pattern(r'\#\{(.*?)\}|\$\{(.*?)\}', re.S)
+        return self.EXPR_PATTERN or self._compile_expr_pattern(r'\#\{(.*?)\}|\$\{(.*?)\}')
 
-    def _compile_expr_pattern(self, pattern, flag, classattr='EXPR_PATTERN'):
+    def _compile_expr_pattern(self, pattern, flag=re.S, classattr='EXPR_PATTERN'):
         rexp = re.compile(pattern, flag)
         setattr(self.__class__, classattr, rexp)
         return rexp
@@ -1098,7 +1098,7 @@ class SafeTemplate(Template):
     EXPR_PATTERN = None
 
     def expr_pattern(self):
-        return self.EXPR_PATTERN or self._compile_expr_pattern(r'\{=(?:=(.*?)=|(.*?))=\}', re.S)
+        return self.EXPR_PATTERN or self._compile_expr_pattern(r'\{=(?:=(.*?)=|(.*?))=\}')
 
 
 ##
@@ -1119,7 +1119,7 @@ class Preprocessor(Template):
     EXPR_PATTERN = None
 
     def expr_pattern(self):
-        return self.EXPR_PATTERN or self._compile_expr_pattern(r'\#\{\{(.*?)\}\}|\$\{\{(.*?)\}\}', re.S)
+        return self.EXPR_PATTERN or self._compile_expr_pattern(r'\#\{\{(.*?)\}\}|\$\{\{(.*?)\}\}')
 
     def add_expr(self, buf, code, flag_escape=None):
         if not code or code.isspace():
@@ -1135,26 +1135,15 @@ class SafePreprocessor(Preprocessor):
     EXPR_PATTERN = None
 
     def expr_pattern(self):
-        return self.EXPR_PATTERN or self._compile_expr_pattern(r'\{\#=(?:=(.*?)=|(.*?))=\#\}', re.S)
+        return self.EXPR_PATTERN or self._compile_expr_pattern(r'\{\#=(?:=(.*?)=|(.*?))=\#\}')
 
 
 def use_new_notation(flag=True):
     """Switch embedded expression notations from '${ }' and '#{ }' to '{= =}' and '{== ==}'."""
-    if flag:
-        pat1 = r'\{=(?:=(.*?)=|(.*?))=\}'
-        pat2 = r'\{#=(?:=(.*?)=|(.*?))=#\}'
-        def get_expr_and_escapeflag(self, match):
-            not_esc_expr, esc_expr = match.group(1), match.group(2)
-            return not_esc_expr is None and (esc_expr, True) or (not_esc_expr, False)
-    else:
-        pat1 = r'([#$])\{(.*?)\}'
-        pat2 = r'([#$])\{\{(.*?)\}\}'
-        def get_expr_and_escapeflag(self, match):
-            prefix, expr = match.group(1), match.group(2)
-            return expr, prefix == '$'
+    pat1 = flag and r'\{=(?:=(.*?)=|(.*?))=\}'   or r'\#\{(.*?)\}|\$\{(.*?)\}'
+    pat2 = flag and r'\{#=(?:=(.*?)=|(.*?))=#\}' or r'\#\{\{(.*?)\}\}|\$\{\{(.*?)\}\}'
     Template.EXPR_PATTERN     = re.compile(pat1, re.S)
     Preprocessor.EXPR_PATTERN = re.compile(pat2, re.S)
-    Template.get_expr_and_escapeflag = get_expr_and_escapeflag
 
 
 ##
