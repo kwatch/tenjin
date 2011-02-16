@@ -5,19 +5,17 @@
 ###
 ### without datastore:
 ###
-###    $ ab -n 100 -c 5 http://127.0.0.1:8080/django
-###    $ ab -n 100 -c 5 http://127.0.0.1:8080/django?escape=1
-###    $ ab -n 100 -c 5 http://127.0.0.1:8080/tenjin
-###    $ ab -n 100 -c 5 http://127.0.0.1:8080/tenjin?escape=1
-###    $ ab -n 100 -c 5 http://127.0.0.1:8080/t
-###    $ ab -n 100 -c 5 http://127.0.0.1:8080/tenjin?escape=1
+###    $ ab -n 100 -c 5 'http://127.0.0.1:8080/django'
+###    $ ab -n 100 -c 5 'http://127.0.0.1:8080/django?escape=1'
+###    $ ab -n 100 -c 5 'http://127.0.0.1:8080/tenjin'
+###    $ ab -n 100 -c 5 'http://127.0.0.1:8080/tenjin?escape=1'
 ###
 ### with datastore (before benchmark, access to http://localhost:8080/stocks/):
 ###
-###    $ ab -n 100 -c 5 http://127.0.0.1:8080/stocks/django
-###    $ ab -n 100 -c 5 http://127.0.0.1:8080/stocks/django?escape=1
-###    $ ab -n 100 -c 5 http://127.0.0.1:8080/stocks/tenjin
-###    $ ab -n 100 -c 5 http://127.0.0.1:8080/stocks/tenjin?escape=1
+###    $ ab -n 100 -c 5 'http://127.0.0.1:8080/db/django'
+###    $ ab -n 100 -c 5 'http://127.0.0.1:8080/db/django?escape=1'
+###    $ ab -n 100 -c 5 'http://127.0.0.1:8080/db/tenjin'
+###    $ ab -n 100 -c 5 'http://127.0.0.1:8080/db/tenjin?escape=1'
 ###
 ###
 ### $Release: $
@@ -27,6 +25,12 @@
 
 import sys, os, re
 
+USE_DJANGO_12 = True
+#USE_DJANGO_12 = False
+
+from google.appengine.dist import use_library
+if USE_DJANGO_12:
+    use_library('django', '1.2')
 from google.appengine.ext import webapp, db
 from google.appengine.ext.webapp import util, template
 
@@ -65,7 +69,10 @@ class DjangoHandler(webapp.RequestHandler):
 
     def get(self):
         flag_escape = self.request.get('escape')
-        file_name = flag_escape and 'escape_django.html' or 'bench_django.html'
+        if USE_DJANGO_12:
+            file_name = flag_escape and 'escape_django12.html' or 'bench_django12.html'
+        else:
+            file_name = flag_escape and 'escape_django.html' or 'bench_django.html'
         path = os.path.dirname(__file__) + '/templates/' + file_name
         #logger.info('** path=%r' % path)
         context = {'items': _items}
@@ -120,7 +127,10 @@ class StocksDjangoHandler(webapp.RequestHandler):
 
     def get(self):
         flag_escape = self.request.get('escape')
-        file_name = flag_escape and 'escape_django.html' or 'bench_django.html'
+        if USE_DJANGO_12:
+            file_name = flag_escape and 'escape_django12.html' or 'bench_django12.html'
+        else:
+            file_name = flag_escape and 'escape_django.html' or 'bench_django.html'
         path = os.path.dirname(__file__) + '/templates/' + file_name
         #logger.info('** path=%r' % path)
         context = {'items': Stock.all().order('-price').fetch(100)}
@@ -141,11 +151,13 @@ class StocksTenjinHandler(webapp.RequestHandler):
         self.response.out.write(html)
 
 
-mappings = [                                 # (no escape),  (escape)
-    ('/django',    DjangoHandler),           # 40.0 req/sec, 35.4 req/sec
-    ('/tenjin',    TenjinHandler),           # 49.2 req/sec, 48.3 req/sec
-    ('/stocks/django', StocksDjangoHandler), # 16.1 req/sec, 15.1 req/sec
-    ('/stocks/tenjin', StocksTenjinHandler), # 18.1 req/sec, 17.6 req/sec
+mappings = [                                     # (no escape),  (escape)
+    ('/django',        DjangoHandler),           # 31.5 req/sec, 28.6 req/sec  (ver 1.2.5)
+                                                 # 40.0 req/sec, 35.5 req/sec  (ver 0.96)
+    ('/tenjin',        TenjinHandler),           # 48.3 req/sec, 47.8 req/sec
+    ('/db/django',     StocksDjangoHandler),     # 16.0 req/sec, 15.2 req/sec  (ver 1.2.5)
+                                                 # 17.4 req/sec, 16.4 req/sec  (ver 0.96)
+    ('/db/tenjin',     StocksTenjinHandler),     # 19.0 req/sec, 18.5 req/sec
     ('/stocks',        StocksHandler),
 ]
 
