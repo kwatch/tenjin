@@ -38,6 +38,32 @@ python_bins = [
 
 
 @recipe
+def task_edit(c):
+    """edit files"""
+    filenames = read_file('MANIFEST').splitlines()
+    filenames.remove('Kookbook.py')
+    filenames.remove('test/oktest.py')
+    edit(filenames, by=replacer())
+
+
+def replacer(flag_all=False):
+    repl = (
+        (r'\$Package:.*?\$',  '$Package: %s $' % package),
+        (r'\$Release:.*?\$',  '$Release: %s $' % release),
+        (r'\$Coyright:.*?\$', '$Copyright: %s $' % copyright),
+        (r'\$License:.*?\$',  '$License: %s $' % license),
+    )
+    if flag_all:
+        repl = (
+            (r'\$Package\$',   package),
+            (r'\$Release\$',   release),
+            (r'\$Copyright\$', copyright),
+            (r'\$License\$',   license),
+        ) + repl
+    return repl
+
+
+@recipe
 @ingreds("examples")
 @spices("-A: create all egg files for each version of python")
 def task_package(c, *args, **kwargs):
