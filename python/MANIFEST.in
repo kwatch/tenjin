@@ -3,7 +3,8 @@ include bin/pytenjin
 include lib/tenjin.py
 include doc/users-guide.html doc/examples.html doc/docstyle.css
 include benchmark/bench.py benchmark/bench_context.* benchmark/Makefile benchmark/Kookbook.py
-include benchmark/templates/*.*
+include benchmark/templates/*.* benchmark/bench_pycode.py benchmark/bench_pycode/*.py
+recursive-include benchmark/gae *.py *.yaml *.html *.pyhtml
 include test/*.py test/*.yaml
 exclude test/test_pytenjin_cgi.py
 include Kookbook.py doc/Kookbook.py test/Kookbook.py
