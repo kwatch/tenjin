@@ -182,6 +182,8 @@ if True:
                         return _str(val)
             return to_str
 
+        to_str = generate_tostrfunc(encode='utf-8')  # or encode=None?
+
     elif python3:
         def generate_tostrfunc(decode=None, encode=None):
             """Generate 'to_str' function with encode or decode encoding.
@@ -219,9 +221,6 @@ if True:
                         return _str(val)
             return to_str
 
-    if python2:
-        to_str = generate_tostrfunc(encode='utf-8')  # or encode=None?
-    elif python3:
         to_str = generate_tostrfunc(decode='utf-8')
 
     def echo(string):
@@ -327,6 +326,7 @@ if True:
         class EscapedUnicode(unicode, Escaped):
             """unicode class to avoid escape in template"""
             pass
+        _klass = EscapedUnicode
 
         def mark_as_escaped(s):
             if isinstance(s, str):
@@ -343,21 +343,13 @@ if True:
             if isinstance(value, unicode):
                 return EscapedUnicode(helpers.escape(value))
             return helpers.mark_as_escaped(helpers.escape(helpers.to_str(value)))
-            ## or
-            #if isinstance(value, str):
-            #    return EscapedStr(helpers.escape(value))
-            #if isinstance(value, unicode):
-            #    return EscapedStr(helpers.escape(value.encode(encoding)))
-            #if value is None:
-            #    return EscapedStr("")
-            #else:
-            #    return EscapedStr(str(value))
 
     elif python3:
 
         class EscapedBytes(bytes, Escaped):
             """unicode class to avoid escape in template"""
             pass
+        _klass = EscapedBytes
 
         def mark_as_escaped(s):
             if isinstance(s, str):
@@ -391,17 +383,12 @@ if True:
     mod.EscapedStr         = EscapedStr
     mod.mark_as_escaped    = mark_as_escaped
     mod.safe_escape        = safe_escape
+    setattr(mod, _klass.__name__, _klass)
     mod.__all__ = ['escape', 'to_str', 'echo', 'generate_tostrfunc',
                    'start_capture', 'stop_capture', 'capture_as', 'captured_as',
                    '_p', '_P', '_decode_params',
-                   'Escaped', 'EscapedStr', 'mark_as_escaped', 'safe_escape',
+                   'Escaped', 'EscapedStr', _klass.__name__, 'mark_as_escaped', 'safe_escape',
                    ]
-    if python2:
-        mod.EscapedUnicode = EscapedUnicode
-        mod.__all__.append('EscapedUnicode')
-    elif python3:
-        mod.EscapedBytes   = EscapedBytes
-        mod.__all__.append('EscapedBytes')
 
 helpers = mod
 del echo, start_capture, stop_capture, captured_as, _p, _P, _decode_params, safe_escape
