@@ -8,7 +8,7 @@
 
 from __future__ import with_statement
 
-import os, re
+import sys, os, re
 from glob import glob
 from kook.utils import read_file, write_file
 
@@ -241,16 +241,33 @@ def uninstall(c):
 
 
 @recipe
+@ingreds("generate")
 @spices('-A: do test with all version of python')
 def test(c, *args, **kwargs):
+    basepath = os.getcwd()
+    env_path = "%s/bin:/bin/:usr/bin" % basepath
+    def _set_env(ver, bin):
+        os.environ['PYTHONPATH'] = '.:%s/lib%s' % (basepath, ver[0])
+        os.environ['PATH'] = os.path.dirname(bin) + ':' + env_path
+        print("*** os.environ['PYTHONPATH']=%r" % os.environ['PYTHONPATH'])
+        print("*** os.environ['PATH']=%r" % os.environ['PATH'])
     if kwargs.get('A'):
         with chdir('test'):
             for ver, bin in python_binaries:
-                print('******************** ' + bin)
+                print('************************************************************')
+                print('*** %s (%s)' % (ver, bin))
+                _set_env(ver, bin)
+                print('************************************************************')
+                rm_f("data/**/*.cache")
                 system("%s test_all.py" % bin)
+            rm_f("data/**/*.cache")
     else:
+        _set_env(sys.version, sys.executable)
         with chdir('test'):
-            system("pykook test")
+            #system("pykook test")
+            rm_f("data/**/*.cache")
+            system("python test_all.py")
+            rm_f("data/**/*.cache")
 
 
 @recipe
