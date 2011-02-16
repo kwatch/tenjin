@@ -29,6 +29,16 @@ def task_clean(c):
 
 
 @recipe
+@ingreds("tenjin.py")
+@spices("-p port: port number (default 8080)")
+def server(c, *args, **kwargs):
+    """invoke dev_appserver.py"""
+    port = kwargs.get('p', 8080)
+    script = '/usr/local/google_appengine/dev_appserver.py'
+    system(c%"python $(script) -p $(port) .")
+
+
+@recipe
 @product('tenjin.py')
 @ingreds('../../lib/tenjin.py')
 def file_tenjin_py(c):
