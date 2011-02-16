@@ -116,15 +116,24 @@ def _store_files_accoring_to_manifest(dir):
 
 @recipe
 @ingreds("build")
-def sdist(c):
-    """python setup.py sdist"""
+def manifest(c):
+    """python setup.py sdist --manifest-only"""
     with chdir(builddir):
-        system("python setup.py sdist")
+        system("python setup.py sdist --manifest-only")
     cp(c%"$(builddir)/MANIFEST", ".")
 
 
 @recipe
-@ingreds("build", "sdist")
+@ingreds("build", "manifest")
+def sdist(c):
+    """python setup.py sdist"""
+    with chdir(builddir):
+        system("python setup.py sdist")
+    #cp(c%"$(builddir)/MANIFEST", ".")
+
+
+@recipe
+@ingreds("build", "manifest")
 def egg(c):
     """python setup.py bdist_egg"""
     with chdir(builddir):
@@ -132,7 +141,7 @@ def egg(c):
 
 
 @recipe
-@ingreds("build", "sdist")
+@ingreds("build", "manifest")
 def eggs(c):
     """python setup.py bdist_egg (for all version)"""
     with chdir(builddir):
