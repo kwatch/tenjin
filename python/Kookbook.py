@@ -15,7 +15,7 @@ from kook.utils import read_file, write_file
 release = prop('release', '0.9.0')
 #package = prop('package', 'pyTenjin')
 package = prop('package', 'Tenjin')
-copyright = prop('copyright', "copyright(c) 2007-2010 kuwata-lab.com all rights reserved.")
+copyright = prop('copyright', "copyright(c) 2007-2011 kuwata-lab.com all rights reserved.")
 
 license         = "MIT License"
 #python_basepath = "/Library/Frameworks/Python.framework/Versions/2.4"

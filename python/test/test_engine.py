@@ -1,6 +1,6 @@
 ###
 ### $Release: $
-### $Copyright: $
+### $Copyright: copyright(c) 2007-2011 kuwata-lab.com all rights reserved. $
 ###
 
 from oktest import ok, not_ok, run, spec
