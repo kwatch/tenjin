@@ -90,9 +90,7 @@ if python2:
 
     _basestring = basestring
     _unicode    = unicode
-
-    def _is_binary(val):
-        return isinstance(val, str)
+    _bytes      = str
 
 elif python3:
 
@@ -109,9 +107,7 @@ elif python3:
 
     _basestring = str
     _unicode    = str
-
-    def _is_binary(val):
-        return isinstance(val, bytes)
+    _bytes      = bytes
 
 def _ignore_not_found_error(f, default=None):
     try:
