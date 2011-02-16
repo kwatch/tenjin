@@ -8,7 +8,26 @@ Release 1.0.0 (2010-??-??)
 
 * [Enhancements]
 
-  * (IMPORTANT!!) Free-indent style introduced. Now there is no limitation
+  * (IMPORTANT!!) Performance is improved (about 5 percent).
+    To improve performance, compiled Python code is changed.
+    This means that YOU MUST CLEAR ALL CACHE FILES or TOUCH ALL TEMPLATE FILES
+    before using this release.
+
+      ## show compiled python code
+      $ cat ex.pyhtml
+      <ul>
+      <?py for item in items: ?>
+        <li>${item}</li>
+      <?py #endfor ?>
+      <?ul>
+      $ pytenjin -sb ex.pyhtml
+      _extend=_buf.extend;_to_str=to_str;_escape=escape; _extend(('''<ul>\n''', ));
+      for item in items:
+          _extend(('''  <li>''', _escape(_to_str(item)), '''</li>\n''', ));
+      #endfor
+      _extend(('''<?ul>\n''', ));
+
+  * (IMPORTANT!!) Free-indent style supported. Now there is no limitation
     about indent.
 
       ## In the previous version, there is strong restriction about indent.
@@ -38,8 +57,8 @@ Release 1.0.0 (2010-??-??)
       </html>
 
   * (IMPORTANT!!) SafeTemplate and SafeEngine classes are supported.
-    Using them, only '${var}' is allowed and '#{var}' is denied.
-    This means that these classes enforces you to escape values in any time.
+    Using them, str and unicode are escaped automatically and EscapedStr
+    and EscapedUnicode are not. This is similar to Django's feature.
     See
       http://www.kuwata-lab.com/tejin/pytenjin-users-guide.html#safe-template
     for details.
@@ -61,6 +80,36 @@ Release 1.0.0 (2010-??-??)
     Notice that you should not write '<?py # coding: utf-8 ?>' into template
     files if you call tenjin.set_template_encoding(). If you wrote it,
     SyntaxError exception would be raised.
+
+  * (IMPORTANT!!) New helper function 'cache_as()' is available for fragment cache.
+    This replaces 'not_cached()' and 'echo_cached()'.
+
+       ## previous (obsolete)
+       <?py if not_cached('cachekey1', 60): ?>
+         ...
+       <?py #endif ?>
+       <?py echo_cached() ?>
+
+       ## using new helper
+       <?py for _ in cache_as('cachekey1', 60): ?>
+         ...
+       <?py #endfor ?>
+
+  * (IMPORTANT!!) New helper 'capture_as()' is available for capturing template.
+    This replaces 'start_capture()' and 'stop_capture()'.
+
+       ## preivous (obsolete)
+       <?py start_capture('name') ?>
+         ....
+       <?py stop_capture() ?>
+
+       ## using new helper
+       <?py for _ in capture_as('name'): ?>
+         ....
+       <?py #endfor ?>
+
+    New helper 'capture_as()' allows you to nest capturing which is
+    impossible with 'start_capture()' and 'stop_capture()'.
 
   * If 'trace=True' is passed to Template class (or Engine class), output
     string will contain template file name. For example:
@@ -93,6 +142,10 @@ Release 1.0.0 (2010-??-??)
   * (IMPORTANT!!) tenjin.GaeMemcacheCacheStorage is removed (this is already
     announced in the previous release).
     Please use tenjin.gae.GaeMemcacheStorage instead.
+
+  * In GAE environment, Tenjin uses '1.1' as dummy value of CURRENT_VERSION_ID
+    when it is not provided. This prevents error when using GAE and tenjin
+    on test environment.
 
   * Python 2.3 is now unsupported. (Python 2.4 is still supported because
     CentOS uses Python 2.4).
