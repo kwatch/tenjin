@@ -71,7 +71,6 @@ def _read_binary_file(filename):
         if f: f.close()
 
 if python2:
-
     codecs = None    # lazy import
 
     def _read_text_file(filename, encoding=None):
@@ -91,9 +90,7 @@ if python2:
     _basestring = basestring
     _unicode    = unicode
     _bytes      = str
-
 elif python3:
-
     def _read_text_file(filename, encoding=None):
         f = open(filename, encoding=(encoding or 'utf-8'))
         try:
@@ -108,6 +105,7 @@ elif python3:
     _basestring = str
     _unicode    = str
     _bytes      = bytes
+#end
 
 def _ignore_not_found_error(f, default=None):
     try:
@@ -183,7 +181,6 @@ if True:
             return to_str
 
         to_str = generate_tostrfunc(encode='utf-8')  # or encode=None?
-
     elif python3:
         def generate_tostrfunc(decode=None, encode=None):
             """Generate 'to_str' function with encode or decode encoding.
@@ -222,6 +219,7 @@ if True:
             return to_str
 
         to_str = generate_tostrfunc(decode='utf-8')
+    #end
 
     def echo(string):
         """add string value into _buf. this is equivarent to '#{string}'."""
@@ -297,9 +295,11 @@ if True:
         """decode <`#...#`> and <`$...$`> into #{...} and ${...}"""
         global unquote
         if unquote is None:
-            import urllib
-            if   python2:  from urllib       import unquote
-            elif python3:  from urllib.parse import unquote
+            if python2:
+                from urllib import unquote
+            elif python3:
+                from urllib.parse import unquote
+            #end
         dct = { 'lt':'<', 'gt':'>', 'amp':'&', 'quot':'"', '#039':"'", }
         def unescape(s):
             #return s.replace('&lt;', '<').replace('&gt;', '>').replace('&quot;', '"').replace('&#039;', "'").replace('&amp;',  '&')
@@ -322,7 +322,6 @@ if True:
         pass
 
     if python2:
-
         class EscapedUnicode(unicode, Escaped):
             """unicode class to avoid escape in template"""
             pass
@@ -343,9 +342,7 @@ if True:
             if isinstance(value, unicode):
                 return EscapedUnicode(helpers.escape(value))
             return helpers.mark_as_escaped(helpers.escape(helpers.to_str(value)))
-
     elif python3:
-
         class EscapedBytes(bytes, Escaped):
             """unicode class to avoid escape in template"""
             pass
@@ -366,7 +363,7 @@ if True:
             if isinstance(value, bytes):
                 return EscapedBytes(helpers.escape(value))
             return helpers.mark_as_escaped(helpers.escape(helpers.to_str(value)))
-
+    #end
 
     mod = _create_module('tenjin.helpers')
     mod.to_str             = to_str
@@ -381,14 +378,24 @@ if True:
     mod._decode_params     = _decode_params
     mod.Escaped            = Escaped
     mod.EscapedStr         = EscapedStr
+    if python2:
+        mod.EscapedUnicode     = EscapedUnicode
+    elif python3:
+        mod.EscapedBytes       = EscapedBytes
+    #end
     mod.mark_as_escaped    = mark_as_escaped
     mod.safe_escape        = safe_escape
     setattr(mod, _klass.__name__, _klass)
     mod.__all__ = ['escape', 'to_str', 'echo', 'generate_tostrfunc',
                    'start_capture', 'stop_capture', 'capture_as', 'captured_as',
                    '_p', '_P', '_decode_params',
-                   'Escaped', 'EscapedStr', _klass.__name__, 'mark_as_escaped', 'safe_escape',
+                   'Escaped', 'EscapedStr', 'mark_as_escaped', 'safe_escape',
                    ]
+    if python2:
+        mod.__all__.append('EscapedUnicode')
+    elif python3:
+        mod.__all__.append('EscapedBytes')
+    #end
 
 helpers = mod
 del echo, start_capture, stop_capture, captured_as, _p, _P, _decode_params, safe_escape
@@ -523,8 +530,11 @@ if True:
             while True:
                 yield values[i]
                 i = (i + 1) % n
-        if   python2:  return gen(values).next
-        elif python3:  return gen(values).__next__
+        if python2:
+            return gen(values).next
+        elif python3:
+            return gen(values).__next__
+        #end
 
     mod = _create_module('tenjin.helpers.html')
     #mod._escape_table = _escape_table
@@ -710,6 +720,9 @@ class Template(object):
         if python2:
             if self.encoding and isinstance(input, str):
                 input = input.decode(self.encoding)
+        elif python3:
+            pass
+        #end
         self._reset(input, filename)
         buf = []
         self.before_convert(buf)
@@ -969,7 +982,11 @@ class Template(object):
         _END_WORDS   = self._END_WORDS
         _CONT_WORDS  = self._CONT_WORDS
         _WORD_REXP   = self._WORD_REXP
-        get_line = python2 and lines_iter.next or lines_iter.__next__
+        if python2:
+            get_line = lines_iter.next
+        elif python3:
+            get_line = lines_iter.__next__
+        #end
         while True:
             line = get_line()
             linenum += line.count("\n")
@@ -1232,8 +1249,11 @@ class PickleCacheStorage(FileCacheStorage):
     def __init__(self, *args, **kwargs):
         global pickle
         if pickle is None:
-            try:    import cPickle as pickle
-            except: import pickle
+            if python2:
+                import cPickle as pickle
+            elif python3:
+                import pickle
+            #end
         FileCacheStorage.__init__(self, *args, **kwargs)
 
     def _restore(self, data):
@@ -1252,6 +1272,7 @@ class TextCacheStorage(FileCacheStorage):
         elif python3:
             header, script = data.split("\n\n".encode('ascii'), 1)
             header = header.decode('ascii')
+        #end
         timestamp = encoding = args = None
         for line in header.split("\n"):
             key, val = line.split(": ", 1)
@@ -1262,6 +1283,7 @@ class TextCacheStorage(FileCacheStorage):
             if encoding: script = script.decode(encoding)   ## binary(=str) to unicode
         elif python3:
             script = script.decode(encoding or 'utf-8')     ## binary to unicode(=str)
+        #end
         return {'args': args, 'script': script, 'timestamp': timestamp}
 
     def _dump(self, dct):
@@ -1269,7 +1291,10 @@ class TextCacheStorage(FileCacheStorage):
         if python2:
             if dct.get('encoding') and isinstance(s, unicode):
                 s = s.encode(dct['encoding'])           ## unicode to binary(=str)
-        sb = []
+            sb = []
+        elif python3:
+            sb = []
+        #end
         sb.append("timestamp: %s\n" % dct['timestamp'])
         if dct.get('encoding'):
             sb.append("encoding: %s\n" % dct['encoding'])
