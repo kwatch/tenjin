@@ -79,16 +79,6 @@ def task_package(c, *args, **kwargs):
     pattern = c%"dist/$(package)-$(release)*"
     if glob(pattern):
         rm_rf(pattern)
-    ## edit files
-    repl = (
-        (r'\$Release\$', release),
-        (r'\$Release:.*?\$', '$Release: %s $' % release),
-        (r'\$Copyright\$', copyright),
-        (r'\$Package\$', package),
-        (r'\$License\$', license),
-    )
-    cp('setup.py.txt', 'setup.py')
-    edit('setup.py', by=repl)
     ## setup
     system('python setup.py sdist')
     #system('python setup.py sdist --keep-temp')
@@ -101,7 +91,7 @@ def task_package(c, *args, **kwargs):
         system(c%"tar xzf $(pkg)")
         dir = re.sub(r'\.tar\.gz$', '', pkg)
         #echo("*** debug: pkg=%s, dir=%s" % (pkg, dir))
-        edit(c%"$(dir)/**/*", by=repl)
+        edit(c%"$(dir)/**/*", by=replacer(True))
         #with chdir(dir):
         #    system("python setup.py egg_info --egg-base .")
         #    rm("*.pyc")
