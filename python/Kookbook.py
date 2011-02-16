@@ -80,7 +80,7 @@ builddir = "build-" + release
 
 @recipe
 @ingreds("examples")
-def task_build(c):
+def build(c):
     """copy files into build-X.X.X"""
     ## create a directory to store files
     os.path.isdir(builddir) and rm_rf(builddir)
@@ -116,7 +116,7 @@ def _store_files_accoring_to_manifest(dir):
 
 @recipe
 @ingreds("build")
-def task_sdist(c):
+def sdist(c):
     """python setup.py sdist"""
     with chdir(builddir):
         system("python setup.py sdist")
@@ -125,7 +125,7 @@ def task_sdist(c):
 
 @recipe
 @ingreds("build", "sdist")
-def task_egg(c):
+def egg(c):
     """python setup.py bdist_egg"""
     with chdir(builddir):
         system("python setup.py bdist_egg")
@@ -133,7 +133,7 @@ def task_egg(c):
 
 @recipe
 @ingreds("build", "sdist")
-def task_eggs(c):
+def eggs(c):
     """python setup.py bdist_egg (for all version)"""
     with chdir(builddir):
         for ver, bin in python_binaries:
@@ -142,7 +142,7 @@ def task_eggs(c):
 
 @recipe
 #@ingreds("doc/examples.txt")
-def task_examples(c):
+def examples(c):
     """create examples"""
     ## get filenames
     txtfile = "doc/examples.txt";
@@ -181,7 +181,7 @@ def task_examples(c):
 
 
 @recipe
-def task_uninstall(c):
+def uninstall(c):
     #script_file    = "$python_basepath/bin/" + script_file;
     #library_files  = [ os.path.join(site_packages_path, item) for item in library_files ]
     #compiled_files = [ item + '.c' for item in library_files ]
@@ -202,7 +202,7 @@ def task_uninstall(c):
 
 @recipe
 @spices('-A: do test with all version of python')
-def task_test(c, *args, **kwargs):
+def test(c, *args, **kwargs):
     if kwargs.get('A'):
         with chdir('test'):
             for ver, bin in python_binaries:
@@ -214,14 +214,14 @@ def task_test(c, *args, **kwargs):
 
 
 @recipe
-def task_clean(c):
+def clean(c):
     rm_rf("**/*.pyc", "**/*.cache", "**/__cache__")
     rm_f("test/test.log", "test/kook.log")
 
 
 @recipe
 @ingreds('clean')
-def task_clear(c):
+def clear(c):
     from glob import glob
     dirs = glob("examples/*");
     for dir in dirs:
