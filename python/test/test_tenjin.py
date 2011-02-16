@@ -1,6 +1,6 @@
 ###
-### $Release:$
-### $Copyright$
+### $Release: $
+### $Copyright: $
 ###
 from oktest import ok, not_ok, run, spec
 from oktest.helper import dummy_file

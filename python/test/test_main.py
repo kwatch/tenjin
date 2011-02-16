@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 ###
-### $Release:$
-### $Copyright$
+### $Release: $
+### $Copyright: $
 ###
 
 from oktest import ok, not_ok, run

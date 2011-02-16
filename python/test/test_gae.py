@@ -1,6 +1,6 @@
 ###
 ### $Release: $
-### $Copyright$
+### $Copyright: $
 ### $License$
 ###
 

@@ -1,6 +1,6 @@
 ###
-### $Release:$
-### $Copyright$
+### $Release: $
+### $Copyright: $
 ###
 
 from oktest import ok, not_ok, run, spec
