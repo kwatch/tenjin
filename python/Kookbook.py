@@ -59,14 +59,14 @@ def task_edit(c):
 
 def replacer(flag_all=False):
     repl = (
-        (r'\$Package:.*?\$',  '$Package: %s $' % package),
-        #(r'\$Release:.*?\$',  '$Release: %s $' % release),
-        (r'\$Coyright:.*?\$', '$Copyright: %s $' % copyright),
-        (r'\$License:.*?\$',  '$License: %s $' % license),
+        (r'\$Package:.*?\$',   '$Package: %s $' % package),
+        #(r'\$Release:.*?\$',   '$Release: %s $' % release),
+        (r'\$Copyright:.*?\$', '$Copyright: %s $' % copyright),
+        (r'\$License:.*?\$',   '$License: %s $' % license),
     )
     if flag_all:
         repl = (
-            (r'\$Release:.*?\$',  '$Release: %s $' % release),
+            (r'\$Release:.*?\$', '$Release: %s $' % release),
             (r'\$Package\$',   package),
             (r'\$Release\$',   release),
             (r'\$Copyright\$', copyright),
