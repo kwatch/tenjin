@@ -8,9 +8,21 @@
 from oktest import ok, not_ok, run
 import sys, os, re
 
+python2 = sys.version_info[0] == 2
+python3 = sys.version_info[0] == 3
+
 from testcase_helper import *
 import tenjin
-from tenjin.helpers import escape, to_str, EscapedStr, EscapedUnicode, mark_as_escaped
+from tenjin.helpers import escape, to_str, EscapedStr,  mark_as_escaped
+
+if python2:
+    from tenjin.helpers import EscapedUnicode
+    def u(s):
+        return s.decode('utf-8')
+else:
+    from tenjin.helpers import EscapedBytes
+    def u(s):
+        return s
 
 
 class HtmlHelperTest(object):
@@ -43,9 +55,9 @@ class HtmlHelperTest(object):
         ok (tagattrs(size=None)).is_a(EscapedStr)
         #
         ok (tagattrs(name="<foo>"))    == ' name="&lt;foo&gt;"'
-        ok (tagattrs(name=u"<foo>"))   == ' name="&lt;foo&gt;"'
-        ok (tagattrs(name=mark_as_escaped("<foo>")))  == ' name="<foo>"'
-        ok (tagattrs(name=mark_as_escaped(u"<foo>"))) == ' name="<foo>"'
+        ok (tagattrs(name=u("<foo>"))) == ' name="&lt;foo&gt;"'
+        ok (tagattrs(name=mark_as_escaped("<foo>")))    == ' name="<foo>"'
+        ok (tagattrs(name=mark_as_escaped(u("<foo>")))) == ' name="<foo>"'
 
     def test_checked(self):
         checked = tenjin.helpers.html.checked
@@ -99,8 +111,9 @@ class HtmlHelperTest(object):
         #
         ok (nv('rank', 'A')).is_a(EscapedStr)
         #
-        ok (nv(u"名前", u"なまえ")) == u'name="名前" value="なまえ"'
-        ok (nv(u"名前", u"なまえ")).is_a(EscapedUnicode)
+        ok (nv(u("名前"), u("なまえ"))) == u('name="名前" value="なまえ"')
+        if python2:
+            ok (nv(u("名前"), u("なまえ"))).is_a(EscapedUnicode)
 
     def test_new_cycle(self):
         cycle = tenjin.helpers.html.new_cycle('odd', 'even')

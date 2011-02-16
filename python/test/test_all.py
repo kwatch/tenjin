@@ -5,8 +5,8 @@
 
 
 import sys, os, glob
-python3 = sys.version_info[0] == 3
 python2 = sys.version_info[0] == 2
+python3 = sys.version_info[0] == 3
 
 
 def main(verbose):

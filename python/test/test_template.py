@@ -275,7 +275,10 @@ _extend(('''</ul>\n''', ));
                              "_extend(('''<p>Hello ''', (name), '''!</p>''', ));"
             #
             def f(): t.render({'name': 123})
-            ok (f).raises(TypeError, 'sequence item 1: expected string, int found')
+            if python2:
+                ok (f).raises(TypeError, 'sequence item 1: expected string, int found')
+            elif python3:
+                ok (f).raises(TypeError, 'sequence item 1: expected str instance, int found')
         if "passed wrong function name as tostrfunc option then raises error":
             t = tenjin.Template(None, input=input, tostrfunc='johnsmith')
             def f(): t.render({'name': 'Haruhi'})

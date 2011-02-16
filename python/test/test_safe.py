@@ -15,34 +15,67 @@ python3 = sys.version_info[0] == 3
 lvars = "_extend=_buf.extend;_to_str=to_str;_escape=safe_escape; "
 
 
+if python2:
+    from tenjin.helpers import EscapedUnicode
+    def u(s):
+        return s.decode('utf-8')
+    def b(s):
+        return s
+else:
+    from tenjin.helpers import EscapedBytes
+    def u(s):
+        return s
+    def b(s):
+        return s.encode('utf-8')
+
+
 class EscapedStrTest(object):
 
     def test_mark_as_escaped(self):
         if "arg is a str then returns EscapedStr object.":
             ok (mark_as_escaped("<foo>")).is_a(EscapedStr)
-        if "arg is a unicode then returns EscapedUnicode object.":
-            ok (mark_as_escaped(u"<foo>")).is_a(EscapedUnicode)
+        if python2:
+            if "arg is a unicode then returns EscapedUnicode object.":
+                ok (mark_as_escaped(u("<foo>"))).is_a(EscapedUnicode)
+        elif python3:
+            if "arg is a bytes then returns EscapedBytes object.":
+                ok (mark_as_escaped(b("<foo>"))).is_a(EscapedBytes)
         if "arg is not a basestring then returns TypeError.":
             def f(): mark_as_escaped(123)
-            ok (f).raises(TypeError, "mark_as_escaped(123): expected str or unicode.")
+            if python2:
+                ok (f).raises(TypeError, "mark_as_escaped(123): expected str or unicode.")
+            elif python3:
+                ok (f).raises(TypeError, "mark_as_escaped(123): expected str or bytes.")
         if "arg is never escaped.":
             ok (mark_as_escaped("<foo>")) == "<foo>"
-            ok (mark_as_escaped(u"<foo>")) == u"<foo>"
+            ok (mark_as_escaped(u("<foo>"))) == u("<foo>")
 
     def test_safe_escape(self):
         if "arg is escaped then returns it as-is.":
             obj = EscapedStr("<foo>")
             ok (safe_escape(obj)).is_(obj)
-            obj = EscapedUnicode(u"<foo>")
-            ok (safe_escape(obj)).is_(obj)
+            if python2:
+                obj = EscapedUnicode(u("<foo>"))
+                ok (safe_escape(obj)).is_(obj)
+            elif python3:
+                obj = EscapedBytes(b("<foo>"))
+                ok (safe_escape(obj)).is_(obj)
         if "arg is not escaped then escapes it and returns escaped object.":
             ret = safe_escape("<foo>")
             ok (ret) == "&lt;foo&gt;"
             ok (ret).is_a(EscapedStr)
             #
-            ret = safe_escape(u"<foo>")
-            ok (ret) == u"&lt;foo&gt;"
-            ok (ret).is_a(EscapedUnicode)
+            if python2:
+                ret = safe_escape(u("<foo>"))
+                ok (ret) == u("&lt;foo&gt;")
+                ok (ret).is_a(EscapedUnicode)
+            elif python3:
+                #ret = safe_escape(b("<foo>"))
+                #ok (ret) == b("&lt;foo&gt;")
+                #ok (ret).is_a(EscapedBytes)
+                ret = safe_escape(to_str(b("<foo>")))
+                ok (ret) == "&lt;foo&gt;"
+                ok (ret).is_a(EscapedStr)
         if "arg is not a basestring then calls to_str() and escape(), and returns EscapedStr":
             ret = safe_escape(None)
             ok (ret) == ""
