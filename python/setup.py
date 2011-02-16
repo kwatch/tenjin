@@ -15,15 +15,27 @@ else:
     from distutils.core import setup
 
 
-name     = '$Package$'
-version  = '$Release$'
-author   = 'makoto kuwata'
-email    = 'kwa@kuwata-lab.com'
-maintainer = author
-maintainer_email = email
-url      = 'http://www.kuwata-lab.com/tenjin/'
-desc     = 'a fast and full-featured template engine based on embedded Python'
-detail   = r"""
+def _kwargs():
+
+    name          = '$Package$'
+    version       = '$Release$'
+    author        = 'makoto kuwata'
+    author_email  = 'kwa@kuwata-lab.com'
+    maintainer    = author
+    maintainer_email = author_email
+    description   = 'a fast and full-featured template engine based on embedded Python'
+    url           = 'http://www.kuwata-lab.com/tenjin/'
+    download_url  = 'http://downloads.sourceforge.net/tenjin/$Package$-$Release$.tar.gz'
+    #download_url = 'http://jaist.dl.sourceforge.net/sourceforge/tenjin/$Package$-$Release$.tar.gz'
+    license       = '$License$'
+    platforms     = 'any'
+    py_modules    = ['tenjin']
+    package_dir   = {'': 'lib'}
+    scripts       = ['bin/pytenjin']
+    #packages     = ['tenjin']
+    #zip_safe     = False
+    #
+    long_description = r"""
 About
 -----
 
@@ -130,43 +142,27 @@ See `other examples`_ .
 
 .. _`other examples`: http://www.kuwata-lab.com/tenjin/pytenjin-examles.html
 """[1:]
-license  = '$License$'
-platforms = 'any'
-download = 'http://downloads.sourceforge.net/tenjin/%s-%s.tar.gz' % (name, version)
-#download = 'http://jaist.dl.sourceforge.net/sourceforge/tenjin/%s-%s.tar.gz' % (name, version)
-classifiers = [
-    'Development Status :: 4 - Beta',
-    'Environment :: Console',
-    'Intended Audience :: Developers',
-    'License :: OSI Approved :: $License$',
-    'Operating System :: OS Independent',
-    'Programming Language :: Python',
-    'Programming Language :: Python :: 2.4',
-    'Programming Language :: Python :: 2.5',
-    'Programming Language :: Python :: 2.6',
-    'Programming Language :: Python :: 2.7',
-    'Programming Language :: Python :: 3',
-    'Programming Language :: Python :: 3.0',
-    'Programming Language :: Python :: 3.1',
-    'Programming Language :: Python :: 3.2',
-    'Topic :: Software Development :: Libraries :: Python Modules',
-    'Topic :: Internet :: WWW/HTTP :: Dynamic Content :: CGI Tools/Libraries',
-]
-
-
-setup(
-    name=name,
-    version=version,
-    author=author,  author_email=email,
-    maintainer=maintainer, maintainer_email=maintainer_email,
-    description=desc,  long_description=detail,
-    url=url,  download_url=download,  classifiers=classifiers,
-    license=license,
-    #platforms=platforms,
     #
-    py_modules=['tenjin'],
-    package_dir={'': 'lib'},
-    scripts=['bin/pytenjin'],
-    #packages=['tenjin'],
-    #zip_safe = False,
-)
+    classifiers = [
+        'Development Status :: 4 - Beta',
+        'Environment :: Console',
+        'Intended Audience :: Developers',
+        'License :: OSI Approved :: $License$',
+        'Operating System :: OS Independent',
+        'Programming Language :: Python',
+        'Programming Language :: Python :: 2.4',
+        'Programming Language :: Python :: 2.5',
+        'Programming Language :: Python :: 2.6',
+        'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.0',
+        'Programming Language :: Python :: 3.1',
+        'Programming Language :: Python :: 3.2',
+        'Topic :: Software Development :: Libraries :: Python Modules',
+        'Topic :: Internet :: WWW/HTTP :: Dynamic Content :: CGI Tools/Libraries',
+    ]
+    #
+    return locals()
+
+
+setup(**_kwargs())
