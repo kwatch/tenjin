@@ -89,9 +89,7 @@ if python2:
         return s
 
     _basestring = basestring
-
-    def _is_unicode(val):
-        return isinstance(val, unicode)
+    _unicode    = unicode
 
     def _is_binary(val):
         return isinstance(val, str)
@@ -110,9 +108,7 @@ elif python3:
         return s.decode(encoding or 'utf-8')     ## binary to unicode(=str)
 
     _basestring = str
-
-    def _is_unicode(val):
-        return isinstance(val, str)
+    _unicode    = str
 
     def _is_binary(val):
         return isinstance(val, bytes)
@@ -1426,7 +1422,7 @@ class FileBaseStore(KeyValueStore):
         if not os.path.isdir(dirname):
             os.makedirs(dirname)
         now = _time()
-        if _is_unicode(value):
+        if isinstance(value, _unicode):
             value = value.encode(self.encoding or 'utf-8')
         _write_binary_file(fpath, value)
         expires_at = now + (lifetime or self.lifetime)  # timestamp
