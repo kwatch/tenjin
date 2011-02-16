@@ -27,13 +27,17 @@ library_files   = [ "tenjin.py" ]
 
 kook_default_product = 'test'
 
-python_bins = [
-    '/opt/local/bin/python2.4',
-    '/usr/local/python/2.5.5/bin/python',
-    '/usr/local/python/2.6.5/bin/python',
-    '/usr/local/python/2.7.0/bin/python',
-    '/usr/local/python/3.0.1/bin/python',
-    '/usr/local/python/3.1/bin/python',
+python_binaries = [
+    ('2.4', '/opt/local/bin/python2.4'),
+    #('2.5', '/opt/local/bin/python2.5'),
+    ('2.5', '/usr/local/python/2.5.5/bin/python'),
+    #('2.6', '/opt/local/bin/python2.6'),
+    ('2.6', '/usr/local/python/2.6.5/bin/python'),
+    #('2.7', '/opt/local/bin/python2.7'),
+    ('2.7', '/usr/local/python/2.7.1/bin/python'),
+    ('3.0', '/usr/local/python/3.0.1/bin/python'),
+    ('3.1', '/usr/local/python/3.1/bin/python'),
+    ('3.2', '/usr/local/python/3.2rc1/bin/python'),
 ]
 
 
@@ -131,7 +135,7 @@ def task_egg(c):
 def task_eggs(c):
     """python setup.py bdist_egg (for all version)"""
     with chdir(builddir):
-        for bin in python_bins:
+        for ver, bin in python_binaries:
             system(c%"$(bin) setup.py bdist_egg")
 
 
@@ -200,7 +204,7 @@ def task_uninstall(c):
 def task_test(c, *args, **kwargs):
     if kwargs.get('A'):
         with chdir('test'):
-            for bin in python_bins:
+            for ver, bin in python_binaries:
                 print('******************** ' + bin)
                 system("%s test_all.py" % bin)
     else:
