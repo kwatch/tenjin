@@ -108,6 +108,16 @@ def _store_files_accoring_to_manifest(dir):
 
 
 @recipe
+@ingreds("build")
+def task_sdist(c):
+    """python setup.py sdist"""
+    dir = "build-%s" % release
+    with chdir(dir):
+        system("python setup.py sdist")
+    cp(c%"$(dir)/MANIFEST", ".")
+
+
+@recipe
 @ingreds("examples")
 @spices("-A: create all egg files for each version of python")
 def task_package(c, *args, **kwargs):
