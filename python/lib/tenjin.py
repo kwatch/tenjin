@@ -1121,6 +1121,11 @@ class SafeTemplate(Template):
     """
     escapefunc = 'safe_escape'
 
+    def get_expr_and_escapeflag(self, match):
+        if match.group(1) is not None:
+            raise TemplateSyntaxError("#{%s}: '#{}' is not allowed with SafeTemplate." % match.group(1))
+        return Template.get_expr_and_escapeflag(self, match)
+
 
 ##
 ## preprocessor class
@@ -1143,6 +1148,11 @@ class Preprocessor(Template):
 class SafePreprocessor(Preprocessor):
 
     escapefunc = 'safe_escape'
+
+    def get_expr_and_escapeflag(self, match):
+        if match.group(1) is not None:
+            raise TemplateSyntaxError("#{{%s}}: '#{{}}' is not allowed with SafePreprocessor." % match.group(1))
+        return Template.get_expr_and_escapeflag(self, match)
 
 
 ##

@@ -96,6 +96,15 @@ class SafeTemplateTest(object):
 
     def test_get_expr_and_escapeflag(self):
         t = tenjin.SafeTemplate()
+        if "matched expression is '${...}' then returns expr string and True":
+            m = t.expr_pattern().search("<p>${item}</p>")
+            ret = t.get_expr_and_escapeflag(m)
+            ok (ret) == ('item', True)
+        if "matched expression is '#{...}' then raises error":
+            m = t.expr_pattern().search("<p>#{item}</p>")
+            def f(): t.get_expr_and_escapeflag(m)
+            ok (f).raises(tenjin.TemplateSyntaxError,
+                          "#{item}: '#{}' is not allowed with SafeTemplate.")
         if "matched expression is '{=...=}' then returns expr string and True":
             m = t.expr_pattern().search("<p>{=item=}</p>")
             ret = t.get_expr_and_escapeflag(m)
@@ -174,6 +183,15 @@ for item in items:
 
     def test_get_expr_and_escapeflag(self):
         t = tenjin.SafePreprocessor()
+        if "matched expression is '${{...}}' then returns expr string and True":
+            m = t.expr_pattern().search("<p>${{item}}</p>")
+            ret = t.get_expr_and_escapeflag(m)
+            ok (ret) == ('item', True)
+        if "matched expression is '#{{...}}' then raises error":
+            m = t.expr_pattern().search("<p>#{{item}}</p>")
+            def f(): t.get_expr_and_escapeflag(m)
+            ok (f).raises(tenjin.TemplateSyntaxError,
+                          "#{{item}}: '#{{}}' is not allowed with SafePreprocessor.")
         if "matched expression is '{#=...=#}' then returns expr string and True":
             m = t.expr_pattern().search("<p>{#=item=#}</p>")
             ret = t.get_expr_and_escapeflag(m)
