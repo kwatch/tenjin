@@ -70,23 +70,25 @@ def replacer(flag_all=False):
     return repl
 
 
+builddir = "build-" + release
+
+
 @recipe
 @ingreds("examples")
 def task_build(c):
     """copy files into build-X.X.X"""
     ## create a directory to store files
-    dir = "build-%s" % release
-    os.path.isdir(dir) and rm_rf(dir)
-    mkdir(dir)
+    os.path.isdir(builddir) and rm_rf(builddir)
+    mkdir(builddir)
     ## copy files according to MANIFEST.in
-    _store_files_accoring_to_manifest(dir)
+    _store_files_accoring_to_manifest(builddir)
     ## copy or remove certain files
-    store("MANIFEST.in", dir)
-    rm_f(c%"$(dir)/MANIFEST", c%"$(dir)/test/test_pytenjin_cgi.py")
+    store("MANIFEST.in", builddir)
+    rm_f(c%"$(builddir)/MANIFEST", c%"$(builddir)/test/test_pytenjin_cgi.py")
     ## edit all files
-    edit("%s/**/*" % dir, by=replacer(True))
+    edit(c%"$(builddir)/**/*", by=replacer(True))
     ## copy files again which should not be edited
-    store("Kookbook.py", "test/oktest.py", dir)
+    store("Kookbook.py", "test/oktest.py", builddir)
 
 
 def _store_files_accoring_to_manifest(dir):
@@ -111,18 +113,16 @@ def _store_files_accoring_to_manifest(dir):
 @ingreds("build")
 def task_sdist(c):
     """python setup.py sdist"""
-    dir = "build-%s" % release
-    with chdir(dir):
+    with chdir(builddir):
         system("python setup.py sdist")
-    cp(c%"$(dir)/MANIFEST", ".")
+    cp(c%"$(builddir)/MANIFEST", ".")
 
 
 @recipe
 @ingreds("build", "sdist")
 def task_egg(c):
     """python setup.py bdist_egg"""
-    dir = "build-%s" % release
-    with chdir(dir):
+    with chdir(builddir):
         system("python setup.py bdist_egg")
 
 
@@ -130,8 +130,7 @@ def task_egg(c):
 @ingreds("build", "sdist")
 def task_eggs(c):
     """python setup.py bdist_egg (for all version)"""
-    dir = "build-%s" % release
-    with chdir(dir):
+    with chdir(builddir):
         for bin in python_bins:
             system(c%"$(bin) setup.py bdist_egg")
 
