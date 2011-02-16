@@ -1177,14 +1177,6 @@ class SafePreprocessor(Preprocessor):
     #_curr_expr_pattern = Preprocessor._new_expr_pattern
 
 
-def use_new_notation(flag=True):
-    """Switch embedded expression notations from '${ }' and '#{ }' to '{= =}' and '{== ==}'."""
-    attr = flag and '_new_expr_pattern' or '_old_expr_pattern'
-    for klass in [Template, Preprocessor]:
-        klass.EXPR_PATTERN = None
-        klass._curr_expr_pattern = getattr(klass, attr)
-
-
 ##
 ## cache storages
 ##
