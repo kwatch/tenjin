@@ -14,6 +14,9 @@ if arg1 == 'bdist_egg':
 else:
     from distutils.core import setup
 
+python2 = sys.version_info[0] == 2
+python3 = sys.version_info[0] == 3
+
 
 def _kwargs():
 
@@ -30,7 +33,7 @@ def _kwargs():
     license       = '$License$'
     platforms     = 'any'
     py_modules    = ['tenjin']
-    package_dir   = {'': 'lib'}
+    package_dir   = {'': python2 and 'lib2' or 'lib3'}
     scripts       = ['bin/pytenjin']
     #packages     = ['tenjin']
     #zip_safe     = False
