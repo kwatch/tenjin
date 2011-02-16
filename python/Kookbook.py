@@ -44,6 +44,10 @@ def task_edit(c):
     filenames.remove('Kookbook.py')
     filenames.remove('test/oktest.py')
     edit(filenames, by=replacer())
+    def repl(s):
+        pat = r"^([ \t]*\w+\s*=\s*)'.*?'(\s*##\s*\$(?:Package|Release|License): (.*?) \$)"
+        return re.compile(pat, re.M).sub(r"\1'\3'\2", s)
+    edit('setup.py', by=repl)
 
 
 def replacer(flag_all=False):

@@ -15,8 +15,8 @@ else:
     from distutils.core import setup
 
 
-name     = 'Tenjin'
-version  = '0.9.0'
+name     = 'Tenjin'    ## $Package: Tenjin $
+version  = '0.9.0'     ## $Release: 0.9.0 $
 author   = 'makoto kuwata'
 email    = 'kwa@kuwata-lab.com'
 maintainer = author
@@ -130,7 +130,7 @@ See `other examples`_ .
 
 .. _`other examples`: http://www.kuwata-lab.com/tenjin/pytenjin-examles.html
 """[1:]
-license  = 'MIT License'
+license  = 'MIT License'   ## $License: MIT License $
 platforms = 'any'
 download = 'http://downloads.sourceforge.net/tenjin/%s-%s.tar.gz' % (name, version)
 #download = 'http://jaist.dl.sourceforge.net/sourceforge/tenjin/%s-%s.tar.gz' % (name, version)
@@ -138,7 +138,7 @@ classifiers = [
     'Development Status :: 4 - Beta',
     'Environment :: Console',
     'Intended Audience :: Developers',
-    'License :: OSI Approved :: MIT License',
+    'License :: OSI Approved :: %s' % license,
     'Operating System :: OS Independent',
     'Programming Language :: Python',
     'Programming Language :: Python :: 2.3',
