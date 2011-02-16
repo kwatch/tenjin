@@ -868,14 +868,8 @@ class Template(object):
     def stop_text_part(self, buf):
         buf.append("));")
 
-    _quote_rexp = None
-
     def _quote_text(self, text):
-        #return re.sub(r"(['\\\\])", r"\\\1", text)
-        rexp = Template._quote_rexp
-        if not rexp:   # make re.compile() to be lazy (because it is heavy weight)
-            rexp = Template._quote_rexp = re.compile(r"(['\\\\])")
-        return rexp.sub(r"\\\1", text)
+        return re.sub(r"(['\\\\])", r"\\\1", text)
 
     def add_text(self, buf, text, encode_newline=False):
         if not text: return
