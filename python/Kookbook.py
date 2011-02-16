@@ -72,6 +72,43 @@ def replacer(flag_all=False):
 
 @recipe
 @ingreds("examples")
+def task_build(c):
+    """copy files into build-X.X.X"""
+    ## create a directory to store files
+    dir = "build-%s" % release
+    os.path.isdir(dir) and rm_rf(dir)
+    mkdir(dir)
+    ## copy files according to MANIFEST.in
+    _store_files_accoring_to_manifest(dir)
+    ## copy or remove certain files
+    store("MANIFEST.in", dir)
+    rm_f(c%"$(dir)/MANIFEST", c%"$(dir)/test/test_pytenjin_cgi.py")
+    ## edit all files
+    edit("%s/**/*" % dir, by=replacer(True))
+    ## copy files again which should not be edited
+    store("Kookbook.py", "test/oktest.py", dir)
+
+
+def _store_files_accoring_to_manifest(dir):
+    lines = read_file('MANIFEST.in').splitlines()
+    for line in lines:
+        items = line.split(' ')[1:]
+        if line.startswith('include '):
+            fnames = items
+            store(fnames, dir)
+        elif line.startswith('exclude '):
+            fnames = [ "%s/%s" % (dir, x) for x in items ]
+            rm_rf(fnames)
+        elif line.startswith('recursive-include '):
+            fnames= [ "%s/**/%s" % (items[0], x) for x in items[1:] ]
+            store(fnames, dir)
+        elif line.startswith('recursive-exclude '):
+            fnames = [ "%s/%s/**/%s" % (dir, items[0], x) for x in items[1:] ]
+            rm_rf(fnames)
+
+
+@recipe
+@ingreds("examples")
 @spices("-A: create all egg files for each version of python")
 def task_package(c, *args, **kwargs):
     """create package"""
