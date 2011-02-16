@@ -118,6 +118,25 @@ def task_sdist(c):
 
 
 @recipe
+@ingreds("build", "sdist")
+def task_egg(c):
+    """python setup.py bdist_egg"""
+    dir = "build-%s" % release
+    with chdir(dir):
+        system("python setup.py bdist_egg")
+
+
+@recipe
+@ingreds("build", "sdist")
+def task_eggs(c):
+    """python setup.py bdist_egg (for all version)"""
+    dir = "build-%s" % release
+    with chdir(dir):
+        for bin in python_bins:
+            system(c%"$(bin) setup.py bdist_egg")
+
+
+@recipe
 @ingreds("examples")
 @spices("-A: create all egg files for each version of python")
 def task_package(c, *args, **kwargs):
