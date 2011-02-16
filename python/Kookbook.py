@@ -41,6 +41,9 @@ python_bins = [
 def task_edit(c):
     """edit files"""
     filenames = read_file('MANIFEST').splitlines()
+    excludes = ('test/data', 'examples',
+                'benchmark/templates', 'benchmark/gae/templates',)
+    filenames = [ x for x in filenames if not x.startswith(excludes) ]
     filenames.remove('Kookbook.py')
     filenames.remove('test/oktest.py')
     edit(filenames, by=replacer())
