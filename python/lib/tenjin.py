@@ -740,17 +740,12 @@ class Template(object):
         self.script = script
         return script
 
-    def compile_stmt_pattern(pi):
-        return re.compile(r'<\?%s( |\t|\r?\n)(.*?) ?\?>([ \t]*\r?\n)?' % pi, re.S)
-
-    compile_stmt_pattern = staticmethod(compile_stmt_pattern)
-
-    STMT_PATTERN = None
+    STMT_PATTERN = (r'<\?py( |\t|\r?\n)(.*?) ?\?>([ \t]*\r?\n)?', re.S)
 
     def stmt_pattern(self):
-        pat = Template.STMT_PATTERN
-        if not pat:   # make re.compile() to be lazy (because it is heavy weight)
-            pat = Template.STMT_PATTERN = Template.compile_stmt_pattern('py')
+        pat = self.STMT_PATTERN
+        if isinstance(pat, tuple):
+            pat = self.__class__.STMT_PATTERN = re.compile(*pat)
         return pat
 
     def parse_stmts(self, buf, input):
@@ -1134,13 +1129,7 @@ class SafeTemplate(Template):
 class Preprocessor(Template):
     """Template class for preprocessing."""
 
-    STMT_PATTERN = None
-
-    def stmt_pattern(self):
-        pat = Preprocessor.STMT_PATTERN
-        if not pat:   # re.compile() is heavy weight, so make it lazy
-            pat = Preprocessor.STMT_PATTERN = Template.compile_stmt_pattern('PY')
-        return Preprocessor.STMT_PATTERN
+    STMT_PATTERN = (r'<\?PY( |\t|\r?\n)(.*?) ?\?>([ \t]*\r?\n)?', re.S)
 
     EXPR_PATTERN = (r'#\{\{(.*?)\}\}|\$\{\{(.*?)\}\}|\{#=(?:=(.*?)=|(.*?))=#\}', re.S)
 
