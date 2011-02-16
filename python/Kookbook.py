@@ -137,49 +137,6 @@ def task_eggs(c):
 
 
 @recipe
-@ingreds("examples")
-@spices("-A: create all egg files for each version of python")
-def task_package(c, *args, **kwargs):
-    """create package"""
-    ## remove files
-    pattern = c%"dist/$(package)-$(release)*"
-    if glob(pattern):
-        rm_rf(pattern)
-    ## setup
-    system('python setup.py sdist')
-    #system('python setup.py sdist --keep-temp')
-    with chdir('dist') as d:
-        #pkgs = kook.util.glob2(c%"$(package)-$(release).tar.gz");
-        #pkg = pkgs[0]
-        pkg = c%"$(package)-$(release).tar.gz"
-        echo(c%"pkg=$(pkg)")
-        #tar_xzf(pkg)
-        system(c%"tar xzf $(pkg)")
-        dir = re.sub(r'\.tar\.gz$', '', pkg)
-        #echo("*** debug: pkg=%s, dir=%s" % (pkg, dir))
-        edit(c%"$(dir)/**/*", by=replacer(True))
-        #with chdir(dir):
-        #    system("python setup.py egg_info --egg-base .")
-        #    rm("*.pyc")
-        mv(pkg, c%"$(pkg).bkup")
-        #tar_czf(c%"$(dir).tar.gz", dir)
-        system(c%"tar -cf $(dir).tar $(dir)")
-        system(c%"gzip -f9 $(dir).tar")
-        ## create *.egg file
-        def bdist_egg(bin):
-            system("%s setup.py bdist_egg" % bin)
-            mv("dist/*.egg", "..")
-            rm_rf("build", "dist")
-        with chdir(dir):
-            if kwargs.get('A'):
-                bins = [ x for x in python_bins if re.search(r'2\.[567]', x) ]
-                for bin in bins:
-                    bdist_egg(bin)
-            else:
-                bdist_egg('python')
-
-
-@recipe
 #@ingreds("doc/examples.txt")
 def task_examples(c):
     """create examples"""
