@@ -42,6 +42,37 @@ python_binaries = [
 
 
 @recipe
+@product("lib2/tenjin.py")
+@ingreds("lib/tenjin.py")
+def file_lib2_tenjin_py(c):
+    _file_generate(c, 'lib2', 1)
+
+
+@recipe
+@product("lib3/tenjin.py")
+@ingreds("lib/tenjin.py")
+def file_lib3_tenjin_py(c):
+    _file_generate(c, 'lib3', 2)
+
+
+def _file_generate(c, libdir, index):
+    mkdir_p(libdir)
+    pat = r'^ *if python2:\n(.*?\n)^ *elif python3:\n(.*?\n)^ *#end\n'
+    def fn(m):
+        pycode = m.group(index)
+        return re.compile(r'^    ', re.M).sub('', pycode)
+    s = read_file(c.ingred)
+    s = re.compile(pat, re.M | re.S).sub(fn, s)
+    write_file(c.product, s)
+
+
+@recipe
+@ingreds("lib2/tenjin.py", "lib3/tenjin.py")
+def generate(c):
+    pass
+
+
+@recipe
 def task_edit(c):
     """edit files"""
     filenames = read_file('MANIFEST').splitlines()
