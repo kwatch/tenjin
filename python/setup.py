@@ -6,9 +6,9 @@
 
 import sys, re, os
 arg1 = len(sys.argv) > 1 and sys.argv[1] or None
-if arg1 == 'egg_info':
-    from ez_setup import use_setuptools
-    use_setuptools()
+#if arg1 == 'egg_info':
+#    from ez_setup import use_setuptools
+#    use_setuptools()
 if arg1 == 'bdist_egg':
     from setuptools import setup
 else:
