@@ -1,12 +1,18 @@
 from __future__ import with_statement
 
+import re
+
 kook_default_product = 'all'
 
 generatable_products = (
     'templates/bench_django.html',
+    #'templates/escape_django.html',
     'templates/bench_django12.html',
     'templates/escape_django12.html',
     'templates/bench_tenjin.pyhtml',
+    #'templates/escape_tenjin.pyhtml',
+    'templates/bench_safetenjin.pyhtml',
+    'templates/escape_safetenjin.pyhtml',
 )
 
 @recipe
@@ -66,4 +72,24 @@ def file_escape_django12_html(c):
 @ingreds('templates/escape_tenjin.pyhtml')
 def file_escape_tenjin_pyhtml(c):
     f = lambda s: s.replace('${', '#{').replace('escape_tenjin', 'bench_tenjin')
+    convert_template(c, f)
+
+
+@recipe
+@product('templates/bench_safetenjin.pyhtml')
+@ingreds('templates/escape_tenjin.pyhtml')
+def file_bench_safetenjin_pyhtml(c):
+    def f(s):
+        s = re.sub(r'\$\{(.*?)\}', r'{==\1==}', s)
+        return s.replace('escape_tenjin', 'bench_safetenjin')
+    convert_template(c, f)
+
+
+@recipe
+@product('templates/escape_safetenjin.pyhtml')
+@ingreds('templates/escape_tenjin.pyhtml')
+def file_escape_safetenjin_pyhtml(c):
+    def f(s):
+        s = re.sub(r'\$\{(.*?)\}', r'{=\1=}', s)
+        return s.replace('escape_tenjin', 'escape_safetenjin')
     convert_template(c, f)

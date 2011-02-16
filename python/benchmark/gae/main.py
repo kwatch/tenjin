@@ -95,6 +95,21 @@ class TenjinHandler(webapp.RequestHandler):
         self.response.out.write(html)
 
 
+class SafeTenjinHandler(webapp.RequestHandler):
+
+    engine = tenjin.SafeEngine(path=[os.path.dirname(__file__) + '/templates'])
+
+    def get(self):
+        flag_escape = self.request.get('escape')
+        file_name = flag_escape and 'escape_safetenjin.pyhtml' or 'bench_safetenjin.pyhtml'
+        #logger.info('** file_name=%r' % file_name)
+        context = {'items': _items}
+        #engine = tenjin.Engine(path=[os.path.dirname(__file__) + '/templates'])
+        #html = engine.render(file_name, context)
+        html = self.engine.render(file_name, context)
+        self.response.out.write(html)
+
+
 class StocksHandler(webapp.RequestHandler):
 
     def get(self):
@@ -151,13 +166,28 @@ class StocksTenjinHandler(webapp.RequestHandler):
         self.response.out.write(html)
 
 
+class StocksSafeTenjinHandler(webapp.RequestHandler):
+
+    engine = tenjin.SafeEngine(path=[os.path.dirname(__file__) + '/templates'])
+
+    def get(self):
+        flag_escape = self.request.get('escape')
+        file_name = flag_escape and 'escape_safetenjin.pyhtml' or 'bench_safetenjin.pyhtml'
+        #logger.info('** file_name=%r' % file_name)
+        context = {'items': Stock.all().order('-price').fetch(100)}
+        html = self.engine.render(file_name, context)
+        self.response.out.write(html)
+
+
 mappings = [                                     # (no escape),  (escape)
     ('/django',        DjangoHandler),           # 31.5 req/sec, 28.6 req/sec  (ver 1.2.5)
                                                  # 40.0 req/sec, 35.5 req/sec  (ver 0.96)
     ('/tenjin',        TenjinHandler),           # 48.3 req/sec, 47.8 req/sec
+    ('/safetenjin',    SafeTenjinHandler),       # 47.6 req/sec, 45.8 req/sec
     ('/db/django',     StocksDjangoHandler),     # 16.0 req/sec, 15.2 req/sec  (ver 1.2.5)
                                                  # 17.4 req/sec, 16.4 req/sec  (ver 0.96)
-    ('/db/tenjin',     StocksTenjinHandler),     # 19.0 req/sec, 18.5 req/sec
+    ('/db/tenjin',     StocksTenjinHandler),     # 19.0 req/sec, 18.8 req/sec
+    ('/db/safetenjin', StocksSafeTenjinHandler), # 19.0 req/sec, 18.7 req/sec
     ('/stocks',        StocksHandler),
 ]
 
