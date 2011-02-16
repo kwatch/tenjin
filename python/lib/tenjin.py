@@ -1115,9 +1115,7 @@ class Template(object):
 ##
 class SafeTemplate(Template):
     """Uses 'safe_escape()' instead of 'escape()'.
-       In addition, embedded expression notation is changed.
-       * Use {=...=} instead of ${...}
-       * Use {==...==} instead of #{...}
+       '#{...}' is not allowed with this class. Use '[==...==]' instead.
     """
     escapefunc = 'safe_escape'
 
