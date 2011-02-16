@@ -909,7 +909,7 @@ class EngineTest(object):
             if spec("set timestamp and filename of template object."):
                 ok (t.timestamp) == os.path.getmtime(filepath)
                 ok (t.filename) == fpath
-                ok (t._last_checked_at).in_delta(time.time(), 0.001)
+                ok (t._last_checked_at).in_delta(time.time(), 0.005)
             if spec("save template object into cache."):
                 ok (cpath).exists()
                 ok (len(e1.cache.items)) == 1
