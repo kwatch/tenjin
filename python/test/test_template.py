@@ -393,6 +393,22 @@ x = 10
 """[1:]
             ok (_convert(input)) == expected
 
+    def test_new_notation(self):
+        input = r"""
+a=${a}
+b=#{b}
+c={=c=}
+d={==d==}
+"""
+        expected = r"""_extend=_buf.extend;_to_str=to_str;_escape=escape; _extend(('''
+a=''', _escape(_to_str(a)), '''
+b=''', _to_str(b), '''
+c=''', _escape(_to_str(c)), '''
+d=''', _to_str(d), '''\n''', ));
+"""
+        t = tenjin.Template()
+        ok (t.convert(input)) == expected
+
 
 
 if __name__ == '__main__':

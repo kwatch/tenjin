@@ -831,7 +831,7 @@ class Template(object):
 
     _old_expr_pattern  = r'#\{(.*?)\}|\$\{(.*?)\}'
     _new_expr_pattern  = r'\{=(?:=(.*?)=|(.*?))=\}'
-    _curr_expr_pattern = _old_expr_pattern
+    _curr_expr_pattern = r'#\{(.*?)\}|\$\{(.*?)\}|\{=(?:=(.*?)=|(.*?))=\}'
 
     def expr_pattern(self):
         return self.EXPR_PATTERN or self._compile_expr_pattern()
@@ -842,8 +842,13 @@ class Template(object):
         return rexp
 
     def get_expr_and_escapeflag(self, match):
-        not_esc_expr, esc_expr = match.group(1), match.group(2)
-        return not_esc_expr is None and (esc_expr, True) or (not_esc_expr, False)
+        expr1, expr2, expr3, expr4 = match.groups()
+        if expr1 is not None: return expr1, False
+        if expr2 is not None: return expr2, True
+        if expr3 is not None: return expr3, False
+        if expr4 is not None: return expr4, True
+        #not_esc_expr, esc_expr = match.group(1), match.group(2)
+        #return not_esc_expr is None and (esc_expr, True) or (not_esc_expr, False)
 
     def parse_exprs(self, buf, input, is_bol=False):
         buf2 = []
@@ -1131,7 +1136,7 @@ class SafeTemplate(Template):
 
     EXPR_PATTERN = None
 
-    _curr_expr_pattern = Template._new_expr_pattern
+    #_curr_expr_pattern = Template._new_expr_pattern
 
 
 
@@ -1154,7 +1159,7 @@ class Preprocessor(Template):
 
     _old_expr_pattern  = r'#\{\{(.*?)\}\}|\$\{\{(.*?)\}\}'
     _new_expr_pattern  = r'\{#=(?:=(.*?)=|(.*?))=#\}'
-    _curr_expr_pattern = _old_expr_pattern
+    _curr_expr_pattern = r'#\{\{(.*?)\}\}|\$\{\{(.*?)\}\}|\{#=(?:=(.*?)=|(.*?))=#\}'
 
     def add_expr(self, buf, code, flag_escape=None):
         if not code or code.isspace():
@@ -1169,7 +1174,7 @@ class SafePreprocessor(Preprocessor):
 
     EXPR_PATTERN = None
 
-    _curr_expr_pattern = Preprocessor._new_expr_pattern
+    #_curr_expr_pattern = Preprocessor._new_expr_pattern
 
 
 def use_new_notation(flag=True):
