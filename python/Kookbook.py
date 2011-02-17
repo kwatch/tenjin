@@ -55,13 +55,7 @@ def file_lib3_tenjin_py(c):
     _file_generate(c, 'lib3', 2)
     #system(c%"2to3 -w -n --no-diffs $(product)")
     s = read_file(c.product)
-    s = s.replace('u"', '"')
-    s = s.replace("u'", "'")
-    s = s.replace(', ex:', ' as ex:')
-    s = s.replace('.iteritems', '.items')
-    s = s.replace('.iterkeys', '.keys')
-    s = s.replace('.next', '.__next__')
-    write_file(c.product, s)
+    write_file(c.product, _py2to3(s))
 
 
 def _file_generate(c, libdir, index):
@@ -73,6 +67,16 @@ def _file_generate(c, libdir, index):
     s = read_file(c.ingred)
     s = re.compile(pat, re.M | re.S).sub(fn, s)
     write_file(c.product, s)
+
+
+def _py2to3(s):
+    s = s.replace('u"', '"')
+    s = s.replace("u'", "'")
+    s = s.replace(', ex:', ' as ex:')
+    s = s.replace('.iteritems', '.items')
+    s = s.replace('.iterkeys', '.keys')
+    s = s.replace('.next', '.__next__')
+    return s
 
 
 @recipe
