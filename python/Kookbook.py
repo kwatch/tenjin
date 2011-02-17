@@ -53,6 +53,15 @@ def file_lib2_tenjin_py(c):
 @ingreds("lib/tenjin.py")
 def file_lib3_tenjin_py(c):
     _file_generate(c, 'lib3', 2)
+    #system(c%"2to3 -w -n --no-diffs $(product)")
+    s = read_file(c.product)
+    s = s.replace('u"', '"')
+    s = s.replace("u'", "'")
+    s = s.replace(', ex:', ' as ex:')
+    s = s.replace('.iteritems', '.items')
+    s = s.replace('.iterkeys', '.keys')
+    s = s.replace('.next', '.__next__')
+    write_file(c.product, s)
 
 
 def _file_generate(c, libdir, index):
