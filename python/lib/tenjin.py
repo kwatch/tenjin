@@ -110,8 +110,7 @@ elif python3:
 def _ignore_not_found_error(f, default=None):
     try:
         return f()
-    except OSError:
-        ex = sys.exc_info()[1]
+    except OSError, ex:
         if ex.errno == 2:   # error: No such file or directory
             return default
         raise
@@ -465,7 +464,7 @@ if True:
         if 'selected' in kwargs: kwargs['selected'] = kwargs.pop('selected') and 'selected' or None
         if 'disabled' in kwargs: kwargs['disabled'] = kwargs.pop('disabled') and 'disabled' or None
         esc = helpers.safe_escape
-        s = ''.join([ ' %s="%s"' % (k, esc(v)) for k, v in kwargs.items() if v or v == 0 ])
+        s = ''.join([ ' %s="%s"' % (k, esc(v)) for k, v in kwargs.iteritems() if v or v == 0 ])
         return helpers.mark_as_escaped(s)
 
     def checked(expr):
@@ -1089,8 +1088,7 @@ class Template(object):
         else:
             try:
                 return ''.join(_buf)
-            except UnicodeDecodeError:
-                ex = sys.exc_info()[1]
+            except UnicodeDecodeError, ex:
                 logger.error("[tenjin.Template] " + str(ex))
                 logger.error("[tenjin.Template] (_buf=%r)" % (_buf, ))
                 raise
@@ -1183,7 +1181,7 @@ class CacheStorage(object):
     def clear(self):
         """remove all template objects and attributes from dict and cache file."""
         d, self.items = self.items, {}
-        for k in d.keys():
+        for k in d.iterkeys():
             self._delete(k)
         d.clear()
 
