@@ -1893,8 +1893,8 @@ class SafeEngine(Engine):
 ##
 
 def _dummy():
-    global memcache, tenjin
-    memcache = tenjin = None      # lazy import of google.appengine.api.memcache
+    global memcache, _tenjin
+    memcache = _tenjin = None      # lazy import of google.appengine.api.memcache
     global GaeMemcacheCacheStorage, GaeMemcacheStore, init
 
     class GaeMemcacheCacheStorage(CacheStorage):
@@ -1908,16 +1908,16 @@ def _dummy():
 
         def _load(self, cachepath):
             key = cachepath
-            if tenjin.logger: tenjin.logger.info("[tenjin.gae.GaeMemcacheCacheStorage] load cache (key=%r)" % (key, ))
+            if _tenjin.logger: _tenjin.logger.info("[tenjin.gae.GaeMemcacheCacheStorage] load cache (key=%r)" % (key, ))
             return memcache.get(key, namespace=self.namespace)
 
         def _store(self, cachepath, dct):
             dct.pop('bytecode', None)
             key = cachepath
-            if tenjin.logger: tejin.logger.info("[tenjin.gae.GaeMemcacheCacheStorage] store cache (key=%r)" % (key, ))
+            if _tenjin.logger: _tenjin.logger.info("[tenjin.gae.GaeMemcacheCacheStorage] store cache (key=%r)" % (key, ))
             ret = memcache.set(key, dct, self.lifetime, namespace=self.namespace)
             if not ret:
-                if tejin.logger: tenjin.logger.info("[tenjin.gae.GaeMemcacheCacheStorage] failed to store cache (key=%r)" % (key, ))
+                if _tenjin.logger: _tenjin.logger.info("[tenjin.gae.GaeMemcacheCacheStorage] failed to store cache (key=%r)" % (key, ))
 
         def _delete(self, cachepath):
             key = cachepath
@@ -1940,7 +1940,7 @@ def _dummy():
             if memcache.set(key, value, lifetime, namespace=self.namespace):
                 return True
             else:
-                if tenjin.logger: tenjin.logger.info("[tenjin.gae.GaeMemcacheStore] failed to set (key=%r)" % (key, ))
+                if _tenjin.logger: _tenjin.logger.info("[tenjin.gae.GaeMemcacheStore] failed to set (key=%r)" % (key, ))
                 return False
 
         def delete(self, key):
@@ -1955,10 +1955,10 @@ def _dummy():
 
 
     def init():
-        global memcache, tenjin
+        global memcache, _tenjin
         if not memcache:
             from google.appengine.api import memcache
-        if not tenjin: import tenjin
+        if not _tenjin: import tenjin as _tenjin
         ## avoid cache confliction between versions
         ver = os.environ.get('CURRENT_VERSION_ID', '1.1').split('.')[0]
         Engine.cache = GaeMemcacheCacheStorage(namespace=ver)
