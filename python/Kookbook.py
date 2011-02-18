@@ -133,6 +133,7 @@ def build(c):
     _store_files_accoring_to_manifest(builddir)
     ## copy or remove certain files
     store("MANIFEST.in", builddir)
+    cp("lib2/tenjin.py", builddir + "/benchmark/gae/lib")
     rm_f(c%"$(builddir)/MANIFEST", c%"$(builddir)/test/test_pytenjin_cgi.py")
     ## edit all files
     edit(c%"$(builddir)/**/*", by=replacer(True))
