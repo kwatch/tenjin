@@ -65,7 +65,23 @@ for item in _items:
     item.minus_ = item.change < 0.0
 
 
+
+class SimpleContext(object):
+
+    def _context(self):
+        return {'items': _items}
+
+
+class DatastoreContext(object):
+
+    def _context(self):
+        return {'items': Stock.all().order('-price').fetch(100)}
+
+
+
 class DjangoHandler(webapp.RequestHandler):
+
+    templates_dir = os.path.dirname(__file__) + '/templates'
 
     def get(self):
         flag_escape = self.request.get('escape')
@@ -73,11 +89,19 @@ class DjangoHandler(webapp.RequestHandler):
             file_name = flag_escape and 'escape_django12.html' or 'bench_django12.html'
         else:
             file_name = flag_escape and 'escape_django.html' or 'bench_django.html'
-        path = os.path.dirname(__file__) + '/templates/' + file_name
+        path = self.templates_dir + '/' + file_name
         #logger.info('** path=%r' % path)
-        context = {'items': _items}
-        html = template.render(path, context)
+        html = template.render(path, self._context())
         self.response.out.write(html)
+
+
+class SimpleDjangoHandler(DjangoHandler, SimpleContext):
+    pass
+
+
+class DatastoreDjangoHandler(DjangoHandler, SimpleContext):
+    pass
+
 
 
 class TenjinHandler(webapp.RequestHandler):
@@ -88,11 +112,18 @@ class TenjinHandler(webapp.RequestHandler):
         flag_escape = self.request.get('escape')
         file_name = flag_escape and 'escape_tenjin.pyhtml' or 'bench_tenjin.pyhtml'
         #logger.info('** file_name=%r' % file_name)
-        context = {'items': _items}
         #engine = tenjin.Engine(path=[os.path.dirname(__file__) + '/templates'])
-        #html = engine.render(file_name, context)
-        html = self.engine.render(file_name, context)
+        html = self.engine.render(file_name, self._context())
         self.response.out.write(html)
+
+
+class SimpleTenjinHandler(TenjinHandler, SimpleContext):
+    pass
+
+
+class DatastoreTenjinHandler(TenjinHandler, SimpleContext):
+    pass
+
 
 
 class SafeTenjinHandler(webapp.RequestHandler):
@@ -103,11 +134,18 @@ class SafeTenjinHandler(webapp.RequestHandler):
         flag_escape = self.request.get('escape')
         file_name = flag_escape and 'escape_safetenjin.pyhtml' or 'bench_safetenjin.pyhtml'
         #logger.info('** file_name=%r' % file_name)
-        context = {'items': _items}
         #engine = tenjin.Engine(path=[os.path.dirname(__file__) + '/templates'])
-        #html = engine.render(file_name, context)
-        html = self.engine.render(file_name, context)
+        html = self.engine.render(file_name, self._context())
         self.response.out.write(html)
+
+
+class SimpleSafeTenjinHandler(SafeTenjinHandler, SimpleContext):
+    pass
+
+
+class DatastoreSafeTenjinHandler(SafeTenjinHandler, SimpleContext):
+    pass
+
 
 
 class StocksHandler(webapp.RequestHandler):
@@ -138,58 +176,19 @@ class StocksHandler(webapp.RequestHandler):
         self.redirect('/stocks')
 
 
-class StocksDjangoHandler(webapp.RequestHandler):
 
-    def get(self):
-        flag_escape = self.request.get('escape')
-        if USE_DJANGO_12:
-            file_name = flag_escape and 'escape_django12.html' or 'bench_django12.html'
-        else:
-            file_name = flag_escape and 'escape_django.html' or 'bench_django.html'
-        path = os.path.dirname(__file__) + '/templates/' + file_name
-        #logger.info('** path=%r' % path)
-        context = {'items': Stock.all().order('-price').fetch(100)}
-        html = template.render(path, context)
-        self.response.out.write(html)
-
-
-class StocksTenjinHandler(webapp.RequestHandler):
-
-    engine = tenjin.Engine(path=[os.path.dirname(__file__) + '/templates'])
-
-    def get(self):
-        flag_escape = self.request.get('escape')
-        file_name = flag_escape and 'escape_tenjin.pyhtml' or 'bench_tenjin.pyhtml'
-        #logger.info('** file_name=%r' % file_name)
-        context = {'items': Stock.all().order('-price').fetch(100)}
-        html = self.engine.render(file_name, context)
-        self.response.out.write(html)
-
-
-class StocksSafeTenjinHandler(webapp.RequestHandler):
-
-    engine = tenjin.SafeEngine(path=[os.path.dirname(__file__) + '/templates'])
-
-    def get(self):
-        flag_escape = self.request.get('escape')
-        file_name = flag_escape and 'escape_safetenjin.pyhtml' or 'bench_safetenjin.pyhtml'
-        #logger.info('** file_name=%r' % file_name)
-        context = {'items': Stock.all().order('-price').fetch(100)}
-        html = self.engine.render(file_name, context)
-        self.response.out.write(html)
-
-
-mappings = [                                     # (no escape),  (escape)
-    ('/django',        DjangoHandler),           # 31.5 req/sec, 28.6 req/sec  (ver 1.2.5)
-                                                 # 40.0 req/sec, 35.5 req/sec  (ver 0.96)
-    ('/tenjin',        TenjinHandler),           # 48.3 req/sec, 47.8 req/sec
-    ('/safetenjin',    SafeTenjinHandler),       # 47.6 req/sec, 45.8 req/sec
-    ('/db/django',     StocksDjangoHandler),     # 16.0 req/sec, 15.2 req/sec  (ver 1.2.5)
-                                                 # 17.4 req/sec, 16.4 req/sec  (ver 0.96)
-    ('/db/tenjin',     StocksTenjinHandler),     # 19.0 req/sec, 18.8 req/sec
-    ('/db/safetenjin', StocksSafeTenjinHandler), # 19.0 req/sec, 18.7 req/sec
+mappings = [                                        # (no escape),  (escape)
+    ('/django',        SimpleDjangoHandler),        # 31.5 req/sec, 28.6 req/sec  (ver 1.2.5)
+                                                    # 40.0 req/sec, 35.5 req/sec  (ver 0.96)
+    ('/tenjin',        SimpleTenjinHandler),        # 48.3 req/sec, 47.8 req/sec
+    ('/safetenjin',    SimpleSafeTenjinHandler),    # 47.6 req/sec, 45.8 req/sec
+    ('/db/django',     DatastoreDjangoHandler),     # 16.0 req/sec, 15.2 req/sec  (ver 1.2.5)
+                                                    # 17.4 req/sec, 16.4 req/sec  (ver 0.96)
+    ('/db/tenjin',     DatastoreTenjinHandler),     # 19.0 req/sec, 18.8 req/sec
+    ('/db/safetenjin', DatastoreSafeTenjinHandler), # 19.0 req/sec, 18.7 req/sec
     ('/stocks',        StocksHandler),
 ]
+
 
 def main():
     app = webapp.WSGIApplication(mappings, debug=is_dev)
