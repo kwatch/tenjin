@@ -374,6 +374,7 @@ def _dummy():
             return value
         if isinstance(value, _basestring):
             return mark_as_escaped(escape(value))
+        #raise TypeError("safe_escape(%r): expected string but got %s." % (value, type(value)))
         return mark_as_escaped(escape(to_str(value)))
 
 helpers = create_module('tenjin.helpers', _dummy, sys=sys, re=re, _basestring=_basestring)
