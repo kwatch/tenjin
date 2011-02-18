@@ -32,7 +32,7 @@ from google.appengine.dist import use_library
 if USE_DJANGO_12:
     use_library('django', '1.2')
 from google.appengine.ext import webapp, db
-from google.appengine.ext.webapp import util, template
+from google.appengine.ext.webapp import util
 
 is_dev = os.environ.get('SERVER_SOFTWARE', '').startswith('Devel')
 
@@ -41,10 +41,10 @@ logger = logging.getLogger()
 if is_dev:
     logger.setLevel(logging.DEBUG)
 
-import tenjin
-from tenjin.helpers import *
-import tenjin.gae; tenjin.gae.init()
 
+##
+## context data
+##
 class Stock(db.Model):
     name    = db.StringProperty()
     name2   = db.StringProperty()
@@ -59,95 +59,22 @@ class Stock(db.Model):
     def is_minus(self):
         return self.change < 0.0
 
-
 from bench_context import items as _items
 for item in _items:
     item.minus_ = item.change < 0.0
 
-
-
 class SimpleContext(object):
-
     def _context(self):
         return {'items': _items}
 
-
 class DatastoreContext(object):
-
     def _context(self):
         return {'items': Stock.all().order('-price').fetch(100)}
 
 
-
-class DjangoHandler(webapp.RequestHandler):
-
-    templates_dir = os.path.dirname(__file__) + '/templates'
-
-    def get(self):
-        flag_escape = self.request.get('escape')
-        if USE_DJANGO_12:
-            file_name = flag_escape and 'escape_django12.html' or 'bench_django12.html'
-        else:
-            file_name = flag_escape and 'escape_django.html' or 'bench_django.html'
-        path = self.templates_dir + '/' + file_name
-        #logger.info('** path=%r' % path)
-        html = template.render(path, self._context())
-        self.response.out.write(html)
-
-
-class SimpleDjangoHandler(DjangoHandler, SimpleContext):
-    pass
-
-
-class DatastoreDjangoHandler(DjangoHandler, SimpleContext):
-    pass
-
-
-
-class TenjinHandler(webapp.RequestHandler):
-
-    engine = tenjin.Engine(path=[os.path.dirname(__file__) + '/templates'])
-
-    def get(self):
-        flag_escape = self.request.get('escape')
-        file_name = flag_escape and 'escape_tenjin.pyhtml' or 'bench_tenjin.pyhtml'
-        #logger.info('** file_name=%r' % file_name)
-        #engine = tenjin.Engine(path=[os.path.dirname(__file__) + '/templates'])
-        html = self.engine.render(file_name, self._context())
-        self.response.out.write(html)
-
-
-class SimpleTenjinHandler(TenjinHandler, SimpleContext):
-    pass
-
-
-class DatastoreTenjinHandler(TenjinHandler, SimpleContext):
-    pass
-
-
-
-class SafeTenjinHandler(webapp.RequestHandler):
-
-    engine = tenjin.SafeEngine(path=[os.path.dirname(__file__) + '/templates'])
-
-    def get(self):
-        flag_escape = self.request.get('escape')
-        file_name = flag_escape and 'escape_safetenjin.pyhtml' or 'bench_safetenjin.pyhtml'
-        #logger.info('** file_name=%r' % file_name)
-        #engine = tenjin.Engine(path=[os.path.dirname(__file__) + '/templates'])
-        html = self.engine.render(file_name, self._context())
-        self.response.out.write(html)
-
-
-class SimpleSafeTenjinHandler(SafeTenjinHandler, SimpleContext):
-    pass
-
-
-class DatastoreSafeTenjinHandler(SafeTenjinHandler, SimpleContext):
-    pass
-
-
-
+##
+## handler class to register context data into datastore
+##
 class StocksHandler(webapp.RequestHandler):
 
     def get(self):
@@ -176,7 +103,98 @@ class StocksHandler(webapp.RequestHandler):
         self.redirect('/stocks')
 
 
+##
+## null handler
+##
+class NotInstalled(webapp.RequestHandler):
+    def get(self):
+        self.response.out.write("<p>NOT INSTALLED</p>")
 
+
+##
+## Django
+##
+from google.appengine.ext.webapp import template
+try:
+    import django
+    sys.stderr.write("*** django.VERSION=%r\n" % (django.VERSION, ))
+except ImportError:
+    django = None
+    sys.stderr.write("*** django: not installed.r\n")
+    SimpleDjangoHandler = DatastoreDjangoHandler = NotInstalled
+else:
+
+    class DjangoHandler(webapp.RequestHandler):
+        templates_dir = os.path.dirname(__file__) + '/templates'
+        def get(self):
+            flag_escape = self.request.get('escape')
+            if USE_DJANGO_12:
+                file_name = flag_escape and 'escape_django12.html' or 'bench_django12.html'
+            else:
+                file_name = flag_escape and 'escape_django.html' or 'bench_django.html'
+            path = self.templates_dir + '/' + file_name
+            #logger.info('** path=%r' % path)
+            html = template.render(path, self._context())
+            self.response.out.write(html)
+
+    class SimpleDjangoHandler(DjangoHandler, SimpleContext):
+        pass
+
+    class DatastoreDjangoHandler(DjangoHandler, SimpleContext):
+        pass
+
+
+##
+## Tenjin
+##
+try:
+    import tenjin
+    from tenjin.helpers import *
+    from tenjin.helpers.html import *
+    import tenjin.gae; tenjin.gae.init()
+    tenjin.logger = logger
+except ImportError:
+    tenjin = None
+    SimpleTenjinHandler = DatastoreTenjinHandler = NotInstalled
+    SimpleSafeTenjinHandler = DatastoreSafeTenjinHandler = NotInstalled
+else:
+
+    class TenjinHandler(webapp.RequestHandler):
+        engine = tenjin.Engine(path=[os.path.dirname(__file__) + '/templates'])
+        def get(self):
+            flag_escape = self.request.get('escape')
+            file_name = flag_escape and 'escape_tenjin.pyhtml' or 'bench_tenjin.pyhtml'
+            #logger.info('** file_name=%r' % file_name)
+            #engine = tenjin.Engine(path=[os.path.dirname(__file__) + '/templates'])
+            html = self.engine.render(file_name, self._context())
+            self.response.out.write(html)
+
+    class SimpleTenjinHandler(TenjinHandler, SimpleContext):
+        pass
+
+    class DatastoreTenjinHandler(TenjinHandler, SimpleContext):
+        pass
+
+    class SafeTenjinHandler(webapp.RequestHandler):
+        engine = tenjin.SafeEngine(path=[os.path.dirname(__file__) + '/templates'])
+        def get(self):
+            flag_escape = self.request.get('escape')
+            file_name = flag_escape and 'escape_safetenjin.pyhtml' or 'bench_safetenjin.pyhtml'
+            #logger.info('** file_name=%r' % file_name)
+            #engine = tenjin.Engine(path=[os.path.dirname(__file__) + '/templates'])
+            html = self.engine.render(file_name, self._context())
+            self.response.out.write(html)
+
+    class SimpleSafeTenjinHandler(SafeTenjinHandler, SimpleContext):
+        pass
+
+    class DatastoreSafeTenjinHandler(SafeTenjinHandler, SimpleContext):
+        pass
+
+
+##
+## WSGI application
+##
 mappings = [                                        # (no escape),  (escape)
     ('/django',        SimpleDjangoHandler),        # 31.5 req/sec, 28.6 req/sec  (ver 1.2.5)
                                                     # 40.0 req/sec, 35.5 req/sec  (ver 0.96)

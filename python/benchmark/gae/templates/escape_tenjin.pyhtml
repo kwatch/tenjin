@@ -46,6 +46,8 @@ thead {
 
   <h1>Stock Prices</h1>
 
+  <p style="font-size:small">(template: escape_tenjin.pyhtml)</p>
+
   <table>
    <thead>
     <tr>
@@ -78,7 +80,6 @@ thead {
     <?py #endfor ?>
    </tbody>
   </table>
-  <p style="font-size:small">(template: escape_tenjin.pyhtml)</p>
 
  </body>
 </html>
