@@ -31,6 +31,22 @@ else:
 
 class EscapedStrTest(object):
 
+    def test_is_escaped(self):
+        if "arg is an instance of Escaped class then return True.":
+            ok (is_escaped(EscapedStr("sos"))) == True
+            if python2:
+                ok (is_escaped(EscapedUnicode(u("sos")))) == True
+            elif python3:
+                ok (is_escaped(EscapedBytes(b("sos")))) == True
+            #end
+        if "arg is not an instance of Escaped class then return False.":
+            ok (is_escaped("sos")) == False
+            if python2:
+                ok (is_escaped(u("sos"))) == False
+            elif python3:
+                ok (is_escaped(b("sos"))) == False
+            #end
+
     def test_mark_as_escaped(self):
         if "arg is a str then returns EscapedStr object.":
             ok (mark_as_escaped("<foo>")).is_a(EscapedStr)

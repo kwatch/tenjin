@@ -144,9 +144,9 @@ def _dummy():
     global start_capture, stop_capture, capture_as, captured_as
     global _p, _P, _decode_params
     if python2:
-        global Escaped, EscapedStr, EscapedUnicode, mark_as_escaped, safe_escape
+        global Escaped, is_escaped, EscapedStr, EscapedUnicode, mark_as_escaped, safe_escape
     elif python3:
-        global Escaped, EscapedStr, EscapedBytes, mark_as_escaped, safe_escape
+        global Escaped, is_escaped, EscapedStr, EscapedBytes, mark_as_escaped, safe_escape
     #end
 
     if python2:
@@ -335,6 +335,10 @@ def _dummy():
         """marking class that object is already escaped."""
         pass
 
+    def is_escaped(value):
+        """return True if value is escaped, else return False."""
+        return isinstance(value, Escaped)
+
     class EscapedStr(str, Escaped):
         """string class to avoid escape in template"""
         pass
@@ -388,7 +392,7 @@ helpers.__all__ = ['to_str', 'escape', 'echo', 'generate_tostrfunc',
                    'start_capture', 'stop_capture', 'capture_as', 'captured_as',
                    'not_cached', 'echo_cached', 'cache_as',
                    '_p', '_P', '_decode_params',
-                   'Escaped', 'EscapedStr', 'mark_as_escaped', 'safe_escape',
+                   'Escaped', 'EscapedStr', 'is_escaped', 'mark_as_escaped', 'safe_escape',
                    ]
 if python2:
     helpers.__all__.append('EscapedUnicode')
