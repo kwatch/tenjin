@@ -1,6 +1,6 @@
 data = [
     {
-        'name':   'Adobe Systems',
+        'name':   '<b>Adobe Systems</b>',
         'name2':  'Adobe Systems Inc.',
         'url':    'http://www.adobe.com',
         'symbol': 'ADBE',
