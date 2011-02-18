@@ -181,7 +181,7 @@ def _dummy():
                         #if _isa(val, _str):     return val.decode(_decode)  # binary(=str) to unicode
                         if _isa(val, _str):
                             if _isa(val, EscapedStr):
-                                return EscapedUnicode(val.decode(_decode))
+                                return EscapedUnicode(val, _decode)
                             else:
                                 return val.decode(_decode)
                         if val is None:         return ''
