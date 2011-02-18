@@ -370,7 +370,7 @@ def _dummy():
     #end
 
     def safe_escape(value):
-        if isinstance(value, Escaped):
+        if helpers.is_escaped(value):
             return value
         if isinstance(value, _basestring):
             return helpers.mark_as_escaped(helpers.escape(value))
