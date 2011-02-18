@@ -272,28 +272,22 @@ def _dummy():
 
     def start_capture(varname=None, _depth=1):
         """(obsolete) start capturing with name."""
-        lvars = sys._getframe(_depth).f_locals   # local variables
-        lvars['_buf_tmp']    = lvars['_buf']
-        lvars['_extend_tmp'] = lvars['_extend']
-        lvars['_capture_varname'] = varname
-        _buf2 = []
-        lvars['_buf']    = _buf2
-        lvars['_extend'] = _buf2.extend
+        lvars = sys._getframe(_depth).f_locals
+        capture_context = CaptureContext(varname, None, lvars)
+        lvars['_capture_context'] = capture_context
+        capture_context.__enter__()
 
     def stop_capture(store_to_context=True, _depth=1):
         """(obsolete) stop capturing and return the result of capturing.
            if store_to_context is True then the result is stored into _context[varname].
         """
         lvars = sys._getframe(_depth).f_locals
-        result = ''.join(lvars['_buf'])
-        lvars['_buf']    = lvars.pop('_buf_tmp')
-        lvars['_extend'] = lvars.pop('_extend_tmp')
-        varname = lvars.pop('_capture_varname')
-        if varname:
-            lvars[varname] = result
-            if store_to_context:
-                lvars['_context'][varname] = result
-        return result
+        capture_context = lvars.pop('_capture_context', None)
+        if not capture_context:
+            raise Exception('stop_capture(): start_capture() is not called before.')
+        capture_context.store_to_context = store_to_context
+        capture_context.__exit__()
+        return capture_context.captured
 
     def capture_as(name, store_to_context=True):
         """capture partial of template.
