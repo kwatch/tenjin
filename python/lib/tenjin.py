@@ -370,11 +370,11 @@ def _dummy():
     #end
 
     def safe_escape(value):
-        if helpers.is_escaped(value):
+        if is_escaped(value):
             return value
         if isinstance(value, _basestring):
-            return helpers.mark_as_escaped(helpers.escape(value))
-        return helpers.mark_as_escaped(helpers.escape(helpers.to_str(value)))
+            return mark_as_escaped(escape(value))
+        return mark_as_escaped(escape(to_str(value)))
 
 helpers = create_module('tenjin.helpers', _dummy, sys=sys, re=re, _basestring=_basestring)
 helpers.__all__ = ['to_str', 'escape', 'echo', 'generate_tostrfunc',
@@ -388,7 +388,6 @@ if python2:
 elif python3:
     helpers.__all__.append('EscapedBytes')
 #end
-helpers.helpers = helpers
 generate_tostrfunc = helpers.generate_tostrfunc
 
 
