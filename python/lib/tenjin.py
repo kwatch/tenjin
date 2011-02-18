@@ -141,7 +141,7 @@ def _dummy():
     global unquote
     unquote = None
     global to_str, escape, echo, generate_tostrfunc
-    global start_capture, stop_capture, capture_as, captured_as
+    global start_capture, stop_capture, capture_as, captured_as, CaptureContext
     global _p, _P, _decode_params
     if python2:
         global Escaped, is_escaped, EscapedStr, EscapedUnicode, mark_as_escaped, safe_escape
@@ -242,6 +242,34 @@ def _dummy():
         lvars = sys._getframe(1).f_locals   # local variables
         lvars['_buf'].append(string)
 
+    class CaptureContext(object):
+
+        def __init__(self, name, store_to_context=True, lvars=None):
+            self.name  = name
+            self.store_to_context = store_to_context
+            self.lvars = lvars or sys._getframe(1).f_locals
+
+        def __enter__(self):
+            lvars = self.lvars
+            self._buf_orig = lvars['_buf']
+            lvars['_buf']    = _buf = []
+            lvars['_extend'] = _buf.extend
+            return self
+
+        def __exit__(self, *args):
+            lvars = self.lvars
+            _buf = lvars['_buf']
+            lvars['_buf']    = self._buf_orig
+            lvars['_extend'] = self._buf_orig.extend
+            lvars[self.name] = self.captured = ''.join(_buf)
+            if self.store_to_context and '_context' in lvars:
+                lvars['_context'][self.name] = self.captured
+
+        def __iter__(self):
+            self.__enter__()
+            yield self
+            self.__exit__()
+
     def start_capture(varname=None, _depth=1):
         """(obsolete) start capturing with name."""
         lvars = sys._getframe(_depth).f_locals   # local variables
@@ -270,23 +298,15 @@ def _dummy():
     def capture_as(name, store_to_context=True):
         """capture partial of template.
            ex.
-              <?py for _ in capture_as('sidemenu'): ?>
+              <?py from __future__ import with_statement ?>
+              <?py with capture_as('sidemenu'): ?>
                 <ul>
                   <li>Top</li>
                 </ul>
-              <?py #endfor ?>
+              <?py #endwith ?>
               <?py echo(sidemenu) ?>
         """
-        lvars = sys._getframe(1).f_locals   # local variables
-        _buf_orig = lvars['_buf']
-        lvars['_buf']    = _buf = []
-        lvars['_extend'] = _buf.extend
-        yield None
-        lvars['_buf']    = _buf_orig
-        lvars['_extend'] = _buf_orig.extend
-        lvars[name] = captured = ''.join(_buf)
-        if store_to_context and '_context' in lvars:
-            lvars['_context'][name] = captured
+        return CaptureContext(name, store_to_context, sys._getframe(1).f_locals)
 
     def captured_as(name, _depth=1):
         """helper method for layout template.

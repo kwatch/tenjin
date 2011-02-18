@@ -240,7 +240,17 @@ class EngineTest(object):
 
     def test_capture_as(self):
         filename  = '.test.capture_as.pyhtml'
-        content   = ("<div>\n"
+        content1  = ("<?py from __future__ import with_statement ?>\n"
+                     "<div>\n"
+                     "<?py with capture_as('sidemenu'): ?>\n"
+                     "  <ul>\n"
+                     "  <?py for item in items: ?>\n"
+                     "    <li>${item}</li>\n"
+                     "  <?py #endfor ?>\n"
+                     "  </ul>\n"
+                     "<?py #endwith ?>\n"
+                     "</div>\n")
+        content2  = ("<div>\n"
                      "<?py for _ in capture_as('sidemenu'): ?>\n"
                      "  <ul>\n"
                      "  <?py for item in items: ?>\n"
@@ -256,16 +266,19 @@ class EngineTest(object):
                      "    <li>B</li>\n"
                      "    <li>C</li>\n"
                      "  </ul>\n")
-        d = dummy_file(filename, content).__enter__()
-        try:
-            context = {'items': ['A', 'B', 'C']}
-            engine = tenjin.Engine()
-            output = engine.render(filename, context)
-            ok (output) == expected1
-            ok (context['sidemenu']) == expected2
-        finally:
-            d.__exit__(*sys.exc_info())
-
+        contents = (content1, content2)
+        if sys.version < '2.5':
+            contents = (content2, )
+        for content in contents:
+            d = dummy_file(filename, content).__enter__()
+            try:
+                context = {'items': ['A', 'B', 'C']}
+                engine = tenjin.Engine()
+                output = engine.render(filename, context)
+                ok (output) == expected1
+                ok (context['sidemenu']) == expected2
+            finally:
+                d.__exit__(*sys.exc_info())
 
     def test_captured_as(self):
         hash = EngineTest.testdata['test_captured_as']
