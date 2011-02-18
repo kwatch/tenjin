@@ -206,7 +206,7 @@ def examples(c):
     rm(tmpfile)
     ## get dirnames
     dirs = {}   # hash
-    for filename in re.split(r'\n', result):
+    for filename in result.splitlines():
         d = os.path.dirname(filename)
         if d: dirs[d] = d
     #print "*** debug: dirs=%s" % dirs
