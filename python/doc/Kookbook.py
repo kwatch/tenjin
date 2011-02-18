@@ -34,7 +34,7 @@ stylesheet = 'docstyle.css'
 #rstdir   = '/Library/Frameworks/Python.framework/Versions/2.4/bin'
 #rst2html = rstdir+'/rst2html.py'
 #rst2html_opts = 'rst2html_opts', '--link-stylesheet --no-xml-declaration --no-source-link --no-toc-backlinks --language=en --stylesheet="%s" --title="%s"' % (stylesheet, title)  #--strip-comments
-tidy_opts = 'tidy_opts', '-q -i -wrap 9999 --hide-comments yes'
+tidy_opts = prop('tidy_opts', '-q -i -wrap 9999 --hide-comments yes')
 
 #users_guide_eruby = 'users-guide.eruby'
 original_docdir = re.sub(r'/tenjin/.*$', r'/tenjin/common/doc/', os.getcwd())
@@ -65,7 +65,8 @@ def task_doc(c):
 @product(stylesheet)
 @ingreds(original_docdir + stylesheet)
 def file_css(c):
-    cp(c.ingred, c.product)
+    #cp(c.ingred, c.product)
+    pass
 
 
 #@product('users-guide.html')
@@ -98,12 +99,14 @@ def file_html(c):
     system(c%'kwaser -t $(tagfile) -T $(ingred) > $(byprod)')
     system(c%'kwaser -t $(tagfile)    $(ingred) > $(product)')
     system_f(c%'tidy -i -w 9999 -utf8 -m -q $(product)')
-    f = (
+    repl = (
       (re.compile(r'^  <meta name="generator" content="HTML Tidy .*?\n', re.M), ''),
       (re.compile(r'^  <meta http-equiv="Content-Type" content="text/html">\n\n?', re.M),
-       '  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">\n'),
+       '  <meta http-equiv="Content-Type" content="text/html;charset=utf-8">\n'),
+      (r'<p>\.\+NOTE:</p>', '<div class="note"><span class="caption">NOTE:</span>'),
+      (r'<p>\.\-NOTE:</p>', '</div>'),
     )
-    edit(c.product, by=f)
+    edit(c.product, by=repl)
 
 @recipe
 @product('*.txt')
