@@ -11,7 +11,7 @@
      <td>
       <strong>{{ item.price }}</strong>
      </td>
-    {% if item.change  %}
+    {% if item.is_minus()  %}
      <td class="minus">{{ item.change }}</td>
      <td class="minus">{{ item.ratio }}</td>
     {% else %}
