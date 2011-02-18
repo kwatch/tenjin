@@ -355,13 +355,6 @@ def _dummy():
             if isinstance(s, unicode):
                 return EscapedUnicode(s)
             raise TypeError("mark_as_escaped(%r): expected str or unicode." % (s, ))
-
-        def safe_escape(value):
-            if isinstance(value, Escaped):
-                return value
-            if isinstance(value, _basestring):
-                return helpers.mark_as_escaped(helpers.escape(value))
-            return helpers.mark_as_escaped(helpers.escape(helpers.to_str(value)))
     elif python3:
         class EscapedBytes(bytes, Escaped):
             """unicode class to avoid escape in template"""
@@ -374,14 +367,14 @@ def _dummy():
             if isinstance(s, bytes):
                 return EscapedBytes(s)
             raise TypeError("mark_as_escaped(%r): expected str or bytes." % (s, ))
-
-        def safe_escape(value):
-            if isinstance(value, Escaped):
-                return value
-            if isinstance(value, _basestring):
-                return helpers.mark_as_escaped(helpers.escape(value))
-            return helpers.mark_as_escaped(helpers.escape(helpers.to_str(value)))
     #end
+
+    def safe_escape(value):
+        if isinstance(value, Escaped):
+            return value
+        if isinstance(value, _basestring):
+            return helpers.mark_as_escaped(helpers.escape(value))
+        return helpers.mark_as_escaped(helpers.escape(helpers.to_str(value)))
 
 helpers = create_module('tenjin.helpers', _dummy, sys=sys, re=re, _basestring=_basestring)
 helpers.__all__ = ['to_str', 'escape', 'echo', 'generate_tostrfunc',
