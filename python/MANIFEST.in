@@ -5,7 +5,7 @@ include lib2/tenjin.py lib3/tenjin.py
 include doc/users-guide.html doc/examples.html doc/docstyle.css
 include benchmark/bench.py benchmark/bench_context.* benchmark/Makefile benchmark/Kookbook.py
 include benchmark/templates/*.* benchmark/bench_pycode.py benchmark/bench_pycode/*.py
-recursive-include benchmark/gae *.py *.yaml *.html *.pyhtml
+include benchmark/gae/*.py benchmark/gae/*.yaml benchmark/gae/templates/*html benchmark/gae/lib/tenjin.py
 include test/*.py test/*.yaml
 exclude test/test_pytenjin_cgi.py
 include Kookbook.py doc/Kookbook.py test/Kookbook.py
