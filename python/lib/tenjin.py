@@ -115,11 +115,18 @@ def _ignore_not_found_error(f, default=None):
             return default
         raise
 
-def _create_module(module_name):
+def _create_module(module_name, dummy_func=None, **kwargs):
     """ex. mod = _create_module('tenjin.util')"""
-    mod = type(sys)(module_name)    # or type(sys)(module_name.split('.')[-1]) ?
+    mod = type(sys)(module_name)
     mod.__file__ = __file__
+    mod.__dict__.update(kwargs)
     sys.modules[module_name] = mod
+    if dummy_func:
+        if python2:
+            exec(dummy_func.func_code, mod.__dict__)
+        elif python3:
+            exec(dummy_func.__code__, mod.__dict__)
+        #end
     return mod
 
 def _raise(exception_class, *args):
@@ -130,7 +137,17 @@ def _raise(exception_class, *args):
 ## helper method's module
 ##
 
-if True:
+def _dummy():
+    global unquote
+    unquote = None
+    global to_str, escape, echo, generate_tostrfunc
+    global start_capture, stop_capture, capture_as, captured_as
+    global _p, _P, _decode_params
+    if python2:
+        global Escaped, EscapedStr, EscapedUnicode, mark_as_escaped, safe_escape
+    elif python3:
+        global Escaped, EscapedStr, EscapedBytes, mark_as_escaped, safe_escape
+    #end
 
     if python2:
         def generate_tostrfunc(encode=None, decode=None):
@@ -303,6 +320,8 @@ if True:
         def unescape(s):
             #return s.replace('&lt;', '<').replace('&gt;', '>').replace('&quot;', '"').replace('&#039;', "'").replace('&amp;',  '&')
             return re.sub(r'&(lt|gt|quot|amp|#039);',  lambda m: dct[m.group(1)],  s)
+        global re
+        if not re: import re
         s = to_str(s)
         s = re.sub(r'%3C%60%23(.*?)%23%60%3E', lambda m: '#{%s}' % unquote(m.group(1)), s)
         s = re.sub(r'%3C%60%24(.*?)%24%60%3E', lambda m: '${%s}' % unquote(m.group(1)), s)
@@ -364,49 +383,28 @@ if True:
             return helpers.mark_as_escaped(helpers.escape(helpers.to_str(value)))
     #end
 
-    mod = _create_module('tenjin.helpers')
-    mod.to_str             = to_str
-    mod.generate_tostrfunc = generate_tostrfunc
-    mod.echo               = echo
-    mod.start_capture      = start_capture
-    mod.stop_capture       = stop_capture
-    mod.capture_as         = capture_as
-    mod.captured_as        = captured_as
-    mod._p                 = _p
-    mod._P                 = _P
-    mod._decode_params     = _decode_params
-    mod.Escaped            = Escaped
-    mod.EscapedStr         = EscapedStr
-    if python2:
-        mod.EscapedUnicode     = EscapedUnicode
-    elif python3:
-        mod.EscapedBytes       = EscapedBytes
-    #end
-    mod.mark_as_escaped    = mark_as_escaped
-    mod.safe_escape        = safe_escape
-    setattr(mod, _klass.__name__, _klass)
-    mod.__all__ = ['escape', 'to_str', 'echo', 'generate_tostrfunc',
+helpers = _create_module('tenjin.helpers', _dummy, sys=sys, re=re)
+helpers.__all__ = ['to_str', 'escape', 'echo', 'generate_tostrfunc',
                    'start_capture', 'stop_capture', 'capture_as', 'captured_as',
+                   'not_cached', 'echo_cached', 'cache_as',
                    '_p', '_P', '_decode_params',
                    'Escaped', 'EscapedStr', 'mark_as_escaped', 'safe_escape',
                    ]
-    if python2:
-        mod.__all__.append('EscapedUnicode')
-    elif python3:
-        mod.__all__.append('EscapedBytes')
-    #end
-
-helpers = mod
-del echo, start_capture, stop_capture, captured_as, _p, _P, _decode_params, safe_escape
-#del to_str, generate_tostrfunc
-#del Escaped, EscapedStr, EscapedUnicode, mark_as_escaped
-del mod
+if python2:
+    helpers.__all__.append('EscapedUnicode')
+elif python3:
+    helpers.__all__.append('EscapedBytes')
+#end
+helpers.helpers = helpers
+generate_tostrfunc = helpers.generate_tostrfunc
 
 
 ##
 ## module for html
 ##
-if True:
+def _dummy():
+    global escape_html, escape_xml, escape, tagattr, tagattrs
+    global checked, selected, disabled, nl2br, text2html, nv, new_cycle
 
     #_escape_table = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }
     #_escape_pattern = re.compile(r'[&<>"]')
@@ -442,6 +440,8 @@ if True:
         """Escape '&', '<', '>', '"' into '&amp;', '&lt;', '&gt;', '&quot;'."""
         return s.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;').replace('"', '&quot;')   # 5.72
 
+    escape_xml = escape_html   # for backward compatibility
+    escape     = escape_html
 
     def tagattr(name, expr, value=None, escape=True):
         """(experimental) Return ' name="value"' if expr is true value, else '' (empty string).
@@ -535,25 +535,8 @@ if True:
             return gen(values).__next__
         #end
 
-    mod = _create_module('tenjin.helpers.html')
-    #mod._escape_table = _escape_table
-    mod.escape_html = escape_html
-    mod.escape_xml = escape_html   # for backward compatibility
-    mod.escape     = escape_html
-    mod.tagattr    = tagattr
-    mod.tagattrs   = tagattrs
-    mod.checked    = checked
-    mod.selected   = selected
-    mod.disabled   = disabled
-    mod.nl2br      = nl2br
-    mod.text2html  = text2html
-    mod.nv         = nv
-    mod.new_cycle  = new_cycle
-
-helpers.html = mod
-helpers.escape = escape_html
-del escape_html, tagattr, tagattrs, checked, selected, disabled, nl2br, text2html, nv, new_cycle
-del mod
+helpers.html = _create_module('tenjin.helpers.html', _dummy, helpers=helpers)
+helpers.escape = helpers.html.escape_html
 
 
 ##
@@ -1909,81 +1892,85 @@ class SafeEngine(Engine):
 ## (should separate into individual file or module?)
 ##
 
-memcache = None      # lazy import of google.appengine.api.memcache
+def _dummy():
+    global memcache, tenjin
+    memcache = tenjin = None      # lazy import of google.appengine.api.memcache
+    global GaeMemcacheCacheStorage, GaeMemcacheStore, init
 
+    class GaeMemcacheCacheStorage(CacheStorage):
 
-class GaeMemcacheCacheStorage(CacheStorage):
+        lifetime = 0     # 0 means unlimited
 
-    lifetime = 0     # 0 means unlimited
+        def __init__(self, lifetime=None, namespace=None):
+            CacheStorage.__init__(self)
+            if lifetime is not None:  self.lifetime = lifetime
+            self.namespace = namespace
 
-    def __init__(self, lifetime=None, namespace=None):
-        CacheStorage.__init__(self)
-        if lifetime is not None:  self.lifetime = lifetime
-        self.namespace = namespace
+        def _load(self, cachepath):
+            key = cachepath
+            if tenjin.logger: tenjin.logger.info("[tenjin.gae.GaeMemcacheCacheStorage] load cache (key=%r)" % (key, ))
+            return memcache.get(key, namespace=self.namespace)
 
-    def _load(self, cachepath):
-        key = cachepath
-        if logger: logger.info("[tenjin.gae.GaeMemcacheCacheStorage] load cache (key=%r)" % (key, ))
-        return memcache.get(key, namespace=self.namespace)
+        def _store(self, cachepath, dct):
+            dct.pop('bytecode', None)
+            key = cachepath
+            if tenjin.logger: tejin.logger.info("[tenjin.gae.GaeMemcacheCacheStorage] store cache (key=%r)" % (key, ))
+            ret = memcache.set(key, dct, self.lifetime, namespace=self.namespace)
+            if not ret:
+                if tejin.logger: tenjin.logger.info("[tenjin.gae.GaeMemcacheCacheStorage] failed to store cache (key=%r)" % (key, ))
 
-    def _store(self, cachepath, dct):
-        dct.pop('bytecode', None)
-        key = cachepath
-        if logger: logger.info("[tenjin.gae.GaeMemcacheCacheStorage] store cache (key=%r)" % (key, ))
-        ret = memcache.set(key, dct, self.lifetime, namespace=self.namespace)
-        if not ret:
-            if logger: logger.info("[tenjin.gae.GaeMemcacheCacheStorage] failed to store cache (key=%r)" % (key, ))
-
-    def _delete(self, cachepath):
-        key = cachepath
-        memcache.delete(key, namespace=self.namespace)
-
-
-class GaeMemcacheStore(KeyValueStore):
-
-    lifetime = 0
-
-    def __init__(self, lifetime=None, namespace=None):
-        if lifetime is not None:  self.lifetime = lifetime
-        self.namespace = namespace
-
-    def get(self, key):
-        return memcache.get(key, namespace=self.namespace)
-
-    def set(self, key, value, lifetime=None):
-        if lifetime is None:  lifetime = self.lifetime
-        if memcache.set(key, value, lifetime, namespace=self.namespace):
-            return True
-        else:
-            if logger: logger.info("[tenjin.gae.GaeMemcacheStore] failed to set (key=%r)" % (key, ))
-            return False
-
-    def delete(self, key):
-        return memcache.delete(key, namespace=self.namespace)
-
-    def has(self, key):
-        if memcache.add(key, 'dummy', namespace=self.namespace):
+        def _delete(self, cachepath):
+            key = cachepath
             memcache.delete(key, namespace=self.namespace)
-            return False
-        else:
-            return True
 
 
-def init():
-    global memcache
-    if not memcache:
-        from google.appengine.api import memcache
-    ## avoid cache confliction between versions
-    ver = os.environ.get('CURRENT_VERSION_ID', '1.1').split('.')[0]
-    Engine.cache = gae.GaeMemcacheCacheStorage(namespace=ver)
-    ## set fragment cache store
-    helpers.fragment_cache.store    = gae.GaeMemcacheStore(namespace=ver)
-    helpers.fragment_cache.lifetime = 60    #  1 minute
-    helpers.fragment_cache.prefix   = 'fragment.'
+    class GaeMemcacheStore(KeyValueStore):
+
+        lifetime = 0
+
+        def __init__(self, lifetime=None, namespace=None):
+            if lifetime is not None:  self.lifetime = lifetime
+            self.namespace = namespace
+
+        def get(self, key):
+            return memcache.get(key, namespace=self.namespace)
+
+        def set(self, key, value, lifetime=None):
+            if lifetime is None:  lifetime = self.lifetime
+            if memcache.set(key, value, lifetime, namespace=self.namespace):
+                return True
+            else:
+                if tenjin.logger: tenjin.logger.info("[tenjin.gae.GaeMemcacheStore] failed to set (key=%r)" % (key, ))
+                return False
+
+        def delete(self, key):
+            return memcache.delete(key, namespace=self.namespace)
+
+        def has(self, key):
+            if memcache.add(key, 'dummy', namespace=self.namespace):
+                memcache.delete(key, namespace=self.namespace)
+                return False
+            else:
+                return True
 
 
-gae = _create_module('tenjin.gae')
-gae.GaeMemcacheCacheStorage = GaeMemcacheCacheStorage
-gae.GaeMemcacheStore        = GaeMemcacheStore
-gae.init = init
-del GaeMemcacheStore, GaeMemcacheCacheStorage, init
+    def init():
+        global memcache, tenjin
+        if not memcache:
+            from google.appengine.api import memcache
+        if not tenjin: import tenjin
+        ## avoid cache confliction between versions
+        ver = os.environ.get('CURRENT_VERSION_ID', '1.1').split('.')[0]
+        Engine.cache = GaeMemcacheCacheStorage(namespace=ver)
+        ## set fragment cache store
+        helpers.fragment_cache.store    = GaeMemcacheStore(namespace=ver)
+        helpers.fragment_cache.lifetime = 60    #  1 minute
+        helpers.fragment_cache.prefix   = 'fragment.'
+
+
+gae = _create_module('tenjin.gae', _dummy,
+                     os=os, helpers=helpers, Engine=Engine,
+                     CacheStorage=CacheStorage, KeyValueStore=KeyValueStore)
+
+
+del _dummy
