@@ -87,6 +87,14 @@ def file_bench_mako_html(c):
 
 
 @recipe
+@product('templates/bench_jinja2.html')
+@ingreds('templates/escape_jinja2.html')
+def file_bench_mako_html(c):
+    f = lambda s: s.replace('escape_jinja2', 'bench_jinja2')
+    convert_template(c, f)
+
+
+@recipe
 @product('templates/bench_tenjin.pyhtml')
 @ingreds('templates/escape_tenjin.pyhtml')
 def file_escape_tenjin_pyhtml(c):
