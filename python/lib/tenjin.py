@@ -115,8 +115,8 @@ def _ignore_not_found_error(f, default=None):
             return default
         raise
 
-def _create_module(module_name, dummy_func=None, **kwargs):
-    """ex. mod = _create_module('tenjin.util')"""
+def create_module(module_name, dummy_func=None, **kwargs):
+    """ex. mod = create_module('tenjin.util')"""
     mod = type(sys)(module_name)
     mod.__file__ = __file__
     mod.__dict__.update(kwargs)
@@ -383,7 +383,7 @@ def _dummy():
             return helpers.mark_as_escaped(helpers.escape(helpers.to_str(value)))
     #end
 
-helpers = _create_module('tenjin.helpers', _dummy, sys=sys, re=re)
+helpers = create_module('tenjin.helpers', _dummy, sys=sys, re=re)
 helpers.__all__ = ['to_str', 'escape', 'echo', 'generate_tostrfunc',
                    'start_capture', 'stop_capture', 'capture_as', 'captured_as',
                    'not_cached', 'echo_cached', 'cache_as',
@@ -535,7 +535,7 @@ def _dummy():
             return gen(values).__next__
         #end
 
-helpers.html = _create_module('tenjin.helpers.html', _dummy, helpers=helpers)
+helpers.html = create_module('tenjin.helpers.html', _dummy, helpers=helpers)
 helpers.escape = helpers.html.escape_html
 
 
@@ -1968,9 +1968,9 @@ def _dummy():
         helpers.fragment_cache.prefix   = 'fragment.'
 
 
-gae = _create_module('tenjin.gae', _dummy,
-                     os=os, helpers=helpers, Engine=Engine,
-                     CacheStorage=CacheStorage, KeyValueStore=KeyValueStore)
+gae = create_module('tenjin.gae', _dummy,
+                    os=os, helpers=helpers, Engine=Engine,
+                    CacheStorage=CacheStorage, KeyValueStore=KeyValueStore)
 
 
 del _dummy
