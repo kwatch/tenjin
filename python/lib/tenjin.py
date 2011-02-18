@@ -102,7 +102,7 @@ elif python3:
         s = _read_binary_file(filename)          ## binary
         return s.decode(encoding or 'utf-8')     ## binary to unicode(=str)
 
-    _basestring = str
+    _basestring = (str, bytes)
     _unicode    = str
     _bytes      = bytes
 #end
@@ -359,10 +359,8 @@ def _dummy():
         def safe_escape(value):
             if isinstance(value, Escaped):
                 return value
-            if isinstance(value, str):
-                return EscapedStr(helpers.escape(value))
-            if isinstance(value, unicode):
-                return EscapedUnicode(helpers.escape(value))
+            if isinstance(value, _basestring):
+                return helpers.mark_as_escaped(helpers.escape(value))
             return helpers.mark_as_escaped(helpers.escape(helpers.to_str(value)))
     elif python3:
         class EscapedBytes(bytes, Escaped):
@@ -380,14 +378,12 @@ def _dummy():
         def safe_escape(value):
             if isinstance(value, Escaped):
                 return value
-            if isinstance(value, str):
-                return EscapedStr(helpers.escape(value))
-            if isinstance(value, bytes):
-                return EscapedBytes(helpers.escape(value))
+            if isinstance(value, _basestring):
+                return helpers.mark_as_escaped(helpers.escape(value))
             return helpers.mark_as_escaped(helpers.escape(helpers.to_str(value)))
     #end
 
-helpers = create_module('tenjin.helpers', _dummy, sys=sys, re=re)
+helpers = create_module('tenjin.helpers', _dummy, sys=sys, re=re, _basestring=_basestring)
 helpers.__all__ = ['to_str', 'escape', 'echo', 'generate_tostrfunc',
                    'start_capture', 'stop_capture', 'capture_as', 'captured_as',
                    'not_cached', 'echo_cached', 'cache_as',
