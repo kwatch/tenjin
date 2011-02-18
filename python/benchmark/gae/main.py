@@ -112,6 +112,43 @@ class NotInstalled(webapp.RequestHandler):
 
 
 ##
+## index page
+##
+class IndexPage(webapp.RequestHandler):
+    def get(self):
+        w = self.response.out.write
+        w(('<!doctype html>\n'
+           '<html>\n'
+           '<body>\n'
+           '  <h2>Context Data Page</h2>\n'
+           '  <p><a href="/stocks">Go to Context Data Page</a></p>\n'
+           '  <h2>URLs for each template engine benchmark</h2>\n'
+           '  <table>\n'
+           '    <thead>\n'
+           '      <td><b>No Escape</b></td>\n'
+           '      <td><b>HTML Escape</b></td>\n'
+           '      <td><b>Using Datastore</b></td>\n'
+           '    </thead>\n'
+           '    <tbody>\n'
+           ))
+        for path, klass in mappings:
+            w(    '      <tr>\n')
+            if klass is NotInstalled:
+                w('        <td><s>%s</s>(not installed)</td>\n' % path)
+                w('        <td><s>%s?escape=1</s>(not installed)</td>\n' % path)
+            else:
+                w('        <td><a href="%s">%s</td>\n' % (path, path))
+                w('        <td><a href="%s?escape=1">%s?escape=1</td>\n' % (path, path))
+            using_datastore = path.startswith('/db/') and 'Yes' or 'No'
+            w(    '        <td>%s</td\n' % using_datastore)
+            w(    '      </tr>\n')
+        w(('    </tbody>\n'
+           '  </table>\n'
+           '</body>\n'
+           '</html>\n'))
+
+
+##
 ## Django
 ##
 from google.appengine.ext.webapp import template
@@ -120,7 +157,6 @@ try:
     sys.stderr.write("*** django.VERSION=%r\n" % (django.VERSION, ))
 except ImportError:
     django = None
-    sys.stderr.write("*** django: not installed.r\n")
     SimpleDjangoHandler = DatastoreDjangoHandler = NotInstalled
 else:
 
@@ -153,6 +189,7 @@ try:
     from tenjin.helpers.html import *
     import tenjin.gae; tenjin.gae.init()
     tenjin.logger = logger
+    sys.stderr.write("*** tenjin.__release__=%r\n" % (tenjin.__release__, ))
 except ImportError:
     tenjin = None
     SimpleTenjinHandler = DatastoreTenjinHandler = NotInstalled
@@ -204,12 +241,15 @@ mappings = [                                        # (no escape),  (escape)
                                                     # 17.4 req/sec, 16.4 req/sec  (ver 0.96)
     ('/db/tenjin',     DatastoreTenjinHandler),     # 19.0 req/sec, 18.8 req/sec
     ('/db/safetenjin', DatastoreSafeTenjinHandler), # 19.0 req/sec, 18.7 req/sec
-    ('/stocks',        StocksHandler),
 ]
+all_mappings = [
+    ('/',              IndexPage),
+    ('/stocks',        StocksHandler),
+] + mappings
 
 
 def main():
-    app = webapp.WSGIApplication(mappings, debug=is_dev)
+    app = webapp.WSGIApplication(all_mappings, debug=is_dev)
     util.run_wsgi_app(app)
 
 
