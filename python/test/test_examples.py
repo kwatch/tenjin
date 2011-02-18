@@ -48,6 +48,9 @@ class ExamplesTest(object):
     def test_form(self):
         self._test()
 
+    def test_gae(self):
+        self._test()
+
     def test_preprocessing(self):
         self._test()
 
