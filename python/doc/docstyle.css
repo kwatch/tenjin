@@ -174,7 +174,7 @@ h3, .subsection {
 	font-size:small;
 }
 
-.note {
+div.note {
 	background-color:#FFFFDD;
 	border-style:solid;
 	border-width:0px 1px 0px 1px;
@@ -182,7 +182,12 @@ h3, .subsection {
 	color:#333300;
 	/* font-size:small; */
 	line-height:120%;
+	margin-top: 10px;
 	padding: 5px 20px 5px 20px;
+}
+
+div.note span.caption {
+	color: #C60;
 }
 
 .figure {
@@ -192,6 +197,12 @@ h3, .subsection {
 	white-space:pre;
 	*/
 }
+
+strong {
+	color: #630;
+	font-weight; bold;
+}
+
 
 em {
 	font-style: italic;
