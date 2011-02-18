@@ -278,13 +278,14 @@ def _dummy():
               <?py echo(sidemenu) ?>
         """
         lvars = sys._getframe(1).f_locals   # local variables
-        _buf_old = lvars['_buf']
-        _buf_new = []
-        lvars['_buf'], lvars['_extend'] = _buf_new, _buf_new.extend
+        _buf_orig = lvars['_buf']
+        lvars['_buf']    = _buf = []
+        lvars['_extend'] = _buf.extend
         yield None
-        lvars['_buf'], lvars['_extend'] = _buf_old, _buf_old.extend
-        lvars[name] = captured = ''.join(_buf_new)
-        if store_to_context:
+        lvars['_buf']    = _buf_orig
+        lvars['_extend'] = _buf_orig.extend
+        lvars[name] = captured = ''.join(_buf)
+        if store_to_context and '_context' in lvars:
             lvars['_context'][name] = captured
 
     def captured_as(name, _depth=1):
