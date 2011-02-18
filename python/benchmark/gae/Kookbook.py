@@ -40,8 +40,9 @@ def server(c, *args, **kwargs):
 
 @recipe
 @product('tenjin.py')
-@ingreds('../../lib/tenjin.py')
+@ingreds('../../lib2/tenjin.py')
 def file_tenjin_py(c):
+    """copy tenjin.py"""
     cp_p(c.ingred, c.product)
 
 
@@ -74,6 +75,14 @@ def file_bench_django12_html(c):
 @ingreds('templates/escape_django.html')
 def file_escape_django12_html(c):
     f = lambda s: s.replace('|escape', '').replace('escape_django', 'escape_django12')
+    convert_template(c, f)
+
+
+@recipe
+@product('templates/bench_mako.html')
+@ingreds('templates/escape_mako.html')
+def file_bench_mako_html(c):
+    f = lambda s: s.replace('|h}', '}').replace('escape_mako', 'bench_mako')
     convert_template(c, f)
 
 

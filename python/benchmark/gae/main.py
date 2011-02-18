@@ -36,6 +36,8 @@ from google.appengine.ext.webapp import util
 
 is_dev = os.environ.get('SERVER_SOFTWARE', '').startswith('Devel')
 
+sys.path.insert(0, 'lib')
+
 import logging
 logger = logging.getLogger()
 if is_dev:
@@ -156,6 +158,7 @@ try:
     import django
     sys.stderr.write("*** django.VERSION=%r\n" % (django.VERSION, ))
 except ImportError:
+    sys.stderr.write("*** django not installed\n")
     django = None
     SimpleDjangoHandler = DatastoreDjangoHandler = NotInstalled
 else:
@@ -181,6 +184,37 @@ else:
 
 
 ##
+## Mako
+##
+try:
+    import mako.template
+    import mako.lookup
+    sys.stderr.write("*** mako.__version__=%r\n" % (mako.__version__, ))
+except ImportError:
+    sys.stderr.write("*** mako not installed\n")
+    mako = None
+    SimpleMakoHandler = DatastoreMakoHandler = NotInstalled
+else:
+
+    class MakoHandler(webapp.RequestHandler):
+        templates_path = os.path.dirname(__file__) + "/templates"
+        #lookup = mako.lookup.TemplateLookup(directories=[templates_path], input_encoding='utf-8')
+        lookup = mako.lookup.TemplateLookup(directories=[templates_path])
+        def get(self):
+            flag_escape = self.request.get('escape')
+            file_name = flag_escape and "escape_mako.html" or "bench_mako.html"
+            template = self.lookup.get_template(file_name)
+            html = template.render_unicode(**self._context())
+            self.response.out.write(html)
+
+    class SimpleMakoHandler(MakoHandler, SimpleContext):
+        pass
+
+    class DatastoreMakoHandler(MakoHandler, DatastoreContext):
+        pass
+
+
+##
 ## Tenjin
 ##
 try:
@@ -191,6 +225,7 @@ try:
     tenjin.logger = logger
     sys.stderr.write("*** tenjin.__release__=%r\n" % (tenjin.__release__, ))
 except ImportError:
+    sys.stderr.write("*** tenjin not installed\n")
     tenjin = None
     SimpleTenjinHandler = DatastoreTenjinHandler = NotInstalled
     SimpleSafeTenjinHandler = DatastoreSafeTenjinHandler = NotInstalled
@@ -235,10 +270,12 @@ else:
 mappings = [                                        # (no escape),  (escape)
     ('/django',        SimpleDjangoHandler),        # 31.5 req/sec, 28.6 req/sec  (ver 1.2.5)
                                                     # 40.0 req/sec, 35.5 req/sec  (ver 0.96)
+    ('/mako',          SimpleMakoHandler),          # 44.1 req/sec, 41.1 req/sec
     ('/tenjin',        SimpleTenjinHandler),        # 48.3 req/sec, 47.8 req/sec
     ('/safetenjin',    SimpleSafeTenjinHandler),    # 47.6 req/sec, 45.8 req/sec
     ('/db/django',     DatastoreDjangoHandler),     # 16.0 req/sec, 15.2 req/sec  (ver 1.2.5)
                                                     # 17.4 req/sec, 16.4 req/sec  (ver 0.96)
+    ('/db/mako',       DatastoreMakoHandler),       # 18.2 req/sec, 17.7 req/sec
     ('/db/tenjin',     DatastoreTenjinHandler),     # 19.0 req/sec, 18.8 req/sec
     ('/db/safetenjin', DatastoreSafeTenjinHandler), # 19.0 req/sec, 18.7 req/sec
 ]
