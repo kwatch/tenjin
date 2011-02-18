@@ -901,7 +901,7 @@ class Template(object):
         if self._localvars_assignments_added:
             return
         for index, stmt in enumerate(buf):
-            if not re.match(r'^[ \t]*(\#|_buf = \[\])', stmt):
+            if not re.match(r'^[ \t]*(?:\#|_buf ?= ?\[\]|from __future__)', stmt):
                 break
         else:
             return

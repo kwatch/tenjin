@@ -392,6 +392,34 @@ _extend=_buf.extend;_to_str=to_str;_escape=escape; items = _context.get('items')
 x = 10
 """[1:]
             ok (_convert(input)) == expected
+        if spec("'from __future__' statement exists then skip it."):
+            input = r"""
+<?py from __future__ import with_statement ?>
+<?py # coding: utf-8 ?>
+<?py #@ARGS item ?>
+item=${item}
+"""[1:]
+            expected = r"""
+from __future__ import with_statement
+# coding: utf-8
+item = _context.get('item'); 
+_extend=_buf.extend;_to_str=to_str;_escape=escape; _extend(('''item=''', _escape(_to_str(item)), '''\n''', ));
+"""[1:]
+            ok (_convert(input)) == expected
+            input = r"""
+<?py from __future__ import with_statement ?>
+<?py for item in items: ?>
+  <p>${item}</p>
+<?py #endfor ?>
+"""[1:]
+            expected = r"""
+from __future__ import with_statement
+_extend=_buf.extend;_to_str=to_str;_escape=escape; 
+for item in items:
+    _extend(('''  <p>''', _escape(_to_str(item)), '''</p>\n''', ));
+#endfor
+"""[1:]
+            ok (_convert(input)) == expected
 
     def test_new_notation(self):
         input = r"""
