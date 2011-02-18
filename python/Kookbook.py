@@ -213,20 +213,22 @@ def examples(c):
     rm_rf("examples")
     mkdir("examples")
     for d in dirs:
-        mkdir("examples/" + d)
+        mkdir_p("examples/" + d)
     ## retrieve files
     system(c%"retrieve -d examples $(txtfile)")
     rm_rf("examples/**/*.result")
     ## create Makefile
     for d in dirs:
-        plfile = ''
-        if os.path.exists(c%"examples/$(d)/main.pl"):
-           plfile = 'main.pl'
-        elif os.path.exists(c%"examples/$(d)/table.pl"):
-           plfile = 'table.pl'
+        if d.startswith('gae'):
+            continue
+        pyfile = ''
+        if os.path.exists(c%"examples/$(d)/main.py"):
+           pyfile = 'main.py'
+        elif os.path.exists(c%"examples/$(d)/table.py"):
+           pyfile = 'table.py'
         f = open(c%"examples/$(d)/Makefile", "w")
         f.write("all:\n")
-        f.write(c%"\tpltenjin $(plfile)\n")
+        f.write(c%"\tpltenjin $(pyfile)\n")
         f.write("\n")
         f.write("clean:\n")
         f.write("\trm -f *.cache\n")
