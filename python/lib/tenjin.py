@@ -164,10 +164,7 @@ def _dummy():
                         if val is None:         return ''
                         #if _isa(val, _unicode): return val.encode(_encode)  # unicode to binary(=str)
                         if _isa(val, _unicode):
-                            if _isa(val, EscapedUnicode):
-                                return EscapedStr(val.encode(_encode))
-                            else:
-                                return val.encode(_encode)  # unicode to binary(=str)
+                            return val.encode(_encode)  # unicode to binary(=str)
                         return _str(val)
             else:
                 if decode:
@@ -175,10 +172,7 @@ def _dummy():
                         """Convert val into string or return '' if None. Binary(=str) will be decoded into unicode."""
                         #if _isa(val, _str):     return val.decode(_decode)  # binary(=str) to unicode
                         if _isa(val, _str):
-                            if _isa(val, EscapedStr):
-                                return EscapedUnicode(val, _decode)
-                            else:
-                                return val.decode(_decode)
+                            return val.decode(_decode)
                         if val is None:         return ''
                         if _isa(val, _unicode): return val
                         return _unicode(val)
@@ -1881,12 +1875,6 @@ safe = create_module('tenjin.safe', _dummy,
                      _helpers=helpers,
                      TemplateSyntaxError=TemplateSyntaxError,
                      Template=Template, Preprocessor=Preprocessor, Engine=Engine)
-helpers.EscapedStr = safe.EscapedStr
-if python2:
-    helpers.EscapedUnicode = safe.EscapedUnicode
-elif python3:
-    helpers.EscapedBytes = safe.EscapedBytes
-#end
 helpers.html._safe = safe
 
 

@@ -201,27 +201,31 @@ class EncodingTest(object):
             tenjin.helpers.to_str = tenjin_to_str
             tenjin.to_str         = tenjin_to_str
 
-    def test_to_str_func_keeps_escaped(self):
-        from tenjin.helpers import EscapedStr, EscapedUnicode
+    def test_to_str_func_does_not_keep_escaped(self):
+        from tenjin.safe import EscapedStr, EscapedUnicode
         #
         to_str = tenjin.helpers.generate_tostrfunc(encode='utf-8')
         if "arg is str object then returns it as-is, keeping escaped.":
             ok (to_str('s')).is_a(str)
             not_ok (to_str('s')).is_a(EscapedStr)
+            ok (to_str(EscapedStr('s'))).is_a(str)
             ok (to_str(EscapedStr('s'))).is_a(EscapedStr)
-        if "arg is unicode object then encodes it into str, keeping escaped.":
+        if "arg is unicode object then encodes it into str, without keeping escaped.":
             ok (to_str(u's')).is_a(str)
             not_ok (to_str(u's')).is_a(EscapedStr)
-            ok (to_str(EscapedUnicode(u's'))).is_a(EscapedStr)
+            ok (to_str(EscapedUnicode(u's'))).is_a(str)
+            not_ok (to_str(EscapedUnicode(u's'))).is_a(EscapedStr)
         #
         to_str = tenjin.helpers.generate_tostrfunc(decode='utf-8')
-        if "arg is str object then decodes it into unicode, keeping escaped.":
+        if "arg is str object then decodes it into unicode, without keeping escaped.":
             ok (to_str('s')).is_a(unicode)
             not_ok (to_str('s')).is_a(EscapedUnicode)
-            ok (to_str(EscapedStr('s'))).is_a(EscapedUnicode)
+            ok (to_str(EscapedStr('s'))).is_a(unicode)
+            not_ok (to_str(EscapedStr('s'))).is_a(EscapedUnicode)
         if "arg is unicode object then returns it as-is, keeping escaped.":
             ok (to_str(u's')).is_a(unicode)
             not_ok (to_str(u's')).is_a(EscapedUnicode)
+            ok (to_str(EscapedUnicode(u's'))).is_a(unicode)
             ok (to_str(EscapedUnicode(u's'))).is_a(EscapedUnicode)
 
 
