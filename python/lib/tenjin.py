@@ -888,8 +888,8 @@ class Template(object):
 
     def add_expr(self, buf, code, flag_tostr, flag_escape):
         if not code or code.isspace(): return
-        if flag_escape is None:
-            buf.extend((code, ", "))
+        #if flag_escape is None:
+        #    buf.extend((code, ", "))
         else:
             if not self.tostrfunc:  flag_tostr  = False
             if not self.escapefunc: flag_escape = False

@@ -45,14 +45,13 @@ class NoTextTemplate(tenjin.Template):
             buf.append(s)
 
     def add_expr(self, buf, code, flag_tostr, flag_escape):
-        if not code or code.isspace():
-            return
+        if not code or code.isspace(): return
         if self.noexpr:
             n = code.count("\n")
             if n:
                 buf.append("\n" * n)
-        elif flag_escape is None:
-            buf.extend((code, "; ", ))
+        #elif flag_escape is None:
+        #    buf.extend((code, "; ", ))
         else:
             if not self.tostrfunc:  flag_tostr  = False
             if not self.escapefunc: flag_escape = False
