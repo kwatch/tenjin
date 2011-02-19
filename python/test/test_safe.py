@@ -119,7 +119,7 @@ class SafeTemplateTest(object):
         if "matched expression is '${...}' then returns expr string and True":
             m = t.expr_pattern().search("<p>${item}</p>")
             ret = t.get_expr_and_flags(m)
-            ok (ret) == ('item', True, True)
+            ok (ret) == ('item', False, True)
         if "matched expression is '#{...}' then raises error":
             m = t.expr_pattern().search("<p>#{item}</p>")
             def f(): t.get_expr_and_flags(m)
@@ -128,7 +128,7 @@ class SafeTemplateTest(object):
         if "matched expression is '{=...=}' then returns expr string and True":
             m = t.expr_pattern().search("<p>{=item=}</p>")
             ret = t.get_expr_and_flags(m)
-            ok (ret) == ('item', True, True)
+            ok (ret) == ('item', False, True)
         if "matched expression is '{==...==}' then returns expr string and False":
             m = t.expr_pattern().search("<p>{==item==}</p>")
             ret = t.get_expr_and_flags(m)
@@ -137,7 +137,7 @@ class SafeTemplateTest(object):
     def test_FUNCTEST_of_convert(self):
         if "converted then use 'safe_escape()' instead of 'escape()'":
             t = tenjin.safe.SafeTemplate(input="<p>{=item=}</p>")
-            ok (t.script) == lvars + "_extend(('''<p>''', _escape(_to_str(item)), '''</p>''', ));"
+            ok (t.script) == lvars + "_extend(('''<p>''', _escape(item), '''</p>''', ));"
         if "{==...==} exists then skips to escape by safe_escape()":
             t = tenjin.safe.SafeTemplate(input="<p>{==foo()==}</p>")
             ok (t.script) == lvars + "_extend(('''<p>''', _to_str(foo()), '''</p>''', ));"
@@ -193,11 +193,11 @@ class SafePreprocessorTest(object):
     expected_script = lvars + r"""
 _extend(('''<h1>0</h1>\n''', ));
 for item in items:
-    _extend(('''<p>''', _escape(_to_str(item)), '''</p>\n''', ));
+    _extend(('''<p>''', _escape(item), '''</p>\n''', ));
 #end
 _extend(('''<h1>1</h1>\n''', ));
 for item in items:
-    _extend(('''<p>''', _escape(_to_str(item)), '''</p>\n''', ));
+    _extend(('''<p>''', _escape(item), '''</p>\n''', ));
 #end
 """[1:]
 
@@ -206,7 +206,7 @@ for item in items:
         if "matched expression is '${{...}}' then returns expr string and True":
             m = t.expr_pattern().search("<p>${{item}}</p>")
             ret = t.get_expr_and_flags(m)
-            ok (ret) == ('item', True, True)
+            ok (ret) == ('item', False, True)
         if "matched expression is '#{{...}}' then raises error":
             m = t.expr_pattern().search("<p>#{{item}}</p>")
             def f(): t.get_expr_and_flags(m)
@@ -215,7 +215,7 @@ for item in items:
         if "matched expression is '{#=...=#}' then returns expr string and True":
             m = t.expr_pattern().search("<p>{#=item=#}</p>")
             ret = t.get_expr_and_flags(m)
-            ok (ret) == ('item', True, True)
+            ok (ret) == ('item', False, True)
         if "matched expression is '{#==...==#}' then returns expr string and False":
             m = t.expr_pattern().search("<p>{#==item==#}</p>")
             ret = t.get_expr_and_flags(m)
@@ -302,7 +302,7 @@ class SafeEngineTest(object):
   <div>copyright(c)2010 kuwata-lab.com</div>
 '''[1:]
         expected_script = lvars + r"""
-_extend(('''  <h1>''', _escape(_to_str(title)), '''</h1>
+_extend(('''  <h1>''', _escape(title), '''</h1>
   <ul>
     <li>Su</li>
     <li>M</li>
