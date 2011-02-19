@@ -489,7 +489,7 @@ def set_template_encoding(decode=None, encode=None):
           tenjin.set_template_encoding('utf-8')  # should be called before importing helpers
           from tenjin.helpers import *
     """
-    global _template_encoding, to_str
+    global _template_encoding
     if _template_encoding == (decode, encode):
         return
     if decode and encode:
@@ -498,10 +498,10 @@ def set_template_encoding(decode=None, encode=None):
         raise ValueError("set_template_encoding(): decode or encode should be specified.")
     if decode:
         Template.encoding = decode    # unicode base template
-        helpers.to_str = to_str = helpers.generate_tostrfunc(decode=decode)
+        helpers.to_str = helpers.generate_tostrfunc(decode=decode)
     else:
         Template.encoding = None      # binary base template
-        helpers.to_str = to_str = helpers.generate_tostrfunc(encode=encode)
+        helpers.to_str = helpers.generate_tostrfunc(encode=encode)
     _template_encoding = (decode, encode)
 
 

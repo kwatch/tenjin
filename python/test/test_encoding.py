@@ -22,7 +22,6 @@ class EncodingTest(object):
                      expected_buf=None, expected_output=None,
                      expected_errcls=None, expected_errmsg=None):
         bkup = {
-            'to_str': tenjin.to_str,
             'helpers.to_str': tenjin.helpers.to_str,
             'Template.tostrfunc': tenjin.Template.tostrfunc,
         }
@@ -53,7 +52,6 @@ class EncodingTest(object):
             else:
                 raise "*** internal error"
         finally:
-            tenjin.to_str             = bkup['to_str']
             tenjin.helpers.to_str     = bkup['helpers.to_str']
             #tenjin.Template.tostrfunc = staticmethod(bkup['Template.tostrfunc'])
 
@@ -177,7 +175,6 @@ class EncodingTest(object):
 
     def test_set_template_encoding(self):
         assert tenjin.Template.encoding == None
-        assert tenjin.helpers.to_str is tenjin.to_str
         assert tenjin.helpers.to_str(u'日本語') == '日本語'
         assert tenjin.helpers.to_str('日本語') == '日本語'
         Template_encoding = tenjin.Template.encoding
@@ -188,18 +185,15 @@ class EncodingTest(object):
             ok (tenjin.helpers.to_str(u'日本語')) == u'日本語'
             ok (tenjin.helpers.to_str('日本語')) == u'日本語'
             #ok (tenjin.Template().tostrfunc).is_(tenjin.helpers.to_str)
-            ok (tenjin.to_str).is_(tenjin.helpers.to_str)
             #
             tenjin.set_template_encoding(encode='utf-8')
             ok (tenjin.Template.encoding) == None
             ok (tenjin.helpers.to_str(u'日本語')) == '日本語'
             ok (tenjin.helpers.to_str('日本語')) == '日本語'
             #ok (tenjin.Template().tostrfunc).is_(tenjin.helpers.to_str)
-            ok (tenjin.to_str).is_(tenjin.helpers.to_str)
         finally:
             tenjin.Template.encoding = Template_encoding
             tenjin.helpers.to_str = tenjin_to_str
-            tenjin.to_str         = tenjin_to_str
 
     def test_to_str_func_does_not_keep_escaped(self):
         from tenjin.safe import EscapedStr, EscapedUnicode
