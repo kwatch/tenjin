@@ -1878,7 +1878,7 @@ def _dummy():
         preprocessorclass = SafePreprocessor
 
 safe = create_module('tenjin.safe', _dummy,
-                     _helpers=helpers, _basestring=_basestring,
+                     _helpers=helpers,
                      TemplateSyntaxError=TemplateSyntaxError,
                      Template=Template, Preprocessor=Preprocessor, Engine=Engine)
 helpers.EscapedStr = safe.EscapedStr
