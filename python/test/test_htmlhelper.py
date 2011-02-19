@@ -13,14 +13,14 @@ python3 = sys.version_info[0] == 3
 
 from testcase_helper import *
 import tenjin
-from tenjin.helpers import escape, to_str, EscapedStr,  mark_as_escaped
+from tenjin.helpers import escape, to_str
 
 if python2:
-    from tenjin.helpers import EscapedUnicode
+    from tenjin.safe import mark_as_escaped, EscapedStr, EscapedUnicode
     def u(s):
         return s.decode('utf-8')
 else:
-    from tenjin.helpers import EscapedBytes
+    from tenjin.safe import mark_as_escaped, EscapedStr, EscapedBytes
     def u(s):
         return s
 
