@@ -48,24 +48,24 @@ class EscapedStrTest(object):
                 ok (is_escaped(b("sos"))) == False
             #end
 
-    def test_mark_as_escaped(self):
+    def test_as_escaped(self):
         if "arg is a str then returns EscapedStr object.":
-            ok (mark_as_escaped("<foo>")).is_a(EscapedStr)
+            ok (as_escaped("<foo>")).is_a(EscapedStr)
         if python2:
             if "arg is a unicode then returns EscapedUnicode object.":
-                ok (mark_as_escaped(u("<foo>"))).is_a(EscapedUnicode)
+                ok (as_escaped(u("<foo>"))).is_a(EscapedUnicode)
         elif python3:
             if "arg is a bytes then returns EscapedBytes object.":
-                ok (mark_as_escaped(b("<foo>"))).is_a(EscapedBytes)
+                ok (as_escaped(b("<foo>"))).is_a(EscapedBytes)
         if "arg is not a basestring then returns TypeError.":
-            def f(): mark_as_escaped(123)
+            def f(): as_escaped(123)
             if python2:
-                ok (f).raises(TypeError, "mark_as_escaped(123): expected str or unicode.")
+                ok (f).raises(TypeError, "as_escaped(123): expected str or unicode.")
             elif python3:
-                ok (f).raises(TypeError, "mark_as_escaped(123): expected str or bytes.")
+                ok (f).raises(TypeError, "as_escaped(123): expected str or bytes.")
         if "arg is never escaped.":
-            ok (mark_as_escaped("<foo>")) == "<foo>"
-            ok (mark_as_escaped(u("<foo>"))) == u("<foo>")
+            ok (as_escaped("<foo>")) == "<foo>"
+            ok (as_escaped(u("<foo>"))) == u("<foo>")
 
     def test_safe_escape(self):
         if "arg is escaped then returns it as-is.":
@@ -110,7 +110,7 @@ class SafeTemplateTest(object):
     input = ( "<?py for item in items: ?>\n"
               "<p>{=item=}</p>\n"
               "<?py #end ?>\n" )
-    context = { 'items': [ '<>&"', mark_as_escaped('<>&"') ] }
+    context = { 'items': [ '<>&"', as_escaped('<>&"') ] }
     expected = ( "<p>&lt;&gt;&amp;&quot;</p>\n"
                  "<p><>&\"</p>\n" )
 
@@ -145,7 +145,7 @@ class SafeTemplateTest(object):
     def test_FUNCTEST_of_render(self):
         if "rendered then avoid escaping of escaped object":
             input    = "var1: {=var1=}, var2: {=var2=}\n"
-            context  = {'var1': '<>&"', 'var2': mark_as_escaped('<>&"')}
+            context  = {'var1': '<>&"', 'var2': as_escaped('<>&"')}
             expected = "var1: &lt;&gt;&amp;&quot;, var2: <>&\"\n"
             t = tenjin.safe.SafeTemplate(input=input)
             ok (t.render(context)) == expected
@@ -153,7 +153,7 @@ class SafeTemplateTest(object):
             if python2:
                 u = unicode
                 input    = "var1: {=var1=}, var2: {=var2=}\n"
-                context  = {'var1': u('<>&"'), 'var2': mark_as_escaped(u('<>&"'))}
+                context  = {'var1': u('<>&"'), 'var2': as_escaped(u('<>&"'))}
                 expected = "var1: &lt;&gt;&amp;&quot;, var2: <>&\"\n"
                 t = tenjin.safe.SafeTemplate(input=input)
                 ok (t.render(context)) == expected
@@ -181,7 +181,7 @@ class SafePreprocessorTest(object):
               "<p>{=item=}</p>\n"
               "<?py #end ?>\n"
               "<?PY #end ?>\n" )
-    context = { 'items': [ '<>&"', mark_as_escaped('<>&"') ] }
+    context = { 'items': [ '<>&"', as_escaped('<>&"') ] }
     expected = ( "<h1>1</h1>\n"
                  "<?py for item in items: ?>\n"
                  "<p>{=item=}</p>\n"
@@ -272,7 +272,7 @@ class SafeEngineTest(object):
         @_with_template(fname, input)
         def f():
             engine = tenjin.safe.SafeEngine()
-            context = { 'v1': '<&>', 'v2': mark_as_escaped('<&>'), }
+            context = { 'v1': '<&>', 'v2': as_escaped('<&>'), }
             output = engine.render(fname, context)
             ok (output) == expected
         f()

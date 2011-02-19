@@ -388,10 +388,10 @@ def _dummy():
     def tagattr(name, expr, value=None, escape=True):
         """(experimental) Return ' name="value"' if expr is true value, else '' (empty string).
            If value is not specified, expr is used as value instead."""
-        if not expr and expr != 0: return _safe.mark_as_escaped('')
+        if not expr and expr != 0: return _safe.as_escaped('')
         if value is None: value = expr
         if escape: value = _safe.safe_escape(value)
-        return _safe.mark_as_escaped(' %s="%s"' % (name, value))
+        return _safe.as_escaped(' %s="%s"' % (name, value))
 
     def tagattrs(**kwargs):
         """(experimental) built html tag attribtes.
@@ -407,35 +407,35 @@ def _dummy():
         if 'disabled' in kwargs: kwargs['disabled'] = kwargs.pop('disabled') and 'disabled' or None
         esc = _safe.safe_escape
         s = ''.join([ ' %s="%s"' % (k, esc(v)) for k, v in kwargs.iteritems() if v or v == 0 ])
-        return _safe.mark_as_escaped(s)
+        return _safe.as_escaped(s)
 
     def checked(expr):
         """return ' checked="checked"' if expr is true."""
-        return _safe.mark_as_escaped(expr and ' checked="checked"' or '')
+        return _safe.as_escaped(expr and ' checked="checked"' or '')
 
     def selected(expr):
         """return ' selected="selected"' if expr is true."""
-        return _safe.mark_as_escaped(expr and ' selected="selected"' or '')
+        return _safe.as_escaped(expr and ' selected="selected"' or '')
 
     def disabled(expr):
         """return ' disabled="disabled"' if expr is true."""
-        return _safe.mark_as_escaped(expr and ' disabled="disabled"' or '')
+        return _safe.as_escaped(expr and ' disabled="disabled"' or '')
 
     def nl2br(text):
         """replace "\n" to "<br />\n" and return it."""
         if not text:
-            return _safe.mark_as_escaped('')
-        return _safe.mark_as_escaped(text.replace('\n', '<br />\n'))
+            return _safe.as_escaped('')
+        return _safe.as_escaped(text.replace('\n', '<br />\n'))
 
     def text2html(text, use_nbsp=True):
         """(experimental) escape xml characters, replace "\n" to "<br />\n", and return it."""
         if not text:
-            return _safe.mark_as_escaped('')
+            return _safe.as_escaped('')
         s = _safe.safe_escape(text)
         if use_nbsp: s = s.replace('  ', ' &nbsp;')
         #return nl2br(s)
         s = s.replace('\n', '<br />\n')
-        return _safe.mark_as_escaped(s)
+        return _safe.as_escaped(s)
 
     def nv(name, value, sep=None, **kwargs):
         """(experimental) Build name and value attributes.
@@ -454,7 +454,7 @@ def _dummy():
         s = sep and 'name="%s" value="%s" id="%s"' % (name, value, name+sep+value) \
                 or  'name="%s" value="%s"'         % (name, value)
         html = kwargs and s + tagattrs(**kwargs) or s
-        return _safe.mark_as_escaped(html)
+        return _safe.as_escaped(html)
 
     def new_cycle(*values):
         """Generate cycle object.
@@ -1797,7 +1797,7 @@ class Engine(object):
 ## safe module
 ##
 def _dummy():
-    global is_escaped, mark_as_escaped, safe_escape
+    global is_escaped, as_escaped, safe_escape
     global SafeTemplate, SafePreprocessor, SafeEngine
     if python2:
         global Escaped, EscapedStr, EscapedUnicode
@@ -1805,7 +1805,7 @@ def _dummy():
         global Escaped, EscapedStr, EscapedBytes
     #end
     global __all__
-    __all__ = ('is_escaped', 'mark_as_escaped', 'safe_escape', #'Escaped', 'EscapedStr',
+    __all__ = ('is_escaped', 'as_escaped', 'safe_escape', #'Escaped', 'EscapedStr',
                'SafeTemplate', 'SafePreprocessor', 'SafeEngine')
 
     class Escaped(object):
@@ -1825,28 +1825,28 @@ def _dummy():
             """unicode class to avoid escape in template"""
             pass
 
-        def mark_as_escaped(s):
+        def as_escaped(s):
             if isinstance(s, str):     return EscapedStr(s)
             if isinstance(s, unicode): return EscapedUnicode(s)
-            raise TypeError("mark_as_escaped(%r): expected str or unicode." % (s, ))
+            raise TypeError("as_escaped(%r): expected str or unicode." % (s, ))
     elif python3:
         class EscapedBytes(bytes, Escaped):
             """unicode class to avoid escape in template"""
             pass
 
-        def mark_as_escaped(s):
+        def as_escaped(s):
             if isinstance(s, str):   return EscapedStr(s)
             if isinstance(s, bytes): return EscapedBytes(s)
-            raise TypeError("mark_as_escaped(%r): expected str or bytes." % (s, ))
+            raise TypeError("as_escaped(%r): expected str or bytes." % (s, ))
     #end
 
     def safe_escape(value):
         if is_escaped(value):
             #return value     # EscapedUnicode should be convered into EscapedStr
-            return mark_as_escaped(_helpers.to_str(value))
+            return as_escaped(_helpers.to_str(value))
         #if isinstance(value, _basestring):
-        #    return mark_as_escaped(_helpers.escape(value))
-        return mark_as_escaped(_helpers.escape(_helpers.to_str(value)))
+        #    return as_escaped(_helpers.escape(value))
+        return as_escaped(_helpers.escape(_helpers.to_str(value)))
 
     class SafeTemplate(Template):
         """Uses 'safe_escape()' instead of 'escape()'.

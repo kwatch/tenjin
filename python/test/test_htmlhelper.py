@@ -16,11 +16,11 @@ import tenjin
 from tenjin.helpers import escape, to_str
 
 if python2:
-    from tenjin.safe import mark_as_escaped, EscapedStr, EscapedUnicode
+    from tenjin.safe import as_escaped, EscapedStr, EscapedUnicode
     def u(s):
         return s.decode('utf-8')
 else:
-    from tenjin.safe import mark_as_escaped, EscapedStr, EscapedBytes
+    from tenjin.safe import as_escaped, EscapedStr, EscapedBytes
     def u(s):
         return s
 
@@ -56,8 +56,8 @@ class HtmlHelperTest(object):
         #
         ok (tagattrs(name="<foo>"))    == ' name="&lt;foo&gt;"'
         ok (tagattrs(name=u("<foo>"))) == ' name="&lt;foo&gt;"'
-        ok (tagattrs(name=mark_as_escaped("<foo>")))    == ' name="<foo>"'
-        ok (tagattrs(name=mark_as_escaped(u("<foo>")))) == ' name="<foo>"'
+        ok (tagattrs(name=as_escaped("<foo>")))    == ' name="<foo>"'
+        ok (tagattrs(name=as_escaped(u("<foo>")))) == ' name="<foo>"'
 
     def test_checked(self):
         checked = tenjin.helpers.html.checked
