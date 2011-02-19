@@ -50,17 +50,14 @@ class NoTextTemplate(tenjin.Template):
             n = code.count("\n")
             if n:
                 buf.append("\n" * n)
-        #elif flag_escape is None:
-        #    buf.extend((code, "; ", ))
-        else:
-            if not self.tostrfunc:  flag_tostr  = False
-            if not self.escapefunc: flag_escape = False
-            if flag_tostr and flag_escape: s1, s2 = "_escape(_to_str(", ")); "
-            elif flag_tostr:               s1, s2 = "_to_str(", "); "
-            elif flag_escape:              s1, s2 = "_escape(", "); "
-            else:                          s1, s2 = "(", "); "
-            buf.extend((s1, code, s2, ))
-
+            return
+        if not self.tostrfunc:  flag_tostr  = False
+        if not self.escapefunc: flag_escape = False
+        if flag_tostr and flag_escape: s1, s2 = "_escape(_to_str(", ")); "
+        elif flag_tostr:               s1, s2 = "_to_str(", "); "
+        elif flag_escape:              s1, s2 = "_escape(", "); "
+        else:                          s1, s2 = "(", "); "
+        buf.extend((s1, code, s2, ))
 
     def parse_exprs(self, buf, input, is_bol=False):
         if not input:
