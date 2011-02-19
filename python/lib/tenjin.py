@@ -1837,9 +1837,9 @@ def _dummy():
             expr1, expr2, expr3, expr4 = match.groups()
             if expr1 is not None:
                 raise TemplateSyntaxError("#{%s}: '#{}' is not allowed with SafeTemplate." % match.group(1))
-            if expr2 is not None: return expr2, False, True    # escape
-            if expr3 is not None: return expr3, True, False    # not escape
-            if expr4 is not None: return expr4, False, True    # escape
+            if expr2 is not None: return expr2, False, True   # #{...}    : escape
+            if expr3 is not None: return expr3, True, False   # [==...==] : not escape
+            if expr4 is not None: return expr4, False, True   # [=...=]   : escape
 
     class SafePreprocessor(Preprocessor):
         tostrfunc  = 'to_str'
@@ -1848,9 +1848,9 @@ def _dummy():
             expr1, expr2, expr3, expr4 = match.groups()
             if expr1 is not None:
                 raise TemplateSyntaxError("#{{%s}}: '#{{}}' is not allowed with SafePreprocessor." % match.group(1))
-            if expr2 is not None: return expr2, False, True    # escape
-            if expr3 is not None: return expr3, True, False    # not escape
-            if expr4 is not None: return expr4, False, True    # escape
+            if expr2 is not None: return expr2, False, True   # #{...}    : escape
+            if expr3 is not None: return expr3, True, False   # [==...==] : not escape
+            if expr4 is not None: return expr4, False, True   # [=...=]   : escape
 
     class SafeEngine(Engine):
         templateclass = SafeTemplate
