@@ -290,16 +290,7 @@ def _dummy():
         return capture_context.captured
 
     def capture_as(name, store_to_context=True):
-        """capture partial of template.
-           ex.
-              <?py from __future__ import with_statement ?>
-              <?py with capture_as('sidemenu'): ?>
-                <ul>
-                  <li>Top</li>
-                </ul>
-              <?py #endwith ?>
-              <?py echo(sidemenu) ?>
-        """
+        """capture partial of template."""
         return CaptureContext(name, store_to_context, sys._getframe(1).f_locals)
 
     def captured_as(name, _depth=1):
