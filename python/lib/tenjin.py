@@ -1835,6 +1835,8 @@ def _dummy():
     #end
 
     def to_escaped(value):
+        if hasattr(value, '__html__'):
+            value = value.__html__()
         if is_escaped(value):
             #return value     # EscapedUnicode should be convered into EscapedStr
             return as_escaped(_helpers.to_str(value))

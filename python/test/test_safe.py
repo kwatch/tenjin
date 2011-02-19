@@ -4,6 +4,7 @@
 ###
 
 from oktest import ok, not_ok, run, spec
+from oktest.tracer import Tracer
 import sys, os, re
 
 import tenjin
@@ -103,6 +104,19 @@ class EscapedStrTest(object):
             ret = to_escaped(123)
             ok (ret) == "123"
             ok (ret).is_a(EscapedStr)
+        if "arg has __html__() method then calls it.":
+            tr = Tracer()
+            obj = tr.fake_obj(__html__="<b>OK</b>")
+            ret = to_escaped(obj)
+            ok (ret) == "&lt;b&gt;OK&lt;/b&gt;"
+            ok (ret).is_a(EscapedStr)
+            ok (tr[-1].name) == '__html__'
+            #
+            obj = tr.fake_obj(__html__=as_escaped("<b>WaWaWa</b>"))
+            ret = to_escaped(obj)
+            ok (ret) == "<b>WaWaWa</b>"
+            ok (ret).is_a(EscapedStr)
+            ok (tr[-1].name) == '__html__'
 
 
 class SafeTemplateTest(object):
