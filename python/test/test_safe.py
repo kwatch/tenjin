@@ -110,25 +110,25 @@ class SafeTemplateTest(object):
     expected = ( "<p>&lt;&gt;&amp;&quot;</p>\n"
                  "<p><>&\"</p>\n" )
 
-    def test_get_expr_and_escapeflag(self):
+    def test_get_expr_and_flags(self):
         t = tenjin.SafeTemplate()
         if "matched expression is '${...}' then returns expr string and True":
             m = t.expr_pattern().search("<p>${item}</p>")
-            ret = t.get_expr_and_escapeflag(m)
-            ok (ret) == ('item', True)
+            ret = t.get_expr_and_flags(m)
+            ok (ret) == ('item', True, True)
         if "matched expression is '#{...}' then raises error":
             m = t.expr_pattern().search("<p>#{item}</p>")
-            def f(): t.get_expr_and_escapeflag(m)
+            def f(): t.get_expr_and_flags(m)
             ok (f).raises(tenjin.TemplateSyntaxError,
                           "#{item}: '#{}' is not allowed with SafeTemplate.")
         if "matched expression is '{=...=}' then returns expr string and True":
             m = t.expr_pattern().search("<p>{=item=}</p>")
-            ret = t.get_expr_and_escapeflag(m)
-            ok (ret) == ('item', True)
+            ret = t.get_expr_and_flags(m)
+            ok (ret) == ('item', True, True)
         if "matched expression is '{==...==}' then returns expr string and False":
             m = t.expr_pattern().search("<p>{==item==}</p>")
-            ret = t.get_expr_and_escapeflag(m)
-            ok (ret) == ('item', False)
+            ret = t.get_expr_and_flags(m)
+            ok (ret) == ('item', True, False)
 
     def test_FUNCTEST_of_convert(self):
         if "converted then use 'safe_escape()' instead of 'escape()'":
@@ -197,25 +197,25 @@ for item in items:
 #end
 """[1:]
 
-    def test_get_expr_and_escapeflag(self):
+    def test_get_expr_and_flags(self):
         t = tenjin.SafePreprocessor()
         if "matched expression is '${{...}}' then returns expr string and True":
             m = t.expr_pattern().search("<p>${{item}}</p>")
-            ret = t.get_expr_and_escapeflag(m)
-            ok (ret) == ('item', True)
+            ret = t.get_expr_and_flags(m)
+            ok (ret) == ('item', True, True)
         if "matched expression is '#{{...}}' then raises error":
             m = t.expr_pattern().search("<p>#{{item}}</p>")
-            def f(): t.get_expr_and_escapeflag(m)
+            def f(): t.get_expr_and_flags(m)
             ok (f).raises(tenjin.TemplateSyntaxError,
                           "#{{item}}: '#{{}}' is not allowed with SafePreprocessor.")
         if "matched expression is '{#=...=#}' then returns expr string and True":
             m = t.expr_pattern().search("<p>{#=item=#}</p>")
-            ret = t.get_expr_and_escapeflag(m)
-            ok (ret) == ('item', True)
+            ret = t.get_expr_and_flags(m)
+            ok (ret) == ('item', True, True)
         if "matched expression is '{#==...==#}' then returns expr string and False":
             m = t.expr_pattern().search("<p>{#==item==#}</p>")
-            ret = t.get_expr_and_escapeflag(m)
-            ok (ret) == ('item', False)
+            ret = t.get_expr_and_flags(m)
+            ok (ret) == ('item', True, False)
 
     def test_FUNCTEST_with_engine(self):
         fname = 'test_safe_preprocessor.pyhtml'

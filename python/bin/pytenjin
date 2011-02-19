@@ -44,7 +44,7 @@ class NoTextTemplate(tenjin.Template):
             s = re.sub(r'[^\t]', ' ', text[i:])
             buf.append(s)
 
-    def add_expr(self, buf, code, flag_escape=None):
+    def add_expr(self, buf, code, flag_tostr=True, flag_escape=None):
         if not code or code.isspace():
             return
         if self.noexpr:
@@ -52,14 +52,16 @@ class NoTextTemplate(tenjin.Template):
             if n:
                 buf.append("\n" * n)
         elif flag_escape is None:
-            #buf.extend(("_extend((", code, ", )); "))
             buf.extend((code, "; ", ))
-        elif flag_escape is False:
-            #buf.extend(("_extend((", self.tostrfunc, "(", code, "), )); "))
-            #buf.extend((self.tostrfunc, "(", code, "); ", ))
-            buf.extend((self.tostrfunc and "_to_str(" or "(", code, "); ", ))
         else:
-            buf.extend((self.escapefunc and "_escape(" or "(", self.tostrfunc and "_to_str(" or "(", code, ")); "))
+            if not self.tostrfunc:  flag_tostr  = False
+            if not self.escapefunc: flag_escape = False
+            buf.extend((flag_escape and "_escape(" or "",
+                        flag_tostr  and "_to_str(" or "",
+                        not (flag_escape or flag_tostr) and "(" or "",
+                        code,
+                        (flag_escape and flag_tostr) and ")); " or "); ", ))
+
 
     def parse_exprs(self, buf, input, is_bol=False):
         if not input:

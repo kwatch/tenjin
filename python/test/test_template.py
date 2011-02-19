@@ -4,6 +4,7 @@
 ###
 
 from oktest import ok, not_ok, run, spec
+from oktest.tracer import Tracer
 import sys, os, re
 
 from testcase_helper import *
@@ -306,7 +307,7 @@ _extend(('''</ul>\n''', ));
             output = t.render({'name': 'Haru&Kyon'})
             ok (output) == "<p>Hello Haru&Kyon!</p>"
             ok (t.script) == self.lvars.replace('=escape', '=False') + \
-                             "_extend(('''<p>Hello ''', (_to_str(name)), '''!</p>''', ));"
+                             "_extend(('''<p>Hello ''', _to_str(name), '''!</p>''', ));"
         if "passed wrong function name as tostrfunc option then raises error":
             t = tenjin.Template(None, input=input, escapefunc='kyonsmith')
             def f(): t.render({'name': 'Haruhi'})
@@ -437,6 +438,77 @@ d=''', _to_str(d), '''\n''', ));
         t = tenjin.Template()
         ok (t.convert(input)) == expected
 
+
+    def test_add_expr(self):
+        input = r"""
+not escape: #{var}
+escape: ${var}
+"""
+        if spec("nothing is specified then both _to_str() and _escape() are used."):
+            t = tenjin.Template()
+            script = t.convert(input)
+            expected = r"""_extend=_buf.extend;_to_str=to_str;_escape=escape; _extend(('''
+not escape: ''', _to_str(var), '''
+escape: ''', _escape(_to_str(var)), '''\n''', ));
+"""
+            ok (script) == expected
+        if spec("when tostrfunc is False then skips _to_str()."):
+            expected = r"""_extend=_buf.extend;_to_str=False;_escape=escape; _extend(('''
+not escape: ''', (var), '''
+escape: ''', _escape(var), '''\n''', ));
+"""
+            t = tenjin.Template(tostrfunc=False)
+            ok (t.convert(input)) == expected
+        if spec("escapefunc is False then skips _escape()."):
+            expected = r"""_extend=_buf.extend;_to_str=to_str;_escape=False; _extend(('''
+not escape: ''', _to_str(var), '''
+escape: ''', _to_str(var), '''\n''', ));
+"""
+            t = tenjin.Template(escapefunc=False)
+            ok (t.convert(input)) == expected
+        if spec("both tostr and escapefunc are False then skips _to_str() and _escape()."):
+            expected = r"""_extend=_buf.extend;_to_str=False;_escape=False; _extend(('''
+not escape: ''', (var), '''
+escape: ''', (var), '''\n''', ));
+"""
+            t = tenjin.Template(tostrfunc=False, escapefunc=False)
+            ok (t.convert(input)) == expected
+        if spec("get_expr_and_flags() returns flag_tostr=False then ignores _escape()."):
+            tr = Tracer()
+            def fn(orig, *args):
+                expr, flag_tostr, flag_escape = orig(*args)
+                return expr, False, flag_escape
+            expected = r"""_extend=_buf.extend;_to_str=to_str;_escape=escape; _extend(('''
+not escape: ''', (var), '''
+escape: ''', _escape(var), '''\n''', ));
+"""
+            t = tenjin.Template()
+            tr.fake_method(t, get_expr_and_flags=fn)
+            ok (t.convert(input)) == expected
+        if spec("get_expr_and_flags() returns flag_escape=False then ignores _escape()."):
+            tr = Tracer()
+            def fn(orig, *args):
+                expr, flag_tostr, flag_escape = orig(*args)
+                return expr, flag_tostr, False
+            expected = r"""_extend=_buf.extend;_to_str=to_str;_escape=escape; _extend(('''
+not escape: ''', _to_str(var), '''
+escape: ''', _to_str(var), '''\n''', ));
+"""
+            t = tenjin.Template()
+            tr.fake_method(t, get_expr_and_flags=fn)
+            ok (t.convert(input)) == expected
+        if spec("get_expr_and_flags() returns both flags False then ignores both _to_str() and _escape()."):
+            tr = Tracer()
+            def fn(orig, *args):
+                expr, flag_tostr, flag_escape = orig(*args)
+                return expr, False, False
+            expected = r"""_extend=_buf.extend;_to_str=to_str;_escape=escape; _extend(('''
+not escape: ''', (var), '''
+escape: ''', (var), '''\n''', ));
+"""
+            t = tenjin.Template()
+            tr.fake_method(t, get_expr_and_flags=fn)
+            ok (t.convert(input)) == expected
 
 
 if __name__ == '__main__':

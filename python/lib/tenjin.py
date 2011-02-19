@@ -812,12 +812,12 @@ class Template(object):
             self.__class__.EXPR_PATTERN = pat = re.compile(*pat)
         return pat
 
-    def get_expr_and_escapeflag(self, match):
+    def get_expr_and_flags(self, match):
         expr1, expr2, expr3, expr4 = match.groups()
-        if expr1 is not None: return expr1, False   # not escape
-        if expr2 is not None: return expr2, True    # escape
-        if expr3 is not None: return expr3, False   # not escape
-        if expr4 is not None: return expr4, True    # escape
+        if expr1 is not None: return expr1, True, False   # not escape
+        if expr2 is not None: return expr2, True, True    # escape
+        if expr3 is not None: return expr3, True, False   # not escape
+        if expr4 is not None: return expr4, True, True    # escape
 
     def parse_exprs(self, buf, input, is_bol=False):
         buf2 = []
@@ -837,11 +837,11 @@ class Template(object):
             start = m.start()
             text  = input[pos:start]
             pos   = m.end()
-            expr, flag_escape = self.get_expr_and_escapeflag(m)
+            expr, flag_tostr, flag_escape = self.get_expr_and_flags(m)
             #
             if text:
                 self.add_text(buf, text)
-            self.add_expr(buf, expr, flag_escape)
+            self.add_expr(buf, expr, flag_tostr, flag_escape)
             #
             if smarttrim:
                 flag_bol = text.endswith(nl) or not text and (start > 0  or is_bol)
@@ -886,16 +886,18 @@ class Template(object):
 
     _add_text = add_text
 
-    def add_expr(self, buf, code, flag_escape=None):
+    def add_expr(self, buf, code, flag_tostr=True, flag_escape=None):
         if not code or code.isspace(): return
         if flag_escape is None:
             buf.extend((code, ", "))
-        elif flag_escape is False:
-            #buf.extend((self.tostrfunc, "(", code, "), "))
-            buf.extend((self.tostrfunc and "_to_str(" or "(", code, "), "))
         else:
-            #buf.extend((self.escapefunc, "(", self.tostrfunc, "(", code, ")), "))
-            buf.extend((self.escapefunc and "_escape(" or "(", self.tostrfunc and "_to_str(" or "(", code, ")), "))
+            if not self.tostrfunc:  flag_tostr  = False
+            if not self.escapefunc: flag_escape = False
+            buf.extend((flag_escape and "_escape(" or "",
+                        flag_tostr  and "_to_str(" or "",
+                        not (flag_escape or flag_tostr) and "(" or "",
+                        code,
+                        (flag_escape and flag_tostr) and ")), " or "), ", ))
 
     def add_stmt(self, buf, code):
         if not code: return
@@ -1098,10 +1100,10 @@ class SafeTemplate(Template):
     """
     escapefunc = 'safe_escape'
 
-    def get_expr_and_escapeflag(self, match):
+    def get_expr_and_flags(self, match):
         if match.group(1) is not None:
             raise TemplateSyntaxError("#{%s}: '#{}' is not allowed with SafeTemplate." % match.group(1))
-        return Template.get_expr_and_escapeflag(self, match)
+        return Template.get_expr_and_flags(self, match)
 
 
 ##
@@ -1115,21 +1117,21 @@ class Preprocessor(Template):
 
     EXPR_PATTERN = (r'#\{\{(.*?)\}\}|\$\{\{(.*?)\}\}|\{#=(?:=(.*?)=|(.*?))=#\}', re.S)
 
-    def add_expr(self, buf, code, flag_escape=None):
+    def add_expr(self, buf, code, flag_tostr=True, flag_escape=None):
         if not code or code.isspace():
             return
         code = "_decode_params(%s)" % code
-        Template.add_expr(self, buf, code, flag_escape)
+        Template.add_expr(self, buf, code, flag_tostr, flag_escape)
 
 
 class SafePreprocessor(Preprocessor):
 
     escapefunc = 'safe_escape'
 
-    def get_expr_and_escapeflag(self, match):
+    def get_expr_and_flags(self, match):
         if match.group(1) is not None:
             raise TemplateSyntaxError("#{{%s}}: '#{{}}' is not allowed with SafePreprocessor." % match.group(1))
-        return Template.get_expr_and_escapeflag(self, match)
+        return Template.get_expr_and_flags(self, match)
 
 
 ##
