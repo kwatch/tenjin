@@ -1342,24 +1342,7 @@ class FileBaseStore(KeyValueStore):
 ## html fragment cache helper class
 ##
 class FragmentCacheHelper(object):
-    """html fragment cache helper.
-       ex (main script):
-           kv_store = tenjin.FileBaseStore('cache.d')
-           not_cached, echo_cached = tenjin.FragmentCacheHelper(kv_store).functions()
-           engine = tenjin.Engine()
-           context = {'get_items': lambda: ['AAA', 'BBB', 'CCC'] }
-           html = engine.render('template.pyhtml', context)
-           print(html)
-       ex (template):
-           <?py if not_cached('item_list', 10): ?>
-           <ol>
-           <?py     for item in get_items(): ?>
-             <li>${item}</li>
-           <?py     #endif ?>
-           </ol>
-           <?py #endif ?>
-           <?py echo_cached()  # necessary! ?>
-    """
+    """html fragment cache helper class."""
 
     lifetime = 60   # 1 minute
     prefix   = None
