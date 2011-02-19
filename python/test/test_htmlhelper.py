@@ -111,9 +111,10 @@ class HtmlHelperTest(object):
         #
         ok (nv('rank', 'A')).is_a(EscapedStr)
         #
-        ok (nv(u("名前"), u("なまえ"))) == u('name="名前" value="なまえ"')
+        #ok (nv(u("名前"), u("なまえ"))) == u('name="名前" value="なまえ"')
+        ok (nv(u("名前"), u("なまえ"))) == 'name="名前" value="なまえ"'
         if python2:
-            ok (nv(u("名前"), u("なまえ"))).is_a(EscapedUnicode)
+            ok (nv(u("名前"), u("なまえ"))).is_a(EscapedStr)  # not EscapedUnicode!
 
     def test_new_cycle(self):
         cycle = tenjin.helpers.html.new_cycle('odd', 'even')

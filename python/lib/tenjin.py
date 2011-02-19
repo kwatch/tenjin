@@ -1841,9 +1841,11 @@ def _dummy():
     #end
 
     def safe_escape(value):
-        if is_escaped(value): return value
-        if isinstance(value, _basestring):
-            return mark_as_escaped(_helpers.escape(value))
+        if is_escaped(value):
+            #return value     # EscapedUnicode should be convered into EscapedStr
+            return mark_as_escaped(_helpers.to_str(value))
+        #if isinstance(value, _basestring):
+        #    return mark_as_escaped(_helpers.escape(value))
         return mark_as_escaped(_helpers.escape(_helpers.to_str(value)))
 
     class SafeTemplate(Template):

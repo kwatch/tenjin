@@ -70,13 +70,16 @@ class EscapedStrTest(object):
     def test_safe_escape(self):
         if "arg is escaped then returns it as-is.":
             obj = EscapedStr("<foo>")
-            ok (safe_escape(obj)).is_(obj)
+            #ok (safe_escape(obj)).is_(obj)
+            ok (safe_escape(obj)) == obj
             if python2:
                 obj = EscapedUnicode(u("<foo>"))
-                ok (safe_escape(obj)).is_(obj)
+                #ok (safe_escape(obj)).is_(obj)
+                ok (safe_escape(obj)) == obj
             elif python3:
                 obj = EscapedBytes(b("<foo>"))
-                ok (safe_escape(obj)).is_(obj)
+                #ok (safe_escape(obj)).is_(obj)
+                ok (safe_escape(obj)) == EscapedStr("<foo>")
         if "arg is not escaped then escapes it and returns escaped object.":
             ret = safe_escape("<foo>")
             ok (ret) == "&lt;foo&gt;"
@@ -85,7 +88,7 @@ class EscapedStrTest(object):
             if python2:
                 ret = safe_escape(u("<foo>"))
                 ok (ret) == u("&lt;foo&gt;")
-                ok (ret).is_a(EscapedUnicode)
+                ok (ret).is_a(EscapedStr)     # not EscapedUnicode!
             elif python3:
                 #ret = safe_escape(b("<foo>"))
                 #ok (ret) == b("&lt;foo&gt;")
