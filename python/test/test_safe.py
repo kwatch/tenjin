@@ -13,7 +13,7 @@ from tenjin.safe import *
 python2 = sys.version_info[0] == 2
 python3 = sys.version_info[0] == 3
 
-lvars = "_extend=_buf.extend;_to_str=to_str;_escape=safe_escape; "
+lvars = "_extend=_buf.extend;_to_str=to_str;_escape=to_escaped; "
 
 
 if python2:
@@ -67,40 +67,40 @@ class EscapedStrTest(object):
             ok (as_escaped("<foo>")) == "<foo>"
             ok (as_escaped(u("<foo>"))) == u("<foo>")
 
-    def test_safe_escape(self):
+    def test_to_escaped(self):
         if "arg is escaped then returns it as-is.":
             obj = EscapedStr("<foo>")
-            #ok (safe_escape(obj)).is_(obj)
-            ok (safe_escape(obj)) == obj
+            #ok (to_escaped(obj)).is_(obj)
+            ok (to_escaped(obj)) == obj
             if python2:
                 obj = EscapedUnicode(u("<foo>"))
-                #ok (safe_escape(obj)).is_(obj)
-                ok (safe_escape(obj)) == obj
+                #ok (to_escaped(obj)).is_(obj)
+                ok (to_escaped(obj)) == obj
             elif python3:
                 obj = EscapedBytes(b("<foo>"))
-                #ok (safe_escape(obj)).is_(obj)
-                ok (safe_escape(obj)) == EscapedStr("<foo>")
+                #ok (to_escaped(obj)).is_(obj)
+                ok (to_escaped(obj)) == EscapedStr("<foo>")
         if "arg is not escaped then escapes it and returns escaped object.":
-            ret = safe_escape("<foo>")
+            ret = to_escaped("<foo>")
             ok (ret) == "&lt;foo&gt;"
             ok (ret).is_a(EscapedStr)
             #
             if python2:
-                ret = safe_escape(u("<foo>"))
+                ret = to_escaped(u("<foo>"))
                 ok (ret) == u("&lt;foo&gt;")
                 ok (ret).is_a(EscapedStr)     # not EscapedUnicode!
             elif python3:
-                #ret = safe_escape(b("<foo>"))
+                #ret = to_escaped(b("<foo>"))
                 #ok (ret) == b("&lt;foo&gt;")
                 #ok (ret).is_a(EscapedBytes)
-                ret = safe_escape(to_str(b("<foo>")))
+                ret = to_escaped(to_str(b("<foo>")))
                 ok (ret) == "&lt;foo&gt;"
                 ok (ret).is_a(EscapedStr)
         if "arg is not a basestring then calls to_str() and escape(), and returns EscapedStr":
-            ret = safe_escape(None)
+            ret = to_escaped(None)
             ok (ret) == ""
             ok (ret).is_a(EscapedStr)
-            ret = safe_escape(123)
+            ret = to_escaped(123)
             ok (ret) == "123"
             ok (ret).is_a(EscapedStr)
 
@@ -135,10 +135,10 @@ class SafeTemplateTest(object):
             ok (ret) == ('item', True, False)
 
     def test_FUNCTEST_of_convert(self):
-        if "converted then use 'safe_escape()' instead of 'escape()'":
+        if "converted then use 'to_escaped()' instead of 'escape()'":
             t = tenjin.safe.SafeTemplate(input="<p>{=item=}</p>")
             ok (t.script) == lvars + "_extend(('''<p>''', _escape(item), '''</p>''', ));"
-        if "{==...==} exists then skips to escape by safe_escape()":
+        if "{==...==} exists then skips to escape by to_escaped()":
             t = tenjin.safe.SafeTemplate(input="<p>{==foo()==}</p>")
             ok (t.script) == lvars + "_extend(('''<p>''', _to_str(foo()), '''</p>''', ));"
 

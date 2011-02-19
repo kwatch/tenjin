@@ -390,7 +390,7 @@ def _dummy():
            If value is not specified, expr is used as value instead."""
         if not expr and expr != 0: return _safe.as_escaped('')
         if value is None: value = expr
-        if escape: value = _safe.safe_escape(value)
+        if escape: value = _safe.to_escaped(value)
         return _safe.as_escaped(' %s="%s"' % (name, value))
 
     def tagattrs(**kwargs):
@@ -405,7 +405,7 @@ def _dummy():
         if 'checked'  in kwargs: kwargs['checked']  = kwargs.pop('checked')  and 'checked'  or None
         if 'selected' in kwargs: kwargs['selected'] = kwargs.pop('selected') and 'selected' or None
         if 'disabled' in kwargs: kwargs['disabled'] = kwargs.pop('disabled') and 'disabled' or None
-        esc = _safe.safe_escape
+        esc = _safe.to_escaped
         s = ''.join([ ' %s="%s"' % (k, esc(v)) for k, v in kwargs.iteritems() if v or v == 0 ])
         return _safe.as_escaped(s)
 
@@ -431,7 +431,7 @@ def _dummy():
         """(experimental) escape xml characters, replace "\n" to "<br />\n", and return it."""
         if not text:
             return _safe.as_escaped('')
-        s = _safe.safe_escape(text)
+        s = _safe.to_escaped(text)
         if use_nbsp: s = s.replace('  ', ' &nbsp;')
         #return nl2br(s)
         s = s.replace('\n', '<br />\n')
@@ -449,8 +449,8 @@ def _dummy():
            >>> nv('rank', 'A', '.', klass='error', style='color:red')
            'name="rank" value="A" id="rank.A" class="error" style="color:red"'
         """
-        name  = _safe.safe_escape(name)
-        value = _safe.safe_escape(value)
+        name  = _safe.to_escaped(name)
+        value = _safe.to_escaped(value)
         s = sep and 'name="%s" value="%s" id="%s"' % (name, value, name+sep+value) \
                 or  'name="%s" value="%s"'         % (name, value)
         html = kwargs and s + tagattrs(**kwargs) or s
@@ -1797,7 +1797,7 @@ class Engine(object):
 ## safe module
 ##
 def _dummy():
-    global is_escaped, as_escaped, safe_escape
+    global is_escaped, as_escaped, to_escaped
     global SafeTemplate, SafePreprocessor, SafeEngine
     if python2:
         global Escaped, EscapedStr, EscapedUnicode
@@ -1805,7 +1805,7 @@ def _dummy():
         global Escaped, EscapedStr, EscapedBytes
     #end
     global __all__
-    __all__ = ('is_escaped', 'as_escaped', 'safe_escape', #'Escaped', 'EscapedStr',
+    __all__ = ('is_escaped', 'as_escaped', 'to_escaped', #'Escaped', 'EscapedStr',
                'SafeTemplate', 'SafePreprocessor', 'SafeEngine')
 
     class Escaped(object):
@@ -1840,7 +1840,7 @@ def _dummy():
             raise TypeError("as_escaped(%r): expected str or bytes." % (s, ))
     #end
 
-    def safe_escape(value):
+    def to_escaped(value):
         if is_escaped(value):
             #return value     # EscapedUnicode should be convered into EscapedStr
             return as_escaped(_helpers.to_str(value))
@@ -1849,11 +1849,11 @@ def _dummy():
         return as_escaped(_helpers.escape(_helpers.to_str(value)))
 
     class SafeTemplate(Template):
-        """Uses 'safe_escape()' instead of 'escape()'.
+        """Uses 'to_escaped()' instead of 'escape()'.
            '#{...}' is not allowed with this class. Use '[==...==]' instead.
         """
         tostrfunc  = 'to_str'
-        escapefunc = 'safe_escape'
+        escapefunc = 'to_escaped'
         def get_expr_and_flags(self, match):
             expr1, expr2, expr3, expr4 = match.groups()
             if expr1 is not None:
@@ -1864,7 +1864,7 @@ def _dummy():
 
     class SafePreprocessor(Preprocessor):
         tostrfunc  = 'to_str'
-        escapefunc = 'safe_escape'
+        escapefunc = 'to_escaped'
         def get_expr_and_flags(self, match):
             expr1, expr2, expr3, expr4 = match.groups()
             if expr1 is not None:

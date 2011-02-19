@@ -846,7 +846,7 @@ class MainTest(object):
             self.input    = INPUT
             self.input    = re.sub(r'#{(.*?)}', r'{==\1==}', self.input)
             self.input    = re.sub(r'\${(.*?)}', r'{=\1=}', self.input)
-            self.expected = SOURCE.replace('=escape', '=safe_escape')
+            self.expected = SOURCE.replace('=escape', '=to_escaped')
             self.expected = re.sub(r'_escape\(_to_str\((.*?)\)\)', r'_escape(\1)', self.expected)
             self._test()
         finally:
