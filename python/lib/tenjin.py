@@ -1436,7 +1436,7 @@ helpers.__all__.extend(('not_cached', 'echo_cached', 'cache_as'))
 class Finder(object):
 
     def exists(self, filepath):
-        raise NotImplemenetedError("%s.exists(): not implemented yet." % self.__class__.__name__)
+        raise NotImplementedError("%s.exists(): not implemented yet." % self.__class__.__name__)
 
     def find(self, filename, dirs=None):
         #: if dirs provided then search template file from it.
@@ -1453,12 +1453,12 @@ class Finder(object):
         return None
 
     def abspath(self, filename):
-        raise NotImplemenetedError("%s.abspath(): not implemented yet." % self.__class__.__name__)
+        raise NotImplementedError("%s.abspath(): not implemented yet." % self.__class__.__name__)
 
     def timestamp(self, filepath):
-        raise NotImplemenetedError("%s.timestamp(): not implemented yet." % self.__class__.__name__)
+        raise NotImplementedError("%s.timestamp(): not implemented yet." % self.__class__.__name__)
     def read(self, filepath):
-        raise NotImplemenetedError("%s.timestamp(): not implemented yet." % self.__class__.__name__)
+        raise NotImplementedError("%s.timestamp(): not implemented yet." % self.__class__.__name__)
 
 
 
