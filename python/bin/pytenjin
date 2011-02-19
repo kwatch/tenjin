@@ -44,7 +44,7 @@ class NoTextTemplate(tenjin.Template):
             s = re.sub(r'[^\t]', ' ', text[i:])
             buf.append(s)
 
-    def add_expr(self, buf, code, flag_tostr=True, flag_escape=None):
+    def add_expr(self, buf, code, flag_tostr, flag_escape):
         if not code or code.isspace():
             return
         if self.noexpr:

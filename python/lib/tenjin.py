@@ -886,7 +886,7 @@ class Template(object):
 
     _add_text = add_text
 
-    def add_expr(self, buf, code, flag_tostr=True, flag_escape=None):
+    def add_expr(self, buf, code, flag_tostr, flag_escape):
         if not code or code.isspace(): return
         if flag_escape is None:
             buf.extend((code, ", "))
@@ -1117,7 +1117,7 @@ class Preprocessor(Template):
 
     EXPR_PATTERN = (r'#\{\{(.*?)\}\}|\$\{\{(.*?)\}\}|\{#=(?:=(.*?)=|(.*?))=#\}', re.S)
 
-    def add_expr(self, buf, code, flag_tostr=True, flag_escape=None):
+    def add_expr(self, buf, code, flag_tostr, flag_escape):
         if not code or code.isspace():
             return
         code = "_decode_params(%s)" % code
