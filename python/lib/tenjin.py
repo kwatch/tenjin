@@ -34,7 +34,7 @@ __license__  = "MIT License"
 __all__      = ['Template', 'Engine', 'helpers', ]
 
 
-import re, sys, os, time, marshal
+import sys, os, re, time, marshal
 from time import time as _time
 from os.path import getmtime as _getmtime
 from os.path import isfile as _isfile
@@ -315,8 +315,6 @@ def _dummy():
         def unescape(s):
             #return s.replace('&lt;', '<').replace('&gt;', '>').replace('&quot;', '"').replace('&#039;', "'").replace('&amp;',  '&')
             return re.sub(r'&(lt|gt|quot|amp|#039);',  lambda m: dct[m.group(1)],  s)
-        global re
-        if not re: import re
         s = to_str(s)
         s = re.sub(r'%3C%60%23(.*?)%23%60%3E', lambda m: '#{%s}' % unquote(m.group(1)), s)
         s = re.sub(r'%3C%60%24(.*?)%24%60%3E', lambda m: '${%s}' % unquote(m.group(1)), s)
