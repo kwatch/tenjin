@@ -66,12 +66,11 @@ def _write_binary_file(filename, content):
             os.rename(tmpfile, filename)
 
 def _read_binary_file(filename):
-    f = None
+    f = open(filename, 'rb')
     try:
-        f = open(filename, 'rb')
         return f.read()
     finally:
-        if f: f.close()
+        f.close()
 
 if python2:
     codecs = None    # lazy import
