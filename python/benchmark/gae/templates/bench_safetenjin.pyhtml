@@ -58,7 +58,7 @@ thead {
     <?py n = 0 ?>
     <?py for item in items: ?>
     <?py     n += 1 ?>
-    <tr class="{==n % 2 == 0 and 'even' or 'odd'==}">
+    <tr class="{==n % 2 and 'odd' or 'even'==}">
      <td style="text-align: center">{==n==}</td>
      <td>
       <a href="/stocks/{==item.symbol==}">{==item.symbol==}</a>
