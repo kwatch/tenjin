@@ -339,7 +339,7 @@ generate_tostrfunc = helpers.generate_tostrfunc
 ## module for html
 ##
 def _dummy():
-    global escape_html, escape_xml, escape, tagattr, tagattrs
+    global escape_html, escape_xml, escape, tagattr, tagattrs, _normalize_attrs
     global checked, selected, disabled, nl2br, text2html, nv, new_cycle
 
     #_escape_table = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }
@@ -395,13 +395,17 @@ def _dummy():
            >>> tagattrs(klass='', size=0)
            ''
         """
+        kwargs = _normalize_attrs(kwargs)
+        esc = _safe.to_escaped
+        s = ''.join([ ' %s="%s"' % (k, esc(v)) for k, v in kwargs.iteritems() if v or v == 0 ])
+        return _safe.as_escaped(s)
+
+    def _normalize_attrs(kwargs):
         if 'klass'    in kwargs: kwargs['class']    = kwargs.pop('klass')
         if 'checked'  in kwargs: kwargs['checked']  = kwargs.pop('checked')  and 'checked'  or None
         if 'selected' in kwargs: kwargs['selected'] = kwargs.pop('selected') and 'selected' or None
         if 'disabled' in kwargs: kwargs['disabled'] = kwargs.pop('disabled') and 'disabled' or None
-        esc = _safe.to_escaped
-        s = ''.join([ ' %s="%s"' % (k, esc(v)) for k, v in kwargs.iteritems() if v or v == 0 ])
-        return _safe.as_escaped(s)
+        return kwargs
 
     def checked(expr):
         """return ' checked="checked"' if expr is true."""
