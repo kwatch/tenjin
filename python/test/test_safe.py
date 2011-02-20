@@ -133,7 +133,7 @@ class SafeTemplateTest(object):
         if "matched expression is '${...}' then returns expr string and True":
             m = t.expr_pattern().search("<p>${item}</p>")
             ret = t.get_expr_and_flags(m)
-            ok (ret) == ('item', False, True)
+            ok (ret) == ('item', (True, False))
         if "matched expression is '#{...}' then raises error":
             m = t.expr_pattern().search("<p>#{item}</p>")
             def f(): t.get_expr_and_flags(m)
@@ -142,11 +142,11 @@ class SafeTemplateTest(object):
         if "matched expression is '{=...=}' then returns expr string and True":
             m = t.expr_pattern().search("<p>{=item=}</p>")
             ret = t.get_expr_and_flags(m)
-            ok (ret) == ('item', False, True)
+            ok (ret) == ('item', (True, False))
         if "matched expression is '{==...==}' then returns expr string and False":
             m = t.expr_pattern().search("<p>{==item==}</p>")
             ret = t.get_expr_and_flags(m)
-            ok (ret) == ('item', True, False)
+            ok (ret) == ('item', (False, True))
 
     def test_FUNCTEST_of_convert(self):
         if "converted then use 'to_escaped()' instead of 'escape()'":
@@ -220,7 +220,7 @@ for item in items:
         if "matched expression is '${{...}}' then returns expr string and True":
             m = t.expr_pattern().search("<p>${{item}}</p>")
             ret = t.get_expr_and_flags(m)
-            ok (ret) == ('item', False, True)
+            ok (ret) == ('item', (True, False))
         if "matched expression is '#{{...}}' then raises error":
             m = t.expr_pattern().search("<p>#{{item}}</p>")
             def f(): t.get_expr_and_flags(m)
@@ -229,11 +229,11 @@ for item in items:
         if "matched expression is '{#=...=#}' then returns expr string and True":
             m = t.expr_pattern().search("<p>{#=item=#}</p>")
             ret = t.get_expr_and_flags(m)
-            ok (ret) == ('item', False, True)
+            ok (ret) == ('item', (True, False))
         if "matched expression is '{#==...==#}' then returns expr string and False":
             m = t.expr_pattern().search("<p>{#==item==#}</p>")
             ret = t.get_expr_and_flags(m)
-            ok (ret) == ('item', True, False)
+            ok (ret) == ('item', (False, True))
 
     def test_FUNCTEST_with_engine(self):
         fname = 'test_safe_preprocessor.pyhtml'

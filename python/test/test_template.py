@@ -476,8 +476,8 @@ escape: ''', (var), '''\n''', ));
         if spec("get_expr_and_flags() returns flag_tostr=False then ignores _escape()."):
             tr = Tracer()
             def fn(orig, *args):
-                expr, flag_tostr, flag_escape = orig(*args)
-                return expr, False, flag_escape
+                expr, (flag_escape, flag_tostr) = orig(*args)
+                return expr, (flag_escape, False)
             expected = r"""_extend=_buf.extend;_to_str=to_str;_escape=escape; _extend(('''
 not escape: ''', (var), '''
 escape: ''', _escape(var), '''\n''', ));
@@ -488,8 +488,8 @@ escape: ''', _escape(var), '''\n''', ));
         if spec("get_expr_and_flags() returns flag_escape=False then ignores _escape()."):
             tr = Tracer()
             def fn(orig, *args):
-                expr, flag_tostr, flag_escape = orig(*args)
-                return expr, flag_tostr, False
+                expr, (flag_escape, flag_tostr) = orig(*args)
+                return expr, (False, flag_tostr)
             expected = r"""_extend=_buf.extend;_to_str=to_str;_escape=escape; _extend(('''
 not escape: ''', _to_str(var), '''
 escape: ''', _to_str(var), '''\n''', ));
@@ -500,8 +500,8 @@ escape: ''', _to_str(var), '''\n''', ));
         if spec("get_expr_and_flags() returns both flags False then ignores both _to_str() and _escape()."):
             tr = Tracer()
             def fn(orig, *args):
-                expr, flag_tostr, flag_escape = orig(*args)
-                return expr, False, False
+                expr, (flag_escape, flag_tostr) = orig(*args)
+                return expr, (False, False)
             expected = r"""_extend=_buf.extend;_to_str=to_str;_escape=escape; _extend(('''
 not escape: ''', (var), '''
 escape: ''', (var), '''\n''', ));

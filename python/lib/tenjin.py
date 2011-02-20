@@ -742,10 +742,10 @@ class Template(object):
 
     def get_expr_and_flags(self, match):
         expr1, expr2, expr3, expr4 = match.groups()
-        if expr1 is not None: return expr1, True, False   # not escape
-        if expr2 is not None: return expr2, True, True    # escape
-        if expr3 is not None: return expr3, True, False   # not escape
-        if expr4 is not None: return expr4, True, True    # escape
+        if expr1 is not None: return expr1, (False, True)   # not escape,  call to_str
+        if expr2 is not None: return expr2, (True,  True)   # call escape, call to_str
+        if expr3 is not None: return expr3, (False, True)   # not escape,  call to_str
+        if expr4 is not None: return expr4, (True,  True)   # call escape, call to_str
 
     def parse_exprs(self, buf, input, is_bol=False):
         buf2 = []
@@ -765,15 +765,15 @@ class Template(object):
             start = m.start()
             text  = input[pos:start]
             pos   = m.end()
-            expr, flag_tostr, flag_escape = self.get_expr_and_flags(m)
+            expr, flags = self.get_expr_and_flags(m)
             #
             if text:
                 self.add_text(buf, text)
-            self.add_expr(buf, expr, flag_tostr, flag_escape)
+            self.add_expr(buf, expr, *flags)
             #
             if smarttrim:
                 flag_bol = text.endswith(nl) or not text and (start > 0  or is_bol)
-                if flag_bol and not flag_escape and input[pos:pos+nl_len] == nl:
+                if flag_bol and not flags[0] and input[pos:pos+nl_len] == nl:
                     pos += nl_len
                     buf.append("\n")
         if smarttrim:
@@ -814,8 +814,9 @@ class Template(object):
 
     _add_text = add_text
 
-    def add_expr(self, buf, code, flag_tostr, flag_escape):
+    def add_expr(self, buf, code, *flags):
         if not code or code.isspace(): return
+        flag_escape, flag_tostr = flags
         if not self.tostrfunc:  flag_tostr  = False
         if not self.escapefunc: flag_escape = False
         if flag_tostr and flag_escape: s1, s2 = "_escape(_to_str(", ")), "
@@ -1027,11 +1028,11 @@ class Preprocessor(Template):
 
     EXPR_PATTERN = (r'#\{\{(.*?)\}\}|\$\{\{(.*?)\}\}|\{#=(?:=(.*?)=|(.*?))=#\}', re.S)
 
-    def add_expr(self, buf, code, flag_tostr, flag_escape):
+    def add_expr(self, buf, code, *flags):
         if not code or code.isspace():
             return
         code = "_decode_params(%s)" % code
-        Template.add_expr(self, buf, code, flag_tostr, flag_escape)
+        Template.add_expr(self, buf, code, *flags)
 
 
 ##
@@ -1842,9 +1843,9 @@ def _dummy():
             expr1, expr2, expr3, expr4 = match.groups()
             if expr1 is not None:
                 raise TemplateSyntaxError("#{%s}: '#{}' is not allowed with SafeTemplate." % match.group(1))
-            if expr2 is not None: return expr2, False, True   # #{...}    : escape
-            if expr3 is not None: return expr3, True, False   # [==...==] : not escape
-            if expr4 is not None: return expr4, False, True   # [=...=]   : escape
+            if expr2 is not None: return expr2, (True, False)   # #{...}    : call escape, not to_str
+            if expr3 is not None: return expr3, (False, True)   # [==...==] : not escape, call to_str
+            if expr4 is not None: return expr4, (True, False)   # [=...=]   : call escape, not to_str
 
     class SafePreprocessor(Preprocessor):
         tostrfunc  = 'to_str'
@@ -1853,9 +1854,9 @@ def _dummy():
             expr1, expr2, expr3, expr4 = match.groups()
             if expr1 is not None:
                 raise TemplateSyntaxError("#{{%s}}: '#{{}}' is not allowed with SafePreprocessor." % match.group(1))
-            if expr2 is not None: return expr2, False, True   # #{...}    : escape
-            if expr3 is not None: return expr3, True, False   # [==...==] : not escape
-            if expr4 is not None: return expr4, False, True   # [=...=]   : escape
+            if expr2 is not None: return expr2, (True, False)   # #{...}    : call escape, not to_str
+            if expr3 is not None: return expr3, (False, True)   # [==...==] : not escape, call to_str
+            if expr4 is not None: return expr4, (True, False)   # [=...=]   : call escape, not to_str
 
     class SafeEngine(Engine):
         templateclass = SafeTemplate
