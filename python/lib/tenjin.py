@@ -1791,34 +1791,38 @@ def _dummy():
         pass
 
     def is_escaped(value):
-        """return True if value is escaped, else return False."""
+        """return True if value is marked as escaped, else return False."""
         return isinstance(value, Escaped)
 
     class EscapedStr(str, Escaped):
-        """string class to avoid escape in template"""
+        """string class which is marked as escaped."""
         pass
 
     if python2:
         class EscapedUnicode(unicode, Escaped):
-            """unicode class to avoid escape in template"""
+            """unicode class which is marked as escaped."""
             pass
 
         def as_escaped(s):
+            """mark string as escaped, without escaping."""
             if isinstance(s, str):     return EscapedStr(s)
             if isinstance(s, unicode): return EscapedUnicode(s)
             raise TypeError("as_escaped(%r): expected str or unicode." % (s, ))
     elif python3:
         class EscapedBytes(bytes, Escaped):
-            """unicode class to avoid escape in template"""
+            """bytes class which is marked as escaped."""
             pass
 
         def as_escaped(s):
+            """mark string as escaped, without escaping. accepts only string."""
             if isinstance(s, str):   return EscapedStr(s)
             if isinstance(s, bytes): return EscapedBytes(s)
             raise TypeError("as_escaped(%r): expected str or bytes." % (s, ))
     #end
 
     def to_escaped(value):
+        """convert any value into string and escape it.
+           if value is already marked as escaped, don't escape it."""
         if hasattr(value, '__html__'):
             value = value.__html__()
         if is_escaped(value):
