@@ -1416,7 +1416,7 @@ helpers.__all__.extend(('not_cached', 'echo_cached', 'cache_as'))
 ##
 ## helper class to find and read template
 ##
-class Finder(object):
+class Loader(object):
 
     def exists(self, filepath):
         raise NotImplementedError("%s.exists(): not implemented yet." % self.__class__.__name__)
@@ -1440,7 +1440,8 @@ class Finder(object):
 
     def timestamp(self, filepath):
         raise NotImplementedError("%s.timestamp(): not implemented yet." % self.__class__.__name__)
-    def read(self, filepath):
+
+    def load(self, filepath):
         raise NotImplementedError("%s.timestamp(): not implemented yet." % self.__class__.__name__)
 
 
@@ -1448,7 +1449,7 @@ class Finder(object):
 ##
 ## helper class to find and read files
 ##
-class FileFinder(Finder):
+class FileLoader(Loader):
 
     def exists(self, filepath):
         #: return True if filepath exists as a file.
@@ -1462,7 +1463,7 @@ class FileFinder(Finder):
         #: return mtime of file
         return _getmtime(filepath)
 
-    def read(self, filepath):
+    def load(self, filepath):
         #: if file exists, return file content and mtime
         def f():
             mtime = _getmtime(filepath)
@@ -1474,7 +1475,7 @@ class FileFinder(Finder):
                 mtime2 = _getmtime(filepath)
                 if mtime != mtime2:
                     if logger:
-                        logger.warn("[tenjin] %s.read(): timestamp is changed while reading file." % self.__class__.__name__)
+                        logger.warn("[tenjin] %s.load(): timestamp is changed while reading file." % self.__class__.__name__)
             return input, mtime
         #: if file not exist, return None
         return _ignore_not_found_error(f)
@@ -1507,12 +1508,12 @@ class Engine(object):
     path       = None
     cache      = MarshalCacheStorage()  # save converted Python code into file by marshal-format
     lang       = None
-    finder     = FileFinder()
+    loader     = FileLoader()
     preprocess = False
     preprocessorclass = Preprocessor
     timestamp_interval = 1  # seconds
 
-    def __init__(self, prefix=None, postfix=None, layout=None, path=None, cache=True, preprocess=None, templateclass=None, preprocessorclass=None, lang=None, finder=None, **kwargs):
+    def __init__(self, prefix=None, postfix=None, layout=None, path=None, cache=True, preprocess=None, templateclass=None, preprocessorclass=None, lang=None, loader=None, **kwargs):
         """Initializer of Engine class.
 
            prefix:str (='')
@@ -1546,7 +1547,7 @@ class Engine(object):
         if preprocessorclass: self.preprocessorclass = preprocessorclass
         if path is not None:  self.path = path
         if lang is not None:  self.lang = lang
-        if finder is not None: self.finder = finder
+        if loader is not None: self.loader = loader
         if preprocess is not None: self.preprocess = preprocess
         self.kwargs = kwargs
         self.encoding = kwargs.get('encoding')
@@ -1625,7 +1626,7 @@ class Engine(object):
             #                        (self.__class__.__name__, now, template._last_checked_at, self.timestamp_interval))
             return template
         #: if timestamp of template objectis same as file, return it.
-        if template.timestamp == self.finder.timestamp(filepath):
+        if template.timestamp == self.loader.timestamp(filepath):
             template._last_checked_at = now
             return template
         #: if timestamp of template object is different from file, clear it
@@ -1650,11 +1651,11 @@ class Engine(object):
             filepath, fullpath = pair
         else:
             #: if template file is not found then raise TemplateNotFoundError.
-            filepath = self.finder.find(filename, self.path)
+            filepath = self.loader.find(filename, self.path)
             if not filepath:
                 raise TemplateNotFoundError('%s: filename not found (path=%r).' % (filename, self.path))
             #
-            fullpath = self.finder.abspath(filepath)
+            fullpath = self.loader.abspath(filepath)
             self._filepaths[filename] = (filepath, fullpath)
         #: use full path as base of cache file path
         cachepath = self.cachename(fullpath)
@@ -1663,7 +1664,7 @@ class Engine(object):
         template = cache and self._get_template_from_cache(cachepath, filepath) or None
         #: if template object is not found in cache or is expired...
         if not template:
-            ret = self.finder.read(filepath)
+            ret = self.loader.load(filepath)
             if not ret:
                 raise TemplateNotFoundError("%r: template not found." % filepath)
             input, timestamp = ret

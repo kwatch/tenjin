@@ -836,7 +836,7 @@ class EngineTest(object):
         e1 = tenjin.Engine()
         if spec("preprocess template and return result"):
             fpath = '_views/index.pyhtml'
-            input, mtime = e1.finder.read(fpath)
+            input, mtime = e1.loader.load(fpath)
             ret = e1._preprocess(input, fpath, {}, globals())
             ok (ret) == "<<SOS>>"
 
