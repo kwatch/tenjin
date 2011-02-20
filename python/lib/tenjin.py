@@ -459,7 +459,6 @@ def _dummy():
         return s.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;').replace('"', '&quot;').replace("'", '&#39;')   # 5.72
 
     escape_xml = escape_html   # for backward compatibility
-    escape     = escape_html
 
     def tagattr(name, expr, value=None, escape=True):
         """(experimental) Return ' name="value"' if expr is true value, else '' (empty string).
