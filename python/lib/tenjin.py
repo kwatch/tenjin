@@ -29,7 +29,7 @@
    http://www.kuwata-lab.com/tenjin/pytenjin-examples.html
 """
 
-__release__  = "$Release$"
+__version__  = "$Release$"
 __license__  = "MIT License"
 __all__      = ['Template', 'Engine', 'helpers', ]
 

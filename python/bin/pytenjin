@@ -427,7 +427,7 @@ Examples:
 
 
     def version(self):
-        return tenjin.__release__
+        return tenjin.__version__
 
 
     def parse_args(self, args, noargopts, argopts, argopts2):
