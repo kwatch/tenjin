@@ -91,14 +91,14 @@ else:
             if "called then change fragment cache prefix to 'fragment.'":
                 ok (tenjin.helpers.fragment_cache.prefix) == 'fragment.'
             if "called then use version id as memcache namespace":
-                expected = 'dev123'
+                expected = 'dev123.1'
                 ok (tenjin.Engine.cache.namespace) == expected
                 ok (tenjin.helpers.fragment_cache.store.namespace) == expected
             if "$CURRENT_VERSION_ID is missing then uses dummy value.":
                 try:
                     os.environ.pop('CURRENT_VERSION_ID')
                     tenjin.gae.init()
-                    ok (tenjin.Engine.cache.namespace) == '1'
+                    ok (tenjin.Engine.cache.namespace) == '1.1'
                 finally:
                     self.before()
                     tenjin.gae.init()
@@ -135,7 +135,7 @@ else:
                 if "rendered then converted script is stored into memcache":
                     from google.appengine.api import memcache
                     key = os.path.abspath(filename) + '.cache'
-                    obj = memcache.get(key, namespace='dev123')
+                    obj = memcache.get(key, namespace='dev123.1')
                     ok (obj).is_a(dict)
                     keys = obj.keys()
                     keys.sort()
@@ -143,7 +143,7 @@ else:
                     ok (obj['script']) == script
                 if "cached then version is used as namespace":
                     ok (memcache.get(key)) == None
-                    ok (memcache.get(key, namespace='dev123')) != None
+                    ok (memcache.get(key, namespace='dev123.1')) != None
                 if "cached once then it is possible to render even if file is removed":
                     os.unlink(filename)
                     not_ok (filename).exists()
@@ -177,16 +177,16 @@ else:
                 from google.appengine.api import memcache
                 key = 'fragment.items/1'
                 if "rendered then fragment is cached into memcache":
-                    ok (memcache.get(key, namespace='dev123')) == fragment
+                    ok (memcache.get(key, namespace='dev123.1')) == fragment
                 if "rendered again within lifetime then fragment is not changed":
                     context['items'].append('XXX')
                     ok (engine.render(filename, context)) == output
-                    ok (memcache.get(key, namespace='dev123')) == fragment
+                    ok (memcache.get(key, namespace='dev123.1')) == fragment
                 if "rendered again after liftime passed then fragment is changed":
                     time.sleep(2)
                     fragment2 = fragment + "  <li>XXX</li>\n"
                     ok (engine.render(filename, context)) == "<ul>\n" + fragment2 + "</ul>\n"
-                    ok (memcache.get(key, namespace='dev123')) == fragment2
+                    ok (memcache.get(key, namespace='dev123.1')) == fragment2
             self.do_with_file(func, filename, input)
 
 

@@ -29,9 +29,9 @@
    http://www.kuwata-lab.com/tenjin/pytenjin-examples.html
 """
 
-__version__  = "$Release: 0.0.0 $"[10:-2]
-__license__  = "$License: MIT License $"[10:-2]
-__all__      = ('Template', 'Engine', )
+__release__  = "$Release$"
+__license__  = "MIT License"
+__all__      = ['Template', 'Engine', 'helpers', ]
 
 
 import sys, os, re, time, marshal
@@ -51,26 +51,24 @@ logger = None
 
 def _write_binary_file(filename, content):
     global random
-    if random is None: from random import random
-    tmpfile = filename + str(random())[1:]
-    f = open(tmpfile, 'w+b')     # on windows, 'w+b' is preffered than 'wb'
+    f = None
     try:
+        if random is None: from random import random
+        tmpfile = filename + str(random())[1:]
+        f = open(tmpfile, 'wb')
         f.write(content)
     finally:
-        f.close()
-    if os.path.exists(tmpfile):
-        try:
-            os.rename(tmpfile, filename)
-        except:
-            os.remove(filename)  # on windows, existing file should be removed before renaming
+        if f:
+            f.close()
             os.rename(tmpfile, filename)
 
 def _read_binary_file(filename):
-    f = open(filename, 'rb')
+    f = None
     try:
+        f = open(filename, 'rb')
         return f.read()
     finally:
-        f.close()
+        if f: f.close()
 
 if python2:
     codecs = None    # lazy import
@@ -166,7 +164,10 @@ def _dummy():
                         if val is None:         return ''
                         #if _isa(val, _unicode): return val.encode(_encode)  # unicode to binary(=str)
                         if _isa(val, _unicode):
-                            return val.encode(_encode)  # unicode to binary(=str)
+                            if _isa(val, EscapedUnicode):
+                                return EscapedStr(val.encode(_encode))
+                            else:
+                                return val.encode(_encode)  # unicode to binary(=str)
                         return _str(val)
             else:
                 if decode:
@@ -174,7 +175,10 @@ def _dummy():
                         """Convert val into string or return '' if None. Binary(=str) will be decoded into unicode."""
                         #if _isa(val, _str):     return val.decode(_decode)  # binary(=str) to unicode
                         if _isa(val, _str):
-                            return val.decode(_decode)
+                            if _isa(val, EscapedStr):
+                                return EscapedUnicode(val, _decode)
+                            else:
+                                return val.decode(_decode)
                         if val is None:         return ''
                         if _isa(val, _unicode): return val
                         return _unicode(val)
@@ -342,7 +346,7 @@ def _dummy():
     global escape_html, escape_xml, escape, tagattr, tagattrs
     global checked, selected, disabled, nl2br, text2html, nv, new_cycle
 
-    #_escape_table = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }
+    #_escape_table = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }
     #_escape_pattern = re.compile(r'[&<>"]')
     ##_escape_callable = lambda m: _escape_table[m.group(0)]
     ##_escape_callable = lambda m: _escape_table.__get__(m.group(0))
@@ -374,7 +378,7 @@ def _dummy():
 
     def escape_html(s):
         """Escape '&', '<', '>', '"' into '&amp;', '&lt;', '&gt;', '&quot;'."""
-        return s.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;').replace('"', '&quot;').replace("'", '&#39;')   # 5.72
+        return s.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;').replace('"', '&quot;')   # 5.72
 
     escape_xml = escape_html   # for backward compatibility
     escape     = escape_html
@@ -1416,7 +1420,7 @@ helpers.__all__.extend(('not_cached', 'echo_cached', 'cache_as'))
 ##
 ## helper class to find and read template
 ##
-class Loader(object):
+class Finder(object):
 
     def exists(self, filepath):
         raise NotImplementedError("%s.exists(): not implemented yet." % self.__class__.__name__)
@@ -1440,8 +1444,7 @@ class Loader(object):
 
     def timestamp(self, filepath):
         raise NotImplementedError("%s.timestamp(): not implemented yet." % self.__class__.__name__)
-
-    def load(self, filepath):
+    def read(self, filepath):
         raise NotImplementedError("%s.timestamp(): not implemented yet." % self.__class__.__name__)
 
 
@@ -1449,7 +1452,7 @@ class Loader(object):
 ##
 ## helper class to find and read files
 ##
-class FileSystemLoader(Loader):
+class FileFinder(Finder):
 
     def exists(self, filepath):
         #: return True if filepath exists as a file.
@@ -1463,7 +1466,7 @@ class FileSystemLoader(Loader):
         #: return mtime of file
         return _getmtime(filepath)
 
-    def load(self, filepath):
+    def read(self, filepath):
         #: if file exists, return file content and mtime
         def f():
             mtime = _getmtime(filepath)
@@ -1475,7 +1478,7 @@ class FileSystemLoader(Loader):
                 mtime2 = _getmtime(filepath)
                 if mtime != mtime2:
                     if logger:
-                        logger.warn("[tenjin] %s.load(): timestamp is changed while reading file." % self.__class__.__name__)
+                        logger.warn("[tenjin] %s.read(): timestamp is changed while reading file." % self.__class__.__name__)
             return input, mtime
         #: if file not exist, return None
         return _ignore_not_found_error(f)
@@ -1508,12 +1511,12 @@ class Engine(object):
     path       = None
     cache      = MarshalCacheStorage()  # save converted Python code into file by marshal-format
     lang       = None
-    loader     = FileSystemLoader()
+    finder     = FileFinder()
     preprocess = False
     preprocessorclass = Preprocessor
     timestamp_interval = 1  # seconds
 
-    def __init__(self, prefix=None, postfix=None, layout=None, path=None, cache=True, preprocess=None, templateclass=None, preprocessorclass=None, lang=None, loader=None, **kwargs):
+    def __init__(self, prefix=None, postfix=None, layout=None, path=None, cache=True, preprocess=None, templateclass=None, preprocessorclass=None, lang=None, finder=None, **kwargs):
         """Initializer of Engine class.
 
            prefix:str (='')
@@ -1547,7 +1550,7 @@ class Engine(object):
         if preprocessorclass: self.preprocessorclass = preprocessorclass
         if path is not None:  self.path = path
         if lang is not None:  self.lang = lang
-        if loader is not None: self.loader = loader
+        if finder is not None: self.finder = finder
         if preprocess is not None: self.preprocess = preprocess
         self.kwargs = kwargs
         self.encoding = kwargs.get('encoding')
@@ -1626,7 +1629,7 @@ class Engine(object):
             #                        (self.__class__.__name__, now, template._last_checked_at, self.timestamp_interval))
             return template
         #: if timestamp of template objectis same as file, return it.
-        if template.timestamp == self.loader.timestamp(filepath):
+        if template.timestamp == self.finder.timestamp(filepath):
             template._last_checked_at = now
             return template
         #: if timestamp of template object is different from file, clear it
@@ -1651,11 +1654,11 @@ class Engine(object):
             filepath, fullpath = pair
         else:
             #: if template file is not found then raise TemplateNotFoundError.
-            filepath = self.loader.find(filename, self.path)
+            filepath = self.finder.find(filename, self.path)
             if not filepath:
                 raise TemplateNotFoundError('%s: filename not found (path=%r).' % (filename, self.path))
             #
-            fullpath = self.loader.abspath(filepath)
+            fullpath = self.finder.abspath(filepath)
             self._filepaths[filename] = (filepath, fullpath)
         #: use full path as base of cache file path
         cachepath = self.cachename(fullpath)
@@ -1664,7 +1667,7 @@ class Engine(object):
         template = cache and self._get_template_from_cache(cachepath, filepath) or None
         #: if template object is not found in cache or is expired...
         if not template:
-            ret = self.loader.load(filepath)
+            ret = self.finder.read(filepath)
             if not ret:
                 raise TemplateNotFoundError("%r: template not found." % filepath)
             input, timestamp = ret
@@ -1819,8 +1822,6 @@ def _dummy():
     #end
 
     def to_escaped(value):
-        if hasattr(value, '__html__'):
-            value = value.__html__()
         if is_escaped(value):
             #return value     # EscapedUnicode should be convered into EscapedStr
             return as_escaped(_helpers.to_str(value))
@@ -1861,6 +1862,12 @@ safe = create_module('tenjin.safe', _dummy,
                      _helpers=helpers,
                      TemplateSyntaxError=TemplateSyntaxError,
                      Template=Template, Preprocessor=Preprocessor, Engine=Engine)
+helpers.EscapedStr = safe.EscapedStr
+if python2:
+    helpers.EscapedUnicode = safe.EscapedUnicode
+elif python3:
+    helpers.EscapedBytes = safe.EscapedBytes
+#end
 helpers.html._safe = safe
 
 
@@ -1937,7 +1944,7 @@ def _dummy():
             from google.appengine.api import memcache
         if not _tenjin: import tenjin as _tenjin
         ## avoid cache confliction between versions
-        ver = os.environ.get('CURRENT_VERSION_ID', '1.1')#.split('.')[0]
+        ver = os.environ.get('CURRENT_VERSION_ID', '1.1').split('.')[0]
         Engine.cache = GaeMemcacheCacheStorage(namespace=ver)
         ## set fragment cache store
         helpers.fragment_cache.store    = GaeMemcacheStore(namespace=ver)
