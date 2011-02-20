@@ -19,7 +19,7 @@ def main(verbose):
         "test_htmlhelper",
         "test_main",
         "test_encoding",
-        "test_finder",
+        "test_loader",
         "test_store",
         "test_gae",
         "test_tenjin",
