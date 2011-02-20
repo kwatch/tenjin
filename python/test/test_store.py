@@ -88,7 +88,7 @@ class MemoryBaseStoreTest(object):
             ok (data_cache.has(key)) == True
         if "key exists but is expired then remove cache data and returns False":
             ok (key).in_(data_cache.values)   # pre_cond
-            time.sleep(1)
+            time.sleep(1.5)
             ok (data_cache.has(key)) == False
             ok (key).not_in(data_cache.values)
 
