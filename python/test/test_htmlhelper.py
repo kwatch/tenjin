@@ -27,6 +27,14 @@ else:
 
 class HtmlHelperTest(object):
 
+    def test_escape_html(self):
+        escape_html = tenjin.helpers.html.escape_html
+        ok (escape_html('<>&"\'')) == '&lt;&gt;&amp;&quot;&#39;'
+        ok (escape_html('[SOS]')) == '[SOS]'
+        def f(): escape_html(123)
+        #ok (f).raises(Exception)
+        ok (f).raises(AttributeError, "'int' object has no attribute 'replace'")
+
     def test_tagattr(self):
         tagattr = tenjin.helpers.html.tagattr
         ok (tagattr('size', 20))           == ' size="20"'

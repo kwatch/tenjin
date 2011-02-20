@@ -342,7 +342,7 @@ def _dummy():
     global escape_html, escape_xml, escape, tagattr, tagattrs
     global checked, selected, disabled, nl2br, text2html, nv, new_cycle
 
-    #_escape_table = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }
+    #_escape_table = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }
     #_escape_pattern = re.compile(r'[&<>"]')
     ##_escape_callable = lambda m: _escape_table[m.group(0)]
     ##_escape_callable = lambda m: _escape_table.__get__(m.group(0))
@@ -374,7 +374,7 @@ def _dummy():
 
     def escape_html(s):
         """Escape '&', '<', '>', '"' into '&amp;', '&lt;', '&gt;', '&quot;'."""
-        return s.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;').replace('"', '&quot;')   # 5.72
+        return s.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;').replace('"', '&quot;').replace("'", '&#39;')   # 5.72
 
     escape_xml = escape_html   # for backward compatibility
     escape     = escape_html

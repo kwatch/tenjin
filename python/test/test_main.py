@@ -87,14 +87,14 @@ EXECUTED = r"""<ul>
   <li><a&b>
       &lt;a&amp;b&gt;</li>
   <li>["c",'d']
-      [&quot;c&quot;,'d']</li>
+      [&quot;c&quot;,&#39;d&#39;]</li>
 </ul>
 """
 EXECUTED2 = """<ul>\r\n\
   <li><a&b>\r\n\
       &lt;a&amp;b&gt;</li>\r\n\
   <li>["c",'d']\r\n\
-      [&quot;c&quot;,'d']</li>\r\n\
+      [&quot;c&quot;,&#39;d&#39;]</li>\r\n\
 </ul>\r\n\
 """
 EXECUTED3 = r"""<h1>tenjin example</h1>
