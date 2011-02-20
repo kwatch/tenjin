@@ -464,8 +464,7 @@ def _dummy():
              print(cycle())   #=> 'even'
         """
         def gen(values):
-            n = len(values)
-            i = 0
+            i, n = 0, len(values)
             while True:
                 yield values[i]
                 i = (i + 1) % n
