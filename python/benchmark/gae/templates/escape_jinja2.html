@@ -65,7 +65,7 @@ thead {
      <td>
       <strong>{{ item.price }}</strong>
      </td>
-    {% if item.is_minus()  %}
+    {% if item.change < 0.0 %}
      <td class="minus">{{ item.change }}</td>
      <td class="minus">{{ item.ratio }}</td>
     {% else %}
