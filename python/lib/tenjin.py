@@ -360,7 +360,7 @@ generate_tostrfunc = helpers.generate_tostrfunc
 ##
 def _dummy():
     global escape_html, escape_xml, escape, tagattr, tagattrs, _normalize_attrs
-    global checked, selected, disabled, nl2br, text2html, nv
+    global checked, selected, disabled, nl2br, text2html, nv, js_link
 
     #_escape_table = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }
     #_escape_pattern = re.compile(r'[&<>"]')
@@ -472,6 +472,11 @@ def _dummy():
         s = sep and 'name="%s" value="%s" id="%s"' % (name, value, name+sep+value) \
                 or  'name="%s" value="%s"'         % (name, value)
         html = kwargs and s + tagattrs(**kwargs) or s
+        return _safe.as_escaped(html)
+
+    def js_link(label, onclick):
+        html = '<a href="javascript:undefined" onclick="%s;return false">%s</a>' % \
+                  (_safe.to_escaped(onclick), _safe.to_escaped(label))
         return _safe.as_escaped(html)
 
 helpers.html = create_module('tenjin.helpers.html', _dummy, helpers=helpers)

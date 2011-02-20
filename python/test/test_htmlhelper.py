@@ -124,6 +124,14 @@ class HtmlHelperTest(object):
         if python2:
             ok (nv(u("名前"), u("なまえ"))).is_a(EscapedStr)  # not EscapedUnicode!
 
+    def test_js_link(self):
+        js_link = tenjin.helpers.html.js_link
+        html = js_link("<b>SOS</b>", "alert('Haru&Kyon')")
+        ok (html) == '''<a href="javascript:undefined" onclick="alert(&#39;Haru&amp;Kyon&#39;);return false">&lt;b&gt;SOS&lt;/b&gt;</a>'''
+        html = js_link(as_escaped("<b>SOS</b>"), as_escaped("alert('Haru&Kyon')"))
+        ok (html) == '''<a href="javascript:undefined" onclick="alert('Haru&Kyon');return false"><b>SOS</b></a>'''
+
+
 
 if __name__ == '__main__':
     run()
