@@ -1449,7 +1449,7 @@ class Loader(object):
 ##
 ## helper class to find and read files
 ##
-class FileLoader(Loader):
+class FileSystemLoader(Loader):
 
     def exists(self, filepath):
         #: return True if filepath exists as a file.
@@ -1508,7 +1508,7 @@ class Engine(object):
     path       = None
     cache      = MarshalCacheStorage()  # save converted Python code into file by marshal-format
     lang       = None
-    loader     = FileLoader()
+    loader     = FileSystemLoader()
     preprocess = False
     preprocessorclass = Preprocessor
     timestamp_interval = 1  # seconds

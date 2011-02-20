@@ -10,10 +10,10 @@ import tenjin
 from test_engine import _with_dummy_files
 
 
-class FileLoaderTest(object):
+class FileSystemLoaderTest(object):
 
     def before(self):
-        self.loader = tenjin.FileLoader()
+        self.loader = tenjin.FileSystemLoader()
         self.dirs = ['_views/blog', '_views']
 
     @_with_dummy_files
