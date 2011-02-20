@@ -1851,12 +1851,9 @@ def _dummy():
         tostrfunc  = 'to_str'
         escapefunc = 'to_escaped'
         def get_expr_and_flags(self, match):
-            expr1, expr2, expr3, expr4 = match.groups()
-            if expr1 is not None:
+            if match.group(1) is not None:
                 raise TemplateSyntaxError("#{{%s}}: '#{{}}' is not allowed with SafePreprocessor." % match.group(1))
-            if expr2 is not None: return expr2, (True, False)   # #{...}    : call escape, not to_str
-            if expr3 is not None: return expr3, (False, True)   # [==...==] : not escape, call to_str
-            if expr4 is not None: return expr4, (True, False)   # [=...=]   : call escape, not to_str
+            return SafeTemplate.__dict__['get_expr_and_flags'](self, match)
 
     class SafeEngine(Engine):
         templateclass = SafeTemplate
