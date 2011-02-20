@@ -29,8 +29,8 @@
    http://www.kuwata-lab.com/tenjin/pytenjin-examples.html
 """
 
-__version__  = "$Release$"
-__license__  = "MIT License"
+__version__  = "$Release: 0.0.0 $"[10:-2]
+__license__  = "$License: MIT License $"[10:-2]
 __all__      = ('Template', 'Engine', )
 
 
