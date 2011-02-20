@@ -142,7 +142,7 @@ def _raise(exception_class, *args):
 def _dummy():
     global unquote
     unquote = None
-    global to_str, escape, echo, generate_tostrfunc
+    global to_str, escape, echo, new_cycle, generate_tostrfunc
     global start_capture, stop_capture, capture_as, captured_as, CaptureContext
     global _p, _P, _decode_params
 
@@ -232,6 +232,26 @@ def _dummy():
         """add string value into _buf. this is equivarent to '#{string}'."""
         lvars = sys._getframe(1).f_locals   # local variables
         lvars['_buf'].append(string)
+
+    def new_cycle(*values):
+        """Generate cycle object.
+           ex.
+             cycle = new_cycle('odd', 'even')
+             print(cycle())   #=> 'odd'
+             print(cycle())   #=> 'even'
+             print(cycle())   #=> 'odd'
+             print(cycle())   #=> 'even'
+        """
+        def gen(values):
+            i, n = 0, len(values)
+            while True:
+                yield values[i]
+                i = (i + 1) % n
+        if python2:
+            return gen(values).next
+        elif python3:
+            return gen(values).__next__
+        #end
 
     class CaptureContext(object):
 
@@ -340,7 +360,7 @@ generate_tostrfunc = helpers.generate_tostrfunc
 ##
 def _dummy():
     global escape_html, escape_xml, escape, tagattr, tagattrs, _normalize_attrs
-    global checked, selected, disabled, nl2br, text2html, nv, new_cycle
+    global checked, selected, disabled, nl2br, text2html, nv
 
     #_escape_table = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }
     #_escape_pattern = re.compile(r'[&<>"]')
@@ -453,26 +473,6 @@ def _dummy():
                 or  'name="%s" value="%s"'         % (name, value)
         html = kwargs and s + tagattrs(**kwargs) or s
         return _safe.as_escaped(html)
-
-    def new_cycle(*values):
-        """Generate cycle object.
-           ex.
-             cycle = new_cycle('odd', 'even')
-             print(cycle())   #=> 'odd'
-             print(cycle())   #=> 'even'
-             print(cycle())   #=> 'odd'
-             print(cycle())   #=> 'even'
-        """
-        def gen(values):
-            i, n = 0, len(values)
-            while True:
-                yield values[i]
-                i = (i + 1) % n
-        if python2:
-            return gen(values).next
-        elif python3:
-            return gen(values).__next__
-        #end
 
 helpers.html = create_module('tenjin.helpers.html', _dummy, helpers=helpers)
 helpers.escape = helpers.html.escape_html

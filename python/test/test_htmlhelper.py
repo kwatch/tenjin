@@ -124,24 +124,6 @@ class HtmlHelperTest(object):
         if python2:
             ok (nv(u("名前"), u("なまえ"))).is_a(EscapedStr)  # not EscapedUnicode!
 
-    def test_new_cycle(self):
-        cycle = tenjin.helpers.html.new_cycle('odd', 'even')
-        ok (cycle())  == 'odd'
-        ok (cycle())  == 'even'
-        ok (cycle())  == 'odd'
-        ok (cycle())  == 'even'
-        #
-        cycle = tenjin.helpers.html.new_cycle('A', 'B', 'C')
-        ok (cycle()) == 'A'
-        ok (cycle()) == 'B'
-        ok (cycle()) == 'C'
-        ok (cycle()) == 'A'
-        ok (cycle()) == 'B'
-        ok (cycle()) == 'C'
-        #
-        #ok (cycle()).is_a(EscapedStr)
-        #ok (cycle()).is_a(EscapedStr)
-
 
 if __name__ == '__main__':
     run()

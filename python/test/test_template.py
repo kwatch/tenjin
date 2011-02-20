@@ -510,6 +510,26 @@ escape: ''', (var), '''\n''', ));
             tr.fake_method(t, get_expr_and_flags=fn)
             ok (t.convert(input)) == expected
 
+    def test_new_cycle(self):
+        cycle = tenjin.helpers.new_cycle('odd', 'even')
+        ok (cycle())  == 'odd'
+        ok (cycle())  == 'even'
+        ok (cycle())  == 'odd'
+        ok (cycle())  == 'even'
+        #
+        cycle = tenjin.helpers.new_cycle('A', 'B', 'C')
+        ok (cycle()) == 'A'
+        ok (cycle()) == 'B'
+        ok (cycle()) == 'C'
+        ok (cycle()) == 'A'
+        ok (cycle()) == 'B'
+        ok (cycle()) == 'C'
+        #
+        #ok (cycle()).is_a(EscapedStr)
+        #ok (cycle()).is_a(EscapedStr)
+
+
+
 
 if __name__ == '__main__':
     run()
