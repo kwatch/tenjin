@@ -31,7 +31,7 @@
 
 __version__  = "$Release$"
 __license__  = "MIT License"
-__all__      = ['Template', 'Engine', 'helpers', ]
+__all__      = ('Template', 'Engine', )
 
 
 import sys, os, re, time, marshal
