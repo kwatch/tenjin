@@ -45,29 +45,31 @@ python_binaries = [
 @product("lib2/tenjin.py")
 @ingreds("lib/tenjin.py")
 def file_lib2_tenjin_py(c):
-    _file_generate(c, 'lib2', 1)
+    os.path.exists("lib2") or mkdir_p("lib2")
+    cp_p(c.ingred, c.product)
+    edit(c.product, by=_gen_repl(1))
 
 
 @recipe
 @product("lib3/tenjin.py")
 @ingreds("lib/tenjin.py")
 def file_lib3_tenjin_py(c):
-    _file_generate(c, 'lib3', 2)
+    os.path.exists("lib3") or mkdir_p("lib3")
+    cp_p(c.ingred, c.product)
+    edit(c.product, by=_gen_repl(2))
     #system(c%"2to3 -w -n --no-diffs $(product)")
-    s = read_file(c.product)
-    write_file(c.product, _py2to3(s))
+    edit(c.product, by=_py2to3)
 
 
-def _file_generate(c, libdir, index):
-    mkdir_p(libdir)
-    pat = r'^ *if python2:\n(.*?\n)^ *elif python3:\n(.*?\n)^ *#end\n'
-    def fn(m):
-        pycode = m.group(index)
-        return re.compile(r'^    ', re.M).sub('', pycode)
-    s = read_file(c.ingred)
-    s = re.compile(pat, re.M | re.S).sub(fn, s)
-    write_file(c.product, s)
-
+def _gen_repl(index):
+    def repl(s):
+        pat = r'^ *if python2:\n(.*?\n)^ *elif python3:\n(.*?\n)^ *#end\n'
+        rexp = re.compile(pat, re.M | re.S)
+        def fn(m):
+            pycode = m.group(index)
+            return re.compile(r'^    ', re.M).sub('', pycode)
+        return rexp.sub(fn, s)
+    return repl
 
 def _py2to3(s):
     s = s.replace('u"', '"')
