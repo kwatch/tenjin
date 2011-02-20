@@ -395,7 +395,7 @@ def _dummy():
            >>> tagattrs(klass='', size=0)
            ''
         """
-        if 'klass' in kwargs: kwargs['class'] = kwargs.pop('klass')
+        if 'klass'    in kwargs: kwargs['class']    = kwargs.pop('klass')
         if 'checked'  in kwargs: kwargs['checked']  = kwargs.pop('checked')  and 'checked'  or None
         if 'selected' in kwargs: kwargs['selected'] = kwargs.pop('selected') and 'selected' or None
         if 'disabled' in kwargs: kwargs['disabled'] = kwargs.pop('disabled') and 'disabled' or None
@@ -1856,7 +1856,7 @@ def _dummy():
             return SafeTemplate.__dict__['get_expr_and_flags'](self, match)
 
     class SafeEngine(Engine):
-        templateclass = SafeTemplate
+        templateclass     = SafeTemplate
         preprocessorclass = SafePreprocessor
 
 safe = create_module('tenjin.safe', _dummy,
