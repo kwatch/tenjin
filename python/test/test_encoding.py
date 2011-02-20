@@ -196,7 +196,7 @@ class EncodingTest(object):
             tenjin.helpers.to_str = tenjin_to_str
 
     def test_to_str_func_does_not_keep_escaped(self):
-        from tenjin.safe import EscapedStr, EscapedUnicode
+        from tenjin.escaped import EscapedStr, EscapedUnicode
         #
         to_str = tenjin.helpers.generate_tostrfunc(encode='utf-8')
         if "arg is str object then returns it as-is, keeping escaped.":

@@ -229,10 +229,10 @@ class Main(object):
         ## '--safe' option
         if properties.get('safe') == True:
             properties.pop('safe')
-            tenjin.Engine.templateclass = tenjin.safe.SafeTemplate
+            tenjin.Engine.templateclass = tenjin.SafeTemplate
             #if action == 'preprocess' or options.get('P'):
             if properties.get('templateclass') == tenjin.Preprocessor:
-                properties['templateclass'] = tenjin.safe.SafePreprocessor
+                properties['templateclass'] = tenjin.SafePreprocessor
 
         ## create engine
         engine = tenjin.Engine(**properties)

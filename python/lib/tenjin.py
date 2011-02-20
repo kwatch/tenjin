@@ -356,6 +356,68 @@ generate_tostrfunc = helpers.generate_tostrfunc
 
 
 ##
+## escaped module
+##
+def _dummy():
+    global is_escaped, as_escaped, to_escaped
+    if python2:
+        global Escaped, EscapedStr, EscapedUnicode
+    elif python3:
+        global Escaped, EscapedStr, EscapedBytes
+    #end
+    global __all__
+    __all__ = ('is_escaped', 'as_escaped', 'to_escaped', ) #'Escaped', 'EscapedStr',
+
+    class Escaped(object):
+        """marking class that object is already escaped."""
+        pass
+
+    def is_escaped(value):
+        """return True if value is marked as escaped, else return False."""
+        return isinstance(value, Escaped)
+
+    class EscapedStr(str, Escaped):
+        """string class which is marked as escaped."""
+        pass
+
+    if python2:
+        class EscapedUnicode(unicode, Escaped):
+            """unicode class which is marked as escaped."""
+            pass
+
+        def as_escaped(s):
+            """mark string as escaped, without escaping."""
+            if isinstance(s, str):     return EscapedStr(s)
+            if isinstance(s, unicode): return EscapedUnicode(s)
+            raise TypeError("as_escaped(%r): expected str or unicode." % (s, ))
+    elif python3:
+        class EscapedBytes(bytes, Escaped):
+            """bytes class which is marked as escaped."""
+            pass
+
+        def as_escaped(s):
+            """mark string as escaped, without escaping. accepts only string."""
+            if isinstance(s, str):   return EscapedStr(s)
+            if isinstance(s, bytes): return EscapedBytes(s)
+            raise TypeError("as_escaped(%r): expected str or bytes." % (s, ))
+    #end
+
+    def to_escaped(value):
+        """convert any value into string and escape it.
+           if value is already marked as escaped, don't escape it."""
+        if hasattr(value, '__html__'):
+            value = value.__html__()
+        if is_escaped(value):
+            #return value     # EscapedUnicode should be convered into EscapedStr
+            return as_escaped(_helpers.to_str(value))
+        #if isinstance(value, _basestring):
+        #    return as_escaped(_helpers.escape(value))
+        return as_escaped(_helpers.escape(_helpers.to_str(value)))
+
+escaped = create_module('tenjin.escaped', _dummy, _helpers=helpers)
+
+
+##
 ## module for html
 ##
 def _dummy():
@@ -402,10 +464,10 @@ def _dummy():
     def tagattr(name, expr, value=None, escape=True):
         """(experimental) Return ' name="value"' if expr is true value, else '' (empty string).
            If value is not specified, expr is used as value instead."""
-        if not expr and expr != 0: return _safe.as_escaped('')
+        if not expr and expr != 0: return _escaped.as_escaped('')
         if value is None: value = expr
-        if escape: value = _safe.to_escaped(value)
-        return _safe.as_escaped(' %s="%s"' % (name, value))
+        if escape: value = _escaped.to_escaped(value)
+        return _escaped.as_escaped(' %s="%s"' % (name, value))
 
     def tagattrs(**kwargs):
         """(experimental) built html tag attribtes.
@@ -416,9 +478,9 @@ def _dummy():
            ''
         """
         kwargs = _normalize_attrs(kwargs)
-        esc = _safe.to_escaped
+        esc = _escaped.to_escaped
         s = ''.join([ ' %s="%s"' % (k, esc(v)) for k, v in kwargs.iteritems() if v or v == 0 ])
-        return _safe.as_escaped(s)
+        return _escaped.as_escaped(s)
 
     def _normalize_attrs(kwargs):
         if 'klass'    in kwargs: kwargs['class']    = kwargs.pop('klass')
@@ -429,31 +491,31 @@ def _dummy():
 
     def checked(expr):
         """return ' checked="checked"' if expr is true."""
-        return _safe.as_escaped(expr and ' checked="checked"' or '')
+        return _escaped.as_escaped(expr and ' checked="checked"' or '')
 
     def selected(expr):
         """return ' selected="selected"' if expr is true."""
-        return _safe.as_escaped(expr and ' selected="selected"' or '')
+        return _escaped.as_escaped(expr and ' selected="selected"' or '')
 
     def disabled(expr):
         """return ' disabled="disabled"' if expr is true."""
-        return _safe.as_escaped(expr and ' disabled="disabled"' or '')
+        return _escaped.as_escaped(expr and ' disabled="disabled"' or '')
 
     def nl2br(text):
         """replace "\n" to "<br />\n" and return it."""
         if not text:
-            return _safe.as_escaped('')
-        return _safe.as_escaped(text.replace('\n', '<br />\n'))
+            return _escaped.as_escaped('')
+        return _escaped.as_escaped(text.replace('\n', '<br />\n'))
 
     def text2html(text, use_nbsp=True):
         """(experimental) escape xml characters, replace "\n" to "<br />\n", and return it."""
         if not text:
-            return _safe.as_escaped('')
-        s = _safe.to_escaped(text)
+            return _escaped.as_escaped('')
+        s = _escaped.to_escaped(text)
         if use_nbsp: s = s.replace('  ', ' &nbsp;')
         #return nl2br(s)
         s = s.replace('\n', '<br />\n')
-        return _safe.as_escaped(s)
+        return _escaped.as_escaped(s)
 
     def nv(name, value, sep=None, **kwargs):
         """(experimental) Build name and value attributes.
@@ -467,20 +529,20 @@ def _dummy():
            >>> nv('rank', 'A', '.', klass='error', style='color:red')
            'name="rank" value="A" id="rank.A" class="error" style="color:red"'
         """
-        name  = _safe.to_escaped(name)
-        value = _safe.to_escaped(value)
+        name  = _escaped.to_escaped(name)
+        value = _escaped.to_escaped(value)
         s = sep and 'name="%s" value="%s" id="%s"' % (name, value, name+sep+value) \
                 or  'name="%s" value="%s"'         % (name, value)
         html = kwargs and s + tagattrs(**kwargs) or s
-        return _safe.as_escaped(html)
+        return _escaped.as_escaped(html)
 
     def js_link(label, onclick, **kwargs):
         s = kwargs and tagattrs(**kwargs) or ''
         html = '<a href="javascript:undefined" onclick="%s;return false"%s>%s</a>' % \
-                  (_safe.to_escaped(onclick), s, _safe.to_escaped(label))
-        return _safe.as_escaped(html)
+                  (_escaped.to_escaped(onclick), s, _escaped.to_escaped(label))
+        return _escaped.as_escaped(html)
 
-helpers.html = create_module('tenjin.helpers.html', _dummy, helpers=helpers)
+helpers.html = create_module('tenjin.helpers.html', _dummy, helpers=helpers, _escaped=escaped)
 helpers.escape = helpers.html.escape_html
 
 
@@ -1782,97 +1844,41 @@ class Engine(object):
 
 
 ##
-## safe module
+## safe template and engine
 ##
-def _dummy():
-    global is_escaped, as_escaped, to_escaped
-    global SafeTemplate, SafePreprocessor, SafeEngine
-    if python2:
-        global Escaped, EscapedStr, EscapedUnicode
-    elif python3:
-        global Escaped, EscapedStr, EscapedBytes
-    #end
-    global __all__
-    __all__ = ('is_escaped', 'as_escaped', 'to_escaped', #'Escaped', 'EscapedStr',
-               'SafeTemplate', 'SafePreprocessor', 'SafeEngine')
 
-    class Escaped(object):
-        """marking class that object is already escaped."""
-        pass
+class SafeTemplate(Template):
+    """Uses 'to_escaped()' instead of 'escape()'.
+       '#{...}' is not allowed with this class. Use '[==...==]' instead.
+    """
 
-    def is_escaped(value):
-        """return True if value is marked as escaped, else return False."""
-        return isinstance(value, Escaped)
+    tostrfunc  = 'to_str'
+    escapefunc = 'to_escaped'
 
-    class EscapedStr(str, Escaped):
-        """string class which is marked as escaped."""
-        pass
+    def get_expr_and_flags(self, match):
+        expr1, expr2, expr3, expr4 = match.groups()
+        if expr1 is not None:
+            raise TemplateSyntaxError("#{%s}: '#{}' is not allowed with SafeTemplate." % match.group(1))
+        if expr2 is not None: return expr2, (True, False)   # #{...}    : call escape, not to_str
+        if expr3 is not None: return expr3, (False, True)   # [==...==] : not escape, call to_str
+        if expr4 is not None: return expr4, (True, False)   # [=...=]   : call escape, not to_str
 
-    if python2:
-        class EscapedUnicode(unicode, Escaped):
-            """unicode class which is marked as escaped."""
-            pass
 
-        def as_escaped(s):
-            """mark string as escaped, without escaping."""
-            if isinstance(s, str):     return EscapedStr(s)
-            if isinstance(s, unicode): return EscapedUnicode(s)
-            raise TypeError("as_escaped(%r): expected str or unicode." % (s, ))
-    elif python3:
-        class EscapedBytes(bytes, Escaped):
-            """bytes class which is marked as escaped."""
-            pass
+class SafePreprocessor(Preprocessor):
 
-        def as_escaped(s):
-            """mark string as escaped, without escaping. accepts only string."""
-            if isinstance(s, str):   return EscapedStr(s)
-            if isinstance(s, bytes): return EscapedBytes(s)
-            raise TypeError("as_escaped(%r): expected str or bytes." % (s, ))
-    #end
+    tostrfunc  = 'to_str'
+    escapefunc = 'to_escaped'
 
-    def to_escaped(value):
-        """convert any value into string and escape it.
-           if value is already marked as escaped, don't escape it."""
-        if hasattr(value, '__html__'):
-            value = value.__html__()
-        if is_escaped(value):
-            #return value     # EscapedUnicode should be convered into EscapedStr
-            return as_escaped(_helpers.to_str(value))
-        #if isinstance(value, _basestring):
-        #    return as_escaped(_helpers.escape(value))
-        return as_escaped(_helpers.escape(_helpers.to_str(value)))
+    def get_expr_and_flags(self, match):
+        if match.group(1) is not None:
+            raise TemplateSyntaxError("#{{%s}}: '#{{}}' is not allowed with SafePreprocessor." % match.group(1))
+        return SafeTemplate.__dict__['get_expr_and_flags'](self, match)
 
-    class SafeTemplate(Template):
-        """Uses 'to_escaped()' instead of 'escape()'.
-           '#{...}' is not allowed with this class. Use '[==...==]' instead.
-        """
-        tostrfunc  = 'to_str'
-        escapefunc = 'to_escaped'
-        def get_expr_and_flags(self, match):
-            expr1, expr2, expr3, expr4 = match.groups()
-            if expr1 is not None:
-                raise TemplateSyntaxError("#{%s}: '#{}' is not allowed with SafeTemplate." % match.group(1))
-            if expr2 is not None: return expr2, (True, False)   # #{...}    : call escape, not to_str
-            if expr3 is not None: return expr3, (False, True)   # [==...==] : not escape, call to_str
-            if expr4 is not None: return expr4, (True, False)   # [=...=]   : call escape, not to_str
 
-    class SafePreprocessor(Preprocessor):
-        tostrfunc  = 'to_str'
-        escapefunc = 'to_escaped'
-        def get_expr_and_flags(self, match):
-            if match.group(1) is not None:
-                raise TemplateSyntaxError("#{{%s}}: '#{{}}' is not allowed with SafePreprocessor." % match.group(1))
-            return SafeTemplate.__dict__['get_expr_and_flags'](self, match)
+class SafeEngine(Engine):
 
-    class SafeEngine(Engine):
-        templateclass     = SafeTemplate
-        preprocessorclass = SafePreprocessor
-
-safe = create_module('tenjin.safe', _dummy,
-                     _helpers=helpers,
-                     TemplateSyntaxError=TemplateSyntaxError,
-                     Template=Template, Preprocessor=Preprocessor, Engine=Engine)
-helpers.html._safe = safe
+    templateclass     = SafeTemplate
+    preprocessorclass = SafePreprocessor
 
 
 ##

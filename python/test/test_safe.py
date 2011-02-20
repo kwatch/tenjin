@@ -9,7 +9,7 @@ import sys, os, re
 
 import tenjin
 from tenjin.helpers import *
-from tenjin.safe import *
+from tenjin.escaped import *
 
 python2 = sys.version_info[0] == 2
 python3 = sys.version_info[0] == 3
@@ -18,13 +18,13 @@ lvars = "_extend=_buf.extend;_to_str=to_str;_escape=to_escaped; "
 
 
 if python2:
-    from tenjin.safe import Escaped, EscapedStr, EscapedUnicode
+    from tenjin.escaped import Escaped, EscapedStr, EscapedUnicode
     def u(s):
         return s.decode('utf-8')
     def b(s):
         return s
 else:
-    from tenjin.safe import Escaped, EscapedStr, EscapedBytes
+    from tenjin.escaped import Escaped, EscapedStr, EscapedBytes
     def u(s):
         return s
     def b(s):
@@ -129,7 +129,7 @@ class SafeTemplateTest(object):
                  "<p><>&\"</p>\n" )
 
     def test_get_expr_and_flags(self):
-        t = tenjin.safe.SafeTemplate()
+        t = tenjin.SafeTemplate()
         if "matched expression is '${...}' then returns expr string and True":
             m = t.expr_pattern().search("<p>${item}</p>")
             ret = t.get_expr_and_flags(m)
@@ -150,10 +150,10 @@ class SafeTemplateTest(object):
 
     def test_FUNCTEST_of_convert(self):
         if "converted then use 'to_escaped()' instead of 'escape()'":
-            t = tenjin.safe.SafeTemplate(input="<p>{=item=}</p>")
+            t = tenjin.SafeTemplate(input="<p>{=item=}</p>")
             ok (t.script) == lvars + "_extend(('''<p>''', _escape(item), '''</p>''', ));"
         if "{==...==} exists then skips to escape by to_escaped()":
-            t = tenjin.safe.SafeTemplate(input="<p>{==foo()==}</p>")
+            t = tenjin.SafeTemplate(input="<p>{==foo()==}</p>")
             ok (t.script) == lvars + "_extend(('''<p>''', _to_str(foo()), '''</p>''', ));"
 
     def test_FUNCTEST_of_render(self):
@@ -161,7 +161,7 @@ class SafeTemplateTest(object):
             input    = "var1: {=var1=}, var2: {=var2=}\n"
             context  = {'var1': '<>&"', 'var2': as_escaped('<>&"')}
             expected = "var1: &lt;&gt;&amp;&quot;, var2: <>&\"\n"
-            t = tenjin.safe.SafeTemplate(input=input)
+            t = tenjin.SafeTemplate(input=input)
             ok (t.render(context)) == expected
             #
             if python2:
@@ -169,14 +169,14 @@ class SafeTemplateTest(object):
                 input    = "var1: {=var1=}, var2: {=var2=}\n"
                 context  = {'var1': u('<>&"'), 'var2': as_escaped(u('<>&"'))}
                 expected = "var1: &lt;&gt;&amp;&quot;, var2: <>&\"\n"
-                t = tenjin.safe.SafeTemplate(input=input)
+                t = tenjin.SafeTemplate(input=input)
                 ok (t.render(context)) == expected
 
     def test_FUNCTEST_with_engine(self):
         fname = 'test_safe_template.pyhtml'
         try:
             _tclass = tenjin.Engine.templateclass
-            tenjin.Engine.templateclass = tenjin.safe.SafeTemplate
+            tenjin.Engine.templateclass = tenjin.SafeTemplate
             open(fname, 'w').write(self.input)
             engine = tenjin.Engine()
             output = engine.render(fname, self.context.copy())
@@ -216,7 +216,7 @@ for item in items:
 """[1:]
 
     def test_get_expr_and_flags(self):
-        t = tenjin.safe.SafePreprocessor()
+        t = tenjin.SafePreprocessor()
         if "matched expression is '${{...}}' then returns expr string and True":
             m = t.expr_pattern().search("<p>${{item}}</p>")
             ret = t.get_expr_and_flags(m)
@@ -240,9 +240,9 @@ for item in items:
         self._unlink = [fname, fname + '.cache']
         try:
             _backup = tenjin.Engine.templateclass
-            tenjin.Engine.templateclass = tenjin.safe.SafeTemplate
+            tenjin.Engine.templateclass = tenjin.SafeTemplate
             open(fname, 'w').write(self.input)
-            engine = tenjin.Engine(preprocess=True, preprocessorclass=tenjin.safe.SafePreprocessor)
+            engine = tenjin.Engine(preprocess=True, preprocessorclass=tenjin.SafePreprocessor)
             t = engine.get_template(fname)
             ok (t.script) == self.expected_script
         finally:
@@ -285,7 +285,7 @@ class SafeEngineTest(object):
 """[1:]
         @_with_template(fname, input)
         def f():
-            engine = tenjin.safe.SafeEngine()
+            engine = tenjin.SafeEngine()
             context = { 'v1': '<&>', 'v2': as_escaped('<&>'), }
             output = engine.render(fname, context)
             ok (output) == expected
@@ -333,7 +333,7 @@ _extend(('''  <h1>''', _escape(title), '''</h1>
             f = open(fname, 'w')
             f.write(input)
             f.close()
-            engine = tenjin.safe.SafeEngine(preprocess=True)
+            engine = tenjin.SafeEngine(preprocess=True)
             context = {
                 'title': 'SafeEngine Example',
                 'WDAYS': ['Su', 'M', 'Tu', 'W', 'Th','F', 'Sa'],

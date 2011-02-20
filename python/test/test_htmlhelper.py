@@ -16,11 +16,11 @@ import tenjin
 from tenjin.helpers import escape, to_str
 
 if python2:
-    from tenjin.safe import as_escaped, EscapedStr, EscapedUnicode
+    from tenjin.escaped import as_escaped, EscapedStr, EscapedUnicode
     def u(s):
         return s.decode('utf-8')
 else:
-    from tenjin.safe import as_escaped, EscapedStr, EscapedBytes
+    from tenjin.escaped import as_escaped, EscapedStr, EscapedBytes
     def u(s):
         return s
 
