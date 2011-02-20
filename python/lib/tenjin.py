@@ -51,21 +51,19 @@ logger = None
 
 def _write_binary_file(filename, content):
     global random
-    f = None
+    if random is None: from random import random
+    tmpfile = filename + str(random())[1:]
+    f = open(tmpfile, 'w+b')     # on windows, 'w+b' is preffered than 'wb'
     try:
-        if random is None: from random import random
-        tmpfile = filename + str(random())[1:]
-        f = open(tmpfile, 'w+b')
         f.write(content)
     finally:
-         if f:
-            f.close()
-            import os
-            try:
-                os.rename(tmpfile, filename)
-            except:
-                os.remove(filename)
-                os.rename(tmpfile, filename)
+        f.close()
+    if os.path.exists(tmpfile):
+        try:
+            os.rename(tmpfile, filename)
+        except:
+            os.remove(filename)  # on windows, existing file should be removed before renaming
+            os.rename(tmpfile, filename)
 
 def _read_binary_file(filename):
     f = None
