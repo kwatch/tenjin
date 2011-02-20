@@ -1856,12 +1856,7 @@ class SafeTemplate(Template):
     escapefunc = 'to_escaped'
 
     def get_expr_and_flags(self, match):
-        expr1, expr2, expr3, expr4 = match.groups()
-        if expr1 is not None:
-            raise TemplateSyntaxError("#{%s}: '#{}' is not allowed with SafeTemplate." % match.group(1))
-        if expr2 is not None: return expr2, (True, False)   # #{...}    : call escape, not to_str
-        if expr3 is not None: return expr3, (False, True)   # [==...==] : not escape, call to_str
-        if expr4 is not None: return expr4, (True, False)   # [=...=]   : call escape, not to_str
+        return _get_expr_and_flags(match, "#{%s}: '#{}' is not allowed with SafeTemplate.")
 
 
 class SafePreprocessor(Preprocessor):
@@ -1870,9 +1865,16 @@ class SafePreprocessor(Preprocessor):
     escapefunc = 'to_escaped'
 
     def get_expr_and_flags(self, match):
-        if match.group(1) is not None:
-            raise TemplateSyntaxError("#{{%s}}: '#{{}}' is not allowed with SafePreprocessor." % match.group(1))
-        return SafeTemplate.__dict__['get_expr_and_flags'](self, match)
+        return _get_expr_and_flags(match, "#{{%s}}: '#{{}}' is not allowed with SafePreprocessor.")
+
+
+def _get_expr_and_flags(match, errmsg):
+    expr1, expr2, expr3, expr4 = match.groups()
+    if expr1 is not None:
+        raise TemplateSyntaxError(errmsg % match.group(1))
+    if expr2 is not None: return expr2, (True, False)   # #{...}    : call escape, not to_str
+    if expr3 is not None: return expr3, (False, True)   # [==...==] : not escape, call to_str
+    if expr4 is not None: return expr4, (True, False)   # [=...=]   : call escape, not to_str
 
 
 class SafeEngine(Engine):
