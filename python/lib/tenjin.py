@@ -474,9 +474,10 @@ def _dummy():
         html = kwargs and s + tagattrs(**kwargs) or s
         return _safe.as_escaped(html)
 
-    def js_link(label, onclick):
-        html = '<a href="javascript:undefined" onclick="%s;return false">%s</a>' % \
-                  (_safe.to_escaped(onclick), _safe.to_escaped(label))
+    def js_link(label, onclick, **kwargs):
+        s = kwargs and tagattrs(**kwargs) or ''
+        html = '<a href="javascript:undefined" onclick="%s;return false"%s>%s</a>' % \
+                  (_safe.to_escaped(onclick), s, _safe.to_escaped(label))
         return _safe.as_escaped(html)
 
 helpers.html = create_module('tenjin.helpers.html', _dummy, helpers=helpers)

@@ -128,8 +128,12 @@ class HtmlHelperTest(object):
         js_link = tenjin.helpers.html.js_link
         html = js_link("<b>SOS</b>", "alert('Haru&Kyon')")
         ok (html) == '''<a href="javascript:undefined" onclick="alert(&#39;Haru&amp;Kyon&#39;);return false">&lt;b&gt;SOS&lt;/b&gt;</a>'''
+        #
         html = js_link(as_escaped("<b>SOS</b>"), as_escaped("alert('Haru&Kyon')"))
         ok (html) == '''<a href="javascript:undefined" onclick="alert('Haru&Kyon');return false"><b>SOS</b></a>'''
+        #
+        html = js_link("<b>SOS</b>", "alert('Haru&Kyon')", klass='<sos2>')
+        ok (html) == '''<a href="javascript:undefined" onclick="alert(&#39;Haru&amp;Kyon&#39;);return false" class="&lt;sos2&gt;">&lt;b&gt;SOS&lt;/b&gt;</a>'''
 
 
 
