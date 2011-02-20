@@ -13,7 +13,7 @@ import sys, re, os, marshal
 import tenjin
 #from tenjin.helpers import escape, to_str
 from tenjin.helpers import *
-from tenjin.helpers.html import *
+from tenjin.html import *
 from tenjin import TemplateSyntaxError
 
 python2 = sys.version_info[0] == 2

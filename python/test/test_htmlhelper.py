@@ -14,6 +14,7 @@ python3 = sys.version_info[0] == 3
 from testcase_helper import *
 import tenjin
 from tenjin.helpers import escape, to_str
+from tenjin.html import *
 
 if python2:
     from tenjin.escaped import as_escaped, EscapedStr, EscapedUnicode
@@ -28,7 +29,6 @@ else:
 class HtmlHelperTest(object):
 
     def test_escape_html(self):
-        escape_html = tenjin.helpers.html.escape_html
         ok (escape_html('<>&"\'')) == '&lt;&gt;&amp;&quot;&#39;'
         ok (escape_html('[SOS]')) == '[SOS]'
         def f(): escape_html(123)
@@ -36,7 +36,6 @@ class HtmlHelperTest(object):
         ok (f).raises(AttributeError, "'int' object has no attribute 'replace'")
 
     def test_tagattr(self):
-        tagattr = tenjin.helpers.html.tagattr
         ok (tagattr('size', 20))           == ' size="20"'
         ok (tagattr('size', 0))            == ' size="0"'
         ok (tagattr('size', ''))           == ''
@@ -50,7 +49,6 @@ class HtmlHelperTest(object):
         ok (tagattr('size', '')).is_a(EscapedStr)
 
     def test_tagattrs(self):
-        tagattrs = tenjin.helpers.html.tagattrs
         ok (tagattrs(src="img.png", size=20)) == ' src="img.png" size="20"'
         ok (tagattrs(src='', size=0))         == ' size="0"'
         ok (tagattrs(klass='error'))          == ' class="error"'    # klass='error' => class="error"
@@ -68,7 +66,6 @@ class HtmlHelperTest(object):
         ok (tagattrs(name=as_escaped(u("<foo>")))) == ' name="<foo>"'
 
     def test_checked(self):
-        checked = tenjin.helpers.html.checked
         ok (checked(1==1)) == ' checked="checked"'
         ok (checked(1==0)) == ''
         #
@@ -76,7 +73,6 @@ class HtmlHelperTest(object):
         ok (checked(1==0)).is_a(EscapedStr)
 
     def test_selected(self):
-        selected = tenjin.helpers.html.selected
         ok (selected(1==1)) == ' selected="selected"'
         ok (selected(1==0)) == ''
         #
@@ -84,7 +80,6 @@ class HtmlHelperTest(object):
         ok (selected(1==0)).is_a(EscapedStr)
 
     def test_disabled(self):
-        disabled = tenjin.helpers.html.disabled
         ok (disabled(1==1)) == ' disabled="disabled"'
         ok (disabled(1==0)) == ''
         #
@@ -92,14 +87,12 @@ class HtmlHelperTest(object):
         ok (disabled(1==0)).is_a(EscapedStr)
 
     def test_nl2br(self):
-        nl2br = tenjin.helpers.html.nl2br
         s = """foo\nbar\nbaz\n"""
         ok (nl2br(s)) == "foo<br />\nbar<br />\nbaz<br />\n"
         #
         ok (nl2br(s)).is_a(EscapedStr)
 
     def test_text2html(self):
-        text2html = tenjin.helpers.html.text2html
         s = """FOO\n    BAR\nBA     Z\n"""
         expected = "FOO<br />\n &nbsp; &nbsp;BAR<br />\nBA &nbsp; &nbsp; Z<br />\n"
         ok (text2html(s)) == expected
@@ -109,7 +102,6 @@ class HtmlHelperTest(object):
         ok (text2html(s)).is_a(EscapedStr)
 
     def test_nv(self):
-        nv = tenjin.helpers.html.nv
         ok (nv('rank', 'A'))       == 'name="rank" value="A"'
         ok (nv('rank', 'A', '.'))  == 'name="rank" value="A" id="rank.A"'
         ok (nv('rank', 'A', klass='error')) == 'name="rank" value="A" class="error"'
@@ -125,7 +117,6 @@ class HtmlHelperTest(object):
             ok (nv(u("名前"), u("なまえ"))).is_a(EscapedStr)  # not EscapedUnicode!
 
     def test_js_link(self):
-        js_link = tenjin.helpers.html.js_link
         html = js_link("<b>SOS</b>", "alert('Haru&Kyon')")
         ok (html) == '''<a href="javascript:undefined" onclick="alert(&#39;Haru&amp;Kyon&#39;);return false">&lt;b&gt;SOS&lt;/b&gt;</a>'''
         #

@@ -542,8 +542,9 @@ def _dummy():
                   (_escaped.to_escaped(onclick), s, _escaped.to_escaped(label))
         return _escaped.as_escaped(html)
 
-helpers.html = create_module('tenjin.helpers.html', _dummy, helpers=helpers, _escaped=escaped)
-helpers.escape = helpers.html.escape_html
+html = create_module('tenjin.html', _dummy, helpers=helpers, _escaped=escaped)
+helpers.escape = html.escape_html
+helpers.html = html   # for backward compatibility
 
 
 ##
