@@ -10,9 +10,11 @@ Release 1.0.0 (2010-??-??)
 
   * (IMPORTANT!!) Performance is improved (about 5 percent).
     To improve performance, compiled Python code is changed.
-    This means that YOU MUST CLEAR ALL CACHE FILES or TOUCH ALL TEMPLATE FILES
-    before using this release.
+    This means that YOU MUST TOUCH ALL TEMPLATE FILES AND UPDATE TIME STAMPS
+    OF THEM in order to clear cache data before using this release.
 
+      ## touch all template files to clear cache data
+      $ find . -name '*.pyhtml' | xargs touch
       ## show compiled python code
       $ cat ex.pyhtml
       <ul>
@@ -56,18 +58,17 @@ Release 1.0.0 (2010-??-??)
         </body>
       </html>
 
-  * (IMPORTANT!!) SafeTemplate and SafeEngine classes are supported.
-    Using them, str and unicode are escaped automatically and EscapedStr
-    and EscapedUnicode are not. This is similar to Django's feature.
+  * (IMPORTANT!!) SafeTemplate and SafeEngine classes are now provided.
+    These classes support autoescaping similar to Django or Jinja2.
     See
       http://www.kuwata-lab.com/tejin/pytenjin-users-guide.html#safe-template
     for details.
 
   * (IMPORTANT!!) New function 'tenjin.set_template_encoding()' is provided.
-    If you prefer templates to be unicode-base like Django, call it before
-    importing helpers.
+    If you prefer templates to be unicode-base like Django or Jinja2,
+    call it before importing helpers.
 
-       ##
+       ## change Tenjin to be unicode-based
        import tenjin
        tenjin.set_template_encoding('utf-8')  # call before importing helpers
        from tenjin.helpers import *
@@ -77,7 +78,7 @@ Release 1.0.0 (2010-??-??)
        #tenjin.helpers.to_str = tenjin.helpers.generate_tostrfunc(decode='utf-8')
        #from tenjin.helpers import *
 
-    Notice that you should not write '<?py # coding: utf-8 ?>' into template
+    Notice that you should NOT write '<?py # coding: utf-8 ?>' into template
     files if you call tenjin.set_template_encoding(). If you wrote it,
     SyntaxError exception would be raised.
 
@@ -95,6 +96,8 @@ Release 1.0.0 (2010-??-??)
          ...
        <?py #endfor ?>
 
+    'not_cached()' and 'echo_cached()' are still available but not recommended.
+
   * (IMPORTANT!!) New helper 'capture_as()' is available for capturing template.
     This replaces 'start_capture()' and 'stop_capture()'.
 
@@ -104,9 +107,11 @@ Release 1.0.0 (2010-??-??)
        <?py stop_capture() ?>
 
        ## using new helper
-       <?py for _ in capture_as('name'): ?>
+       <?py with capture_as('name'): ?>
          ....
        <?py #endfor ?>
+
+    'start_capture()' and 'stop_capture()' are still available but not recommended.
 
     New helper 'capture_as()' allows you to nest capturing which is
     impossible with 'start_capture()' and 'stop_capture()'.
@@ -126,11 +131,17 @@ Release 1.0.0 (2010-??-??)
     catalog expantion cost (such as '${_("Hello")}')
 
         ## for lang='en'
-        engine = tenjin.Engine(lang='en', preprocess=True)
-	enginer.render('index.pyhtml')  # generates 'index.pyhtml.en.cache'
+        engine_en = tenjin.Engine(lang='en', preprocess=True)
+	engine_en.render('index.pyhtml')  # generates 'index.pyhtml.en.cache'
         ## for lang='fr'
-        engine = tenjin.Engine(lang='fr', preprocess=True)
-	enginer.render('index.pyhtml')  # generates 'index.pyhtml.fr.cache'
+        engine_fr = tenjin.Engine(lang='fr', preprocess=True)
+	engine_fr.render('index.pyhtml')  # generates 'index.pyhtml.fr.cache'
+
+  * (Experimental) New html helper 'js_link()'.
+
+        >>> from tenjin.html import *
+	>>> js_link('click', 'alert("OK")', klass='link')
+	'<a href="javascript:undefined" onclick="alert(&quot;OK&quot;);return false" class="link">click</a>'
 
 
 * [Changes]
@@ -143,12 +154,33 @@ Release 1.0.0 (2010-??-??)
     announced in the previous release).
     Please use tenjin.gae.GaeMemcacheStorage instead.
 
+  * 'tenjin.helpers.html' module is renamed to 'tenjin.html', but old module
+    name is still available for backward compatibility.
+
+  * escape_html() (and escape()) now escapes "'" into "&#39;".
+
+  * new_cycle() is moved from tenjin.helpers.html module to tenjin.helpers
+    module because it is not only for HTML.
+
   * In GAE environment, Tenjin uses '1.1' as dummy value of CURRENT_VERSION_ID
     when it is not provided. This prevents error when using GAE and tenjin
     on test environment.
 
   * Python 2.3 is now unsupported. (Python 2.4 is still supported because
     CentOS uses Python 2.4).
+
+  * (internal) Tenjin.escape_expr_and_escapeflag() is changed to
+    Tenjin.escape_expr_and_flags().
+
+  * (internal) Tenjin.add_expr() is changed to take 'flags' argument.
+
+  * (internal) 'tenjin.__release__' is renamed to 'tenjin.__version__'.
+
+
+* [Bugfixes]
+
+  * Cache file saving was failed on Windows because existing file should be
+    removed before renaming file. (patched by elishowk, thank you!)
 
 
 
