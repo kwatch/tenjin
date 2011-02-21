@@ -174,7 +174,7 @@ h3, .subsection {
 	font-size:small;
 }
 
-div.note {
+div.note, div.tips {
 	background-color:#FFFFDD;
 	border-style:solid;
 	border-width:0px 1px 0px 1px;
@@ -186,7 +186,7 @@ div.note {
 	padding: 5px 20px 5px 20px;
 }
 
-div.note span.caption {
+div.note span.caption, div.tips span.caption {
 	color: #C60;
 }
 
