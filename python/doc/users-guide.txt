@@ -4,6 +4,20 @@
 .?stylesheet:   docstyle.css
 
 
+
+.+NOTE:
+
+.* pyTenjin now supports indent-free syntax since version 1.0.0.
+   See {{<this section|#render-template>}} for details.
+.* New embedded notation ({{,{=...=},}} and {{,{==...==},}}) is available since version 1.0.0.
+   See {{<this section|#render-template>}} for details.
+.#.* It is planned for pyTenjin to be unicode-based templates in the next release.
+.#   See {{<Template Encoding|#template-encoding>}} section for related information.
+
+.-NOTE:
+
+
+
 Table of Contents:
 
 .<<< users-guide.toc
@@ -23,6 +37,7 @@ Tenjin is a very fast and full-featured template engine implemented in pure Pyth
    .- About 4 times faster than Cheetah
    .- About 2 times faster than Mako
 .* Full featured
+   .- {{<Auto-escaping|#auto-escaping>}}
    .- {{<Layout template|#layout-template>}}
    .- {{<Partial template|#partial-template>}}
    .- {{<Fragment cache|#fragment-cache>}}
@@ -32,7 +47,7 @@ Tenjin is a very fast and full-featured template engine implemented in pure Pyth
    .- Because you can embed any python statements or expression in your template files
    .- You don't have to study template-specific language
 .* Compact
-   .- Only 1500 lines of code
+   .- Less than 2000 lines of code
    .- Very ligthweight to load module (important for CGI script and Google App Engine)
 .* {{<Supports Google App Engine|#google-appengine>}}
 
@@ -42,16 +57,14 @@ Tenjin is a very fast and full-featured template engine implemented in pure Pyth
 
 pyTenjin supports Python 2.4 or later. Python 3 is also supported.
 
-You can install Tenjin by easy_install command.
-
 .====================
 $ sudo easy_install Tenjin
 .====================
 
-Or download Tenjin-X.X.X.tar.gz, extract it, and type 'python setup.py install'.
+Or:
 
 .====================
-$ wget http://downloads.sourceforge.net/project/tenjin/pytenjin/X.X.X/Tenjin-X.X.X.tar.gz
+$ wget http://pypi.python.org/packages/source/T/Tenjin/Tenjin-X.X.X.tar.gz
 $ tar xzf Tenjin-X.X.X.tar.gz
 $ cd Tenjin-X.X.X/
 $ sudo python setup.py install
@@ -247,17 +260,26 @@ This section describes basics of Tenjin.
 
 
 
-.$$ Render Template	| render-template
+.$$ Template Syntax	| template-syntax
 
 Notation:
 
-.: <?py ... ?>
+.: {{,<?py ... ?>,}}
 	Python statements
-.: ${...}
+.: {{,${...},}} or {{,{=...=},}}
 	Python expression (with HTML escape)
-.: #{...}
+.: {{,#{...},}} or {{,{==...==},}}
 	Python expression (without HTML escape)
 
+.+NOTE:
+
+Since version 1.0.0, pyTenjin provides {{,{=...=},}} and {{,{==...==},}} for embedded expression as well as {{,${...},}} and {{,#{...},}}.
+This is for:
+
+.* Conveniency: {{,${_('Hello {}!').format(name)},}} is NG (because '}' appears in {{,${...},}}) but {{,{=_('Hello {}!').format(name)=},}} is OK.
+.* Security: you may take a mistake to write {{,#{...},}} instead of {{,${...},}} easily because they are similar, but you will not confuse between {{,{=...=},}} and {{,{==...==},}} because the latter is MUCH longer then the former!
+
+.-NOTE:
 
 .? views/page.pyhtml: html template
 .-------------------- test_010/views/page.pyhtml
@@ -274,10 +296,66 @@ Notation:
 </table>
 .--------------------
 
+
+You can write any Python statements or expression in yor template file, but there are several restrictions.
+
+.* {{*It is necessary to close 'for', 'if', 'while', ... by corresponding '#endfor', '#endif', '#endwhile', and so on.*}}
+   Notice that '#end' is almighty closer.
+.* {{*Indentation is not necessary*}} since version 1.0.0.
+.* Conditional expression of 'if', 'while', ... should be in a line.
+.* '#' (comment) after ':' or '#endXXX' are not allowed.
+
+.? Examples
+.--------------------
+## [OK] Indentation is not necessary.
+<?py for x in nums: ?>
+<?py if x > 0: ?>
+<p>Positive.</p>
+<?py elif x < 0: ?>
+<p>Negative.</p>
+<?py else: ?>
+<p>Zero.</p>
+<?py #endif ?>
+<?py #endfor ?>
+
+## [NG] conditional expression of 'if' is not in a line
+<?py if re.search(r'^\[(\w+)\]',?>
+<?py              line, re.M): ?>
+<p>matched.</p>
+<?py #endif ?>
+
+## [NG] there is a comment after ':' and '#endfor'
+<ul>
+<?py if item in items:   ## beginning of loop ?>
+  <li>${item}</li>
+<?py #endfor             ## end of loop ?>
+</ul>
+.--------------------
+
+
+.+TIPS:
+
+You can check template syntax by 'pytenjin -z'.
+
+.? Syntax check of template files
+.==================== test_011/result.output
+$ pytenjin {{*-z*}} views/*.pyhtml
+views/page.pyhtml - ok.
+.====================
+
+.-TIPS:
+
+
+
+.$$ Render Template	| render-template
+
+This is an example code to render template file.
+
 .? main.py: main program
 .-------------------- test_010/main.py
 ## import modules and helper functions
 {{*import tenjin*}}
+#tenjin.set_template_encoding('cp932')   # template encoding
 {{*from tenjin.helpers import **}}
 
 ## context data
@@ -312,62 +390,16 @@ $ python main.py
 
 .====================
 
-Tips: you can check template syntax by 'pytenjin -z'.
-
-.? Syntax check of template files
-.==================== test_011/result.output
-$ pytenjin {{*-z*}} views/*.pyhtml
-views/page.pyhtml - ok.
-.====================
-
-
-
-
-.$$ Template Syntax	| template-syntax
-
-You can write any Python statements or expression in yor template file, but there are several restrictions.
-
-.* {{*It is necessary to close 'for', 'if', 'while', ... by corresponding '#endfor', '#endif', '#endwhile', and so on.*}}
-   Notice that '#end' is almighty closer.
-.* {{*Indentation is not necessary*}} since version 1.0.
-.* Conditional expression of 'if', 'while', ... should be in a line.
-.* '#' (comment) after ':' or '#endXXX' are not allowed.
-
-.? Examples
-.--------------------
-## [OK] Indentation is not necessary.
-<?py for x in nums: ?>
-<?py if x > 0: ?>
-<p>Positive.</p>
-<?py elif x < 0: ?>
-<p>Negative.</p>
-<?py else: ?>
-<p>Zero.</p>
-<?py #endif ?>
-<?py #endfor ?>
-
-## [NG] conditional expression of 'if' is not in a line
-<?py if re.search(r'^\[(\w+)\]',?>
-<?py              line, re.M): ?>
-<p>matched.</p>
-<?py #endif ?>
-
-## [NG] there is a comment after ':' and '#endfor'
-<ul>
-<?py if item in items:   ## beginning of loop ?>
-  <li>${item}</li>
-<?py #endfor             ## end of loop ?>
-</ul>
-.--------------------
-
+If you want to specify template encoding, call {{,tenjin.set_template_encoding(),}}.
+Default encoding is 'utf-8'.
+See {{<Template Encoding|#template-encoding>}} section for details.
 
 
 
 .$$ Show Converted Source Code	| source-code
 
 pyTenjin converts template files into Python script and executes it.
-Compiled Python script is saved into cache file automatically.
-Cache file is saved with Python's marshal format (= bytecode format).
+Compiled Python script is saved into cache file automatically in Python's marshal format (= bytecode format).
 
 .? Show cached file
 .====================
@@ -397,7 +429,7 @@ print(''.join(_buf))
 .====================
 
 
-If you specify '{{,-sb,}}' instead of '{{,-s,}}', neither preamble (= '_buf = [];,}}') nor postamble (= '{{,print("".join(_buf)),}}') are printed.
+If you specify '{{,-sb,}}' instead of '{{,-s,}}', neither preamble (= '{{,_buf = [];,}}') nor postamble (= '{{,print("".join(_buf)),}}') are printed.
 See {{<Retrieve Embedded Code|#command-retrieve>}} section for more information.
 
 Or:
@@ -409,8 +441,13 @@ template = tenjin.Template('views/page.pyhtml')
 print(template.script)
 
 ### or:
-## engine = tenjin.Engine()
-## print(engine.get_template('page.pyhtml').script)
+#template = tenjin.Template()
+#with open('views/page.pyhtml') as f:
+#    print(template.convert(f.read(), 'views/page.pyhtml'))
+
+### or:
+#engine = tenjin.Engine(path=['views'])
+#print(engine.get_template('page.pyhtml').script)
 .--------------------
 
 .#+++
@@ -516,9 +553,9 @@ Tenjin supports nested layout template. See {{<Nested Layout Template|#nested-la
 .$$ Context Variables	| context-variables
 
 
-'{{,#<Erubis::Context:0x1011547d8>,}}' dictionary contains context data which are passed from main program into template file.
+'{{,_context,}}' dictionary contains context data which are passed from main program into template file.
 
-Using '{{,#<Erubis::Context:0x1011547d8>,}}' dictionary, you can pass any data from template file to main program or layout template file.
+Using '{{,_context,}}' dictionary, you can pass any data from template file to main program or layout template file.
 
 .? views/_layout.pyhtml
 .-------------------- test_040/views/_layout.pyhtml
@@ -603,8 +640,7 @@ For readability, it is recommended to declare context variables in your template
 
 .? Converted Python script
 .==================== test_050/result.output
-$ pytenjin -s views/page.pyhtml
-_buf = []
+$ pytenjin -sb views/page.pyhtml
 _extend=_buf.extend;_to_str=to_str;_escape=escape; {{*title = _context.get('title'); items = _context.get('items'); *}}
 _context['page_title'] = 'Tenjin: Layout Template Example'
 _extend(('''<h2>''', _escape(_to_str(title)), '''</h2>
@@ -618,11 +654,10 @@ for item in items:
   </tr>\n''', ));
 #endfor
 _extend(('''</table>\n''', ));
-print(''.join(_buf))
 .====================
 
 
-.? views/page.pyhtml
+.? views/_layout.pyhtml
 .-------------------- test_051/views/_layout.pyhtml
 {{*<?py #@ARGS _content, page_title ?>*}}
 <!DOCTYPE>
@@ -639,8 +674,7 @@ print(''.join(_buf))
 
 .? Converted Python script
 .==================== test_051/result.output
-$ pytenjin -s views/_layout.pyhtml
-_buf = []
+$ pytenjin -sb views/_layout.pyhtml
 {{*_content = _context.get('_content'); page_title = _context.get('page_title'); *}}
 _extend=_buf.extend;_to_str=to_str;_escape=escape; _extend(('''<!DOCTYPE>
 <html>
@@ -652,10 +686,12 @@ _extend=_buf.extend;_to_str=to_str;_escape=escape; _extend(('''<!DOCTYPE>
 ''', _to_str(_content), '''
   </body>
 </html>\n''', ));
-print(''.join(_buf))
 .====================
 
-Tips: If you want to specify default value of context variable, try {{,_context.get('{{/varname/}}', {{/defaultvalue/}}),}}.
+
+.+TIPS:
+
+If you want to specify default value of context variable, try {{,_context.get('{{/varname/}}', {{/defaultvalue/}}),}}.
 
 .--------------------
 <?py
@@ -664,6 +700,9 @@ username = {{*_context.get('username', 'World')*}}
 ?>
 <p>Hello ${username}</p>
 .--------------------
+
+.-TIPS:
+
 
 
 
@@ -748,7 +787,7 @@ $ python main.py
 
 .$$ Template Short Name		| template-short-name
 
-If you specify template postfix, you can use template short name such as '{{,:views/page,}}' instead of '{{,views/page.pyhtml,}}'. Notice that template short name should start with '{{,:,}}'.
+If you set template postfix, you can specify template by short name such as '{{,:views/page,}}' instead of '{{,views/page.pyhtml,}}'. Notice that template short name should start with '{{,:,}}'.
 
 .? main.py
 .-------------------- test_070/main.py
@@ -828,69 +867,103 @@ $ python main.py
 
 .$$ Template Encoding		| template-encoding
 
-If you want to specify encoding name of template file, add magic comment at 1st line in template file.
+If you want to specify encoding name, call {{,tenjin.set_template_encoding('utf-8'),}} in your main program or add magic comment into template file.
 
-.? Magic comment example
-.--------------------
-<?py # -*- coding: utf-8 -*- ?>
-<html>
-  ...
-.--------------------
-
-
+See the following description.
 
 
 .$$$ Python 2.x			| template-encoding-py2
 
+.+NOTE:
+
+It is planned to change pyTenjin to be unicode-based templates in the future release.
+This is because a lot of O/R Mapper or helper libraries assume string to be unicode object.
+However pyTenjin will provides users to select str-based or uicode-based by {{,tenjin.set_template_encoding(),}} function.
+
+.-NOTE:
+
 Tenjin provides two approaches for encoding in Python 2.x.
 
-.% (A) Binary-based approach
-   
-   Tenjin handles templates as binary file.
-   For example, text "foo" will be converted into {{,_exnted(('foo', )),}}.
-   In this approach, unicode object should be encoded into binary(=str) by {{,to_str(),}}.
+.% (A) Binary-based approach (default)
+
+   Tenjin converts templates into binary string.
+   You can see that converted script uses str instead of unicode.
    .--------------------
-   to_str = tenjin.generate_tostrfunc({{*encode*}}='utf-8')
-      # ex. to_str(u'\u65e5\u672c\u8a9e') => '\xe6\x97\xa5\xe6\x9c\xac\xe8\xaa\x9e'
-   engine = tenjin.Engine()
+   _extend(('''Hello ''', _to_str(name), '''!''', ))
    .--------------------
-   If you have some troubles about encoding in this approach, add magic comment into your template file.
+   If you got troubles around encoding in this approach, add magic comment into template files.
    .--------------------
    {{*<?py # -*- coding: utf-8 -*- ?>*}}
    <h1>Hello</h1>
    .--------------------
+   If you want to specify encoding name such as euc-jp or cp932, call {{,tenjin.set_template_encoding(encode='cp932'),}} before importing helper functions.
+   .--------------------
+   import tenjin
+   {{*tenjin.set_template_encoding(encode='cp932')*}}   # or shift_jis
+   from tenjin.helpers import *
+      # ex. to_str({{*u*}}'日本語') => '\xe6\x97\xa5\xe6\x9c\xac\xe8\xaa\x9e'
+   .--------------------
+   In this approach, unicode object should be converted into str and this is done by {{,to_str(),}} automatically. {{,tenjin.set_template_encoding(),}} generates correct {{,to_str(),}} function therefore you must call it before importing helper functions.
+
+   .+NOTE:
+
+   When you called {{,tenjin.set_template_encoding(),}}, it is strongly recommened to touch template files (= update timestamp of template files) in order to clear template caches.
+
+   .-NOTE:
+
 
 .% (B) Unicode-based approach
-   
-   You can hanlde templates as unicode string with {{,encoding,}} option for {{,tenjin.Engine(),}}.
-   For example, text "foo" will be converted into {{,_extend(({{*u*}}'foo', )),}}.
-   In this approach, binary(=str) should be decoded into unicode in {{,to_str(),}}.
+
+   You can specify pyTenjin to convert template files into unicode object, such as:
    .--------------------
-   to_str = tenjin.generate_tostrfunc({{*decode*}}='utf-8')
-      # ex. to_str('\xe6\x97\xa5\xe6\x9c\xac\xe8\xaa\x9e')  #=> u'\u65e5\u672c\u8a9e'
-   engine = tenjin.Engine({{*encoding*}}='utf-8')
-   html = engine.render('index.pyhtml')
-   if isinstance(html, unicode): html = html.encode('utf-8')
+   _extend(({{*u*}}'''Hello ''', _to_str(name), {{*u*}}'''!''', ))
+   .--------------------
+   If you prefer this approach, call {{,tenjin.set_template_encoding(),}} before importing helper functions.
+   .--------------------
+   import tenjin
+   {{*tenjin.set_template_encoding('utf-8')   # or decode='utf-8'*}}
+   from tenjin.helpers import *
+      # ex. to_str('日本語')  #=> {{*u*}}'\u65e5\u672c\u8a9e'
+   .--------------------
+   In this approach, str object should be converted into unicode and this is done by {{,to_str(),}} automatically. {{,tenjin.set_template_encoding(),}} generates correct {{,to_str(),}} function therefore you must call it before importing helper functions.
+
+   In addition, you must convert output into str object because output will be unicode object.
+   .--------------------
+   import tenjin
+   tenjin.set_template_encoding(decode='utf-8')
+   from tenjin.helpers import *
+   engine = tenjin.Engine()
+   output = engine.render('index.pyhtml')
+   {{*if isinstance(output, unicode):*}}
+       {{*output = output.encode('utf-8')*}}
    print(html)
    .--------------------
-   You should not add encoding declaration in your templates, or you will get the following error.
+   You should not add magic comment in your templates, or you will get the following SyntaxError.
    .--------------------
-   SyntaxError: encoding declaration in Unicode string
+   ## SyntaxError: encoding declaration in Unicode string
+   <?py # -*- coding: utf-8 -*- ?>
    .--------------------
 
-In Python 2.x, binary-based approach is faster than unicode-based approach.
-If you don't have any special reason, it is recommend to be with binary-based approach.
+   .+NOTE:
+
+   When you called {{,tenjin.set_template_encoding(),}}, it is strongly recommened to touch template files (= update timestamp of template files) in order to clear template caches.
+
+   .-NOTE:
+
+.#In Python 2.x, binary-based approach is faster than unicode-based approach.
+.#If you don't have any special reason, it is recommend to be with binary-based approach.
 
 
-.$$$ Python 3.0		| template-encoding-py3
+.$$$ Python 3.x		| template-encoding-py3
 
-In Python 3.0, string is treated as unicode object.
-So Tenjin handles all templates in string base (= unicode base), and bytes data is converted into str by to_str() function.
+In Python 3.x, string is treated as unicode object.
+So pyTenjin handles all templates in string base (= unicode base), and bytes data is converted into str by {{,to_str(),}} function.
 If you don't specify any encoding, Tenjin uses 'utf-8' encoding as default.
 
 .--------------------
-to_str = tenjin.generate_tostrfunc('utf-8')  ## decode bytes into unicode
-engine = tenjin.Engine(encoding='utf-8')     ## handle template as unicode
+import tenjin
+{{*tenjin.set_template_encoding('cp932')*}}   # or shift_jis
+from tenjin.helpers import *
 .--------------------
 
 
@@ -918,29 +991,30 @@ Module {{,tenjin.helpers,}} provides basic helper functions.
 	>>> to_str(None)       # None is converted into empty string
 	''
 	>>> to_str(u'日本語')  # unicode object is encoded into str
-	'\xc3\xa6\xc2\x97\xc2\xa5\xc3\xa6\xc2\x9c\xc2\xac\xc3\xa8\xc2\xaa\xc2\x9e'
+	'\xe6\x97\xa5\xe6\x9c\xac\xe8\xaa\x9e'
 	.--------------------
 
 .: escape({{/str/}})
-	Escape HTML special characters.
+	Escape HTML special characters. This is same as {{,tenjin.html.escape_html(),}}.
 	.--------------------
 	>>> from tenjin.helpers import escape
-	>>> escape('< > & "')
-	'&lt; &gt; &amp; &quot;'
+	>>> escape('< > & " \' ')
+	'&lt; &gt; &amp; &quot; &#39; '
 	.--------------------
 
 .: generate_tostrfunc({{/encode/}}={{/encoding/}}, {{/decode/}}={{/encoding/}})
-	Generate to_str() function with enoding name.
+	Generate to_str() function with enoding name..^
+	(Since version 1.0.0, you don't need to call this directly. Call {{,tenjin.set_template_encoding(),}} instead.)
 	.--------------------
 	>>> from tenjin.helpers import generate_tostrfunc
 	>>> ## generate to_str() function which encodes unicode into binary(=str).
 	>>> to_str = generate_tostrfunc(encode='utf-8')
-	>>> to_str(u'hoge')
-	'hoge'
+	>>> to_str({{*u*}}'SOS')
+	'SOS'
 	>>> ## generate to_str() function which decodes binary(=str) into unicode.
 	>>> to_str = generate_tostrfunc(decode='utf-8')
-	>>> to_str('hoge')
-	u'hoge'
+	>>> to_str('SOS')
+	{{*u*}}'SOS'
 	.--------------------
 
 .: echo({{/value/}})
@@ -948,73 +1022,14 @@ Module {{,tenjin.helpers,}} provides basic helper functions.
 	.--------------------
 	## add _content into here
 	<?py echo(_content) ?>
-	## this is same as #{...}
+	## this is same as #{...} or {==...==}
 	#{_content}
-	.--------------------
-
-.: not_cached({{/key/}}, {{/lifetime=0/}})
-	If fragment is expired or not cached, start caching fragment with {{/key/}} and {{/lifetime/}} (seconds), and returns True.
-	If fragment is already cached with {{/key/}}, returns False.
-	See {{<Fragment Cache|#fragment-cache>}} for details.
-
-.: echo_cached()
-	Echo cached fragment. If caching is started by not_cached, stop and cache it.
-	This function should be used with not_cached().
-	See {{<Fragment Cache|#fragment-cache>}} for details.
-
-.: start_capture({{/name/}}), stop_capture()
-	Start capturing with specified name. See {{<Capturing|#capturing>}} section for details.
-
-.: captured_as({{/name/}})
-	Return True if captured with name. See {{<Capturing|#capturing>}} section for details.
-
-.: _P({{/value/}}), _p({{/value/}})
-	Helper method for preprocessing. See {{<Preprocessing|#preprocessing>}} section for details.
-
-
-
-.$$$ tenjin.helpers.html module		| tenjin-helpers-html
-
-Module {{,tenjin.helpers.html,}} provides HTML specific helper functions.
-
-
-.: escape({{/str/}}), escape_html({{/str/}})
-	Escapes HTML special characters. Same as {{,tejin.helpers.escape(),}}.
-
-.: checked({{/value/}})
-	Returns {{,' checked="checked"',}} if value is true value, else returns empty string.
-	.--------------------
-	>>> from tenjin.helpers.html import *
-	>>> checked(1+1==2)
-	' checked="checked"'
-	>>> checked(1+1==3)
-	''
-	.--------------------
-
-.: selected({{/value/}})
-	Returns {{,' selected="selected"',}} if value is true value, else returns empty string.
-	.--------------------
-	>>> from tenjin.helpers.html import *
-	>>> selected(1+1==2)
-	' selected="selected"'
-	>>> selected(1+1==3)
-	''
-	.--------------------
-
-.: disabled({{/value/}})
-	Returns {{,' disabled="disabled"',}} if value is true value, else returns empty string.
-	.--------------------
-	>>> from tenjin.helpers.html import *
-	>>> disabled(1+1==2)
-	' disabled="disabled"'
-	>>> disabled(1+1==3)
-	''
 	.--------------------
 
 .: new_cycle(*{{/values/}})
 	Generates cycle object.
 	.--------------------
-	>>> from tenjin.helpers.html import *
+	>>> from tenjin.helpers import new_cycle
 	>>> cycle = new_cycle('odd', 'even')
 	>>> cycle()
 	'odd'
@@ -1026,10 +1041,132 @@ Module {{,tenjin.helpers.html,}} provides HTML specific helper functions.
 	'even'
 	.--------------------
 
+.: cache_as({{/key/}}, {{/lifetime=0/}})
+	Caches fragment of output.
+	See {{<Fragment Cache|#fragment-cache>}} for details.
+
+.: not_cached({{/key/}}, {{/lifetime=0/}})
+	(OBSOLETE; use cache_as() instead).^
+	If fragment is expired or not cached, start caching fragment with {{/key/}} and {{/lifetime/}} (seconds), and returns True.
+	If fragment is already cached with {{/key/}}, returns False.
+	See {{<Fragment Cache|#fragment-cache>}} for details.
+
+.: echo_cached()
+	(OBSOLETE; use cache_as() instead).^
+	Echo cached fragment. If caching is started by not_cached, stop and cache it.
+	This function should be used with not_cached().
+	See {{<Fragment Cache|#fragment-cache>}} for details.
+
+.: capture_as({{/name/}})
+	Capture a part of template.
+	See {{<Capturing|#capturing>}} section for details.
+
+.: captured_as({{/name/}})
+	Return True if captured with name.
+	See {{<Capturing|#capturing>}} section for details.
+
+.: start_capture({{/name/}}), stop_capture()
+	(OSOLETE; use capture_as() instead).^
+	Start capturing with specified name.
+	See {{<Capturing|#capturing>}} section for details.
+
+.: _P({{/value/}}), _p({{/value/}})
+	Helper method for preprocessing.
+	See {{<Preprocessing|#preprocessing>}} section for details.
+
+
+
+.$$$ tenjin.escaped module		| tenjin-escaped
+
+Module {{,tenjin.escaped,}} provides auto-escaping helpers and classes.
+
+.: as_escaped({{/string/}})
+	Mark {{/string/}} as escaped and returns marked string.
+	{{*Notice that this doesn't escape string at all.*}}
+	This function just mark string as escaped.
+	See {{<Auto-escaping|#auto-escaping>}} section for details.
+	.--------------------
+	>>> s = '<p>Hello</p>'
+	>>> as_escaped(s)              # not changes string content
+	'<p>Hello</p>'
+	>>> type(as_escaped(s))        # marks string as escaped
+	<class 'tenjin.escaped.EscapedStr'>
+	>>> as_escaped(s) == s         # returned value is also string
+	True
+	.--------------------
+
+.: is_escaped({{/value/}}):
+	Return True if {{/value/}} is marked as escaped, else False.
+	See {{<Auto-escaping|#auto-escaping>}} section for details.
+	.--------------------
+	>>> s = '<p>Hello</p>'
+	>>> is_escaped(s)              # returns False if string is not marked
+	False
+	>>> s = as_escaped('<p>Hello</p>')
+	>>> is_escaped(s)              # returns True if string is marked as escaped
+	True
+	.--------------------
+	
+.: to_escaped({{/value/}}):
+	Convert {{/value/}} into string, escape it, and return string which is marked as escaped.
+	If {{/value/}} is already escaped, this helper function doesn't escape it any more.
+	See {{<Auto-escaping|#auto-escaping>}} section for details.
+	.--------------------
+	>>> s = '<p>Hello</p>'
+	>>> to_escaped(s)              # escapes html special characters
+	'&lt;p&gt;Hello&lt;/p&gt;'
+	>>> is_escaped(to_escaped(s))  # returned value is marked as escaped
+	True
+	>>> to_escaped(123)            # converts any value into string
+	'123'
+	>>> to_escaped(None)           # converts None into empty string
+	''
+	.--------------------
+
+
+
+.$$$ tenjin.html module		| tenjin-helpers-html
+
+Module {{,tenjin.html,}} provides HTML specific helper functions.
+
+
+.: escape_html({{/str/}})
+	Escapes HTML special characters. Same as {{,tejin.helpers.escape(),}}.
+	.--------------------
+	>>> escape_html('<>&"')
+	'&lt;&gt;&amp;&quot;'
+	.--------------------
+
+.: checked({{/value/}})
+	Returns {{,' checked="checked"',}} if value is true value, else returns empty string.
+	.--------------------
+	>>> checked(1+1==2)
+	' checked="checked"'
+	>>> checked(1+1==3)
+	''
+	.--------------------
+
+.: selected({{/value/}})
+	Returns {{,' selected="selected"',}} if value is true value, else returns empty string.
+	.--------------------
+	>>> selected(1+1==2)
+	' selected="selected"'
+	>>> selected(1+1==3)
+	''
+	.--------------------
+
+.: disabled({{/value/}})
+	Returns {{,' disabled="disabled"',}} if value is true value, else returns empty string.
+	.--------------------
+	>>> disabled(1+1==2)
+	' disabled="disabled"'
+	>>> disabled(1+1==3)
+	''
+	.--------------------
+
 .: nl2br({{/str/}})
 	Replaces {{,"\n",}} into {{,"<br />\n",}}.
 	.--------------------
-	>>> from tenjin.helpers.html import *
 	>>> nl2br("foo\nbar\nbaz\n")
 	'foo<br />\nbar<br />\nbaz<br />\n'
 	.--------------------
@@ -1037,7 +1174,6 @@ Module {{,tenjin.helpers.html,}} provides HTML specific helper functions.
 .: text2html({{/str/}})
    	(experimental) Escapes xml characters and replace {{,"\n",}} into {{,"<br />\n",}}.
 	.--------------------
-	>>> from tenjin.helpers.html import *
 	>>> text2html('<AAA>\nB&B\n"CCC"\n')
 	'&lt;AAA&gt;<br />\nB&amp;B<br />\n&quot;CCC&quot;<br />\n'
 	.--------------------
@@ -1046,7 +1182,6 @@ Module {{,tenjin.helpers.html,}} provides HTML specific helper functions.
 	{{*(experimental)*}} Returns {{,' name="value"',}} if {{/expr/}} is true value, else {{,'',}} (empty string).
 	If {{/value/}} is not specified, {{/expr/}} is used as value instead.
 	.--------------------
-	>>> from tenjin.helpers.html import *
 	>>> tagattr('name', 'account')
 	' name="account"'
 	>>> tagattr('name', None)
@@ -1058,7 +1193,6 @@ Module {{,tenjin.helpers.html,}} provides HTML specific helper functions.
 .: tagattrs(**{{/kwargs/}})
 	{{*(experimental)*}} Builds html tag attribtes.
 	.--------------------
-	>>> from tenjin.helpers.html import *
 	>>> tagattrs(klass='main', size=20)
 	' class="main" size="20"'
 	>>> tagattrs(klass='', size=0)
@@ -1068,7 +1202,6 @@ Module {{,tenjin.helpers.html,}} provides HTML specific helper functions.
 .: nv({{/name/}}, {{/value/}}, {{/sep/}}=None, **{{/kwargs/}})
 	{{*(experimental)*}} Builds name and value attributes.
 	.--------------------
-	>>> from tenjin.helpers.html import *
 	>>> nv('rank', 'A')
 	'name="rank" value="A"'
 	>>> nv('rank', 'A', '-')
@@ -1079,6 +1212,21 @@ Module {{,tenjin.helpers.html,}} provides HTML specific helper functions.
 	'name="rank" value="A" id="rank-A" class="error" style="color:red"'
 	.--------------------
 
+.: js_link({{/label/}}, {{/onclick/}}, **{{/kwargs/}})
+	{{*(experimental)*}} Builds <a onclick="..."></a> link.
+	.--------------------
+	>>> js_link('click', 'alert("OK")', klass='link')
+	'<a href="javascript:undefined" onclick="alert(&quot;OK&quot;);return false" class="link">click</a>'
+	.--------------------
+
+
+.+NOTE:
+
+{{,tenjin.html,}} module is renamed to {{,tenjin.html,}} since version 1.0.0.
+But old module name is still available for backward compatibility.
+
+.-NOTE:	
+
 
 
 
@@ -1087,94 +1235,76 @@ Module {{,tenjin.helpers.html,}} provides HTML specific helper functions.
 
 
 
-.$$ Safe Template		| safe-template
+.$$ Auto-escaping		| auto-escaping
 
 
 
-Tenjin provides SafeTemplate and SafeEngine class which enforces HTML escape.
-These are similar to Django's feature.
+Tenjin provides {{,SafeTemplate,}} and {{,SafeEngine,}} class which enforces HTML escape.
+These are similar to Django's feature or Jinja2's autoescape feature.
 
-With these classes, embedded expression notation is changed.
+{{*The point of these classes is that you can control whether escape html or not by data type, not by embedded notation.*}}
 
-.* Use {{,{=...=},}} instead of {{,${...},}}
-.* Use {{,{==...==},}} instead of {{,#{...},}}
+.#The differece between SafeTemplate/SafeEngine and normal Template/Engine is that the former uses {{,safe_escape(),}} as escaping function.
 
-The reason of this change is that current notation can't allow user to embed curlie brackets (for example {{,${"Hello {0}!".format(user.name)},}} will be parse error in current version).
+See the following example.
 
-
-.? safe-test.pyhtml
-.-------------------- test_safe/safe-test.pyhtml
-<?py #@ARGS var1, var2 ?>
-(escaped)
-  var1 = {{*{=*}}var1{{*=}*}}
-  var2 = {{*{=*}}var2{{*=}*}}
-(not escaped)
-  var1 = {{*{==*}}var1{{*==}*}}
-  var2 = {{*{==*}}var2{{*==}*}}
-.--------------------
-
-.? main.py
-.-------------------- test_safe/main.py
-## import safe_escape() and mark_as_escaped()
+.? safe-test.py
+.-------------------- test_safe/safe-test.py
 import tenjin
-from tenjin.helpers import to_str, {{*safe_escape*}}, {{*mark_as_escaped*}}
-    # or form tenjin.helpers import *
+from tenjin.helpers import *
+{{*from tenjin.escaped import is_escaped, as_escaped, to_escaped*}}
 
-## use SafeEngine class instead Engine class
-## (SafeEngine class uses SafeTemplate class internally)
-engine = tenjin.{{*SafeEngine*}}()
+## both are same notation
+input = r"""
+a = {{*${a}*}}
+b = {{*${b}*}}
+"""
 
-## if you want NOT escape a certain value, wrap by mark_as_escaped()
+## but passed different data type
 context = {
-  'var1': '<b>Hello</b>',
-  'var2': {{*mark_as_escaped(*}}'<b>Hello</b>'{{*)*}},
+    "a": "<b>SOS</b>",
+    "b": {{*as_escaped*}}("<b>SOS</b>"),
 }
 
-## render template
-output = engine.render('safe-test.pyhtml', context)
-print(output)
+## SafeTemplate will escape 'a' but not 'b'
+template = {{*tenjin.SafeTemplate*}}(input=input)
+print(template.script)
+print("---------------------")
+print(template.render(context))
 .--------------------
 
-.? Result
-.==================== test_safe/result.output
-$ python main.py
-(escaped)
-  var1 = &lt;b&gt;Hello&lt;/b&gt;
-  var2 = {{*<b>Hello</b>*}}
-(not escaped)
-  var1 = <b>Hello</b>
-  var2 = <b>Hello</b>
+The follwoing output shows that:
+
+.* {{,SafeTemplate,}} and {{,SafeEngine,}} classes uses {{,to_escaped(),}} instead of {{,escape(),}} to escape value.
+.* Normal string (= {{,"<b>SOS</b>",}}) is escaped automatically, but the other string which is marked as escaped (= {{,as_escaped("<b>SOS</b>",}}) is not escaped.
+   This means that you can controll escape by data type, not embedded notation.
+
+.? Output example
+.====================
+$ python safe-test.py
+_extend=_buf.extend;_to_str=to_str;_escape={{*to_escaped*}}; _extend(('''
+a = ''', _escape(a), '''
+b = ''', _escape(b), '''\n''', ));
+
+---------------------
+
+a = &lt;b&gt;SOS&lt;/b&gt;
+b = {{*<b>SOS</b>*}}
 
 .====================
 
+See {{<tenjin.escaped module|#tenjin-escaped>}} section for details about {{,as_escaped(),}} and {{,to_escaped(),}}.
 
-SafeTemplate class uses safe_escape() instead of escape().
-You can see it by {{,--safe,}} option for pytenjin command.{{({{,${mark_as_escaped(var1)},}} is converted into Python code which does't use safe_escape() for performance reason.)}}
+In addition, {{,SafeTemplate,}}/{{,SafeEngine,}} classes inhibits {{,#{...},}} because some people mistake it with {{,${...},}} and it can be XSS security hole in the result. Use {{,{==...==},}} instead of {{,#{...},}}.
 
-.==================== test_safe/result2.output
-$ pytenjin -s {{*--safe*}} safe-test.pyhtml
-_buf = []
-var1 = _context.get('var1'); var2 = _context.get('var2'); 
-_extend=_buf.extend;_to_str=to_str;_escape={{*safe_escape*}}; _extend(('''(escaped)
-  var1 = ''', {{*_escape*}}(_to_str(var1)), '''
-  var2 = ''', {{*_escape*}}(_to_str(var2)), '''
-(not escaped)
-  var1 = ''', {{*_to_str*}}(var1), '''
-  var2 = ''', {{*_to_str*}}(var2), '''\n''', ));
-print(''.join(_buf))
-.====================
+.+============================================================
+             .,  Template, Engine                 ., SafeTemplate, SafeEngine
+.------------------------------------------------------------
+Escape html  .,  {{,${...},}} or {{,{=...=},}}    ., {{,${...},}} or {{,{=...=},}}
+Not escape   .,  {{,#{...},}} or {{,{==...==},}}  ., only {{,{==...==},}}
+.+============================================================
 
-.#Here is the definition of safe_escape(). It is very simple and you can customize it freely.
-.#
-.#.--------------------
-.#def safe_escape(s):
-.#    if isinstance(s, EscapedStr):
-.#        return s
-.#    if isinstance(s, EscapedUnicode):
-.#        return EscapedStr(to_str(s))
-.#    return EscapedStr(escape(to_str(s)))
-.#.--------------------
-.#
+
 
 
 
@@ -1215,7 +1345,7 @@ It is able to nest several layout template files.
 .-------------------- test_nested/main.py
 import tenjin
 from tenjin.helpers import *
-from tenjin.helpers.html import text2html
+from tenjin.html import text2html
 engine = tenjin.Engine(path=['views'])
 context = {
     'title': 'Blog Post Test',
@@ -1249,25 +1379,34 @@ Baz
 
 .$$ Capturing		| capturing
 
-It is able to capture parital of template. It can be poor-man's alternative of Django's template-inheritance.
+It is able to capture parital of output.
+You can use this feature as an alternative of Django's template-inheritance.
 
 .? views/blog-post.pyhtml
 .-------------------- test_capturing/views/blog-post.pyhtml
+<?py from __future__ import with_statement ?>
 <?py #@ARGS blog_post, recent_posts ?>
 <h2>#{blog_post['title']}</h2>
 <div class="blog-post">
 #{text2html(blog_post['content'])}
 </div>
 
-{{*<?py start_capture('sidebar') ?>*}}
+{{*<?py with capture_as('sidebar'): ?>*}}
 <h3>Recent Posts</h3>
 <ul>
 <?py for post in recent_posts: ?> 
   <a href="/blog/#{post['id']}">${post['title']}</a>
 <?py #endfor ?>
 </ul>
-{{*<?py stop_capture() ?>*}}
+{{*<?py #endwith ?>*}}
 .--------------------
+
+.+NOTE:
+
+{{,capture_as(),}} supports both with-statement and for-statement.
+If you are using Python 2.4, change {{,with capture_as("sidebar"): ... #endwith,}} to {{,for _ in capture_as("sidebar"): ... #endfor,}}.
+
+.-NOTE:
 
 .? views/_layout.pyhtml
 .-------------------- test_capturing/views/_layout.pyhtml
@@ -1319,7 +1458,7 @@ context = {
 ## render template
 import tenjin
 from tenjin.helpers import *
-from tenjin.helpers.html import text2html
+from tenjin.html import text2html
 engine = tenjin.Engine(path=['views'], layout='_layout.pyhtml')
 html = engine.render('blog-post.pyhtml', context)
 print(html)
@@ -1359,6 +1498,12 @@ Tenjin has great features.<br />
 </html>
 
 .--------------------
+
+.+NOTE:
+
+{{,start_capture(),}} and {{,stop_capture(),}} are still available but obsolete.
+
+.-NOTE:
 
 
 
@@ -1408,14 +1553,13 @@ You can cache a certain part of HTML to improve performance. This is called as F
 <?py #@ARGS get_items ?>
 <div>
   {{*<?py # fragment cache with key ('items/1') and lifetime (60sec) ?>*}}
-  {{*<?py if not_cached('items/1', 60): ?>*}}
+  {{*<?py for _ in cache_as('items/1', 60): ?>*}}
   <ul>
     <?py     for item in get_items(): ?>
     <li>${item}</li>
     <?py     #endfor ?>
   </ul>
-  {{*<?py #endif ?>*}}
-  {{*<?py echo_cached() ?>*}}
+  {{*<?py #endfor ?>*}}
 </div>
 .--------------------
 
@@ -1476,6 +1620,11 @@ $ cat cache.d/items/1
   </ul>
 .====================
 
+.+NOTE:
+
+{{,not_cached(),}} and {{,echo_cached(),}} are still available but obsolete.
+
+.-NOTE:
 
 
 .$$ Logging	| logging
@@ -1527,7 +1676,7 @@ INFO:root:[tenjin.MarshalCacheStorage] {{*load cache (file='/home/user/example.p
 
 
 
-.$$ Using Tenjin with Google App Engine		| google-appengine
+.$$ Google App Engine Support		| google-appengine
 
 Tenjin supports Google App Engine.
 All you have to do is just call {{,tenjin.gae.init(),}}.
@@ -1543,24 +1692,30 @@ logging.basicConfig(level=logging.DEBUG)
 {{*tenjin.logger = logging*}}
 .--------------------
 
+You can see {{<source code|examples.html#gae>}} of GAE example using Tenjin.
+
 {{,tenjin.gae.init(),}} do the followings internally.
 
 .--------------------
 ## change tenjin.Engine to cache template objects into memcache service
 ## (using CURRENT_VERSION_ID as namespace).
-ver = os.environ.get('CURRENT_VERSION_ID').split('.')[0]
+ver = os.environ.get('CURRENT_VERSION_ID', '1.1')#.split('.')[0]
 Engine.cache = tenjin.gae.GaeMemcacheCacheStorage(namespace=ver)
 ## change fragment cache store to use memcache service
 fragcache = tenjin.helpers.fragment_cache
-fragcache.store    = tenjin.gae.aGaeMemcacheStore(namespace=ver)
+fragcache.store    = tenjin.gae.GaeMemcacheStore(namespace=ver)
 fragcache.lifetime = 60    #  1 minute
 fragcache.prefix   = 'fragment.'
 .--------------------
 
-NOTICE: Google App Engine shares memcache in any version.
+.+NOTE:
+
+Google App Engine shares memcache in any version.
 In other words, Google App Engine doesn't allow to separate memcache for each version.
 This means that {{*memcache data can be conflict between old and new version application in Google App Engine*}}.
 Tenjin avoids this confliction by using version id as namespace.
+
+.-NOTE:
 
 
 
@@ -1576,12 +1731,12 @@ Preprocessing makes your application much faster.
 
 Notation of preprocessing:
 
-.: <?PY ... ?>
+.: {{,<?PY ... ?>,}}
 	Preprocessing statement.
-.: #{{{}}{...}{{}}}
-	Preprocessing expression (without HTML escape)
-.: ${{{}}{...}{{}}}
+.: {{,${{{}}{...}{{}}},}} or {{,{#=...=#},}}
 	Preprocessing expression (with HTML escape)
+.: {{,#{{{}}{...}{{}}},}} or {{,{#==...==#},}}
+	Preprocessing expression (without HTML escape)
 
 The following shows difference between {{,${...},}} and {{,${{{}}{...}{{}}},}}.
 
@@ -1932,6 +2087,202 @@ _extend=_buf.extend;_to_str=to_str;_escape=escape; _extend(('''<div>
 
 
 
+
+.$ Tips		    | tips
+
+
+.$$ Trace Templates	    | tips-trace
+
+If you pass '{{,trace=True,}}' to tenjin.Template class or tenjin.Engine class, Template class will print template file name at the beginning and end of output.
+
+For example:
+
+.? trace-example.py
+.-------------------- test_trace/trace-example.py
+import tenjin
+from tenjin.helpers import *
+engine = tenjin.Engine(layout='layout.pyhtml', {{*trace=True*}})
+output = engine.render('main.pyhtml', {'items': ['A','B','C']})
+print(output)
+.--------------------
+
+Will print:
+
+.==================== test_trace/result.output
+$ python trace-example.py
+{{*<!-- ***** begin: layout.pyhtml ***** -->*}}
+<html>
+  <body>
+    <div class="content">
+{{*<!-- ***** begin: main.pyhtml ***** -->*}}
+<ul>
+  <li>A</li>
+  <li>B</li>
+  <li>C</li>
+</ul>
+{{*<!-- ***** end: main.pyhtml ***** -->*}}
+    </div>
+  </body>
+</html>
+{{*<!-- ***** end: layout.pyhtml ***** -->*}}
+
+.====================
+
+This feature is very useful to specify template file from HTML output.
+
+If you like it, you can make it always enabled.
+
+.--------------------
+## trace is always enabled
+tenjin.Engine.trace = True
+.--------------------
+
+
+.#+++
+
+.-------------------- test_trace/layout.pyhtml
+<?py #@ARGS _content ?>
+<html>
+  <body>
+    <div class="content">
+    <?py echo(_content) ?>
+    </div>
+  </body>
+</html>
+.--------------------
+
+.-------------------- test_trace/main.pyhtml
+<?py #@ARGS items ?>
+<ul>
+  <?py for item in items: ?>
+  <li>${item}</li>
+  <?py #end ?>
+</ul>
+.--------------------
+
+.#---
+
+
+
+.$$ Specify Function Names of escape() and to_str()	| function-names
+
+It is able to specify function names of {{,escape(),}} and {{,to_str(),}} which are used in converted Python script.
+
+.? main.py
+.-------------------- test_escape/main.py
+import tenjin
+from tenjin.helpers import *
+import cgi
+engine = tenjin.Engine(path=['views'], {{*escapefunc="cgi.escape", tostrfunc="str"*}})
+print(engine.get_template('page.pyhtml').script)
+.--------------------
+
+.? views/page.pyhtml
+.-------------------- test_escape/views/page.pyhtml
+<p>
+  escaped:     ${value}
+  not escaped: #{value}
+</p>
+.--------------------
+
+.? Result
+.-------------------- test_escape/result.output
+$ python main.py
+_extend=_buf.extend;_to_str={{*str*}};_escape={{*cgi.escape*}}; _extend(('''<p>
+.#  escaped:     ''', {{*cgi.escape*}}({{*str*}}(value)), '''
+.#  not escaped: ''', {{*str*}}(value), '''
+  escaped:     ''', _escape(_to_str(value)), '''
+  not escaped: ''', _to_str(value), '''
+</p>\n''', ));
+
+.--------------------
+
+If you need faster version of {{,to_str(),}} and {{,escape(),}}, see {{<next section|#webext>}}.
+
+
+
+.$$ Webext	| tips-webext
+
+I have to say that {{*bottleneck of Tenjin is calling {{,to_str(),}} and {{,escape(),}}, not string concatenation*}}.
+Therefore if you want to make Tenjin much faster, you must make {{,to_str(),}} and {{,escape(),}} faster (or eliminate calling them).
+
+For example, using {{,str(),}} instead of {{,to_str(),}} will make Tenjin much faster. The following benchmark result shows that {{,str(),}}(= 'tenjin-str') is much faster than {{,to_str(),}}(= 'tenjin').
+
+.? {{,str(),}} is faster than {{,to_str(),}}
+.====================
+$ cd Tenjin-X.X.X/benchmark
+$ python -V
+Python 2.5.5
+$ python bench.py -q -n 10000 tenjin tenjin-str
+*** ntimes=10000
+                                    utime     stime     total      real
+tenjin                             3.7500    0.0400    3.7900    3.7936
+tenjin-str                         2.4500    0.0300    2.4800    2.4857
+.#$ python -V
+.#Python 2.7
+.#$ python bench.py -q -n 10000 tenjin tenjin-str
+.#*** ntimes=10000
+.#                                    utime     stime     total      real
+.#tenjin                             3.2600    0.0300    3.2900    3.3033
+.#tenjin-str                         1.8700    0.0300    1.9000    1.9006
+.====================
+
+But {{,str(),}} doesn't return empty string if argument is {{,None,}}. In addition {{,str(),}} raises UnicodeEncodeError frequently.
+
+Other solution is {{<Webext|http://pypi.python.org/Webext/>}}. {{<Webext|http://pypi.python.org/Webext/>}} is an extension module which implement {{,to_str(),}} and {{,escape(),}} in C language.
+
+.--------------------
+import tenjin
+from tenjin.helpers import *
+{{*from webext import to_str, escape*}}    # use webext's functions instead of tenjin's
+.--------------------
+
+Benchmark script in Tenjin already supports Webext. It shows that Webext makes Tenjin much faster especially html escaping.
+
+.? Intel CoreDuo2 2GHz, Mac OS X 10.6, Python 2.5.5
+.====================
+### without html escape
+$ cd Tenjin-X.X.X/
+$ cd benchmark/
+$ python bench.py -q -n 10000 tenjin tenjin-str tenjin-webext
+*** ntimes=10000
+                                    utime     stime     total      real
+tenjin                             3.8100    0.0400    3.8500    3.8462
+tenjin-str                         2.4500    0.0200    2.4700    2.4815
+tenjin-webext                      2.4500    0.0300    2.4800    2.4825
+
+## with html escape
+$ python bench.py -e -q -n 10000 tenjin tenjin-str tenjin-webext
+*** ntimes=10000
+                                    utime     stime     total      real
+tenjin                             7.2900    0.0500    7.3400    7.4669
+tenjin-str                         5.7400    0.0400    5.7800    5.8202
+tenjin-webext                      2.9700    0.0400    3.0100    3.0079
+.====================
+
+
+
+.$$ Template Inheritance	| tips-template-inheritance
+
+Tenjin doesn't support Template Inheritance which Django template engine does.
+But you can emulate it by capturing{{(Notice that capturing is useful but not so powerful than template inheritance.)}}.
+See {{<this section|#capturing>}} for details.
+
+
+.#.$$ Report Full Path Name of Template File  | tips-fullpath
+.#
+.#If you set tenjin.Engine.prefer_fullpath to True, Tenjin will use full-path name of template file.
+.#This affects to error reporting. You can get full path name of template file on error.
+.#
+.#.--------------------
+.### report full-path name of template file when error raised
+.#tenjin.Engine.prefer_fullpath = True
+.#.--------------------
+
+
+
+
+
 .$ {{,pytenjin,}} Command	| command
 
 See '{{,pytenjin -h,}}' for details.
@@ -2214,199 +2565,6 @@ $ pytenjin {{*-f context.yaml*}} example.pyhtml
 
 
 
-.$ Tips		    | tips
-
-
-.$$ Trace Templates	    | tips-trace
-
-If you pass '{{,trace=True,}}' to tenjin.Template class or tenjin.Engine class, Template class will print template file name at the beginning and end of output.
-
-For example:
-
-.? trace-example.py
-.-------------------- test_trace/trace-example.py
-import tenjin
-from tenjin.helpers import *
-engine = tenjin.Engine(layout='layout.pyhtml', {{*trace=True*}})
-output = engine.render('main.pyhtml', {'items': ['A','B','C']})
-print(output)
-.--------------------
-
-Will print:
-
-.==================== test_trace/result.output
-$ python trace-example.py
-{{*<!-- ***** begin: layout.pyhtml ***** -->*}}
-<html>
-  <body>
-    <div class="content">
-{{*<!-- ***** begin: main.pyhtml ***** -->*}}
-<ul>
-  <li>A</li>
-  <li>B</li>
-  <li>C</li>
-</ul>
-{{*<!-- ***** end: main.pyhtml ***** -->*}}
-    </div>
-  </body>
-</html>
-{{*<!-- ***** end: layout.pyhtml ***** -->*}}
-
-.====================
-
-This feature is very useful to specify template file from HTML output.
-
-If you like it, you can make it always enabled.
-
-.--------------------
-## trace is always enabled
-tenjin.Engine.trace = True
-.--------------------
-
-
-.#+++
-
-.-------------------- test_trace/layout.pyhtml
-<?py #@ARGS _content ?>
-<html>
-  <body>
-    <div class="content">
-    <?py echo(_content) ?>
-    </div>
-  </body>
-</html>
-.--------------------
-
-.-------------------- test_trace/main.pyhtml
-<?py #@ARGS items ?>
-<ul>
-  <?py for item in items: ?>
-  <li>${item}</li>
-  <?py #end ?>
-</ul>
-.--------------------
-
-.#---
-
-
-
-.$$ Specify Function Names of escape() and to_str()	| function-names
-
-It is able to specify function names of {{,escape(),}} and {{,to_str(),}} which are used in converted Python script.
-
-.? main.py
-.-------------------- test_escape/main.py
-import tenjin
-from tenjin.helpers import *
-import cgi
-engine = tenjin.Engine(path=['views'], {{*escapefunc="cgi.escape", tostrfunc="str"*}})
-print(engine.get_template('page.pyhtml').script)
-.--------------------
-
-.? views/page.pyhtml
-.-------------------- test_escape/views/page.pyhtml
-<p>
-  escaped:     ${value}
-  not escaped: #{value}
-</p>
-.--------------------
-
-.? Result
-.-------------------- test_escape/result.output
-$ python main.py
-_extend=_buf.extend;_to_str={{*str*}};_escape={{*cgi.escape*}}; _extend(('''<p>
-.#  escaped:     ''', {{*cgi.escape*}}({{*str*}}(value)), '''
-.#  not escaped: ''', {{*str*}}(value), '''
-  escaped:     ''', _escape(_to_str(value)), '''
-  not escaped: ''', _to_str(value), '''
-</p>\n''', ));
-
-.--------------------
-
-If you need faster version of {{,to_str(),}} and {{,escape(),}}, see {{<next section|#webext>}}.
-
-
-
-.$$ Webext	| tips-webext
-
-I have to say that {{*bottleneck of Tenjin is calling to_str() and escape(), not string concatenation*}}.
-Therefore if you want to make Tenjin much faster, you must make to_str() and escape() faster (or omit calling them).
-
-For example, using {{,str(),}} instead of {{,to_str(),}} will make Tenjin much faster. The following benchmark result shows that {{,str(),}}(= 'tenjin-str') is much faster than {{,to_str(),}}(= 'tenjin').
-
-.? {{,str(),}} is faster than {{,to_str(),}}
-.====================
-$ cd Tenjin-X.X.X/benchmark
-$ python -V
-Python 2.5.5
-$ python bench.py -q -n 10000 tenjin tenjin-str
-*** ntimes=10000
-                                    utime     stime     total      real
-tenjin                             3.7500    0.0400    3.7900    3.7936
-tenjin-str                         2.4500    0.0300    2.4800    2.4857
-.#$ python -V
-.#Python 2.7
-.#$ python bench.py -q -n 10000 tenjin tenjin-str
-.#*** ntimes=10000
-.#                                    utime     stime     total      real
-.#tenjin                             3.2600    0.0300    3.2900    3.3033
-.#tenjin-str                         1.8700    0.0300    1.9000    1.9006
-.====================
-
-But {{,str(),}} doesn't return empty string if argument is {{,None,}}. In addition {{,str(),}} raises UnicodeEncodeError frequently.
-
-Other solution is {{<Webext|http://pypi.python.org/Webext/>}}. {{<Webext|http://pypi.python.org/Webext/>}} is an extension module which implement {{,to_str(),}} and {{,escape(),}} in C language.
-
-.--------------------
-import tenjin
-from tenjin.helpers import *
-{{*from webext import to_str, escape*}}    # use webext's functions instead of tenjin's
-.--------------------
-
-Benchmark script in Tenjin already supports Webext. It shows that Webext makes Tenjin much faster especially html escaping.
-
-.? Intel CoreDuo2 2GHz, Mac OS X 10.6, Python 2.5.5
-.====================
-### without html escape
-$ cd Tenjin-X.X.X/
-$ cd benchmark/
-$ python bench.py -q -n 10000 tenjin tenjin-str tenjin-webext
-*** ntimes=10000
-                                    utime     stime     total      real
-tenjin                             3.8100    0.0400    3.8500    3.8462
-tenjin-str                         2.4500    0.0200    2.4700    2.4815
-tenjin-webext                      2.4500    0.0300    2.4800    2.4825
-
-## with html escape
-$ python bench.py -e -q -n 10000 tenjin tenjin-str tenjin-webext
-*** ntimes=10000
-                                    utime     stime     total      real
-tenjin                             7.2900    0.0500    7.3400    7.4669
-tenjin-str                         5.7400    0.0400    5.7800    5.8202
-tenjin-webext                      2.9700    0.0400    3.0100    3.0079
-.====================
-
-
-
-.$$ Template Inheritance	| tips-template-inheritance
-
-Tenjin doesn't support Template Inheritance which Django template engine does.
-But you can emulate it by capturing{{(Notice that capturing is useful but not so powerful than template inheritance.)}}.
-See {{<this section|#capturing>}} for details.
-
-
-.#.$$ Report Full Path Name of Template File  | tips-fullpath
-.#
-.#If you set tenjin.Engine.prefer_fullpath to True, Tenjin will use full-path name of template file.
-.#This affects to error reporting. You can get full path name of template file on error.
-.#
-.#.--------------------
-.### report full-path name of template file when error raised
-.#tenjin.Engine.prefer_fullpath = True
-.#.--------------------
-
-
-
 .$ Trouble shooting 	      | shooting
 
 
@@ -2440,12 +2598,12 @@ syntaxerr.pyhtml:5:12: invalid syntax
 
 .$$ I got 'SyntaxError: encoding declaration in Unicode string'	| encoding-syntaxerr
 
-This is because you added encoding declaration in template file AND you specified encoding option to tenjin.Engine() or tenjin.Template().
+This is because you added magic comment (such as {{,<?py # -*- coding: utf-8 -*- ?>,}}) in template file AND you specified template encoding by {{,tenjin.set_template_encoding(),}} or pass encoding option to {{,tenjin.Engine(),}}.
 
 Solution:
 
-.* If you specify encoding option to tenjin.Engine() or tenjin.Template(), remove encoding declaration from your template file.
-.* If you want to add encoding declaration into your template file, don't specify encoding option to tenjin.Engine() or tenjin.Template().
+.* If you called {{,tenjin.set_template_encoding(),}}, remove magic comment.
+.* If you want to add magic comment, call {{,tenjin.set_template_encoding(),}} with {{,encode,}} option, or don't call it.
 
 
 
@@ -2531,6 +2689,178 @@ def getval(key, {{*_values=values*}}):   # works very well!
 .--------------------
 
 
+
+
+
+.$ Customization Examples	| customize
+
+This section shows how to customize pyTenjin.
+
+{{*Notice that these customization may be changed in the future release.*}}
+
+
+.$$ Template Encoding		| customize-encoding
+
+.--------------------
+tenjin.set_template_encoding('cp932')   # or shift_jis
+.--------------------
+
+
+.$$ Escaping Function		| customize-escapefunc
+
+.--------------------
+tenjin.Template.escapefunc = 'cgi.escape'
+## or
+engine = tenjin.Engine(escapefunc='cgi.escape')
+.--------------------
+
+
+.$$ Change Behaviour of {{,to_str(),}}		| customize-tostr
+
+.--------------------
+## encode unicode into str, and unchange str.
+to_str = tenjin.helpers.generate_tostrfunc(encode='utf-8')
+  # ex.	
+  #   >>> to_str('日本語')
+  #   '\xe6\x97\xa5\xe6\x9c\xac\xe8\xaa\x9e'
+  #   >>> to_str({{*u*}}'日本語')
+  #   '\xe6\x97\xa5\xe6\x9c\xac\xe8\xaa\x9e'
+
+## decode str into unicode, and unchange unicode.
+to_str = tenjin.helpers.generate_tostrfunc(decode='utf-8')
+  # ex.
+  #   >>> to_str("日本語")
+  #   {{*u*}}'\u65e5\u672c\u8a9e'
+  #   >>> to_str({{*u*}}"日本語")
+  #   {{*u*}}'\u65e5\u672c\u8a9e'
+.--------------------
+
+.+NOTE:
+
+It is recommended to call {{,tenjin.set_template_encoding(),}} instead of calling {{,tenjin.helpers.generate_tostrfunc(),}} directly because the former calls the latter internally.
+
+.-NOTE:
+
+
+.$$ Embedded Notation		| customize-notation
+
+.--------------------
+class MyTemplate(tenjin.Template):
+
+    STMT_PATTERN = re.compile(r'<\?py( |\t|\r?\n)(.*?) ?\?>([ \t]*\r?\n)?', re.S)
+
+    def stmt_pattern(self):
+        return self.STMT_PATTERN
+
+    EXPR_PATTERN = re.compile(r'([#\$])\{(.*?)\}', re.S)
+
+    def expr_pattern(self):
+        return self.EXPR_PATTERN
+
+    def get_expr_and_flags(self, match):
+        prefix, expr = match.groups()
+	flag_tostr  = True
+	flag_escape = prefix == "$"   # escape if prefix is "$"
+	return expr, (flag_escape, flag_tostr)
+
+    def add_expr(self, buf, code, *flags):
+        flag_escape, flag_tostr = flags
+	if   flag_escape: buf.extend(("_escape(_to_str(", code, ")), "))
+	elif flag_tostr:  buf.extend((        "_to_str(", code, "), "))
+	else:             buf.extend((               "(", code, "), "))
+
+tenjin.Engine.templateclass = MyTemplate
+.--------------------
+
+
+.$$ Custom Safe Template	| customize-safetemplate
+
+For example you want to use {{<MarkupSafe|http://pypi.python.org/pypi/MarkupSafe>}} module{{(MarkupSafe is a module to enable auto-escape on Jinja2 or other python products.)}}:
+
+.--------------------
+import tenjin
+tenjin.set_template_encoding('utf-8')  # change templates to be unicode-base
+from tenjin.helpers import *
+from tenjin.html import *
+
+## import Markup
+from markupsafe import Markup, escape_silent
+
+## change SafeTemplate to use Markup
+tenjin.SafeTemplate.tostrfunc      = 'Markup'
+tenjin.SafeTemplate.escapefunc     = 'Markup.escape' # or 'escape_silent'
+tenjin.SafePreprocessor.tostrfunc  = 'Markup'
+tenjin.SafePreprocessor.escapefunc = 'Markup.escape' # or 'escape_silent'
+
+## change safe helpers to use Markup
+import tenjin.escape
+tenjin.escaped.is_escaped = lambda x: isinstance(x, Markup)
+tenjin.escaped.as_escaped = Markup
+tenjin.escaped.to_escaped = Markup.escape # or escape_silent
+from tenjin.escaped import is_escaped, as_escaped, to_escaped
+.--------------------
+
+.+NOTE:
+
+You must call {{,tenjin.set_template_encoding(),}} to change pyTenjin to be unicode-based
+because MarkupSafe requires it.
+
+.-NOTE:
+
+
+.$$ Custom Html Helper Function		| customize-helper
+
+.--------------------
+from tenjin.escaped import as_escaped, to_escaped
+
+def js_link(label, onclick):
+    html = '<a href="javascript:undefined" onclick="%s;return false">%s</a>' % \
+              (to_escaped(onclick), to_escaped(label))
+    return as_escaped(html)
+.--------------------
+
+
+.$$ Switch Default Template Class	| customize-templateclass
+
+.--------------------
+tenjin.Engine.templateclass = MyTemplate
+tenjin.Engine.preprocessorclass = MyPreprocessor
+#
+tenjin.SafeEngine.templateclass = MySafeTemplate
+tenjin.SafeEngine.preprocessorclass = MySafePreprocessor
+.--------------------
+
+
+.$$ Change Template Loader		| customize-loader
+
+.--------------------
+class MyFileSystemLoader(tenjin.FileSystemLoader):
+   def load(self, filepath):
+     ...
+
+tenjin.Engine.loader = MyFileSystemLoader()
+## or
+engine = tenjin.Engine(finder=MyFileSystemLoader())
+.--------------------
+
+
+.$$ Change Template Cache Storage	| customize-cachestorage
+
+.--------------------
+tenjin.Engine.cache = tenjin.MemoryCacheStorage()
+## or
+engine = tenjin.Engine(cache=tenjin.MemoryCacheStorage())
+.--------------------
+
+
+.$$ Change Fragment Cache Store		| customize-kvstore
+
+.--------------------
+if not os.path.isdir('cache.d'):
+    os.mkdir('cache.d')
+kv_store = tenjin.FileBaseStore('cache.d')      # file based
+tenjin.helpers.fragment_cache.store = kv_store
+.--------------------
 
 
 
