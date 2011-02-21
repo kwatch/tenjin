@@ -65,8 +65,8 @@ def task_doc(c):
 @product(stylesheet)
 @ingreds(original_docdir + stylesheet)
 def file_css(c):
-    #cp(c.ingred, c.product)
-    pass
+    """generate *.css"""
+    cp(c.ingred, c.product)
 
 
 #@product('users-guide.html')
@@ -105,6 +105,8 @@ def file_html(c):
        '  <meta http-equiv="Content-Type" content="text/html;charset=utf-8">\n'),
       (r'<p>\.\+NOTE:</p>', '<div class="note"><span class="caption">NOTE:</span>'),
       (r'<p>\.\-NOTE:</p>', '</div>'),
+      (r'<p>\.\+TIPS:</p>', '<div class="tips"><span class="caption">TIPS:</span>'),
+      (r'<p>\.\-TIPS:</p>', '</div>'),
     )
     edit(c.product, by=repl)
 
