@@ -61,7 +61,7 @@ Release 1.0.0 (2010-02-22)
   * (IMPORTANT!!) SafeTemplate and SafeEngine classes are now provided.
     These classes support autoescaping similar to Django or Jinja2.
     See
-      http://www.kuwata-lab.com/tejin/pytenjin-users-guide.html#safe-template
+      http://www.kuwata-lab.com/tenjin/pytenjin-users-guide.html#auto-escaping
     for details.
 
   * (IMPORTANT!!) New function 'tenjin.set_template_encoding()' is provided.
