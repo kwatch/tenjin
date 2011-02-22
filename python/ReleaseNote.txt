@@ -1,4 +1,368 @@
 .######################################################################
+.$ ANN: pyTenjin 1.0.0 - a high-speed and full-featured template engine
+
+I released pyTenjin 1.0.0.
+http://pypi.python.org/pypi/Tenjin/
+http://www.kuwata-lab.com/tenjin/
+
+This release contains a lot of enhancements and changes.
+
+
+Overview
+--------
+
+* Very fast: about 10 times faster than Django template engine
+* Easy to learn: no need to learn template-original language
+* Full-featured: nestable layout template, partial template, preprocessing, etc.
+* Lightweight: only 2000 lines of code and very fast to import.
+* Google App Engine supported
+
+
+Documents
+---------
+
+* User's Guide
+  http://www.kuwata-lab.com/tenjin/pytenjin-users-guide.html
+* Examples
+  http://www.kuwata-lab.com/tenjin/pytenjin-examples.html
+* CHANGES
+  http://www.kuwata-lab.com/tenjin/pytenjin-CHANGES.txt
+
+
+Install
+-------
+
+    $ sudo easy_install Tenjin
+
+Or:
+
+    $ wget http://pypi.python.org/packages/source/T/Tenjin/Tenjin-1.0.0.tar.gz
+    $ tar xzf Tenjin-1.0.0.tar.gz
+    $ cd Tenjin-1.0.0/
+    $ sudo python setup.py install
+
+
+Example
+-------
+
+    ## views/example.pyhtml
+    <?py #@ARGS title, items ?>
+    <h2>${title}</h2>
+    <table>
+      <?py cycle = new_cycle('odd', 'even') ?>
+      <?py for item in items: ?>
+      <tr class="${cycle()}">
+        <td>${item}</td>
+      </tr>
+      <?py #endfor ?>
+    </table>
+
+    ## main.py
+    import tenjin
+    #tenjin.set_template_encoding('utf-8')  # optional (default 'utf-8')
+    from tenjin.helpers import *
+    from tenjin.html import *
+    engine = tenjin.Engine(path=['views'])
+    context = {'title': 'Example', 'items': ['Haruhi', 'Mikuru', 'Yuki'] }
+    output = engine.render('example.pyhtml', context)
+    print(output)
+
+    ## output
+    $ python main.py
+    <h2>Example</h2>
+    <table>
+      <tr class="odd">
+        <td>Haruhi</td>
+      </tr>
+      <tr class="even">
+        <td>Mikuru</td>
+      </tr>
+      <tr class="odd">
+        <td>Yuki</td>
+      </tr>
+    </table>
+
+	
+Enhancements
+------------
+
+* (IMPORTANT!!) Performance is improved (about 5 percent).
+  To improve performance, compiled Python code is changed.
+  This means that YOU MUST TOUCH ALL TEMPLATE FILES AND UPDATE TIME STAMPS
+  OF THEM in order to clear cache data before using this release.
+
+    ## touch all template files to clear cache data
+    $ find . -name '*.pyhtml' | xargs touch
+    ## show compiled python code
+    $ cat ex.pyhtml
+    <ul>
+    <?py for item in items: ?>
+      <li>${item}</li>
+    <?py #endfor ?>
+    <?ul>
+    $ pytenjin -sb ex.pyhtml
+    _extend=_buf.extend;_to_str=to_str;_escape=escape; _extend(('''<ul>\n''', ));
+    for item in items:
+        _extend(('''  <li>''', _escape(_to_str(item)), '''</li>\n''', ));
+    #endfor
+    _extend(('''<?ul>\n''', ));
+
+* (IMPORTANT!!) Free-indent style supported. Now there is no limitation
+  about indent.
+
+    ## In the previous version, there is strong restriction about indent.
+    <html>
+      <body>
+        <table>
+    <?py for item in items: ?>
+          <tr>
+            <td>${item}</td>
+          </tr>
+    <?py #endfor ?>
+        </table>
+      </body>
+    </html>
+
+    ## In this release, you can place statements freely.
+    <html>
+      <body>
+        <table>
+          <?py for item in items: ?>
+          <tr>
+            <td>${item}</td>
+          </tr>
+          <?py #endfor ?>
+        </table>
+      </body>
+    </html>
+
+* (IMPORTANT!!) SafeTemplate and SafeEngine classes are now provided.
+  These classes support autoescaping similar to Django or Jinja2.
+  See
+    http://www.kuwata-lab.com/tenjin/pytenjin-users-guide.html#auto-escaping
+  for details.
+
+* (IMPORTANT!!) New function 'tenjin.set_template_encoding()' is provided.
+  If you prefer templates to be unicode-base like Django or Jinja2,
+  call it before importing helpers.
+
+     ## change Tenjin to be unicode-based
+     import tenjin
+     tenjin.set_template_encoding('utf-8')  # call before importing helpers
+     from tenjin.helpers import *
+     ## The above is same as:
+     #import tenjin
+     #Template.encoding = 'utf-8'
+     #tenjin.helpers.to_str = tenjin.helpers.generate_tostrfunc(decode='utf-8')
+     #from tenjin.helpers import *
+
+  Notice that you should NOT write '<?py # coding: utf-8 ?>' into template
+  files if you call tenjin.set_template_encoding(). If you wrote it,
+  SyntaxError exception would be raised.
+
+* (IMPORTANT!!) New helper function 'cache_as()' is available for fragment cache.
+  This replaces 'not_cached()' and 'echo_cached()'.
+
+     ## previous (obsolete)
+     <?py if not_cached('cachekey1', 60): ?>
+       ...
+     <?py #endif ?>
+     <?py echo_cached() ?>
+
+     ## using new helper
+     <?py for _ in cache_as('cachekey1', 60): ?>
+       ...
+     <?py #endfor ?>
+
+  'not_cached()' and 'echo_cached()' are still available but not recommended.
+
+* (IMPORTANT!!) New helper 'capture_as()' is available for capturing template.
+  This replaces 'start_capture()' and 'stop_capture()'.
+
+     ## preivous (obsolete)
+     <?py start_capture('name') ?>
+       ....
+     <?py stop_capture() ?>
+
+     ## using new helper
+     <?py with capture_as('name'): ?>
+       ....
+     <?py #endfor ?>
+
+  'start_capture()' and 'stop_capture()' are still available but not recommended.
+
+  New helper 'capture_as()' allows you to nest capturing which is
+  impossible with 'start_capture()' and 'stop_capture()'.
+
+* If 'trace=True' is passed to Template class (or Engine class), output
+  string will contain template file name. For example:
+
+     <!-- ***** begin: hello.pyhtml ***** -->
+     <div class="content">
+       <p>Hello World!</p>
+     </div>
+     <!-- ***** end: hello.pyhtml ***** -->
+
+* tenjin.Engine now helps M17N of templates. If you pass 'lang' option to
+  Engine, it will generates cache files for each langs from a file.
+  This feature is intened to use with preprocessing in order to reduce
+  catalog expantion cost (such as '${_("Hello")}')
+
+      ## for lang='en'
+      engine_en = tenjin.Engine(lang='en', preprocess=True)
+      engine_en.render('index.pyhtml')  # generates 'index.pyhtml.en.cache'
+      ## for lang='fr'
+      engine_fr = tenjin.Engine(lang='fr', preprocess=True)
+      engine_fr.render('index.pyhtml')  # generates 'index.pyhtml.fr.cache'
+
+* (Experimental) New html helper 'js_link()'.
+
+      >>> from tenjin.html import *
+      >>> js_link('click', 'alert("OK")', klass='link')
+      '<a href="javascript:undefined" onclick="alert(&quot;OK&quot;);return false" class="link">click</a>'
+
+
+Changes
+-------
+
+* (IMPORTANT!!) You must close statement block of 'if', 'for', 'with', ...
+  with corresponding '#endif', '#endfor', '#endwith', and so on.
+  Notice that '#end' is available as almighty closer.
+
+* (IMPORTANT!!) tenjin.GaeMemcacheCacheStorage is removed (this is already
+  announced in the previous release).
+  Please use tenjin.gae.GaeMemcacheStorage instead.
+
+* 'tenjin.helpers.html' module is renamed to 'tenjin.html', but old module
+  name is still available for backward compatibility.
+
+* escape_html() (and escape()) now escapes "'" into "&#39;".
+
+* new_cycle() is moved from tenjin.helpers.html module to tenjin.helpers
+  module because it is not only for HTML.
+
+* In GAE environment, Tenjin uses '1.1' as dummy value of CURRENT_VERSION_ID
+  when it is not provided. This prevents error when using GAE and tenjin
+  on test environment.
+
+* Python 2.3 is now unsupported. (Python 2.4 is still supported because
+  CentOS uses Python 2.4).
+
+* (internal) Tenjin.escape_expr_and_escapeflag() is changed to
+  Tenjin.escape_expr_and_flags().
+
+* (internal) Tenjin.add_expr() is changed to take 'flags' argument.
+
+* (internal) 'tenjin.__release__' is renamed to 'tenjin.__version__'.
+
+
+Bugfixes
+--------
+
+* Cache file saving was failed on Windows because existing file should be
+  removed before renaming file. (patched by elishowk, thank you!)
+
+
+Thank you.
+--
+regards,
+makoto kuwata
+
+
+.######################################################################
+.$ ANN: pyTenjin 1.0.0 - a high-speed and full-featured template engine
+
+Hi,
+
+I released pyTenjin 1.0.0.
+http://pypi.python.org/pypi/Tenjin/
+http://www.kuwata-lab.com/tenjin/
+
+This release contains a lot of enhancements and changes.
+
+
+Overview
+--------
+
+  * Very fast: about 10 times faster than Django template engine
+  * Easy to learn: no need to learn template-original language
+  * Full-featured: nestable layout template, partial template, preprocessing, etc.
+  * Lightweight: only 2000 lines of code and very fast to import.
+  * Google App Engine supported
+
+
+Documents
+---------
+
+  * User's Guide
+      http://www.kuwata-lab.com/tenjin/pytenjin-users-guide.html
+  * Examples
+      http://www.kuwata-lab.com/tenjin/pytenjin-examples.html
+  * CHANGES
+      http://www.kuwata-lab.com/tenjin/pytenjin-CHANGES.txt
+
+
+Install
+-------
+
+    $ sudo easy_install Tenjin
+
+Or:
+
+    $ wget http://pypi.python.org/packages/source/T/Tenjin/Tenjin-1.0.0.tar.gz
+    $ tar xzf Tenjin-1.0.0.tar.gz
+    $ cd Tenjin-1.0.0/
+    $ sudo python setup.py install
+
+
+Enhancements
+------------
+
+See CHANGES.txt for details.
+
+  * (IMPORTANT!!) Performance is improved (about 5 percent).
+  * (IMPORTANT!!) Free-indent style supported.
+  * (IMPORTANT!!) SafeTemplate and SafeEngine classes are now provided.
+    http://www.kuwata-lab.com/tenjin/pytenjin-users-guide.html#auto-escaping
+  * (IMPORTANT!!) New function 'tenjin.set_template_encoding()' is provided.
+  * (IMPORTANT!!) New helper function 'cache_as()' is available for fragment cache.
+  * (IMPORTANT!!) New helper function 'cache_as()' is available for fragment cache.
+  * New 'trace' option to trace what template is rendered.
+  * New 'lang' option to support M17N templates.
+  * (Experimental) New html helper 'js_link()'.
+
+
+Changes
+-------
+
+See CHANGES.txt for details.
+
+  * (IMPORTANT!!) You must close statement block of 'if', 'for', 'with', ...
+    with corresponding '#endif', '#endfor', '#endwith', and so on.
+  * (IMPORTANT!!) tenjin.GaeMemcacheCacheStorage is removed.
+  * 'tenjin.helpers.html' module is renamed to 'tenjin.html'.
+  * escape_html() (and escape()) now escapes "'" into "&#39;".
+  * new_cycle() is moved from tenjin.helpers.html module to tenjin.helpers.
+  * Uses '1.1' as dummy value of CURRENT_VERSION_ID in GAE environment.
+  * Python 2.3 is now unsupported. Please use Python 2.4+ or 3.0+.
+  * (internal) Tenjin.escape_expr_and_escapeflag() is changed to
+    Tenjin.escape_expr_and_flags().
+  * (internal) Tenjin.add_expr() is changed to take 'flags' argument.
+  * (internal) 'tenjin.__release__' is renamed to 'tenjin.__version__'.
+
+
+Bugfixes
+--------
+
+  * Cache file saving was failed on Windows because existing file should be
+    removed before renaming file. (patched by elishowk, thank you!)
+
+
+--
+regards,
+makoto kuwata
+
+.######################################################################
 .$ ANN: pyTenjin 0.9.0 - very fast and full-featured template engine
 
 I released pyTenjin 0.9.0
