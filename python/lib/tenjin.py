@@ -347,7 +347,7 @@ def _dummy():
         return s
 
 helpers = create_module('tenjin.helpers', _dummy, sys=sys, re=re)
-helpers.__all__ = ['to_str', 'escape', 'echo', 'generate_tostrfunc',
+helpers.__all__ = ['to_str', 'escape', 'echo', 'new_cycle', 'generate_tostrfunc',
                    'start_capture', 'stop_capture', 'capture_as', 'captured_as',
                    'not_cached', 'echo_cached', 'cache_as',
                    '_p', '_P', '_decode_params',
