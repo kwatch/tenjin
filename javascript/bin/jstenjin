@@ -117,7 +117,7 @@ Tenjin.Main.prototype.execute = function(args) {
 			if (action == actions[i])
 				break;
 		}
-		if (i == 0) { // not found
+		if (i == n) { // not found
 			throw "-a " + action + ": unknown action.";
 		}
 	}
