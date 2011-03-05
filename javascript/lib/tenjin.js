@@ -136,7 +136,41 @@ var Tenjin = {
 delete(Tenjin._end);
 
 
-if (typeof(java) == 'object' && typeof(Packages) == 'function') { // Rhino
+if (typeof(require) == 'function' && typeof(require.resolve) == 'function') { // node.js
+
+	Tenjin._nodejs = { fs: require('fs') };
+	Tenjin.encoding = 'utf-8';
+
+	Tenjin.readFile = function(filename) {
+		return Tenjin._nodejs.fs.readFileSync(filename, Tenjin.encoding);
+	};
+
+	Tenjin.writeFile = function(filename, content) {
+		return Tenjin._nodejs.fs.writeFileSync(filename, content, Tenjin.encoding);
+	};
+
+	Tenjin.separator = '/';
+
+	Tenjin.isFile = function(filename) {
+		try {
+		    return Tenjin._nodejs.fs.statSync(filename).isFile();
+		}
+		catch (ignore) {
+			return false;
+		}
+	};
+
+	Tenjin.isNewer = function(filename, filename2) {
+		var statSync = Tenjin._nodejs.fs.statSync;
+		return statSync(filename).mtime > statSync(filename2).mtime;
+	};
+
+	Tenjin.mtime = function(filename) {
+		return Tenjin._nodejs.fs.statSync(filename).mtime;
+	};
+
+}
+else if (typeof(java) == 'object' && typeof(Packages) == 'function') { // Rhino
 
 	//importPackage(java.io);
 
@@ -897,4 +931,10 @@ Tenjin.inspect = function(value) {
 		return buf.join('');
 	}
 	throw "unreachable: typeof(value)="+typeof(value)+", value="+value;
+}
+
+if (typeof(exports) == 'object') {  // node.js
+	for (var k in Tenjin) {
+		exports[k] = Tenjin[k];
+	}
 }
