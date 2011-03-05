@@ -532,12 +532,8 @@ END
     @compiled.chomp!
     @original = <<'END'
 function (_context) {
-    if (_context) {
-        eval(Tenjin._setlocalvarscode(_context));
-    } else {
-        _context = {};
-    }
-    return eval(this.script);
+    this.compile(_context);
+    return this.render(_context);
 }
 END
     @original.chomp!
@@ -573,7 +569,7 @@ template.compile()
 print("** after compile()="+template.render);
 END
     result = _invoke_js(s)
-    expected = "** before render()=#{@original}\n** after render()=#{@original}\n** after compile()=#{@compiled}"
+    expected = "** before render()=#{@original}\n** after render()=#{@compiled}\n** after compile()=#{@compiled}"
     assert_text_equal(expected, result, "** #{desc}")
   end
 
@@ -656,6 +652,24 @@ function (_context) {
 END
     @original_render.chomp!
 
+    @compiled_render = <<'END'
+function (_context) {
+    var x = _context.x;
+    var y = _context.y;
+    var z = _context.z;
+    var _engine = _context._engine;
+    var _layout = _context._layout;
+    var capturedAs = _context.capturedAs;
+    var _buf = "";
+    var x = _context.x;
+    var y = _context.y;
+    var z = _context.z;
+    _buf += "<p>\nx = " + x + "\ny = " + y + "\nz = " + z + "\n</p>\n";
+    return _buf;
+}
+END
+    @compiled_render.chomp!
+
     @context = "{x:10, y:20, z:30}"
     @content_args = "//@ARGS x,y,z\n"
     @layout_args  = "//@ARGS _content\n"
@@ -733,7 +747,7 @@ object
 0:_content
 END
     #expected = [@output,expected.chomp,@original_render,@layout_render].join("\n---\n")
-    expected = [@output,expected.chomp,@original_render,@layout_render].join("\n---\n")
+    expected = [@output,expected.chomp,@compiled_render,@layout_render].join("\n---\n")
     assert_text_equal(expected, actual, "** #{desc}")
   ensure
     _remove_files %w[test_content.jshtml test_content.jshtml.cache

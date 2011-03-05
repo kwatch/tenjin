@@ -529,38 +529,26 @@ Tenjin.Template.prototype = {
 	},
 
 	render: function(_context) {
-		//if (this.args) {
-		//	this.compile();
-		//	this.render(_context);
-		//}
-		if (_context) {
-			eval(Tenjin._setlocalvarscode(_context));
-		}
-		else {
-			_context = {};
-		}
-		//var _buf = [];
-		//eval(this.script);
-		//return _buf.join('');
-		return eval(this.script);
+		this.compile(_context);
+		return this.render(_context);
 	},
 
-	compile: function(args) {
-		if (! this.args)
-			return undefined;
-		var script = this.script;
-		var pos = script.length - this.postamble.length;
+	compile: function(_context) {
+		var vars = " ";
+		if (! this.args) {
+			for (var k in _context) {
+				vars += "var " + k + " = _context." + k + "; "
+			}
+		}
+		var pos = this.script.length - this.postamble.length;
 		var buf = [
-				"this.render = function(_context) {",
-				script.substring(0, pos),
+				"this.render = function(_context) {", vars,
+				this.script.substring(0, pos),
 				"return ", this.postamble,
-				"}" ];
+				"};" ];
 		var s = buf.join('');
 		eval(s);
-		return s;
-		//this.script = s;
-		//return func;
-		//return true;
+		return this.render;
 	},
 
 	_end: undefined  /// dummy property to escape strict warning (not legal in ECMA-262)
@@ -780,7 +768,7 @@ Tenjin.Engine.prototype = {
 			template.convert(input, filename);
 			this.storeCacheFile(cache_filename, template);
 		}
-		template.compile();
+		//template.compile(_context);
 		return template;
 	},
 
