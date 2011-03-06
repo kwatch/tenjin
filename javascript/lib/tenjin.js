@@ -311,8 +311,8 @@ Tenjin.Template = function(filename, properties) {
 
 Tenjin.Template.__props__ = {
 	escapefunc : "escapeXml",
-	preamble   : "var _buf = []; ",
-	postamble  : "_buf.join('')\n",
+	preamble   : "var _buf = ''; ",
+	postamble  : "_buf\n",
 	script     : null,
 	filename   : null,
 	atline     : 0
@@ -444,19 +444,19 @@ Tenjin.Template.prototype = {
 
 	macroHandlers: {
 		'echo': function(arg) {
-			return " _buf.push("+arg+");";
+			return " _buf += ("+arg+");";
 		},
 		'include': function(arg) {
-			return " _buf.push(_context._engine.render("+arg+", _context, false));";
+			return " _buf += _context._engine.render("+arg+", _context, false);";
 		},
 		'startCapture': function(arg) {
-			return " var _buf_bkup = _buf; _buf = []; var _capture_varname = "+arg+";";
+			return " var _buf_bkup = _buf; _buf = ''; var _capture_varname = "+arg+";";
 		},
 		'stopCapture': function(arg) {
-			return " _context[_capture_varname] = _buf.join(''); _buf = _buf_bkup;";
+			return " _context[_capture_varname] = _buf; _buf = _buf_bkup;";
 		},
 		'startPlaceholder': function(arg) {
-			return " if (typeof(_context["+arg+"])!='undefined') { _buf.push(_context["+arg+"]); } else {";
+			return " if (typeof(_context["+arg+"])!='undefined') { _buf += _context["+arg+"]; } else {";
 		},
 		'stopPlaceholder': function(arg) {
 			return "}";
@@ -483,14 +483,14 @@ Tenjin.Template.prototype = {
 			pos = m.index + s.length;
 			if (text) {
 				this.addText(buf, text);
-				buf.push(", ");
+				buf.push(" + ");
 			}
 			var ret = this.getExpressionAndEscapeflag(m);
 			var expr = ret[0], flag_escape = ret[1];
 			expr = this.hookExpression(expr, flag_escape);
 			if (expr) {
 				buf.push(expr);
-				buf.push(", ");
+				buf.push(" + ");
 			}
 		}
 		var rest = pos == 0 ? input : input.substring(pos);
@@ -502,15 +502,15 @@ Tenjin.Template.prototype = {
 	},
 
 	startTextPart: function(buf) {
-		buf.push(" _buf.push(");
+		buf.push(" _buf += ");
 	},
 
 	stopTextPart: function(buf) {
-		buf.push(");");
+		buf.push(";");
 	},
 
 	hookExpression: function(expr, flag_escape) {
-		return flag_escape ? this.escapeExpression(expr) : expr;
+		return flag_escape ? this.escapeExpression(expr) : "(" + expr + ")";
 	},
 
 	escapeExpression: function(expr) {

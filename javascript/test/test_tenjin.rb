@@ -77,19 +77,19 @@ class TenjinTest < Test::Unit::TestCase
 END
 
     @script = <<'END'
-var _buf = [];  _buf.push('<table>\n');
+var _buf = '';  _buf += '<table>\n';
 
   var len = list.length
   for (var i = 0; i < len; i++) {
     var item = list[i];
 
- _buf.push('  <tr>\n\
-    <td>', item, '</td>\n\
-    <td>', escapeXml(item), '</td>\n\
-  </tr>\n');
+ _buf += '  <tr>\n\
+    <td>' + (item) + '</td>\n\
+    <td>' + escapeXml(item) + '</td>\n\
+  </tr>\n';
  }
- _buf.push('</table>\n');
-_buf.join('')
+ _buf += '</table>\n';
+_buf
 END
 
     @context = <<END
@@ -169,16 +169,16 @@ END
 </html>
 END
     @script_table = <<'END'
-var _buf = [];  _buf.push('<table>\n');
+var _buf = '';  _buf += '<table>\n';
  for (var i = 0; i < list.length; i++) {
        var item = list[i];
        var color = i % 2 == 0 ? '#FFCCCC' : '#CCCCFF';
- _buf.push('  <tr bgcolor="', color, '">\n\
-    <td>', escapeXml(item), '</td>\n\
-  </tr>\n');
+ _buf += '  <tr bgcolor="' + (color) + '">\n\
+    <td>' + escapeXml(item) + '</td>\n\
+  </tr>\n';
  }
- _buf.push('</table>\n');
-_buf.join('')
+ _buf += '</table>\n';
+_buf
 END
     @script_layout = <<'END'
 <html>
@@ -235,11 +235,11 @@ END
 </ul>
 END
     @script = <<'END'
-var _buf = [];  _buf.push('<h1>'); _buf.push(title); _buf.push('</h1>\n\
+var _buf = '';  _buf += '<h1>'; _buf += (title); _buf += '</h1>\n\
 <ul>\n\
-  <li>'); _buf.push(list[i]); _buf.push('</li>\n\
-</ul>\n');
-_buf.join('')
+  <li>'; _buf += (list[i]); _buf += '</li>\n\
+</ul>\n';
+_buf
 END
     ## echo()
     s = _create_input('input.jshtml', @input)
@@ -290,18 +290,18 @@ END
 </html>
 END
     @script_layout = <<'END'
-var _buf = [];  _buf.push('<html>\n\
+var _buf = '';  _buf += '<html>\n\
   <body>\n\
-    <h1>', escapeXml(title), '</h1>\n\
-    <div id="content">\n');
-       _buf.push(_context._engine.render('create.jshtml', _context, false));
- _buf.push('    </div>\n\
-    <div id="footer">\n');
-       _buf.push(_context._engine.render("footer.jshtml", _context, false));
- _buf.push('    </div>\n\
+    <h1>' + escapeXml(title) + '</h1>\n\
+    <div id="content">\n';
+       _buf += _context._engine.render('create.jshtml', _context, false);
+ _buf += '    </div>\n\
+    <div id="footer">\n';
+       _buf += _context._engine.render("footer.jshtml", _context, false);
+ _buf += '    </div>\n\
   </body>\n\
-</html>\n');
-_buf.join('')
+</html>\n';
+_buf
 END
     @context = <<'END'
 { title: 'Edit User', user: { name: 'Foo', email: 'foo@mail.com' } }
@@ -391,35 +391,35 @@ END
 </html>
 END
     @script_input = <<'END'
-var _buf = [];  _buf.push('<html>\n\
+var _buf = '';  _buf += '<html>\n\
   <body>\n\
-    <h1>'); var _buf_bkup = _buf; _buf = []; var _capture_varname = "title"; _buf.push('Start&amp;Stop Capture'); _context[_capture_varname] = _buf.join(''); _buf = _buf_bkup; _buf.push('</h1>\n\
-    <div> \n');
-   var _buf_bkup = _buf; _buf = []; var _capture_varname = "maincontent";
- _buf.push('      <ul>\n');
+    <h1>'; var _buf_bkup = _buf; _buf = ''; var _capture_varname = "title"; _buf += 'Start&amp;Stop Capture'; _context[_capture_varname] = _buf; _buf = _buf_bkup; _buf += '</h1>\n\
+    <div> \n';
+   var _buf_bkup = _buf; _buf = ''; var _capture_varname = "maincontent";
+ _buf += '      <ul>\n';
      for (var i = 0, n = list.length; i < n; i++) {
- _buf.push('        <li>', escapeXml(list[i]), '</li>\n');
+ _buf += '        <li>' + escapeXml(list[i]) + '</li>\n';
      }
- _buf.push('      </ul>\n');
-   _context[_capture_varname] = _buf.join(''); _buf = _buf_bkup;
- _buf.push('    </div>\n\
+ _buf += '      </ul>\n';
+   _context[_capture_varname] = _buf; _buf = _buf_bkup;
+ _buf += '    </div>\n\
   </body>\n\
-</html>\n');
-_buf.join('')
+</html>\n';
+_buf
 END
     @script_layout = <<'END'
-var _buf = [];  _buf.push('<html xml:lang="en" lang="en">\n\
+var _buf = '';  _buf += '<html xml:lang="en" lang="en">\n\
   <head>\n\
-    <title>', title, '</title>\n\
+    <title>' + (title) + '</title>\n\
   </head>\n\
   <body>\n\
-    <h1>', title, '</h1>\n\
+    <h1>' + (title) + '</h1>\n\
     <div id="content">\n\
-', maincontent, '\n\
+' + (maincontent) + '\n\
     </div>\n\
   </body>\n\
-</html>\n');
-_buf.join('')
+</html>\n';
+_buf
 END
     @context = <<END
 { list: ['<AAA>', 'B&B', '"CCC"'] }
@@ -511,26 +511,26 @@ END
 </ul>
 END
     @script = <<'END'
-var _buf = [];  var title = _context['title']; var items = _context['items'];
- _buf.push('<h1>', escapeXml(title), '</h1>\n\
-<ul>\n');
+var _buf = '';  var title = _context['title']; var items = _context['items'];
+ _buf += '<h1>' + escapeXml(title) + '</h1>\n\
+<ul>\n';
  for (var i = 0, n = items.length; i < n; i++) {
- _buf.push('  <li>', escapeXml(items[i]), '</li>\n');
+ _buf += '  <li>' + escapeXml(items[i]) + '</li>\n';
  }
- _buf.push('</ul>\n');
-_buf.join('')
+ _buf += '</ul>\n';
+_buf
 END
     @compiled = <<'END'
 function (_context) {
-    var _buf = [];
+    var _buf = "";
     var title = _context.title;
     var items = _context.items;
-    _buf.push("<h1>", escapeXml(title), "</h1>\n<ul>\n");
+    _buf += "<h1>" + escapeXml(title) + "</h1>\n<ul>\n";
     for (var i = 0, n = items.length; i < n; i++) {
-        _buf.push("  <li>", escapeXml(items[i]), "</li>\n");
+        _buf += "  <li>" + escapeXml(items[i]) + "</li>\n";
     }
-    _buf.push("</ul>\n");
-    return _buf.join("");
+    _buf += "</ul>\n";
+    return _buf;
 }
 END
     @compiled.chomp!
@@ -596,21 +596,21 @@ END
 </html>
 END
     @content_script = <<'END'
-var _buf = [];  var x = _context['x']; var y = _context['y']; var z = _context['z'];
- _buf.push('<p>\n\
-x = ', x, '\n\
-y = ', y, '\n\
-z = ', z, '\n\
-</p>\n');
-_buf.join('')
+var _buf = '';  var x = _context['x']; var y = _context['y']; var z = _context['z'];
+ _buf += '<p>\n\
+x = ' + x + '\n\
+y = ' + y + '\n\
+z = ' + z + '\n\
+</p>\n';
+_buf
 END
     @layout_script = <<'END'
-var _buf = [];  _buf.push('<html>\n\
+var _buf = '';  _buf += '<html>\n\
  <body>\n\
-', _content, '\n\
+' + _content + '\n\
  </body>\n\
-</html>\n');
-_buf.join('')
+</html>\n';
+_buf
 END
     @output = <<END
 <html>
@@ -626,21 +626,21 @@ z = 30
 END
     @content_render = <<'END'
 function (_context) {
-    var _buf = [];
+    var _buf = '';
     var x = _context.x;
     var y = _context.y;
     var z = _context.z;
-    _buf.push("<p>\nx = ", x, "\ny = ", y, "\nz = ", z, "\n</p>\n");
-    return _buf.join("");
+    _buf += "<p>\nx = " + (x) + "\ny = " + (y) + "\nz = " + (z) + "\n</p>\n";
+    return _buf;
 }
 END
     @content_render.chomp!
     @layout_render = <<'END'
 function (_context) {
     var _content = _context._content;
-    var _buf = [];
-    _buf.push("<html>\n <body>\n", _content, "\n </body>\n</html>\n");
-    return _buf.join("");
+    var _buf = "";
+    _buf += "<html>\n <body>\n" + _content + "\n </body>\n</html>\n";
+    return _buf;
 }
 END
     @layout_render.chomp!
