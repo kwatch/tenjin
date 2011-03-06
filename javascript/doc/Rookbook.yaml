@@ -1,7 +1,7 @@
 parameters:
 
   - home*:	  ENV['HOME']
-  - docpath:	  ../../../rbtenjin/trunk/doc
+  #- docpath:	  ../../../rbtenjin/trunk/doc
   - basenames:	  [ users-guide, faq, examples ]
   - erubyfiles*:  'basenames.collect{|s| s+".eruby"}'
   - textfiles*:	  'basenames.collect{|s| s+".txt"}'
@@ -25,10 +25,10 @@ recipes:
     method*: |
 	rm_rf '*.toc.html', 'test.log', 'data/**/*.cache'
 
-  - product:	*.eruby
-    ingreds:	[ $(docpath)/$(1).eruby ]
-    method*: |
-	cp @ingred, @product
+#  - product:	*.eruby
+#    ingreds:	[ $(docpath)/$(1).eruby ]
+#    method*: |
+#	cp @ingred, @product
 
   - product:	*.txt
     ingreds:	[ $(1).eruby ]
