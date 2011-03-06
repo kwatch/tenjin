@@ -1149,7 +1149,8 @@ Global symbol "$z" requires explicit package name at (eval 4) line 6.
 .==================== ex[%=n%]_template_args.result
 $ [%=command%] -c 'x:10, y:20, z:30' ex[%=n%].[%=suffix%]
 *** Error:
-ex[%=n%].[%=suffix%]:3: ReferenceError: "z" is not defined.
+ex[%=n%].[%=suffix%]:6: ReferenceError: z is not defined
+.#ex[%=n%].[%=suffix%]:3: ReferenceError: "z" is not defined.
 .#ex[%=n%].[%=suffix%]:6: ReferenceError: z is not defined.    # spidermonkey
 .#*** ERROR:
 .#ex[%=n%].[%=suffix%]: z is not defined

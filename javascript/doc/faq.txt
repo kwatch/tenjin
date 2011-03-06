@@ -245,7 +245,8 @@ Undeclared arguments are not available even when they are passed via context obj
 .==================== ex5_template_args.result
 $ jstenjin -c 'x:10, y:20, z:30' ex5.jshtml
 *** Error:
-ex5.jshtml:3: ReferenceError: "z" is not defined.
+ex5.jshtml:6: ReferenceError: z is not defined
+.#ex5.jshtml:3: ReferenceError: "z" is not defined.
 .#ex5.jshtml:6: ReferenceError: z is not defined.    # spidermonkey
 .#*** ERROR:
 .#ex5.jshtml: z is not defined
