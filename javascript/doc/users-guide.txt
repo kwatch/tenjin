@@ -44,13 +44,13 @@ Here is the notation:
 .? Result of covertion into JavaScript script:
 .==================== ex_source.result
 $ jstenjin -s ex.jshtml
-var _buf = [];  _buf.push('Hello ', name, '!\n\
-<ul>\n');
+var _buf = '';  _buf += 'Hello ' + (name) + '!\n\
+<ul>\n';
  for (var i = 0, n = items.length; i < n; i++) {
- _buf.push(' <li>', escapeXml(items[i]), '</li>\n');
+ _buf += ' <li>' + escapeXml(items[i]) + '</li>\n';
  }
- _buf.push('</ul>\n');
-_buf.join('')
+ _buf += '</ul>\n';
+_buf
 .====================
 
 
@@ -412,19 +412,19 @@ Command-line option '-s' converts embedded files into JavaScript code.
 .? Result:
 .==================== example1_source.result
 $ jstenjin {{*-s*}} example1.jshtml
-var _buf = [];  _buf.push('<table>\n\
-  <tbody>\n');
+var _buf = '';  _buf += '<table>\n\
+  <tbody>\n';
  {{*var items = ['<foo>', 'bar&bar', '"baz"'];*}}
  {{*for (var i = 0, n = items.length; i < n; i++) {*}}
      {{*var item = items[i];*}}
- _buf.push('    <tr>\n\
-      <td>', item, '</td>\n\
-      <td>', escapeXml(item), '</td>\n\
-    </tr>\n');
+ _buf += '    <tr>\n\
+      <td>' + (item) + '</td>\n\
+      <td>' + escapeXml(item) + '</td>\n\
+    </tr>\n';
  {{*}*}}
- _buf.push('  <tbody>\n\
-</table>\n');
-_buf.join('')
+ _buf += '  <tbody>\n\
+</table>\n';
+_buf
 .====================
 
 
@@ -451,15 +451,15 @@ Command-line option '{{,-b,}}' removes preamble and postamble.
 .? Result:
 .==================== example2_sb.result2
 $ jstenjin -s example2.jshtml
-{{*var _buf = [];*}}  var list = [1, 2, 3];
+{{*var _buf '';*}}  var list = [1, 2, 3];
  for (var i = 0, n = list.length; i < n; i++) {
- _buf.push('<p>', list[i], '</p>\n');
+ _buf += '<p>' + (list[i]) + '</p>\n';
  }
-{{*_buf.join('')*}}
+{{*_buf*}}
 $ jstenjin -s{{*b*}} example2.jshtml
  var list = [1, 2, 3];
  for (var i = 0, n = list.length; i < n; i++) {
- _buf.push('<p>', list[i], '</p>\n');
+ _buf += '<p>' + (list[i]) + '</p>\n';
  }
 .====================
 
@@ -472,19 +472,19 @@ This is useful to check JavaScript code for debugging.
 .? Result:
 .==================== example1_S.result
 $ jstenjin {{*-S*}} example1.jshtml
-var _buf = []; 
+var _buf = ''; 
 
  var items = ['<foo>', 'bar&bar', '"baz"'];
  for (var i = 0, n = items.length; i < n; i++) {
      var item = items[i];
 
-           _buf.push(item);
-           _buf.push(escapeXml(item));
+           _buf += (item);
+           _buf += escapeXml(item);
 
  }
 
 
-_buf.join('')
+_buf
 .====================
 
 
@@ -499,7 +499,7 @@ In addition, the following command-line options are available.
 .? Result:
 .==================== example1_SXNC.result
 $ jstenjin {{*-SUNX*}} example1.jshtml
-    1:  var _buf = []; 
+    1:  var _buf = ''; 
 
     3:   var items = ['<foo>', 'bar&bar', '"baz"'];
     4:   for (var i = 0, n = items.length; i < n; i++) {
@@ -507,7 +507,7 @@ $ jstenjin {{*-SUNX*}} example1.jshtml
 
    10:   }
 
-   13:  _buf.join('')
+   13:  _buf
 .====================
 
 
@@ -1061,11 +1061,11 @@ Template arguments line is converted into assignment statements of local variabl
 
 .==================== example10_template_args.result
 $ jstenjin -s example10.jshtml
-var _buf = [];  _buf.push('<?xml version="1.0"?>\n');
+var _buf = '';  _buf += '<?xml version="1.0"?>\n';
 {{* var title = _context['title']; var name = _context['name'];*}}
- _buf.push('<h1>', escapeXml(title), '</h1>\n\
-<p>Hello ', escapeXml(name), '!</p>\n');
-_buf.join('')
+ _buf += '<h1>' + escapeXml(title) + '</h1>\n\
+<p>Hello ' + escapeXml(name) + '!</p>\n';
+_buf
 .====================
 
 
@@ -1150,14 +1150,14 @@ And the JavaScript code is here. This shows that there is no for-loop.
 .==================== example12_preprocessed_source.result
 $ jstenjin {{*--preprocess*}} -sb example12.jshtml
  var chk = {};  chk[params.state] = ' selected="selected"';
- _buf.push('<select name="state">\n\
+ _buf += '<select name="state">\n\
   <option value="">-</option>\n\
-  <option value="CA"', chk.CA||'', '>California</option>\n\
-  <option value="FL"', chk.FL||'', '>Florida</option>\n\
-  <option value="HI"', chk.HI||'', '>Hawaii</option>\n\
-  <option value="NY"', chk.NY||'', '>New York</option>\n\
-  <option value="TX"', chk.TX||'', '>Texas</option>\n\
-</select>\n');
+  <option value="CA"' + (chk.CA||'') + '>California</option>\n\
+  <option value="FL"' + (chk.FL||'') + '>Florida</option>\n\
+  <option value="HI"' + (chk.HI||'') + '>Hawaii</option>\n\
+  <option value="NY"' + (chk.NY||'') + '>New York</option>\n\
+  <option value="TX"' + (chk.TX||'') + '>Texas</option>\n\
+</select>\n';
 .====================
 
 If you have errors on preprocessing, you should check source script by {{,-Ps,}} option{{(Command-line option '-Ps' is available but '-PS' is not availabe. This is a current restriction of jstenjin. )}}.
@@ -1190,7 +1190,7 @@ $ jstenjin {{*-P*}} example13.jshtml
 .? Translated script code:
 .==================== example13_preprocessed_source.result
 $ jstenjin {{*--preprocess*}} -sb example13.jshtml
- _buf.push('<a href="/items/show/', params["id"], '">Show ', escapeXml(params["name"]), '</a>\n');
+ _buf += '<a href="/items/show/' + (params["id"]) + '">Show ' + escapeXml(params["name"]) + '</a>\n';
 .====================
 
 There are many web-application framework and they provides helper functions.
@@ -1350,13 +1350,13 @@ print(output);
 .==================== example14_tmplclass.result
 $ js example14.js
 ---- js code ----
-var _buf = [];  _buf.push('<h1>', title, '</h1>\n\
-<ul>\n');
+var _buf = '';  _buf += '<h1>' + (title) + '</h1>\n\
+<ul>\n';
  for (var i = 0, n = items.length; i < n; i++) {
- _buf.push(' <li>', escapeXml(items[i]), '</li>\n');
+ _buf += ' <li>' + escapeXml(items[i]) + '</li>\n';
  }
- _buf.push('</ul>\n');
-_buf.join('')
+ _buf += '</ul>\n';
+_buf
 
 ---- output ----
 <h1>jsTenjin Example</h1>
@@ -1430,7 +1430,7 @@ In template file, the followings are available.
     is equivarent to:
     .====================
     <?js if (typeof(_context['foo']) != 'undefined') { ?>
-    <?js     _buf.push(_contet['foo']); ?>
+    <?js     _buf += _contet['foo']; ?>
     <?js } else { ?>
       ...
     <?js } ?>
@@ -1619,13 +1619,13 @@ print(output);
 .? Result:
 .==================== example15_escapefunc.result
 $ js example15.js
-var _buf = [];  _buf.push('<h1>', title, '</h1>\n\
-<ul>\n');
+var _buf = '';  _buf += '<h1>' + (title) + '</h1>\n\
+<ul>\n';
  for (var i = 0, n = items.length; i < n; i++) {
- _buf.push(' <li>', {{*(items[i]).escapeHTML()*}}, '</li>\n');
+ _buf += ' <li>' + {{*(items[i]).escapeHTML()*}} + '</li>\n';
  }
- _buf.push('</ul>\n');
-_buf.join('')
+ _buf += '</ul>\n';
+_buf
 
 <h1>jsTenjin Example</h1>
 <ul>

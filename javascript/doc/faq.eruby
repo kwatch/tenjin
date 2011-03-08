@@ -442,7 +442,7 @@ Yes. You can use '{{,<?rb echo(@_content) ?>,}}' or '{{,<?rb _buf << @_content ?
 % elsif $PERL
 Yes. You can use '<?pl echo($_content); ?>' or '{{,<?pl push(@_buf, $_context); ?>,}} or '{{,[== $_context ==],}}' instead of '{{,[== $_context =],}}'.
 % elsif $JS
-Yes. You can use '{{,<?js echo(_content); ?>,}}' or '{{,<?js _buf.push(_content); ?>,}}' instead of '{{,#{_conent},}}'.
+Yes. You can use '{{,<?js echo(_content); ?>,}}' or '{{,<?js _buf += _content; ?>,}}' instead of '{{,#{_conent},}}'.
 % elsif $PHP
 Yes. You can use '<?php echo($_content); ?>' instead of '{{,[== $_context =],}}'.
 % else assert false 
@@ -491,7 +491,7 @@ Yes. You can use '<?php echo($_content); ?>' instead of '{{,[== $_context =],}}'
 % elsif $PERL
 {{*<?pl push(@_buf, $_content); ?>*}}
 % elsif $JS
-{{*<?js _buf.push(_content); ?>*}}
+{{*<?js _buf += _content; ?>*}}
 % else assert false 
 % end 
 <!-- -->
@@ -760,8 +760,8 @@ Hello ${name}!
 .? Result:
 .-------------------- ex[%=n%]_escapefunc1.result
 $ [%= lang %] ex[%=n%].js
-var _buf = [];  _buf.push('Hello ', {{*(name).escapeHTML()*}}, '!\n');
-_buf.join('')
+var _buf = '';  _buf += 'Hello ' + {{*(name).escapeHTML()*}} + '!\n';
+_buf
 
 .--------------------
 
@@ -770,8 +770,8 @@ Command-line option '--escapefunc={{/name/}}' is equivarent to the above.
 .? Result:
 .-------------------- ex[%=n%]_escapefunc2.result
 $ [%= command %] -s {{*--escapefunc=.escapeHTML*}} ex[%=n%].[%= suffix %]
-var _buf = [];  _buf.push('Hello ', {{*(name).escapeHTML()*}}, '!\n');
-_buf.join('')
+var _buf = '';  _buf += 'Hello ' + {{*(name).escapeHTML()*}} + '!\n';
+_buf
 .--------------------
 
 
@@ -1096,14 +1096,14 @@ push(@_buf, q`<p>
 % elsif $JS
 .==================== ex[%=n%]_template_args.source
 $ [%=command%] -s ex[%=n%].[%=suffix%]
-var _buf = [];  _buf.push('<?xml version="1.0 ?>\n');
+var _buf = '';  _buf += '<?xml version="1.0 ?>\n';
  var x = _context['x']; var y = _context['y'];
- _buf.push('<p>\n\
-  x = ', x, '\n\
-  y = ', y, '\n\
-  z = ', z, '\n\
-</p>\n');
-_buf.join('')
+ _buf += '<p>\n\
+  x = ' + (x) + '\n\
+  y = ' + (y) + '\n\
+  z = ' + (z) + '\n\
+</p>\n';
+_buf
 .====================
 % elsif $PHP
 .==================== ex[%=n%]_template_args.source
@@ -2622,7 +2622,7 @@ is equivarent to the following.
 
 .--------------------
 <?js {{*if (typeof(_context['header_part'])!='undefined') {*}} ?>
-<?js     {{*_buf.push(_context['header_part']);*}} ?>
+<?js     {{*_buf += _context['header_part'];*}} ?>
 <?js {{*} else {*}} ?>
    <img src="img/logo.png" alt="logo" ?>
 <?js {{*}*}} ?>

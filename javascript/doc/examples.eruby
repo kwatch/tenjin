@@ -352,21 +352,21 @@ print $output;
 .? Convert into Ruby script:
 .==================== table/table_s.result
 $ [%=command%] -a convert table.[%=suffix%]
-var _buf = [];  _buf.push('<html>\n\
+var _buf = '';  _buf += '<html>\n\
   <body>\n\
-    <h1>', {{*escapeXml(title)*}}, '</h1>\n\
-    <table>\n');
+    <h1>' + {{*escapeXml(title)*}} + '</h1>\n\
+    <table>\n';
  {{*for (var i = 0, n = items.length; i < n; i++) {*}}
     {{*var color = i % 2 == 1 ? '#FFCCCC' : '#CCCCFF';*}}
- _buf.push('      <tr bgcolor="', {{*color*}}, '">\n\
-        <td>', {{*i+1*}}, '</td>\n\
-        <td>', {{*escapeXml(items[i])*}}, '</td>\n\
-      </tr>\n');
+ _buf += '      <tr bgcolor="' + ({{*color*}}) + '">\n\
+        <td>' + ({{*i+1*}}) + '</td>\n\
+        <td>' + {{*escapeXml(items[i])*}} + '</td>\n\
+      </tr>\n';
  }
- _buf.push('    </table>\n\
+ _buf += '    </table>\n\
   </body>\n\
-</html>\n');
-_buf.join('')
+</html>\n';
+_buf
 .====================
 
 .? Main program: 'table.[%=pi%]'

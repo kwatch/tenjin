@@ -56,7 +56,7 @@ ex1.jshtml:2:  for (var i = 0, i <= 10, i++) {
 
 
 
-Yes. You can use '{{,<?js echo(_content); ?>,}}' or '{{,<?js _buf.push(_content); ?>,}}' instead of '{{,#{_conent},}}'.
+Yes. You can use '{{,<?js echo(_content); ?>,}}' or '{{,<?js _buf += _content; ?>,}}' instead of '{{,#{_conent},}}'.
 
 
 .? File 'ex2-layout.jshtml':
@@ -70,7 +70,7 @@ Yes. You can use '{{,<?js echo(_content); ?>,}}' or '{{,<?js _buf.push(_content)
 <!-- -->
 
 <!-- -->
-{{*<?js _buf.push(_content); ?>*}}
+{{*<?js _buf += _content; ?>*}}
 <!-- -->
 .--------------------
 
@@ -136,8 +136,8 @@ Hello ${name}!
 .? Result:
 .-------------------- ex3_escapefunc1.result
 $ js ex3.js
-var _buf = [];  _buf.push('Hello ', {{*(name).escapeHTML()*}}, '!\n');
-_buf.join('')
+var _buf = '';  _buf += 'Hello ' + {{*(name).escapeHTML()*}} + '!\n';
+_buf
 
 .--------------------
 
@@ -146,8 +146,8 @@ Command-line option '--escapefunc={{/name/}}' is equivarent to the above.
 .? Result:
 .-------------------- ex3_escapefunc2.result
 $ jstenjin -s {{*--escapefunc=.escapeHTML*}} ex3.jshtml
-var _buf = [];  _buf.push('Hello ', {{*(name).escapeHTML()*}}, '!\n');
-_buf.join('')
+var _buf = '';  _buf += 'Hello ' + {{*(name).escapeHTML()*}} + '!\n';
+_buf
 .--------------------
 
 
@@ -228,14 +228,14 @@ Template arguments line is converted into local variable assignment statements.
 .? Source code
 .==================== ex5_template_args.source
 $ jstenjin -s ex5.jshtml
-var _buf = [];  _buf.push('<?xml version="1.0 ?>\n');
+var _buf = '';  _buf += '<?xml version="1.0 ?>\n';
  var x = _context['x']; var y = _context['y'];
- _buf.push('<p>\n\
-  x = ', x, '\n\
-  y = ', y, '\n\
-  z = ', z, '\n\
-</p>\n');
-_buf.join('')
+ _buf += '<p>\n\
+  x = ' + (x) + '\n\
+  y = ' + (y) + '\n\
+  z = ' + (z) + '\n\
+</p>\n';
+_buf
 .====================
 
 
@@ -610,7 +610,7 @@ is equivarent to the following.
 
 .--------------------
 <?js {{*if (typeof(_context['header_part'])!='undefined') {*}} ?>
-<?js     {{*_buf.push(_context['header_part']);*}} ?>
+<?js     {{*_buf += _context['header_part'];*}} ?>
 <?js {{*} else {*}} ?>
    <img src="img/logo.png" alt="logo" ?>
 <?js {{*}*}} ?>
