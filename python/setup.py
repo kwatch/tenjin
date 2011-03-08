@@ -144,7 +144,7 @@ Output::
 
 See `other examples`_ .
 
-.. _`other examples`: http://www.kuwata-lab.com/tenjin/pytenjin-examles.html
+.. _`other examples`: http://www.kuwata-lab.com/tenjin/pytenjin-examples.html
 """[1:]
     #
     classifiers = [
