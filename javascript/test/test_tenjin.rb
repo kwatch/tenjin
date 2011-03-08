@@ -923,6 +923,87 @@ END
   end
 
 
+  ## ----------------------------------------
+  def test_emptystr
+    @input = <<'END'
+<p>
+null: "#{x}", "${x}"
+undefined: "#{y}", "${y}"
+</p>
+END
+
+    @script1 = <<'END'
+var _buf = '';  _buf += '<p>\n\
+null: "' + [x].join() + '", "' + escapeXml(x) + '"\n\
+undefined: "' + [y].join() + '", "' + escapeXml(y) + '"\n\
+</p>\n';
+_buf
+END
+
+    @script2 = <<'END'
+var _buf = '';  _buf += '<p>\n\
+null: "' + (x) + '", "' + escapeXml(x) + '"\n\
+undefined: "' + (y) + '", "' + escapeXml(y) + '"\n\
+</p>\n';
+_buf
+END
+
+    @context = <<END
+{ x: null, y: undefined }
+END
+
+    @output1 = <<'END'
+<p>
+null: "", "null"
+undefined: "", "undefined"
+</p>
+END
+
+    @output2 = <<'END'
+<p>
+null: "null", "null"
+undefined: "undefined", "undefined"
+</p>
+END
+    ## Tenjin.Template#convert()
+    fname = 'input.jshtml'
+    s = _create_input(fname, @input);
+    s << "print((new Tenjin.Template()).convert(input));"
+    script = _invoke_js(s)
+    assert_text_equal(@script1, script, '** Tenjin.Template#convert()')
+    #
+    s = _create_input(fname, @input);
+    s << "print((new Tenjin.Template({emptystr:false})).convert(input));"
+    script = _invoke_js(s)
+    assert_text_equal(@script2, script, '** Tenjin.Template#convert()')
+    ## Tenjin.Template#render()
+    s = _create_input(fname, @input)
+    s << <<END
+var template = new Tenjin.Template();
+var script   = template.convert(input);
+var context  = #{@context};
+var output   = template.render(context);
+print(output);
+END
+    output = _invoke_js(s)
+    assert_text_equal(@output1, output, '** Tenjin.Template#render()')
+    #
+    s = _create_input(fname, @input)
+    s << <<END
+var template = new Tenjin.Template({emptystr: false});
+var script   = template.convert(input);
+var context  = #{@context};
+var output   = template.render(context);
+print(output);
+END
+    output = _invoke_js(s)
+    assert_text_equal(@output2, output, '** Tenjin.Template#render()')
+    ##
+  ensure
+    _remove_files 'input.jshtml'
+  end
+
+
   if ENV['TEST']
     target = 'test_' + ENV['TEST']
     test_methods = self.instance_methods.grep(/^test_/)

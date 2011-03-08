@@ -315,6 +315,7 @@ Tenjin.Template.__props__ = {
 	postamble  : "_buf\n",
 	script     : null,
 	filename   : null,
+	emptystr   : true,
 	atline     : 0
 };
 
@@ -510,7 +511,12 @@ Tenjin.Template.prototype = {
 	},
 
 	hookExpression: function(expr, flag_escape) {
-		return flag_escape ? this.escapeExpression(expr) : "[" + expr + "].join()";
+		if (this.emptystr) {
+			return flag_escape ? this.escapeExpression(expr) : "[" + expr + "].join()";
+		}
+		else {
+			return flag_escape ? this.escapeExpression(expr) : "(" + expr + ")";
+		}
 	},
 
 	escapeExpression: function(expr) {
