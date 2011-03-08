@@ -510,7 +510,7 @@ Tenjin.Template.prototype = {
 	},
 
 	hookExpression: function(expr, flag_escape) {
-		return flag_escape ? this.escapeExpression(expr) : "(" + expr + ")";
+		return flag_escape ? this.escapeExpression(expr) : "[" + expr + "].join()";
 	},
 
 	escapeExpression: function(expr) {
