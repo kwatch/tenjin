@@ -1,5 +1,19 @@
 
-load('../lib/tenjin.js');
+var is_nodejs = typeof(require) == 'function' && typeof(require.resolve) == 'function';
+var TENJIN_JS = '../lib/tenjin.js';
+if (is_nodejs) {
+	var Tenjin = require(TENJIN_JS);
+	function print(arg) {
+		console.log(arg);
+	}
+	var system = require('system');
+	var arguments = [];
+	for (var i = 1, n = system.args.length; ++i < n; ) {
+		arguments.push(system.args[i]);
+	}
+} else {
+	load(TENJIN_JS);
+}
 
 function main(arguments) {
 
