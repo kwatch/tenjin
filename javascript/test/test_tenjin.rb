@@ -6,6 +6,19 @@ require 'fileutils'
 TENJIN_JS = ENV['TENJIN_JS'] || 'tenjin.js'
 test(?f, TENJIN_JS) or raise StandardError.new("#{TENJIN_JS}: not found.")
 
+if ENV['JS'] == 'rhino'
+  smonkey = false
+  rhino   = true
+  command = "rhino -strict -f #{TENJIN_JS} "
+else
+  smonkey = true
+  rhino   = false
+  command = "js -s -f #{TENJIN_JS} "
+end
+SMONKEY = smonkey
+RHINO   = rhino
+COMMAND = command
+
 
 def File.write(filename, content)
   File.open(filename, 'w') {|f| f.write(content) }
@@ -14,8 +27,12 @@ end
 
 class TenjinTest < Test::Unit::TestCase
 
-  def skip(reason)
-    $stderr.puts "*** skip: #{reason}"
+  def skip_when(cond, reason)
+    if cond
+      $stderr.puts "*** skip: #{reason}"
+    else
+      yield
+    end
   end
 
 
@@ -36,7 +53,7 @@ class TenjinTest < Test::Unit::TestCase
 
   def _invoke_js(s)
     File.write('tmp.js', s)
-    output = `js -s -f #{TENJIN_JS} tmp.js`
+    output = `#{COMMAND} tmp.js`
     output.chomp!
     File.unlink('tmp.js')
     return output
@@ -722,7 +739,7 @@ END
     actual = _invoke_js(s)
         #=> TypeError: :content: Cannot access file status for test_content.jshtml.cache
     expected = [@output,@content_args+@content_script,@layout_script,@content_render,@original_render].join("\n---\n")
-    skip("spidermonkey 1.7 raise error when cache is enabled.") {
+    skip_when(SMONKEY, "spidermonkey 1.7 raises error when cache is enabled.") {
       assert_text_equal(expected, actual, "** #{desc}")
     }
 
