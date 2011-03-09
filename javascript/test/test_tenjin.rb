@@ -41,12 +41,12 @@ class TenjinTest < Test::Unit::TestCase
   end
 
 
-  def _create_input(filename, input)
+  def _create_input(filename, input, declare_var=true)
     varname = filename.gsub(/[^\w]/, '_')
     quoted = "'" + input.gsub(/(['\\])/, '\\\\\1').gsub(/\n/, "\\n\\\n") + "'"
     s =  "Tenjin.writeFile('#{filename}', #{quoted});\n"
     #s << "var #{varname} = Tenjin.readFile('#{filename}');\n"
-    s << "var input = Tenjin.readFile('#{filename}');\n"
+    s << "#{declare_var ? 'var ' : ''}input = Tenjin.readFile('#{filename}');\n"
     return s
   end
 
@@ -229,7 +229,7 @@ END
     ## Engine.render()
     s = ''
     s << _create_input('user_table.jshtml', @input_table)
-    s << _create_input('layout.jshtml', @input_layout)
+    s << _create_input('layout.jshtml', @input_layout, false)
     s << <<'END'
 var engine = new Tenjin.Engine({prefix: 'user_', postfix: '.jshtml', layout: 'layout.jshtml'})
 var context = { title: 'Engine Test', list: [ '<AAA>', 'B&B', '"CCC"' ] };
@@ -360,9 +360,9 @@ END
     ## output
     s = ''
     s << _create_input('form.jshtml',   @input_form)
-    s << _create_input('create.jshtml', @input_create)
-    s << _create_input('footer.jshtml', @input_footer)
-    s << _create_input('layout.jshtml', @input_layout)
+    s << _create_input('create.jshtml', @input_create, false)
+    s << _create_input('footer.jshtml', @input_footer, false)
+    s << _create_input('layout.jshtml', @input_layout, false)
     s << <<END
 var engine = new Tenjin.Engine();
 var context = #{@context};
@@ -489,7 +489,7 @@ END
     ## render input without layout
     s = ''
     s << _create_input('input.jshtml', @input)
-    s << _create_input('layout.jshtml', @layout)
+    s << _create_input('layout.jshtml', @layout, false)
     s << <<END
 var context = #{@context};
 var engine = new Tenjin.Engine();
@@ -501,7 +501,7 @@ END
     ## render input with layout
     s = ''
     s << _create_input('input.jshtml', @input)
-    s << _create_input('layout.jshtml', @layout)
+    s << _create_input('layout.jshtml', @layout, false)
     s << <<END
 var context = #{@context};
 var engine = new Tenjin.Engine({layout: 'layout.jshtml'});
@@ -735,7 +735,7 @@ END
     layout  = @layout
     s = ''
     s << _create_input('test_content.jshtml', content)
-    s << _create_input('test_layout.jshtml',  layout)
+    s << _create_input('test_layout.jshtml',  layout, false)
     s << <<"END"
 var engine = new Tenjin.Engine({cache:true, prefix:'test_', postfix:'.jshtml', layout:':layout'});
 var context = #{@context};
@@ -771,7 +771,7 @@ END
       File.write('test_layout.jshtml.cache',  layout_script)
     else
       s << _create_input('test_content.jshtml.cache', content_script)
-      s << _create_input('test_layout.jshtml.cache',  layout_script)
+      s << _create_input('test_layout.jshtml.cache',  layout_script, false)
     end
     s << <<"END"
 var engine = new Tenjin.Engine({cache:true, prefix:'test_', postfix:'.jshtml', layout:':layout'});
@@ -780,13 +780,13 @@ var output = engine.render(':content', context);
 print(output);
 print("---");
 //// content template has no args
-var t = engine.getTemplate(':content');
-print(t.args === null ? 'null' : typeof(t.args));
+var t1 = engine.getTemplate(':content');
+print(t1.args === null ? 'null' : typeof(t1.args));
 print("---");
 //// layout template has an argument
-var t = engine.getTemplate(':layout');
-print(t.args === null ? 'null' : typeof(t.args));
-for (var p in t.args) { print(p + ':' + t.args[p]); }
+var t2 = engine.getTemplate(':layout');
+print(t2.args === null ? 'null' : typeof(t2.args));
+for (var p in t2.args) { print(p + ':' + t2.args[p]); }
 //// render() function
 print("---");
 print(engine.getTemplate(':content').render);
@@ -903,7 +903,7 @@ END
     ## _context.capturedAs()
     s = ''
     s << _create_input('test_content.jshtml', @content)
-    s << _create_input('test_layout.jshtml',  @layout)
+    s << _create_input('test_layout.jshtml',  @layout, false)
     s << <<END
 var engine = new Tenjin.Engine({prefix:'test_', postfix:'.jshtml', layout:':layout'});
 var context = { title: 'Example', items: ['AAA', 'BBB', 'CCC'] };
@@ -915,7 +915,7 @@ END
     ## placeholder
     s = ''
     s << _create_input('test_content.jshtml', @content)
-    s << _create_input('test_layout.jshtml',  @layout)
+    s << _create_input('test_layout.jshtml',  @layout, false)
     s << <<END
 var engine = new Tenjin.Engine({prefix:'test_', postfix:'.jshtml', layout:':layout'});
 var context = { title: 'Example', items: ['AAA', 'BBB', 'CCC'] };
