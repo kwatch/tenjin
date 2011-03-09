@@ -64,9 +64,10 @@ Tenjin.Main.main = function(args) {
 
 Tenjin.Main.prototype.exceptionToString = function(ex) {
 	//for (var p in ex) { print('*** debug: exceptionToString(): "'+ p+'": '+ex[p]) }
-	var filename = ex.fileName || null;;
-	var linenum = ex.lineNumber || null;
-	var message = ex.message || null;
+	var filename = null, linenum = null, message = null;
+	if (ex.fileName)   filename = ex.fileName;
+	if (ex.lineNumber) linenum = ex.lineNumber;
+	if (ex.message)    message = ex.message;
 	if (filename && filename.length >= TENJIN_JS.length &&
 		filename.substring(0, TENJIN_JS.length) == TENJIN_JS) {
 		var m = message.match(/^([-\/.\w]+): (.*)/);
@@ -76,8 +77,8 @@ Tenjin.Main.prototype.exceptionToString = function(ex) {
 		}
 		else {
 			var rest = filename.substring(TENJIN_JS.length);
-			var m = TENJIN_JS.match(/[-.\w]+$/);
-			filename = m[0] + rest;
+			var m2 = TENJIN_JS.match(/[-.\w]+$/);
+			filename = m2[0] + rest;
 		}
 	}
 	var buf = [];
@@ -112,12 +113,12 @@ Tenjin.Main.prototype.execute = function(args) {
 	var action = opts['a'] || null;
 	var actions = ['render', 'convert', 'retrieve', 'statements', 'syntax', 'preprocess'];
 	if (action) {
-		var i, n;
-		for (i = 0, n = actions.length; i < n; i++) {
-			if (action == actions[i])
+		var i1, n1;
+		for (i1 = 0, n1 = actions.length; i1 < n1; i++) {
+			if (action == actions[i1])
 				break;
 		}
-		if (i == n) { // not found
+		if (i1 == n1) { // not found
 			throw "-a " + action + ": unknown action.";
 		}
 	}
@@ -134,8 +135,8 @@ Tenjin.Main.prototype.execute = function(args) {
 	/// libraries
 	if (opts['r']) {
 		var libs = opts['r'].split(',');
-		for (var i = 0, n = libs.length; i < n; i++) {
-			var name = libs[i];
+		for (var i2 = 0, n2 = libs.length; i2 < n2; i2++) {
+			var name = libs[i2];
 			load(name.match(/\.\w+$/) ? name : name + '.js');
 		}
 	}
@@ -143,17 +144,17 @@ Tenjin.Main.prototype.execute = function(args) {
 	/// context
 	var context = {};
 	if (opts['f']) {
-		var s = Tenjin.readFile(opts['f']);
-		var obj;
-		eval("obj = \n" + s);
-		for (var p in obj) { context[p] = obj[p]; }
+		var s1 = Tenjin.readFile(opts['f']);
+		var obj1;
+		eval("obj1 = \n" + s1);
+		for (var p1 in obj1) { context[p1] = obj1[p1]; }
 	}
 	if (opts['c']) {
-		var s = opts['c'];
-		s = s.match(/^\{.*\}$/) ? s : '{' + s + '};'
-		var obj;
-		eval("obj = " + s + ";");
-		for (var p in obj) { context[p] = obj[p]; }
+		var s2 = opts['c'];
+		s2 = s2.match(/^\{.*\}$/) ? s2 : '{' + s2 + '};'
+		var obj2;
+		eval("obj2 = " + s2 + ";");
+		for (var p2 in obj2) { context[p2] = obj2[p2]; }
 	}
 
 	/// set atline option
@@ -206,18 +207,18 @@ Tenjin.Main.prototype.execute = function(args) {
 	var engine = new Tenjin.Engine(properties);
 
 	/// main loop
-	for (var i = 0, n = filenames.length; i < n; i++) {
-		var template_name = filenames[i];
+	for (var i3 = 0, n3 = filenames.length; i3 < n3; i3++) {
+		var template_name = filenames[i3];
 		var output;
 		if (action == 'convert' || action == 'retrieve' || action == 'statements') {
-			var template = engine.getTemplate(template_name, context);
-			output = template.script;
+			var template1 = engine.getTemplate(template_name, context);
+			output = template1.script;
 		}
 		else if (action == 'syntax') {
-			var template = engine.getTemplate(template_name, context);
+			var template2 = engine.getTemplate(template_name, context);
 			var filename = engine.templateFilename(template_name);
 			var filepath = engine.findTemplateFile(filename);
-			output = this.checkSyntax(filepath, template.script, opts, properties.atline);
+			output = this.checkSyntax(filepath, template2.script, opts, properties.atline);
 		}
 		else if (action == 'render' || action == 'preprocess') {
 			output = engine.render(template_name, context);
