@@ -297,11 +297,12 @@ Tenjin.Template = function(filename, properties) {
 		else if (! this.preamble)   this.preamble = '';
 		if (this.postamble == true) delete(this.postamble);
 		else if (! this.postamble)  this.postamble = '';
-		var v = properties.escapefunc;
-		if (v && v.charAt(0) == '.') {
-			this.escapeExpression = v.charAt(v.length-1) == ')' ?
-				function(expr) { return '('+expr+')'+this.escapefunc; } :
-				function(expr) { return '('+expr+')'+this.escapefunc + '()'; } ;
+		if (properties.escapefunc) {
+			if (properties.escapefunc.charAt(0) == '.') {
+				this.escapeExpression = properties.escapefunc.charAt(v.length-1) == ')' ?
+					function(expr) { return '('+expr+')'+this.escapefunc; } :
+					function(expr) { return '('+expr+')'+this.escapefunc + '()'; } ;
+			}
 		}
 	}
 	if (filename) {
