@@ -660,7 +660,7 @@ z = 30
 END
     @content_render = <<'END'
 function (_context) {
-    var _buf = '';
+    var _buf = "";
     var x = _context.x;
     var y = _context.y;
     var z = _context.z;
@@ -669,7 +669,7 @@ function (_context) {
 }
 END
     if RHINO
-      @content_render = "\n#{@content_render}\n".gsub(/\.([xyz]);/, '["\1"];').sub(/''/, '""')
+      @content_render = "\n#{@content_render}\n".gsub(/\.([xyz]);/, '["\1"];')
     end
     @content_render.chomp!
     @layout_render = <<'END'
