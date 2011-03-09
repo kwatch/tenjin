@@ -550,6 +550,9 @@ function (_context) {
     return _buf;
 }
 END
+    if RHINO
+      @compiled = "\n#{@compiled}\n".gsub(/_context.(title|items)/, '_context["\1"]')
+    end
     @compiled.chomp!
     @original = <<'END'
 function (_context) {
@@ -557,6 +560,9 @@ function (_context) {
     return this.render(_context);
 }
 END
+    if RHINO
+      @original = "\n#{@original}\n"
+    end
     @original.chomp!
     ## convert input
     s = _create_input('input.jshtml', @input)
@@ -651,6 +657,9 @@ function (_context) {
     return _buf;
 }
 END
+    if RHINO
+      @content_render = "\n#{@content_render}\n".gsub(/\.([xyz]);/, '["\1"];').sub(/''/, '""')
+    end
     @content_render.chomp!
     @layout_render = <<'END'
 function (_context) {
@@ -660,6 +669,9 @@ function (_context) {
     return _buf;
 }
 END
+    if RHINO
+      @layout_render = "\n#{@layout_render}\n"
+    end
     @layout_render.chomp!
 #    @original_render = <<'END'
 #function (_context) {
@@ -684,6 +696,9 @@ function (_context) {
     return _buf;
 }
 END
+    if RHINO
+      @original_render = "\n#{@original_render}\n"
+    end
     @original_render.chomp!
 
     @compiled_render = <<'END'
@@ -701,6 +716,9 @@ function (_context) {
     return _buf;
 }
 END
+    if RHINO
+      @compiled_render = "\n#{@compiled_render}\n".gsub(/\.([xyz]);/, '["\1"];')
+    end
     @compiled_render.chomp!
 
     @context = "{x:10, y:20, z:30}"
@@ -782,6 +800,9 @@ null
 object
 0:_content
 END
+    if RHINO
+      @compiled_render = @compiled_render.sub('["x"]', '.x').sub('["y"]', '.y').sub('["z"]', '.z')
+    end
     #expected = [@output,expected.chomp,@original_render,@layout_render].join("\n---\n")
     expected = [@output,expected.chomp,@compiled_render,@layout_render].join("\n---\n")
     assert_text_equal(expected, actual, "** #{desc}")
