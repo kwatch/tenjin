@@ -10,10 +10,21 @@ if ENV['JS'] == 'rhino'
   smonkey = false
   rhino   = true
   command = "rhino -strict -f #{TENJIN_JS} "
+  $bug_cache = false
 else
   smonkey = true
   rhino   = false
   command = "js -s -f #{TENJIN_JS} "
+  require 'open3'
+  $bug_cache = false
+  output = Open3.popen3('js -v') {|sin, sout, serr|
+    sin.close()
+    serr.read()
+  }
+  if output =~ /JavaScript-C (\d+\.\d+)/
+    js_ver = $1
+    $bug_cache = true if js_ver.to_f >= 1.7
+  end
 end
 SMONKEY = smonkey
 RHINO   = rhino
@@ -757,7 +768,7 @@ END
     actual = _invoke_js(s)
         #=> TypeError: :content: Cannot access file status for test_content.jshtml.cache
     expected = [@output,@content_args+@content_script,@layout_script,@content_render,@original_render].join("\n---\n")
-    skip_when(SMONKEY, "spidermonkey 1.7 raises error when cache is enabled.") {
+    skip_when($bug_cache, "spidermonkey 1.7 raises error when cache is enabled.") {
       assert_text_equal(expected, actual, "** #{desc}")
     }
 
