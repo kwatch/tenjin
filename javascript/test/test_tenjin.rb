@@ -676,7 +676,6 @@ function (_context) {
     var z = _context.z;
     var _engine = _context._engine;
     var _layout = _context._layout;
-    var capturedAs = _context.capturedAs;
     var _buf = "";
     var x = _context.x;
     var y = _context.y;

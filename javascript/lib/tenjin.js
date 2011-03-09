@@ -841,7 +841,7 @@ Tenjin.Engine.prototype = {
 			context = {};
 		context._engine = this;
 		context._layout = null;
-		context.capturedAs = Tenjin.Engine._capturedAs;
+		//context.capturedAs = Tenjin.Engine._capturedAs;
 		return context;
 	},
 
