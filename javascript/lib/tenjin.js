@@ -413,16 +413,16 @@ Tenjin.Template.prototype = {
 		var m = stmt.match(macro_pattern);
 		if (m) {
 			var name = m[1];
-			var arg  = m[2];
+			var argstr = m[2];
 			var handler = this.macroHandlers[name];
-			return handler == undefined ? stmt : handler(arg);
+			return handler == undefined ? stmt : handler(argstr);
 		}
 		/// arguments declaration
 		if (! this.args) {
 			var args_pattern = /^ *\/\/@ARGS[ \t]+(.*?)$/;
-			var m = stmt.match(args_pattern);
-			if (m) {
-				var arr = m[1].split(',');
+			var m2 = stmt.match(args_pattern);
+			if (m2) {
+				var arr = m2[1].split(',');
 				var args = [], declares = [];
 				var strip = Tenjin.strip;
 				for (var i = 0, n = arr.length; i < n; i++) {
@@ -603,7 +603,7 @@ Tenjin.merge(Tenjin.NoTextTemplate.prototype, {
 				}
 			}
 			if (pos >= 0) {
-				for (var i = pos+1, n = text.length; i < n; i++) {
+				for (var j = pos+1, n2 = text.length; j < n2; j++) {
 					buf.push(" ");
 				}
 			}
@@ -761,8 +761,8 @@ Tenjin.Engine.prototype = {
 		}
 		else if (! this.cache) {
 			//template.convertFile(filename);
-			var input = this.readTemplateFile(filename, _context);
-			template.convert(input, filename);
+			var input1 = this.readTemplateFile(filename, _context);
+			template.convert(input1, filename);
 		}
 		else if (Tenjin.isFile(cache_filename) && Tenjin.isNewer(cache_filename, filename)) {
 			this.loadCacheFile(cache_filename, template);
@@ -770,8 +770,8 @@ Tenjin.Engine.prototype = {
 		}
 		else {
 			//template.convertFile(filename);
-			var input = this.readTemplateFile(filename, _context);
-			template.convert(input, filename);
+			var input2 = this.readTemplateFile(filename, _context);
+			template.convert(input2, filename);
 			this.storeCacheFile(cache_filename, template);
 		}
 		//template.compile(_context);
