@@ -6,17 +6,17 @@ require 'fileutils'
 TENJIN_JS = ENV['TENJIN_JS'] || 'tenjin.js'
 test(?f, TENJIN_JS) or raise StandardError.new("#{TENJIN_JS}: not found.")
 
-if ENV['JS'] == 'rhino'
-  smonkey = false
+smonkey = rhino = false
+$bug_cache = false
+case ENV['JS']
+when /rhino/
   rhino   = true
   command = "rhino -strict -f #{TENJIN_JS} "
-  $bug_cache = false
 else
   smonkey = true
-  rhino   = false
   command = "js -s -f #{TENJIN_JS} "
   require 'open3'
-  $bug_cache = false
+  # check version
   output = Open3.popen3('js -v') {|sin, sout, serr|
     sin.close()
     serr.read()
@@ -751,23 +751,31 @@ END
 var engine = new Tenjin.Engine({cache:true, prefix:'test_', postfix:'.jshtml', layout:':layout'});
 var context = #{@context};
 var output = engine.render(':content', context);
+print("--- output ---");
 print(output);
-print("---");
 //// template args
+print("--- content cache ---");
 print(Tenjin.readFile('test_content.jshtml.cache'));
-print("---");
 //// no template args
+print("--- layout cache ---");
 print(Tenjin.readFile('test_layout.jshtml.cache'));
-print("---");
 //// render() function
+print("--- content render ---");
 print(engine.getTemplate(':content').render);  // compiled
-print("---");
+print("--- layout render ---");
 print(engine.getTemplate(':layout').render);  // not compiled
 END
 
     actual = _invoke_js(s)
         #=> TypeError: :content: Cannot access file status for test_content.jshtml.cache
-    expected = [@output,@content_args+@content_script,@layout_script,@content_render,@original_render].join("\n---\n")
+    #expected = [@output,@content_args+@content_script,@layout_script,@content_render,@original_render].join("\n---\n")
+    expected = ""
+    expected << "--- output ---\n" << @output << "\n"
+    expected << "--- content cache ---\n"  << (@content_args+@content_script) << "\n"
+    expected << "--- layout cache ---\n"   << @layout_script << "\n"
+    expected << "--- content render ---\n" << @content_render << "\n"
+    expected << "--- layout render ---\n"  << @original_render << "\n"
+    expected.chomp!
     skip_when($bug_cache, "spidermonkey 1.7 raises error when cache is enabled.") {
       assert_text_equal(expected, actual, "** #{desc}")
     }
@@ -788,34 +796,45 @@ END
 var engine = new Tenjin.Engine({cache:true, prefix:'test_', postfix:'.jshtml', layout:':layout'});
 var context = #{@context};
 var output = engine.render(':content', context);
+print("--- output ---");
 print(output);
-print("---");
 //// content template has no args
 var t1 = engine.getTemplate(':content');
+print("--- args ---");
 print(t1.args === null ? 'null' : typeof(t1.args));
-print("---");
 //// layout template has an argument
 var t2 = engine.getTemplate(':layout');
+print("--- layout args ---");
 print(t2.args === null ? 'null' : typeof(t2.args));
 for (var p in t2.args) { print(p + ':' + t2.args[p]); }
 //// render() function
-print("---");
+print("--- content render ---");
 print(engine.getTemplate(':content').render);
-print("---");
+print("--- layout render ---");
 print(engine.getTemplate(':layout').render);
 END
     actual = _invoke_js(s)
-    expected = <<END
+    @expected_args1 = <<END
 null
----
+END
+    @expected_args1.chomp!
+    @expected_args2 = <<END
 object
 0:_content
 END
+    @expected_args2.chomp!
     if RHINO
       @compiled_render = @compiled_render.sub('["x"]', '.x').sub('["y"]', '.y').sub('["z"]', '.z')
     end
-    #expected = [@output,expected.chomp,@original_render,@layout_render].join("\n---\n")
-    expected = [@output,expected.chomp,@compiled_render,@layout_render].join("\n---\n")
+    #expected = [@output,@expected_args1,@expected_args2,@original_render,@layout_render].join("\n---\n")
+    #expected = [@output,@expected_args1,@expected_args2,@compiled_render,@layout_render].join("\n---\n")
+    expected = ""
+    expected << "--- output ---\n"         << @output          << "\n"
+    expected << "--- args ---\n"           << @expected_args1  << "\n"
+    expected << "--- layout args ---\n"    << @expected_args2  << "\n"
+    expected << "--- content render ---\n" << @compiled_render << "\n"
+    expected << "--- layout render ---\n"  << @layout_render   << "\n"
+    expected.chomp!
     assert_text_equal(expected, actual, "** #{desc}")
   ensure
     _remove_files %w[test_content.jshtml test_content.jshtml.cache
