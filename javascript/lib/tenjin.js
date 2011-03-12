@@ -268,12 +268,12 @@ else if (typeof(File) == 'function') {	/// File object is available
 		return f.exists && f.isFile;
 	};
 
-	Tenjin.isNewer = function(filename, filename2) {  /// dummy
-		return true;
+	Tenjin.isNewer = function(filename, filename2) {
+		return Tenjin.mtime(filename) > Tenjin.mtime(filename2);
 	};
 
-	Tenjin.mtime = function(filename) {  /// dummy
-		return 0;
+	Tenjin.mtime = function(filename) {
+		return new File(filename).lastModified;
 	};
 
 }
