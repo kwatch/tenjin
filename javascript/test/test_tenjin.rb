@@ -877,11 +877,12 @@ print(output);
 var t1 = engine.getTemplate(':content');
 print("--- args ---");
 print(t1.args === null ? 'null' : typeof(t1.args));
+if (t1.args) for (var p in t1.args) { print(p + ':' + t1.args[p]); }
 //// layout template has an argument
 var t2 = engine.getTemplate(':layout');
 print("--- layout args ---");
 print(t2.args === null ? 'null' : typeof(t2.args));
-for (var p in t2.args) { print(p + ':' + t2.args[p]); }
+if (t2.args) for (var p in t2.args) { print(p + ':' + t2.args[p]); }
 //// render() function
 print("--- content render ---");
 print(engine.getTemplate(':content').render);
@@ -907,8 +908,33 @@ END
     expected << "--- output ---\n"         << @output          << "\n"
     expected << "--- args ---\n"           << @expected_args1  << "\n"
     expected << "--- layout args ---\n"    << @expected_args2  << "\n"
-    expected << "--- content render ---\n" << @compiled_render << "\n"
-    expected << "--- layout render ---\n"  << @layout_render   << "\n"
+    if NODEJS
+      content_render = <<'END'
+function (_context) { var x = _context.x; var y = _context.y; var z = _context.z; var _engine = _context._engine; var _layout = _context._layout; var _buf = '';  var x = _context['x']; var y = _context['y']; var z = _context['z'];
+ _buf += '<p>\n\
+x = ' + [x].join() + '\n\
+y = ' + [y].join() + '\n\
+z = ' + [z].join() + '\n\
+</p>\n';
+return _buf
+}
+END
+      layout_render = <<'END'
+function (_context) { var _content = _context._content;
+var _buf = '';  _buf += '<html>\n\
+ <body>\n\
+' + [_content].join() + '\n\
+ </body>\n\
+</html>\n';
+return _buf
+}
+END
+      expected << "--- content render ---\n" << content_render  #<< "\n"
+      expected << "--- layout render ---\n"  << layout_render   #<< "\n"
+    else
+      expected << "--- content render ---\n" << @compiled_render << "\n"
+      expected << "--- layout render ---\n"  << @layout_render   << "\n"
+    end
     expected.chomp!
     assert_text_equal(expected, actual, "** #{desc}")
   ensure
