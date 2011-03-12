@@ -263,7 +263,9 @@ else if (typeof(File) == 'function') {	/// File object is available
 	Tenjin.separator = File.separator;
 
 	Tenjin.isFile = function(filename) {
-		return (new File(filename)).isFile;
+		//return (new File(filename)).isFile;
+		var f = new File(filename);
+		return f.exists && f.isFile;
 	};
 
 	Tenjin.isNewer = function(filename, filename2) {  /// dummy
