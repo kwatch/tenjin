@@ -801,7 +801,7 @@ Tenjin.Engine.prototype = {
 			var input1 = this.readTemplateFile(filename, _context);
 			template.convert(input1, filename);
 		}
-		else if (Tenjin.isFile(cache_filename) && Tenjin.isNewer(cache_filename, filename)) {
+		else if (Tenjin.isFile(cache_filename) && ! Tenjin.isNewer(filename, cache_filename)) {
 			this.loadCacheFile(cache_filename, template);
 			template.filename = filename;
 		}
