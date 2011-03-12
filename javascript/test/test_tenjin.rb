@@ -6,9 +6,12 @@ require 'fileutils'
 TENJIN_JS = ENV['TENJIN_JS'] || 'tenjin.js'
 test(?f, TENJIN_JS) or raise StandardError.new("#{TENJIN_JS}: not found.")
 
-smonkey = rhino = false
+nodejs = smonkey = rhino = false
 $bug_cache = false
 case ENV['JS']
+when /node(js)?/
+  nodejs = true
+  command = "node --strict_mode"
 when /rhino/
   rhino   = true
   command = "rhino -strict -f #{TENJIN_JS} "
@@ -26,8 +29,9 @@ else
     $bug_cache = true if js_ver.to_f >= 1.7
   end
 end
-SMONKEY = smonkey
+NODEJS  = nodejs
 RHINO   = rhino
+SMONKEY = smonkey
 COMMAND = command
 
 
@@ -63,6 +67,12 @@ class TenjinTest < Test::Unit::TestCase
 
 
   def _invoke_js(s)
+    if NODEJS
+      s = "\"use strict\";\n" +
+          "var Tenjin = require('#{TENJIN_JS}');\n" +
+          "var print = require('system').print;\n" +
+          s
+    end
     File.write('tmp.js', s)
     output = `#{COMMAND} tmp.js`
     output.chomp!
@@ -564,6 +574,19 @@ END
     if RHINO
       @compiled = "\n#{@compiled}\n".gsub(/_context.(title|items)/, '_context["\1"]')
     end
+    if NODEJS
+      @compiled = <<'END'
+function (_context) { var _buf = '';  var title = _context['title']; var items = _context['items'];
+ _buf += '<h1>' + escapeXml(title) + '</h1>\n\
+<ul>\n';
+ for (var i = 0, n = items.length; i < n; i++) {
+ _buf += '  <li>' + escapeXml(items[i]) + '</li>\n';
+ }
+ _buf += '</ul>\n';
+return _buf
+}
+END
+    end
     @compiled.chomp!
     @original = <<'END'
 function (_context) {
@@ -573,6 +596,14 @@ function (_context) {
 END
     if RHINO
       @original = "\n#{@original}\n"
+    end
+    if NODEJS
+    @original = <<'END'
+function (_context) {
+		this.compile(_context);
+		return this.render(_context);
+	}
+END
     end
     @original.chomp!
     ## convert input
@@ -671,6 +702,18 @@ END
     if RHINO
       @content_render = "\n#{@content_render}\n".gsub(/\.([xyz]);/, '["\1"];')
     end
+    if NODEJS
+      @content_render = <<'END'
+function (_context) { var _buf = '';  var x = _context['x']; var y = _context['y']; var z = _context['z'];
+ _buf += '<p>\n\
+x = ' + [x].join() + '\n\
+y = ' + [y].join() + '\n\
+z = ' + [z].join() + '\n\
+</p>\n';
+return _buf
+}
+END
+    end
     @content_render.chomp!
     @layout_render = <<'END'
 function (_context) {
@@ -682,6 +725,16 @@ function (_context) {
 END
     if RHINO
       @layout_render = "\n#{@layout_render}\n"
+    end
+    if NODEJS
+      @layout_render = <<'END'
+function (_context) {
+    var _content = _context._content;
+    var _buf = "";
+    _buf += "<html>\n <body>\n" + [_content].join() + "\n </body>\n</html>\n";
+    return _buf;
+}
+END
     end
     @layout_render.chomp!
 #    @original_render = <<'END'
@@ -710,6 +763,17 @@ END
     if RHINO
       @original_render = "\n#{@original_render}\n"
     end
+    if NODEJS
+      @original_render = <<'END'
+function (_context) { var x = _context.x; var y = _context.y; var z = _context.z; var _engine = _context._engine; var _layout = _context._layout; var _content = _context._content; var _buf = '';  _buf += '<html>\n\
+ <body>\n\
+' + [_content].join() + '\n\
+ </body>\n\
+</html>\n';
+return _buf
+}
+END
+    end
     @original_render.chomp!
 
     @compiled_render = <<'END'
@@ -729,6 +793,17 @@ function (_context) {
 END
     if RHINO
       @compiled_render = "\n#{@compiled_render}\n".gsub(/\.([xyz]);/, '["\1"];')
+    end
+    if NODEJS
+      @compiled_render = <<'END'
+function (_context) { var x = _context.x; var y = _context.y; var z = _context.z; var _engine = _context._engine; var _layout = _context._layout; var _content = _context._content; var _buf = '';  _buf += '<html>\n\
+ <body>\n\
+' + [_content].join() + '\n\
+ </body>\n\
+</html>\n';
+return _buf
+ }
+END
     end
     @compiled_render.chomp!
 
