@@ -120,12 +120,8 @@ Shotenjin.Template.prototype = {
 			pos = m.index + s.length;
 			var indicator = m[1];
 			var expr = m[2];
-			if (indicator == "$") {
-				sb += "'" + this.escapeText(text) + "' + " + this.escapefunc + "(" + expr + ") + ";
-			}
-			else {
-				sb += "'" + this.escapeText(text) + "' + " + this.tostrfunc + "(" + expr + ") + ";
-			}
+			var funcname = indicator == "$" ? this.escapefunc : this.tostrfunc;
+			sb += "'" + this.escapeText(text) + "' + " + funcname + "(" + expr + ") + ";
 		}
 		var rest = pos == 0 ? input : input.substring(pos);
 		var newline = input.charAt(input.length-1) == "\n" ? "\n" : "";
