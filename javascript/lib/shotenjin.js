@@ -133,12 +133,7 @@ Shotenjin.Template.prototype = {
 	},
 
 	render: function(_context) {
-		if (_context) {
-			eval(Shotenjin._setlocalvarscode(_context));
-		}
-		else {
-			_context = {};
-		}
+		_context ? eval(Shotenjin._setlocalvarscode(_context)) : (_context = {});
 		return eval(this.script);
 	},
 
