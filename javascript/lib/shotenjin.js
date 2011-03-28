@@ -59,10 +59,10 @@ Shotenjin.Template.prototype = {
 
 	escapefunc: 'escapeXml',
 
-	program: null,
+	script: null,
 
 	convert: function(input) {
-		return this.program = "var _buf = '', _V; " + this.parseStatements(input) + "_buf\n";
+		return this.script = "var _buf = '', _V; " + this.parseStatements(input) + "_buf\n";
 	},
 
 	parseStatements: function(input) {
@@ -136,7 +136,7 @@ Shotenjin.Template.prototype = {
 		else {
 			_context = {};
 		}
-		return eval(this.program);
+		return eval(this.script);
 	},
 
 	_end: undefined  // dummy property to escape strict warning (not legal in ECMA-262)
