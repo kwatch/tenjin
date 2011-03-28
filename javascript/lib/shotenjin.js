@@ -68,7 +68,7 @@ Shotenjin.Template.prototype = {
 
 	convert: function(input) {
 		var buf = [];
-		buf.push("var _buf = ''; ");
+		buf.push("var _buf = '', _V; ");
 		this.parseStatements(buf, input);
 		buf.push("_buf\n");
 		return this.program = buf.join('');
@@ -105,9 +105,9 @@ Shotenjin.Template.prototype = {
 			var indicator = m[1];
 			var expr = m[2];
 			if (indicator == "$")
-				buf.push(this.escapefunc, "(", expr, ")");
+				buf.push(this.escapefunc, "((_V = (", expr, ")) === null || _V === undefined ? '' : _V)");
 			else
-				buf.push("(", expr, ")");
+				buf.push("((_V = (", expr, ")) === null || _V === undefined ? '' : _V)");
 			buf.push(" + ");
 		}
 		var rest = pos == 0 ? input : input.substring(pos);
