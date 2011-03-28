@@ -21,11 +21,6 @@ var Shotenjin = {
 		return s.replace(/[&<>"]/g, Shotenjin._escape_func); //"
 	},
 
-	escapeXml2: function(s) {
-		if (s === null || s === undefined) return '';
-		return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');  //"
-	},
-
 	strip: function(s) {
 		if (! s) return s;
 		//return s.replace(/^\s+|\s+$/g, '');
