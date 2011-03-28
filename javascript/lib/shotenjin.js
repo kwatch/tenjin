@@ -87,7 +87,7 @@ Shotenjin.Template.prototype = {
 
 	parseExpressions: function(buf, input) {
 		if (! input) return;
-		buf.push(" _buf += ");
+		var sb = " _buf += ";
 		var regexp = /([$#])\{(.*?)\}/g;
 		var pos = 0;
 		var m;
@@ -95,27 +95,24 @@ Shotenjin.Template.prototype = {
 			var text = input.substring(pos, m.index);
 			var s = m[0];
 			pos = m.index + s.length;
-			this.addText(buf, text);
-			buf.push(" + ");
 			var indicator = m[1];
 			var expr = m[2];
-			if (indicator == "$")
-				buf.push(this.escapefunc, "(", expr, ")");
-			else
-				buf.push("((_V = (", expr, ")) === null || _V === undefined ? '' : _V)");
-			buf.push(" + ");
+			if (indicator == "$") {
+				sb += "'" + this.escapeText(text) + "' + " + this.escapefunc + "(" + expr + ") + ";
+			}
+			else {
+				sb += "'" + this.escapeText(text) + "' + ((_V = (" + expr + ")) === null || _V === undefined ? '' : _V) + ";
+			}
 		}
 		var rest = pos == 0 ? input : input.substring(pos);
-		rest ? this.addText(buf, rest, true) : buf.push('""');
-		buf.push(";");
-		if (input.charAt(input.length-1) == "\n")
-			buf.push("\n");
+		var newline = input.charAt(input.length-1) == "\n" ? "\n" : "";
+		sb += "'" + this.escapeText(rest) + "';" + newline;
+		buf.push(sb);
 	},
 
-	addText: function(buf, text, encode_newline) {
-		if (! text) return;
-		var s = text.replace(/[\'\\]/g, '\\$&').replace(/\n/g, '\\n\\\n');
-		buf.push("'", s, "'");
+	escapeText: function(text, encode_newline) {
+		if (! text) return "";
+		return text.replace(/[\'\\]/g, '\\$&').replace(/\n/g, '\\n\\\n');
 	},
 
 	render: function(_context) {
