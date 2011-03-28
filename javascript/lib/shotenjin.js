@@ -51,7 +51,7 @@ var escapeXml = Shotenjin.escapeXml;
 Shotenjin.Template = function(properties) {
 	if (properties) {
 		var p = properties;
-		if (p['escaefunc']) this.escapefunc = p['escapefunc'];
+		if (p['escapefunc']) this.escapefunc = p['escapefunc'];
 	}
 };
 
