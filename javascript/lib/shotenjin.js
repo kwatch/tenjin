@@ -61,8 +61,11 @@ Shotenjin.Template.prototype = {
 
 	script: null,
 
+	preamble: "var _buf = '', _V; ",
+	postamble: "_buf\n",
+
 	convert: function(input) {
-		return this.script = "var _buf = '', _V; " + this.parseStatements(input) + "_buf\n";
+		return this.script = this.preamble + this.parseStatements(input) + this.postamble;
 	},
 
 	parseStatements: function(input) {
