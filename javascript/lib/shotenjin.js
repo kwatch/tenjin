@@ -57,17 +57,19 @@ var toStr     = Shotenjin.toStr;
 Shotenjin.Template = function(properties) {
 	if (properties) {
 		var p = properties;
+		if (p['tostrfunc'])  this.escapefunc = p['tostrfunc'];
 		if (p['escapefunc']) this.escapefunc = p['escapefunc'];
 	}
 };
 
 Shotenjin.Template.prototype = {
 
+	tostrfunc: 'toStr',
 	escapefunc: 'escapeXml',
 
 	script: null,
 
-	preamble: "var _buf = '', _V; ",
+	preamble: "var _buf = ''; ",
 	postamble: "_buf\n",
 
 	convert: function(input) {
@@ -122,7 +124,7 @@ Shotenjin.Template.prototype = {
 				sb += "'" + this.escapeText(text) + "' + " + this.escapefunc + "(" + expr + ") + ";
 			}
 			else {
-				sb += "'" + this.escapeText(text) + "' + ((_V = (" + expr + ")) === null || _V === undefined ? '' : _V) + ";
+				sb += "'" + this.escapeText(text) + "' + " + this.tostrfunc + "(" + expr + ") + ";
 			}
 		}
 		var rest = pos == 0 ? input : input.substring(pos);

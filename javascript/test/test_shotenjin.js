@@ -14,7 +14,7 @@ target('Shotenjin.Tenjin', function(t) {
 				'</table>\n',
 			].join('');
 			var expected = [
-				'var _buf = \'\', _V;  _buf += \'<table>\\n\\\n',
+				'var _buf = \'\';  _buf += \'<table>\\n\\\n',
 				'</table>\\n\';\n',
 				'_buf\n',
 			].join('');
@@ -28,7 +28,7 @@ target('Shotenjin.Tenjin', function(t) {
 				'<td>${item}</td>\n',
 			].join('');
 			var expected = [
-				'var _buf = \'\', _V;  _buf += \'<td>\' + ((_V = (i)) === null || _V === undefined ? \'\' : _V) + \'</td>\\n\\\n',
+				'var _buf = \'\';  _buf += \'<td>\' + toStr(i) + \'</td>\\n\\\n',
 				'<td>\' + escapeXml(item) + \'</td>\\n\';\n',
 				'_buf\n',
 			].join('');
@@ -49,11 +49,11 @@ target('Shotenjin.Tenjin', function(t) {
 				'</table>\n',
 			].join('');
 			var expected = [
-				'var _buf = \'\', _V;  _buf += \'<table>\\n\';\n',
+				'var _buf = \'\';  _buf += \'<table>\\n\';\n',
 				'   for (var i = 0, n = items.length; i < n; ) {\n',
 				'     var item = items[i++];\n',
-				' _buf += \'  <tr class="\' + ((_V = (i % 2 == 1 ? \'odd\' : \'even\')) === null || _V === undefined ? \'\' : _V) + \'">\\n\\\n',
-				'    <td>\' + ((_V = (i)) === null || _V === undefined ? \'\' : _V) + \'</td>\\n\\\n',
+				' _buf += \'  <tr class="\' + toStr(i % 2 == 1 ? \'odd\' : \'even\') + \'">\\n\\\n',
+				'    <td>\' + toStr(i) + \'</td>\\n\\\n',
 				'    <td>\' + escapeXml(item) + \'</td>\\n\\\n',
 				'  </tr>\\n\';\n',
 				'   }\n',
