@@ -68,9 +68,9 @@ Shotenjin.Template.prototype = {
 
 	convert: function(input) {
 		var buf = [];
-		buf.push("var _buf = []; ");
+		buf.push("var _buf = ''; ");
 		this.parseStatements(buf, input);
-		buf.push("_buf.join('')\n");
+		buf.push("_buf\n");
 		return this.program = buf.join('');
 	},
 
@@ -92,7 +92,7 @@ Shotenjin.Template.prototype = {
 
 	parseExpressions: function(buf, input) {
 		if (! input) return;
-		buf.push(" _buf.push(");
+		buf.push(" _buf += ");
 		var regexp = /([$#])\{(.*?)\}/g;
 		var pos = 0;
 		var m;
@@ -101,17 +101,18 @@ Shotenjin.Template.prototype = {
 			var s = m[0];
 			pos = m.index + s.length;
 			this.addText(buf, text);
-			buf.push(", ");
+			buf.push(" + ");
 			var indicator = m[1];
 			var expr = m[2];
 			if (indicator == "$")
-				buf.push(this.escapefunc, "(", expr, "), ");
+				buf.push(this.escapefunc, "(", expr, ")");
 			else
-				buf.push(expr, ", ");
+				buf.push("(", expr, ")");
+			buf.push(" + ");
 		}
 		var rest = pos == 0 ? input : input.substring(pos);
 		rest ? this.addText(buf, rest, true) : buf.push('""');
-		buf.push(");");
+		buf.push(";");
 		if (input.charAt(input.length-1) == "\n")
 			buf.push("\n");
 	},

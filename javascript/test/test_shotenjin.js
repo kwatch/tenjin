@@ -14,12 +14,12 @@ target('Shotenjin.Tenjin', function(t) {
 				'</table>\n',
 			].join('');
 			var expected = [
-				'var _buf = [];  _buf.push(\'<table>\\n\\\n',
+				'var _buf = \'\';  _buf += \'<table>\\n\\\n',
 				'</table>\\n\\\n',
-				'\');\n',
-				'_buf.join(\'\')\n',
+				'\';\n',
+				'_buf\n',
 			].join('');
-			var actual = new Shotenjin.Template().convert(input);
+			var actual = (new Shotenjin.Template()).convert(input);
 			ok (actual).eq(expected);
 		});
 
@@ -29,10 +29,10 @@ target('Shotenjin.Tenjin', function(t) {
 				'<td>${item}</td>\n',
 			].join('');
 			var expected = [
-				'var _buf = [];  _buf.push(\'<td>\', i, \'</td>\\n\\\n',
-				'<td>\', escapeXml(item), \'</td>\\n\\\n',
-				'\');\n',
-				'_buf.join(\'\')\n',
+				'var _buf = \'\';  _buf += \'<td>\' + (i) + \'</td>\\n\\\n',
+				'<td>\' + escapeXml(item) + \'</td>\\n\\\n',
+				'\';\n',
+				'_buf\n',
 			].join('');
 			var actual = new Shotenjin.Template().convert(input);
 			ok (actual).eq(expected);
@@ -44,24 +44,24 @@ target('Shotenjin.Tenjin', function(t) {
 				'  <?js for (var i = 0, n = items.length; i < n; ) { ?>\n',
 				'  <?js   var item = items[i++]; ?>\n',
 				'  <tr class="#{i % 2 == 1 ? \'odd\' : \'even\'}">\n',
-				'    <td>#{[i].join()}</td>\n',
+				'    <td>#{i}</td>\n',
 				'    <td>${item}</td>\n',
 				'  </tr>\n',
 				'  <?js } ?>\n',
 				'</table>\n',
 			].join('');
 			var expected = [
-				'var _buf = [];  _buf.push(\'<table>\\n\\\n',
-				'  \'); for (var i = 0, n = items.length; i < n; ) { _buf.push(\'\\n\\\n',
-				'  \');   var item = items[i++]; _buf.push(\'\\n\\\n',
-				'  <tr class="\', i % 2 == 1 ? \'odd\' : \'even\', \'">\\n\\\n',
-				'    <td>\', [i].join(), \'</td>\\n\\\n',
-				'    <td>\', escapeXml(item), \'</td>\\n\\\n',
+				'var _buf = \'\';  _buf += \'<table>\\n\\\n',
+				'  \'; for (var i = 0, n = items.length; i < n; ) { _buf += \'\\n\\\n',
+				'  \';   var item = items[i++]; _buf += \'\\n\\\n',
+				'  <tr class="\' + (i % 2 == 1 ? \'odd\' : \'even\') + \'">\\n\\\n',
+				'    <td>\' + (i) + \'</td>\\n\\\n',
+				'    <td>\' + escapeXml(item) + \'</td>\\n\\\n',
 				'  </tr>\\n\\\n',
-				'  \'); } _buf.push(\'\\n\\\n',
+				'  \'; } _buf += \'\\n\\\n',
 				'</table>\\n\\\n',
-				'\');\n',
-				'_buf.join(\'\')\n',
+				'\';\n',
+				'_buf\n',
 			].join('');
 			var actual = new Shotenjin.Template().convert(input);
 			ok (actual).eq(expected);
