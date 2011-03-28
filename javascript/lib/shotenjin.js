@@ -67,15 +67,31 @@ Shotenjin.Template.prototype = {
 
 	parseStatements: function(input) {
 		var sb = '';
-		var regexp = /<\?js(\s(.|\n)*?) ?\?>/mg;
+		var regexp = /(^[ \t]*)?<\?js(\s(?:.|\n)*?) ?\?>([ \t]*\r?\n)?/mg;
 		var pos = 0;
 		var m;
+		var ended_with_nl = true;
+		var remained = null;
 		while ((m = regexp.exec(input)) != null) {
-			var stmt = m[1];
+			var lspace = m[1], stmt = m[2], rspace = m[3];
+			var is_bol = lspace || ended_with_nl;
+			var ended_with_nl = !! rspace;
 			var text = input.substring(pos, m.index);
 			pos = m.index + m[0].length;
-			if (text) sb += this.parseExpressions(text);
-			if (stmt) sb += stmt;
+			if (remained) {
+				text = remained + text;
+				remained = null;
+			}
+			if (is_bol && rspace) {
+				if (text) sb += this.parseExpressions(text);
+				sb += (lspace || '') + stmt + rspace;
+			}
+			else {
+				if (lspace) text += lspace;
+				if (text) sb += this.parseExpressions(text);
+				sb += stmt;
+				remained = rspace;
+			}
 		}
 		var rest = pos == 0 ? input : input.substring(pos);
 		sb += this.parseExpressions(rest);
@@ -103,13 +119,15 @@ Shotenjin.Template.prototype = {
 		}
 		var rest = pos == 0 ? input : input.substring(pos);
 		var newline = input.charAt(input.length-1) == "\n" ? "\n" : "";
-		sb += "'" + this.escapeText(rest) + "';" + newline;
+		sb += "'" + this.escapeText(rest, true) + "';" + newline;
 		return sb;
 	},
 
-	escapeText: function(text, encode_newline) {
+	escapeText: function(text, eol) {
 		if (! text) return "";
-		return text.replace(/[\'\\]/g, '\\$&').replace(/\n/g, '\\n\\\n');
+		text = text.replace(/[\'\\]/g, '\\$&').replace(/\n/g, '\\n\\\n');
+		if (eol) text = text.replace(/\\n\\\n$/, "\\n");
+		return text;
 	},
 
 	render: function(_context) {

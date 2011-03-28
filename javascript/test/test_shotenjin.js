@@ -15,8 +15,7 @@ target('Shotenjin.Tenjin', function(t) {
 			].join('');
 			var expected = [
 				'var _buf = \'\', _V;  _buf += \'<table>\\n\\\n',
-				'</table>\\n\\\n',
-				'\';\n',
+				'</table>\\n\';\n',
 				'_buf\n',
 			].join('');
 			var actual = (new Shotenjin.Template()).convert(input);
@@ -30,8 +29,7 @@ target('Shotenjin.Tenjin', function(t) {
 			].join('');
 			var expected = [
 				'var _buf = \'\', _V;  _buf += \'<td>\' + ((_V = (i)) === null || _V === undefined ? \'\' : _V) + \'</td>\\n\\\n',
-				'<td>\' + escapeXml(item) + \'</td>\\n\\\n',
-				'\';\n',
+				'<td>\' + escapeXml(item) + \'</td>\\n\';\n',
 				'_buf\n',
 			].join('');
 			var actual = new Shotenjin.Template().convert(input);
@@ -51,16 +49,15 @@ target('Shotenjin.Tenjin', function(t) {
 				'</table>\n',
 			].join('');
 			var expected = [
-				'var _buf = \'\', _V;  _buf += \'<table>\\n\\\n',
-				'  \'; for (var i = 0, n = items.length; i < n; ) { _buf += \'\\n\\\n',
-				'  \';   var item = items[i++]; _buf += \'\\n\\\n',
-				'  <tr class="\' + ((_V = (i % 2 == 1 ? \'odd\' : \'even\')) === null || _V === undefined ? \'\' : _V) + \'">\\n\\\n',
+				'var _buf = \'\', _V;  _buf += \'<table>\\n\';\n',
+				'   for (var i = 0, n = items.length; i < n; ) {\n',
+				'     var item = items[i++];\n',
+				' _buf += \'  <tr class="\' + ((_V = (i % 2 == 1 ? \'odd\' : \'even\')) === null || _V === undefined ? \'\' : _V) + \'">\\n\\\n',
 				'    <td>\' + ((_V = (i)) === null || _V === undefined ? \'\' : _V) + \'</td>\\n\\\n',
 				'    <td>\' + escapeXml(item) + \'</td>\\n\\\n',
-				'  </tr>\\n\\\n',
-				'  \'; } _buf += \'\\n\\\n',
-				'</table>\\n\\\n',
-				'\';\n',
+				'  </tr>\\n\';\n',
+				'   }\n',
+				' _buf += \'</table>\\n\';\n',
 				'_buf\n',
 			].join('');
 			var actual = new Shotenjin.Template().convert(input);
