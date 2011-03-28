@@ -83,15 +83,14 @@ Shotenjin.Template.prototype = {
 				remained = null;
 			}
 			if (is_bol && rspace) {
-				if (text) sb += this.parseExpressions(text);
-				sb += (lspace || '') + stmt + rspace;
+				stmt = (lspace || '') + stmt + rspace;
 			}
 			else {
 				if (lspace) text += lspace;
-				if (text) sb += this.parseExpressions(text);
-				sb += stmt;
 				remained = rspace;
 			}
+			if (text) sb += this.parseExpressions(text);
+			sb += stmt;
 		}
 		var rest = pos == 0 ? input : input.substring(pos);
 		sb += this.parseExpressions(rest);
