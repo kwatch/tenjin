@@ -62,14 +62,11 @@ Shotenjin.Template.prototype = {
 	program: null,
 
 	convert: function(input) {
-		var buf = [];
-		buf.push("var _buf = '', _V; ");
-		this.parseStatements(buf, input);
-		buf.push("_buf\n");
-		return this.program = buf.join('');
+		return this.program = "var _buf = '', _V; " + this.parseStatements(input) + "_buf\n";
 	},
 
-	parseStatements: function(buf, input) {
+	parseStatements: function(input) {
+		var sb = '';
 		var regexp = /<\?js(\s(.|\n)*?) ?\?>/mg;
 		var pos = 0;
 		var m;
@@ -77,15 +74,15 @@ Shotenjin.Template.prototype = {
 			var stmt = m[1];
 			var text = input.substring(pos, m.index);
 			pos = m.index + m[0].length;
-			//
-			if (text) this.parseExpressions(buf, text);
-			if (stmt) buf.push(stmt);
+			if (text) sb += this.parseExpressions(text);
+			if (stmt) sb += stmt;
 		}
 		var rest = pos == 0 ? input : input.substring(pos);
-		this.parseExpressions(buf, rest);
+		sb += this.parseExpressions(rest);
+		return sb;
 	},
 
-	parseExpressions: function(buf, input) {
+	parseExpressions: function(input) {
 		if (! input) return;
 		var sb = " _buf += ";
 		var regexp = /([$#])\{(.*?)\}/g;
@@ -107,7 +104,7 @@ Shotenjin.Template.prototype = {
 		var rest = pos == 0 ? input : input.substring(pos);
 		var newline = input.charAt(input.length-1) == "\n" ? "\n" : "";
 		sb += "'" + this.escapeText(rest) + "';" + newline;
-		buf.push(sb);
+		return sb;
 	},
 
 	escapeText: function(text, encode_newline) {
