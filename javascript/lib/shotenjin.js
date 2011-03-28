@@ -16,13 +16,13 @@ var Shotenjin = {
 	_escape_func: function(m) { return Shotenjin._escape_table[m] },
 
 	escapeXml: function(s) {
-		//if (s == null) return '';
-		return typeof(s) != 'string' ? s : s.replace(/[&<>"]/g, Shotenjin._escape_func); //"
-		//return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); //"
+		if (s === null || s === undefined) return '';
+		if (typeof(s) != 'string') return s;
+		return s.replace(/[&<>"]/g, Shotenjin._escape_func); //"
 	},
 
 	escapeXml2: function(s) {
-		if (s == null) return '';
+		if (s === null || s === undefined) return '';
 		return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');  //"
 	},
 
@@ -105,7 +105,7 @@ Shotenjin.Template.prototype = {
 			var indicator = m[1];
 			var expr = m[2];
 			if (indicator == "$")
-				buf.push(this.escapefunc, "((_V = (", expr, ")) === null || _V === undefined ? '' : _V)");
+				buf.push(this.escapefunc, "(", expr, ")");
 			else
 				buf.push("((_V = (", expr, ")) === null || _V === undefined ? '' : _V)");
 			buf.push(" + ");
