@@ -114,15 +114,15 @@ Shotenjin.Template.prototype = {
 			var indicator = m[1];
 			var expr = m[2];
 			var funcname = indicator == "$" ? this.escapefunc : this.tostrfunc;
-			sb += "'" + this.escapeText(text) + "' + " + funcname + "(" + expr + ") + ";
+			sb += "'" + this._escapeText(text) + "' + " + funcname + "(" + expr + ") + ";
 		}
 		var rest = pos == 0 ? input : input.substring(pos);
 		var is_newline = input.charAt(input.length-1) == "\n";
-		sb += "'" + this.escapeText(rest, true) + (is_newline ? "';\n" : "';");
+		sb += "'" + this._escapeText(rest, true) + (is_newline ? "';\n" : "';");
 		return sb;
 	},
 
-	escapeText: function(text, eol) {
+	_escapeText: function(text, eol) {
 		if (! text) return "";
 		text = text.replace(/[\'\\]/g, '\\$&').replace(/\n/g, '\\n\\\n');
 		if (eol) text = text.replace(/\\n\\\n$/, "\\n");
