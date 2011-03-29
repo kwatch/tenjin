@@ -37,11 +37,9 @@ var Shotenjin = {
 		var sb = "";
 		for (var p in obj) sb += "var " + p + " = _context['" + p + "'];\n";
 		return sb;
-	},
-	
-	_end: undefined  // dummy property to escape strict warning (not legal in ECMA-262)
+	}
+
 };
-delete(Shotenjin._end);
 
 var escapeXml = Shotenjin.escapeXml;
 var toStr     = Shotenjin.toStr;
@@ -136,11 +134,9 @@ Shotenjin.Template.prototype = {
 	render: function(_context) {
 		_context ? eval(Shotenjin._setlocalvarscode(_context)) : (_context = {});
 		return eval(this.script);
-	},
+	}
 
-	_end: undefined  // dummy property to escape strict warning (not legal in ECMA-262)
 };
-delete(Shotenjin.Template.prototype._end);
 
 
 /*
