@@ -102,7 +102,7 @@ Shotenjin.Template.prototype = {
 	},
 
 	parseExpressions: function(input) {
-		if (! input) return;
+		if (! input) return '';
 		var sb = " _buf += ";
 		var regexp = /([$#])\{(.*?)\}/g;
 		var pos = 0;
