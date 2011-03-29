@@ -119,8 +119,8 @@ Shotenjin.Template.prototype = {
 			sb += "'" + this.escapeText(text) + "' + " + funcname + "(" + expr + ") + ";
 		}
 		var rest = pos == 0 ? input : input.substring(pos);
-		var newline = input.charAt(input.length-1) == "\n" ? "\n" : "";
-		sb += "'" + this.escapeText(rest, true) + "';" + newline;
+		var is_newline = input.charAt(input.length-1) == "\n";
+		sb += "'" + this.escapeText(rest, true) + (is_newline ? "';\n" : "';");
 		return sb;
 	},
 
