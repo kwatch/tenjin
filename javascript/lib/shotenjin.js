@@ -34,11 +34,9 @@ var Shotenjin = {
 	// ex. {x: 10, y: 'foo'}
 	//       => "var x = _context['x'];\nvar y = _conntext['y'];\n"
 	_setlocalvarscode: function(obj) {
-		var buf = [];
-		for (var p in obj) {
-			buf.push("var ", p, " = _context['", p, "'];\n");
-		}
-		return buf.join('');
+		var sb = "";
+		for (var p in obj) sb += "var " + p + " = _context['" + p + "'];\n";
+		return sb;
 	},
 	
 	_end: undefined  // dummy property to escape strict warning (not legal in ECMA-262)
