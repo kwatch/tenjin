@@ -68,6 +68,7 @@ Shotenjin.Template.prototype = {
 	postamble: "_buf\n",
 
 	convert: function(input) {
+		this.args = null;
 		return this.script = this.preamble + this.parseStatements(input) + this.postamble;
 	},
 
@@ -94,10 +95,30 @@ Shotenjin.Template.prototype = {
 				remained = rspace;
 			}
 			if (text) sb += this.parseExpressions(text);
+			stmt = this._parseArgs(stmt);
 			sb += stmt;
 		}
 		var rest = pos == 0 ? input : input.substring(pos);
 		sb += this.parseExpressions(rest);
+		return sb;
+	},
+
+	args: null,
+
+	_parseArgs: function(stmt) {
+		if (this.args !== null) return stmt;
+		var m = stmt.match(/^(\s*)\/\/@ARGS:?[ \t]+(.*?)(\r?\n)?$/);
+		if (! m) return stmt;
+		var sb = m[1];
+		var arr = m[2].split(/,/);
+		var args = [];
+		for (var i = 0, n = arr.length; i < n; i++) {
+			var arg = arr[i].replace(/^\s+/, '').replace(/\s+$/, '');
+			args.push(arg);
+			sb += " var " + arg + "=_context." + arg + ";";
+		}
+		sb += m[3];
+		this.args = args;
 		return sb;
 	},
 
@@ -130,7 +151,12 @@ Shotenjin.Template.prototype = {
 	},
 
 	render: function(_context) {
-		_context ? eval(Shotenjin._setlocalvarscode(_context)) : (_context = {});
+		if (! _context) {
+			_context = {};
+		}
+		else if (this.args === null) {
+			eval(Shotenjin._setlocalvarscode(_context));
+		}
 		return eval(this.script);
 	}
 
