@@ -72,12 +72,10 @@ Shotenjin.Template.prototype = {
 	},
 
 	parseStatements: function(input) {
-		var sb = '';
+		var sb = '', pos = 0;
 		var regexp = /(^[ \t]*)?<\?js(\s(?:.|\n)*?) ?\?>([ \t]*\r?\n)?/mg;
-		var pos = 0;
+		var ended_with_nl = true, remained = null;
 		var m;
-		var ended_with_nl = true;
-		var remained = null;
 		while ((m = regexp.exec(input)) != null) {
 			var lspace = m[1], stmt = m[2], rspace = m[3];
 			var is_bol = lspace || ended_with_nl;
