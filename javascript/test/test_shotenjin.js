@@ -130,9 +130,8 @@ target('Shotenjin.Tenjin', function(t) {
 				'  </tr>',
 				'</table>',
 				''].join("\n");
-			var t = new Shotenjin.Template();
-			t.convert(input);
-			var actual = t.render({items: ['A&A', '<BBB>', '"CCC"']});
+			var context = {items: ['A&A', '<BBB>', '"CCC"']};
+			var actual = new Shotenjin.Template(input).render(context);
 			ok (actual).eq(expected);
 		});
 
@@ -147,9 +146,8 @@ target('Shotenjin.Tenjin', function(t) {
 				'<p>x: Haruhi</p>',
 				'<p>y: Sasaki</p>',
 				''].join("\n");
-			var t = new Shotenjin.Template();
-			t.convert(input);
-			var actual = t.render({x: 'Haruhi', y: 'Sasaki'});
+			var context = {x: 'Haruhi', y: 'Sasaki'};
+			var actual = new Shotenjin.Template(input).render(context);
 			ok (actual).eq(expected);
 		});
 
@@ -165,9 +163,8 @@ target('Shotenjin.Tenjin', function(t) {
 				'<p>x: Haruhi</p>',
 				'<p>y: Sasaki</p>',
 				''].join("\n");
-			var t = new Shotenjin.Template();
+			var t = new Shotenjin.Template(input);
 			var context = {x: 'Haruhi', y: 'Sasaki', 'z': 'John'};
-			t.convert(input);
 			var fn = function() { t.render(context); };
 			ok (fn).throws();
 		});

@@ -49,12 +49,17 @@ var toStr     = Shotenjin.toStr;
  *  Template class
  */
 
-Shotenjin.Template = function(properties) {
+Shotenjin.Template = function(input, properties) {
+	if (typeof(input) === 'object' && ! properties) {
+		input = null;
+		properties = input;
+	}
 	if (properties) {
 		var p = properties;
 		if (p['tostrfunc'])  this.escapefunc = p['tostrfunc'];
 		if (p['escapefunc']) this.escapefunc = p['escapefunc'];
 	}
+	if (input) this.convert(input);
 };
 
 Shotenjin.Template.prototype = {
