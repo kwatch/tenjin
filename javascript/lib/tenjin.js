@@ -40,18 +40,18 @@ var Tenjin = {
 	},
 
 	_escape_table: { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#039;' },
-	_escape_func: function(m) { return Tenjin._escape_table[m] },
+	_escape_func: function(m) { return Tenjin._escape_table[m]; },
 
 	escapeXml: function(s) {
 		//if (s == null) return '';
 		if (s === undefined || s == null) return "";
-		return typeof(s) == 'string' ? s.replace(/[&<>"]/g, Tenjin._escape_func) : s //"
+		return typeof(s) == 'string' ? s.replace(/[&<>"]/g, Tenjin._escape_func) : s; //"
 		//return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); //"
 		//return String(s).replace(/[&<>"]/g, Tenjin._escape_func) : s //"
 	},
 
 	_unescape_table: { '&amp;':'&', '&lt;':'<', '&gt;':'>', '&quot;':'"', '&#039;':"'" },
-	_unescape_func: function(m) { return Tenjin._unescape_table[m] },
+	_unescape_func: function(m) { return Tenjin._unescape_table[m]; },
 
 	unescapeXml: function(s) {
 		return s.replace(/&(lt|gt|amp|quot|#039);/g, Tenjin._unescape_func);
@@ -134,7 +134,7 @@ var Tenjin = {
 	selected: function(expr) { return expr ? ' selected="selected"' : ''; },
 	disabled: function(expr) { return expr ? ' disabled="disabled"' : ''; },
 	nl2br:    function(text) { return text ? text.replace(/\r?\n/g, '<br />$&') : ''; },
-	text2html: function(text) { return text ? Tenjin.nl2br(Tenjin.escapeXml(text).replace(/  /g, ' &nbsp;')) : text },
+	text2html: function(text) { return text ? Tenjin.nl2br(Tenjin.escapeXml(text).replace(/  /g, ' &nbsp;')) : text; },
 
 	_end: undefined  /// dummy property to escape strict warning (not legal in ECMA-262)
 };
@@ -233,7 +233,7 @@ else if (typeof(File) == 'function') {	/// File object is available
 				break;
 		}
 		f.close();
-		return i == 1 ? buf[0] : buf.join('')
+		return i == 1 ? buf[0] : buf.join('');
 	};
 
 	Tenjin._writeFile = function(filename, content) {
@@ -258,12 +258,12 @@ else if (typeof(File) == 'function') {	/// File object is available
 				ex.message = "'" + filename + "': " + ex.message;
 				throw ex;
 			}
-		}
+		};
 	};
 
-	Tenjin.readFile = Tenjin._wrapExceptionCatcher(Tenjin._readFile)
+	Tenjin.readFile = Tenjin._wrapExceptionCatcher(Tenjin._readFile);
 
-	Tenjin.writeFile = Tenjin._wrapExceptionCatcher(Tenjin._writeFile)
+	Tenjin.writeFile = Tenjin._wrapExceptionCatcher(Tenjin._writeFile);
 
 	Tenjin.separator = File.separator;
 
@@ -589,7 +589,7 @@ Tenjin.Template.prototype = {
 		var vars = " ";
 		if (! this.args) {
 			for (var k in _context) {
-				vars += "var " + k + " = _context." + k + "; "
+				vars += "var " + k + " = _context." + k + "; ";
 			}
 		}
 		var pos = this.script.length - this.postamble.length;
@@ -611,7 +611,7 @@ Tenjin.merge(Tenjin.Template.prototype, Tenjin.Template.__props__);
 
 Tenjin.Template.prototype._render = Tenjin.Template.prototype.render;
 
-Tenjin.Template.prototype.statementPattern = Tenjin.Template.prototype.compileStatementPattern('js'),
+Tenjin.Template.prototype.statementPattern = Tenjin.Template.prototype.compileStatementPattern('js');
 
 
 
@@ -622,7 +622,7 @@ Tenjin.render = function(template_str, context) {
 	var template = new Tenjin.Template();
 	template.convert(template_str);
 	return template.render(context);
-}
+};
 
 
 
@@ -863,12 +863,12 @@ Tenjin.Engine.prototype = {
 				output = template.render(context);
 			}
 			catch (ex) {
-				ex.template = template.fiename || template_name
+				ex.template = template.fiename || template_name;
 				ex.message = ex.template + ': ' + ex.message;
 				throw ex;
 			}
 			if (context._layout != null) {
-				layout = context._layout
+				layout = context._layout;
 				context._layout = null;
 			}
 			layout = (layout == true || layout == null) ? this.layout : layout;
@@ -935,14 +935,14 @@ Tenjin.inspect = function(value) {
 			buf.push("{");
 			for (var p in value) {
 				if (buf.length > 1) buf.push(', ');
-				buf.push(p + ':' + Tenjin.inspect(value[p]))
+				buf.push(p + ':' + Tenjin.inspect(value[p]));
 			}
 			buf.push("}");
 		}
 		return buf.join('');
 	}
 	throw "unreachable: typeof(value)="+typeof(value)+", value="+value;
-}
+};
 
 if (typeof(exports) == 'object') {  // node.js
 	for (var k in Tenjin) {
