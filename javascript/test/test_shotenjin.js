@@ -173,4 +173,34 @@ target('Shotenjin.Tenjin', function(t) {
 
 });
 
+
+target('Shotenjin', function(t) {
+
+	target('.render()', function(t) {
+
+		t.spec("renders template string with context data.", function(s) {
+			var input = [
+				'<?js //@ARGS items ?>',
+				'<ul>',
+				'  <?js for (var i = 0, item; item = items[i++]; ) { ?>',
+				'  <li>${item}</li>',
+				'  <?js } ?>',
+				'</ul>',
+				''].join("\n");
+			var expected = [
+				'<ul>',
+				'  <li>&lt;Haruhi&gt;</li>',
+				'  <li>Sasaki&amp;Kyon</li>',
+				'</ul>',
+				''].join("\n");
+			var context = { items: ['<Haruhi>', 'Sasaki&Kyon'] };
+			var output = Shotenjin.render(input, context);
+			ok (output).eq(expected);
+		});
+
+	});
+		   
+});
+
+
 Oktest.run_all();
