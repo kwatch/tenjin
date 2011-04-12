@@ -44,6 +44,7 @@ var Tenjin = {
 
 	escapeXml: function(s) {
 		//if (s == null) return '';
+		if (s === undefined || s == null) return "";
 		return typeof(s) == 'string' ? s.replace(/[&<>"]/g, Tenjin._escape_func) : s //"
 		//return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); //"
 		//return String(s).replace(/[&<>"]/g, Tenjin._escape_func) : s //"

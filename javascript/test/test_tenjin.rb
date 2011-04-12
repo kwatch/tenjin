@@ -1122,15 +1122,15 @@ END
 
     @output1 = <<'END'
 <p>
-null: "", "null"
-undefined: "", "undefined"
+null: "", ""
+undefined: "", ""
 </p>
 END
 
     @output2 = <<'END'
 <p>
-null: "null", "null"
-undefined: "undefined", "undefined"
+null: "null", ""
+undefined: "undefined", ""
 </p>
 END
     ## Tenjin.Template#convert()
