@@ -122,7 +122,7 @@ var _buf = '';  _buf += '<table>\n';
     var item = list[i];
 
  _buf += '  <tr>\n\
-    <td>' + [item].join() + '</td>\n\
+    <td>' + toStr(item) + '</td>\n\
     <td>' + escapeXml(item) + '</td>\n\
   </tr>\n';
  }
@@ -211,7 +211,7 @@ var _buf = '';  _buf += '<table>\n';
  for (var i = 0; i < list.length; i++) {
        var item = list[i];
        var color = i % 2 == 0 ? '#FFCCCC' : '#CCCCFF';
- _buf += '  <tr bgcolor="' + [color].join() + '">\n\
+ _buf += '  <tr bgcolor="' + toStr(color) + '">\n\
     <td>' + escapeXml(item) + '</td>\n\
   </tr>\n';
  }
@@ -448,12 +448,12 @@ END
     @script_layout = <<'END'
 var _buf = '';  _buf += '<html xml:lang="en" lang="en">\n\
   <head>\n\
-    <title>' + [title].join() + '</title>\n\
+    <title>' + toStr(title) + '</title>\n\
   </head>\n\
   <body>\n\
-    <h1>' + [title].join() + '</h1>\n\
+    <h1>' + toStr(title) + '</h1>\n\
     <div id="content">\n\
-' + [maincontent].join() + '\n\
+' + toStr(maincontent) + '\n\
     </div>\n\
   </body>\n\
 </html>\n';
@@ -663,16 +663,16 @@ END
     @content_script = <<'END'
 var _buf = '';  var x = _context['x']; var y = _context['y']; var z = _context['z'];
  _buf += '<p>\n\
-x = ' + [x].join() + '\n\
-y = ' + [y].join() + '\n\
-z = ' + [z].join() + '\n\
+x = ' + toStr(x) + '\n\
+y = ' + toStr(y) + '\n\
+z = ' + toStr(z) + '\n\
 </p>\n';
 _buf
 END
     @layout_script = <<'END'
 var _buf = '';  _buf += '<html>\n\
  <body>\n\
-' + [_content].join() + '\n\
+' + toStr(_content) + '\n\
  </body>\n\
 </html>\n';
 _buf
@@ -695,7 +695,7 @@ function (_context) {
     var x = _context.x;
     var y = _context.y;
     var z = _context.z;
-    _buf += "<p>\nx = " + [x].join() + "\ny = " + [y].join() + "\nz = " + [z].join() + "\n</p>\n";
+    _buf += "<p>\nx = " + toStr(x) + "\ny = " + toStr(y) + "\nz = " + toStr(z) + "\n</p>\n";
     return _buf;
 }
 END
@@ -706,9 +706,9 @@ END
       @content_render = <<'END'
 function (_context) { var _buf = '';  var x = _context['x']; var y = _context['y']; var z = _context['z'];
  _buf += '<p>\n\
-x = ' + [x].join() + '\n\
-y = ' + [y].join() + '\n\
-z = ' + [z].join() + '\n\
+x = ' + toStr(x) + '\n\
+y = ' + toStr(y) + '\n\
+z = ' + toStr(z) + '\n\
 </p>\n';
 return _buf
 }
@@ -719,7 +719,7 @@ END
 function (_context) {
     var _content = _context._content;
     var _buf = "";
-    _buf += "<html>\n <body>\n" + [_content].join() + "\n </body>\n</html>\n";
+    _buf += "<html>\n <body>\n" + toStr(_content) + "\n </body>\n</html>\n";
     return _buf;
 }
 END
@@ -731,7 +731,7 @@ END
 function (_context) {
     var _content = _context._content;
     var _buf = "";
-    _buf += "<html>\n <body>\n" + [_content].join() + "\n </body>\n</html>\n";
+    _buf += "<html>\n <body>\n" + toStr(_content) + "\n </body>\n</html>\n";
     return _buf;
 }
 END
@@ -756,7 +756,7 @@ function (_context) {
     var _layout = _context._layout;
     var _content = _context._content;
     var _buf = "";
-    _buf += "<html>\n <body>\n" + [_content].join() + "\n </body>\n</html>\n";
+    _buf += "<html>\n <body>\n" + toStr(_content) + "\n </body>\n</html>\n";
     return _buf;
 }
 END
@@ -767,7 +767,7 @@ END
       @original_render = <<'END'
 function (_context) { var x = _context.x; var y = _context.y; var z = _context.z; var _engine = _context._engine; var _layout = _context._layout; var _content = _context._content; var _buf = '';  _buf += '<html>\n\
  <body>\n\
-' + [_content].join() + '\n\
+' + toStr(_content) + '\n\
  </body>\n\
 </html>\n';
 return _buf
@@ -787,7 +787,7 @@ function (_context) {
     var x = _context.x;
     var y = _context.y;
     var z = _context.z;
-    _buf += "<p>\nx = " + [x].join() + "\ny = " + [y].join() + "\nz = " + [z].join() + "\n</p>\n";
+    _buf += "<p>\nx = " + toStr(x) + "\ny = " + toStr(y) + "\nz = " + toStr(z) + "\n</p>\n";
     return _buf;
 }
 END
@@ -798,7 +798,7 @@ END
       @compiled_render = <<'END'
 function (_context) { var x = _context.x; var y = _context.y; var z = _context.z; var _engine = _context._engine; var _layout = _context._layout; var _content = _context._content; var _buf = '';  _buf += '<html>\n\
  <body>\n\
-' + [_content].join() + '\n\
+' + toStr(_content) + '\n\
  </body>\n\
 </html>\n';
 return _buf
@@ -912,9 +912,9 @@ END
       content_render = <<'END'
 function (_context) { var x = _context.x; var y = _context.y; var z = _context.z; var _engine = _context._engine; var _layout = _context._layout; var _buf = '';  var x = _context['x']; var y = _context['y']; var z = _context['z'];
  _buf += '<p>\n\
-x = ' + [x].join() + '\n\
-y = ' + [y].join() + '\n\
-z = ' + [z].join() + '\n\
+x = ' + toStr(x) + '\n\
+y = ' + toStr(y) + '\n\
+z = ' + toStr(z) + '\n\
 </p>\n';
 return _buf
 }
@@ -923,7 +923,7 @@ END
 function (_context) { var _content = _context._content;
 var _buf = '';  _buf += '<html>\n\
  <body>\n\
-' + [_content].join() + '\n\
+' + toStr(_content) + '\n\
  </body>\n\
 </html>\n';
 return _buf
@@ -1102,8 +1102,8 @@ END
 
     @script1 = <<'END'
 var _buf = '';  _buf += '<p>\n\
-null: "' + [x].join() + '", "' + escapeXml(x) + '"\n\
-undefined: "' + [y].join() + '", "' + escapeXml(y) + '"\n\
+null: "' + toStr(x) + '", "' + escapeXml(x) + '"\n\
+undefined: "' + toStr(y) + '", "' + escapeXml(y) + '"\n\
 </p>\n';
 _buf
 END

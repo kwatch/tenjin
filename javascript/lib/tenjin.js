@@ -35,6 +35,10 @@ var Tenjin = {
 
 	RELEASE: '$Release$',
 
+	toStr: function(value) {
+		return value === undefined || value === null ? "" : value;
+	},
+
 	_escape_table: { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#039;' },
 	_escape_func: function(m) { return Tenjin._escape_table[m] },
 
@@ -310,6 +314,8 @@ else {	/// dummy function
 /*
  *  exported functions
  */
+var toStr = Tenjin.toStr;
+
 var escapeXml = Tenjin.escapeXml;
 
 var _p = Tenjin._p;
@@ -550,7 +556,8 @@ Tenjin.Template.prototype = {
 
 	hookExpression: function(expr, flag_escape) {
 		if (this.emptystr) {
-			return flag_escape ? this.escapeExpression(expr) : "[" + expr + "].join()";
+			//return flag_escape ? this.escapeExpression(expr) : "[" + expr + "].join()";
+			return flag_escape ? this.escapeExpression(expr) : "toStr(" + expr + ")";
 		}
 		else {
 			return flag_escape ? this.escapeExpression(expr) : "(" + expr + ")";
