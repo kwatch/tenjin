@@ -10,56 +10,56 @@ target('Shotenjin.Tenjin', function(t) {
 
 		t.spec("converts text into JS coode.", function(s) {
 			var input = [
-				'<table>\n',
-				'</table>\n',
-			].join('');
+				'<table>',
+				'</table>',
+			    ''].join("\n");
 			var expected = [
-				'var _buf = \'\';  _buf += \'<table>\\n\\\n',
-				'</table>\\n\';\n',
-				'_buf\n',
-			].join('');
+				'var _buf = \'\';  _buf += \'<table>\\n\\',
+				'</table>\\n\';',
+				'_buf',
+			    ''].join("\n");
 			var actual = (new Shotenjin.Template()).convert(input);
 			ok (actual).eq(expected);
 		});
 
-		t.spec("converts expression to JS coode.", function(s) {
+		t.spec("converts embedded expressions into JS coode.", function(s) {
 			var input = [
-				'<td>#{i}</td>\n',
-				'<td>${item}</td>\n',
-			].join('');
+				'<td>#{i}</td>',
+				'<td>${item}</td>',
+			    ''].join("\n");
 			var expected = [
-				'var _buf = \'\';  _buf += \'<td>\' + toStr(i) + \'</td>\\n\\\n',
-				'<td>\' + escapeXml(item) + \'</td>\\n\';\n',
-				'_buf\n',
-			].join('');
+				'var _buf = \'\';  _buf += \'<td>\' + toStr(i) + \'</td>\\n\\',
+				'<td>\' + escapeXml(item) + \'</td>\\n\';',
+				'_buf',
+			    ''].join("\n");
 			var actual = new Shotenjin.Template().convert(input);
 			ok (actual).eq(expected);
 		});
 
-		t.spec("converts statements into JS coode.", function(s) {
+		t.spec("converts embedded statements into JS coode.", function(s) {
 			var input = [
-				'<table>\n',
-				'  <?js for (var i = 0, n = items.length; i < n; ) { ?>\n',
-				'  <?js   var item = items[i++]; ?>\n',
-				'  <tr class="#{i % 2 == 1 ? \'odd\' : \'even\'}">\n',
-				'    <td>#{i}</td>\n',
-				'    <td>${item}</td>\n',
-				'  </tr>\n',
-				'  <?js } ?>\n',
-				'</table>\n',
-			].join('');
+				'<table>',
+				'  <?js for (var i = 0, n = items.length; i < n; ) { ?>',
+				'  <?js   var item = items[i++]; ?>',
+				'  <tr class="#{i % 2 == 1 ? \'odd\' : \'even\'}">',
+				'    <td>#{i}</td>',
+				'    <td>${item}</td>',
+				'  </tr>',
+				'  <?js } ?>',
+				'</table>',
+			    ''].join("\n");
 			var expected = [
-				'var _buf = \'\';  _buf += \'<table>\\n\';\n',
-				'   for (var i = 0, n = items.length; i < n; ) {\n',
-				'     var item = items[i++];\n',
-				' _buf += \'  <tr class="\' + toStr(i % 2 == 1 ? \'odd\' : \'even\') + \'">\\n\\\n',
-				'    <td>\' + toStr(i) + \'</td>\\n\\\n',
-				'    <td>\' + escapeXml(item) + \'</td>\\n\\\n',
-				'  </tr>\\n\';\n',
-				'   }\n',
-				' _buf += \'</table>\\n\';\n',
-				'_buf\n',
-			].join('');
+				'var _buf = \'\';  _buf += \'<table>\\n\';',
+				'   for (var i = 0, n = items.length; i < n; ) {',
+				'     var item = items[i++];',
+				' _buf += \'  <tr class="\' + toStr(i % 2 == 1 ? \'odd\' : \'even\') + \'">\\n\\',
+				'    <td>\' + toStr(i) + \'</td>\\n\\',
+				'    <td>\' + escapeXml(item) + \'</td>\\n\\',
+				'  </tr>\\n\';',
+				'   }',
+				' _buf += \'</table>\\n\';',
+				'_buf',
+			    ''].join("\n");
 			var actual = new Shotenjin.Template().convert(input);
 			ok (actual).eq(expected);
 		});
