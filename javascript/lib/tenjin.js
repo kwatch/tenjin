@@ -335,7 +335,8 @@ Tenjin.Template = function(filename, properties) {
 		else if (! this.postamble)  this.postamble = '';
 		if (properties.escapefunc) {
 			if (properties.escapefunc.charAt(0) == '.') {
-				this.escapeExpression = properties.escapefunc.charAt(v.length-1) == ')' ?
+				var len = properties.escapefunc.length;
+				this.escapeExpression = properties.escapefunc.charAt(len-1) == ')' ?
 					function(expr) { return '('+expr+')'+this.escapefunc; } :
 					function(expr) { return '('+expr+')'+this.escapefunc + '()'; } ;
 			}
