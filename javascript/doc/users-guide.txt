@@ -44,7 +44,7 @@ Here is the notation:
 .? Result of covertion into JavaScript script:
 .==================== ex_source.result
 $ jstenjin -s ex.jshtml
-var _buf = '';  _buf += 'Hello ' + (name) + '!\n\
+var _buf = '';  _buf += 'Hello ' + toStr(name) + '!\n\
 <ul>\n';
  for (var i = 0, n = items.length; i < n; i++) {
  _buf += ' <li>' + escapeXml(items[i]) + '</li>\n';
@@ -418,7 +418,7 @@ var _buf = '';  _buf += '<table>\n\
  {{*for (var i = 0, n = items.length; i < n; i++) {*}}
      {{*var item = items[i];*}}
  _buf += '    <tr>\n\
-      <td>' + (item) + '</td>\n\
+      <td>' + toStr(item) + '</td>\n\
       <td>' + escapeXml(item) + '</td>\n\
     </tr>\n';
  {{*}*}}
@@ -453,13 +453,13 @@ Command-line option '{{,-b,}}' removes preamble and postamble.
 $ jstenjin -s example2.jshtml
 {{*var _buf '';*}}  var list = [1, 2, 3];
  for (var i = 0, n = list.length; i < n; i++) {
- _buf += '<p>' + (list[i]) + '</p>\n';
+ _buf += '<p>' + toStr(list[i]) + '</p>\n';
  }
 {{*_buf*}}
 $ jstenjin -s{{*b*}} example2.jshtml
  var list = [1, 2, 3];
  for (var i = 0, n = list.length; i < n; i++) {
- _buf += '<p>' + (list[i]) + '</p>\n';
+ _buf += '<p>' + toStr(list[i]) + '</p>\n';
  }
 .====================
 
@@ -478,7 +478,7 @@ var _buf = '';
  for (var i = 0, n = items.length; i < n; i++) {
      var item = items[i];
 
-           _buf += (item);
+           _buf += toStr(item);
            _buf += escapeXml(item);
 
  }
@@ -1152,11 +1152,11 @@ $ jstenjin {{*--preprocess*}} -sb example12.jshtml
  var chk = {};  chk[params.state] = ' selected="selected"';
  _buf += '<select name="state">\n\
   <option value="">-</option>\n\
-  <option value="CA"' + (chk.CA||'') + '>California</option>\n\
-  <option value="FL"' + (chk.FL||'') + '>Florida</option>\n\
-  <option value="HI"' + (chk.HI||'') + '>Hawaii</option>\n\
-  <option value="NY"' + (chk.NY||'') + '>New York</option>\n\
-  <option value="TX"' + (chk.TX||'') + '>Texas</option>\n\
+  <option value="CA"' + toStr(chk.CA||'') + '>California</option>\n\
+  <option value="FL"' + toStr(chk.FL||'') + '>Florida</option>\n\
+  <option value="HI"' + toStr(chk.HI||'') + '>Hawaii</option>\n\
+  <option value="NY"' + toStr(chk.NY||'') + '>New York</option>\n\
+  <option value="TX"' + toStr(chk.TX||'') + '>Texas</option>\n\
 </select>\n';
 .====================
 
@@ -1190,7 +1190,7 @@ $ jstenjin {{*-P*}} example13.jshtml
 .? Translated script code:
 .==================== example13_preprocessed_source.result
 $ jstenjin {{*--preprocess*}} -sb example13.jshtml
- _buf += '<a href="/items/show/' + (params["id"]) + '">Show ' + escapeXml(params["name"]) + '</a>\n';
+ _buf += '<a href="/items/show/' + toStr(params["id"]) + '">Show ' + escapeXml(params["name"]) + '</a>\n';
 .====================
 
 There are many web-application framework and they provides helper functions.
@@ -1350,7 +1350,7 @@ print(output);
 .==================== example14_tmplclass.result
 $ js example14.js
 ---- js code ----
-var _buf = '';  _buf += '<h1>' + (title) + '</h1>\n\
+var _buf = '';  _buf += '<h1>' + toStr(title) + '</h1>\n\
 <ul>\n';
  for (var i = 0, n = items.length; i < n; i++) {
  _buf += ' <li>' + escapeXml(items[i]) + '</li>\n';
@@ -1619,7 +1619,7 @@ print(output);
 .? Result:
 .==================== example15_escapefunc.result
 $ js example15.js
-var _buf = '';  _buf += '<h1>' + (title) + '</h1>\n\
+var _buf = '';  _buf += '<h1>' + toStr(title) + '</h1>\n\
 <ul>\n';
  for (var i = 0, n = items.length; i < n; i++) {
  _buf += ' <li>' + {{*(items[i]).escapeHTML()*}} + '</li>\n';

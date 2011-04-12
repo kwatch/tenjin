@@ -14,6 +14,7 @@
 
     <div align="left"><h1>jsTenjin FAQ</h1></div>
     <div align="left">
+      release:     $Release$<br>
       last update: $Date$<br>
     </div>
 
@@ -96,7 +97,7 @@ ex1.jshtml:2:  for (var i = 0, i &lt;= 10, i++) {
 
 <a name="faq-delete-newline"></a>
 <h3 class="section2">'#{_content}' includes extra newline at end. Can I delete it?</h3>
-<p>Yes. You can use '<code>&lt;?js echo(_content); ?&gt;</code>' or '<code>&lt;?js _buf.push(_content); ?&gt;</code>' instead of '<code>#{_conent}</code>'.
+<p>Yes. You can use '<code>&lt;?js echo(_content); ?&gt;</code>' or '<code>&lt;?js _buf += _content; ?&gt;</code>' instead of '<code>#{_conent}</code>'.
 </p>
 <a name="ex2-layout.jshtml"></a>
 <div class="program_caption">
@@ -110,7 +111,7 @@ File 'ex2-layout.jshtml':</div>
 &lt;!-- --&gt;
 
 &lt;!-- --&gt;
-<strong>&lt;?js _buf.push(_content); ?&gt;</strong>
+<strong>&lt;?js _buf += _content; ?&gt;</strong>
 &lt;!-- --&gt;
 </pre>
 <a name="ex2-content.jshtml"></a>
@@ -167,8 +168,8 @@ File 'ex3.jshtml':</div>
 <div class="program_caption">
 Result:</div>
 <pre class="program">$ js ex3.js
-var _buf = [];  _buf.push('Hello ', <strong>(name).escapeHTML()</strong>, '!\n');
-_buf.join('')
+var _buf = '';  _buf += 'Hello ' + <strong>(name).escapeHTML()</strong> + '!\n';
+_buf
 
 </pre>
 <p>Command-line option '--escapefunc=<em>name</em>' is equivarent to the above.
@@ -177,8 +178,8 @@ _buf.join('')
 <div class="program_caption">
 Result:</div>
 <pre class="program">$ jstenjin -s <strong>--escapefunc=.escapeHTML</strong> ex3.jshtml
-var _buf = [];  _buf.push('Hello ', <strong>(name).escapeHTML()</strong>, '!\n');
-_buf.join('')
+var _buf = '';  _buf += 'Hello ' + <strong>(name).escapeHTML()</strong> + '!\n';
+_buf
 </pre>
 <br>
 
@@ -237,14 +238,14 @@ File 'ex5-layout.jshtml'</div>
 <div class="terminal_caption">
 Source code</div>
 <pre class="terminal">$ jstenjin -s ex5.jshtml
-var _buf = [];  _buf.push('&lt;?xml version="1.0 ?&gt;\n');
+var _buf = '';  _buf += '&lt;?xml version="1.0 ?&gt;\n';
  var x = _context['x']; var y = _context['y'];
- _buf.push('&lt;p&gt;\n\
-  x = ', x, '\n\
-  y = ', y, '\n\
-  z = ', z, '\n\
-&lt;/p&gt;\n');
-_buf.join('')
+ _buf += '&lt;p&gt;\n\
+  x = ' + (x) + '\n\
+  y = ' + (y) + '\n\
+  z = ' + (z) + '\n\
+&lt;/p&gt;\n';
+_buf
 </pre>
 <p>Undeclared arguments are not available even when they are passed via context object.
 </p>
@@ -253,7 +254,7 @@ _buf.join('')
 Result:</div>
 <pre class="terminal">$ jstenjin -c 'x:10, y:20, z:30' ex5.jshtml
 *** Error:
-ex5.jshtml:3: ReferenceError: "z" is not defined.
+ex5.jshtml:6: ReferenceError: z is not defined
 </pre>
 <br>
 
@@ -598,7 +599,7 @@ For example,
 <p>is equivarent to the following.
 </p>
 <pre class="program">&lt;?js <strong>if (typeof(_context['header_part'])!='undefined') {</strong> ?&gt;
-&lt;?js     <strong>_buf.push(_context['header_part']);</strong> ?&gt;
+&lt;?js     <strong>_buf += _context['header_part'];</strong> ?&gt;
 &lt;?js <strong>} else {</strong> ?&gt;
    &lt;img src="img/logo.png" alt="logo" ?&gt;
 &lt;?js <strong>}</strong> ?&gt;

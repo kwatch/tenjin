@@ -358,8 +358,8 @@ var _buf = '';  _buf += '<html>\n\
     <table>\n';
  {{*for (var i = 0, n = items.length; i < n; i++) {*}}
     {{*var color = i % 2 == 1 ? '#FFCCCC' : '#CCCCFF';*}}
- _buf += '      <tr bgcolor="' + ({{*color*}}) + '">\n\
-        <td>' + ({{*i+1*}}) + '</td>\n\
+ _buf += '      <tr bgcolor="' + toStr({{*color*}}) + '">\n\
+        <td>' + toStr({{*i+1*}}) + '</td>\n\
         <td>' + {{*escapeXml(items[i])*}} + '</td>\n\
       </tr>\n';
  }

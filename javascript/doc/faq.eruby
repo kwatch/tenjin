@@ -1099,9 +1099,9 @@ $ [%=command%] -s ex[%=n%].[%=suffix%]
 var _buf = '';  _buf += '<?xml version="1.0 ?>\n';
  var x = _context['x']; var y = _context['y'];
  _buf += '<p>\n\
-  x = ' + (x) + '\n\
-  y = ' + (y) + '\n\
-  z = ' + (z) + '\n\
+  x = ' + toStr(x) + '\n\
+  y = ' + toStr(y) + '\n\
+  z = ' + toStr(z) + '\n\
 </p>\n';
 _buf
 .====================

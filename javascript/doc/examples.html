@@ -14,6 +14,7 @@
 
     <div align="left"><h1>jsTenjin Examples</h1></div>
     <div align="left">
+      release:     $Release$<br>
       last update: $Date$<br>
     </div>
 
@@ -53,21 +54,21 @@ Template: 'table.jshtml'</div>
 <div class="terminal_caption">
 Convert into Ruby script:</div>
 <pre class="terminal">$ jstenjin -a convert table.jshtml
-var _buf = [];  _buf.push('&lt;html&gt;\n\
+var _buf = '';  _buf += '&lt;html&gt;\n\
   &lt;body&gt;\n\
-    &lt;h1&gt;', <strong>escapeXml(title)</strong>, '&lt;/h1&gt;\n\
-    &lt;table&gt;\n');
+    &lt;h1&gt;' + <strong>escapeXml(title)</strong> + '&lt;/h1&gt;\n\
+    &lt;table&gt;\n';
  <strong>for (var i = 0, n = items.length; i &lt; n; i++) {</strong>
     <strong>var color = i % 2 == 1 ? '#FFCCCC' : '#CCCCFF';</strong>
- _buf.push('      &lt;tr bgcolor="', <strong>color</strong>, '"&gt;\n\
-        &lt;td&gt;', <strong>i+1</strong>, '&lt;/td&gt;\n\
-        &lt;td&gt;', <strong>escapeXml(items[i])</strong>, '&lt;/td&gt;\n\
-      &lt;/tr&gt;\n');
+ _buf += '      &lt;tr bgcolor="' + (<strong>color</strong>) + '"&gt;\n\
+        &lt;td&gt;' + (<strong>i+1</strong>) + '&lt;/td&gt;\n\
+        &lt;td&gt;' + <strong>escapeXml(items[i])</strong> + '&lt;/td&gt;\n\
+      &lt;/tr&gt;\n';
  }
- _buf.push('    &lt;/table&gt;\n\
+ _buf += '    &lt;/table&gt;\n\
   &lt;/body&gt;\n\
-&lt;/html&gt;\n');
-_buf.join('')
+&lt;/html&gt;\n';
+_buf
 </pre>
 <a name="table/table.js"></a>
 <div class="program_caption">

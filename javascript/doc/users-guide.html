@@ -14,6 +14,7 @@
 
     <div align="left"><h1>jsTenjin User's Guide</h1></div>
     <div align="left">
+      release:     $Release$<br>
       last update: $Date$<br>
     </div>
 
@@ -113,13 +114,13 @@ File 'ex.jshtml':</div>
 <div class="terminal_caption">
 Result of covertion into JavaScript script:</div>
 <pre class="terminal">$ jstenjin -s ex.jshtml
-var _buf = [];  _buf.push('Hello ', name, '!\n\
-&lt;ul&gt;\n');
+var _buf = '';  _buf += 'Hello ' + (name) + '!\n\
+&lt;ul&gt;\n';
  for (var i = 0, n = items.length; i &lt; n; i++) {
- _buf.push(' &lt;li&gt;', escapeXml(items[i]), '&lt;/li&gt;\n');
+ _buf += ' &lt;li&gt;' + escapeXml(items[i]) + '&lt;/li&gt;\n';
  }
- _buf.push('&lt;/ul&gt;\n');
-_buf.join('')
+ _buf += '&lt;/ul&gt;\n';
+_buf
 </pre>
 <a name="ex.result"></a>
 <div class="terminal_caption">
@@ -429,19 +430,19 @@ Result:</div>
 <div class="terminal_caption">
 Result:</div>
 <pre class="terminal">$ jstenjin <strong>-s</strong> example1.jshtml
-var _buf = [];  _buf.push('&lt;table&gt;\n\
-  &lt;tbody&gt;\n');
+var _buf = '';  _buf += '&lt;table&gt;\n\
+  &lt;tbody&gt;\n';
  <strong>var items = ['&lt;foo&gt;', 'bar&amp;bar', '"baz"'];</strong>
  <strong>for (var i = 0, n = items.length; i &lt; n; i++) {</strong>
      <strong>var item = items[i];</strong>
- _buf.push('    &lt;tr&gt;\n\
-      &lt;td&gt;', item, '&lt;/td&gt;\n\
-      &lt;td&gt;', escapeXml(item), '&lt;/td&gt;\n\
-    &lt;/tr&gt;\n');
+ _buf += '    &lt;tr&gt;\n\
+      &lt;td&gt;' + (item) + '&lt;/td&gt;\n\
+      &lt;td&gt;' + escapeXml(item) + '&lt;/td&gt;\n\
+    &lt;/tr&gt;\n';
  <strong>}</strong>
- _buf.push('  &lt;tbody&gt;\n\
-&lt;/table&gt;\n');
-_buf.join('')
+ _buf += '  &lt;tbody&gt;\n\
+&lt;/table&gt;\n';
+_buf
 </pre>
 <ul type="disc">
 <li>Variable <code>_buf</code> is a array.
@@ -467,15 +468,15 @@ File 'example2.jshtml'</div>
 <div class="terminal_caption">
 Result:</div>
 <pre class="terminal">$ jstenjin -s example2.jshtml
-<strong>var _buf = [];</strong>  var list = [1, 2, 3];
+<strong>var _buf '';</strong>  var list = [1, 2, 3];
  for (var i = 0, n = list.length; i &lt; n; i++) {
- _buf.push('&lt;p&gt;', list[i], '&lt;/p&gt;\n');
+ _buf += '&lt;p&gt;' + (list[i]) + '&lt;/p&gt;\n';
  }
-<strong>_buf.join('')</strong>
+<strong>_buf</strong>
 $ jstenjin -s<strong>b</strong> example2.jshtml
  var list = [1, 2, 3];
  for (var i = 0, n = list.length; i &lt; n; i++) {
- _buf.push('&lt;p&gt;', list[i], '&lt;/p&gt;\n');
+ _buf += '&lt;p&gt;' + (list[i]) + '&lt;/p&gt;\n';
  }
 </pre>
 <p>Command-line option '-S' also show converted JavaScript code but it doesn't print text part.
@@ -485,19 +486,19 @@ This is useful to check JavaScript code for debugging.
 <div class="terminal_caption">
 Result:</div>
 <pre class="terminal">$ jstenjin <strong>-S</strong> example1.jshtml
-var _buf = []; 
+var _buf = ''; 
 
  var items = ['&lt;foo&gt;', 'bar&amp;bar', '"baz"'];
  for (var i = 0, n = items.length; i &lt; n; i++) {
      var item = items[i];
 
-           _buf.push(item);
-           _buf.push(escapeXml(item));
+           _buf += (item);
+           _buf += escapeXml(item);
 
  }
 
 
-_buf.join('')
+_buf
 </pre>
 <p>In addition, the following command-line options are available.
 </p>
@@ -527,7 +528,7 @@ _buf.join('')
 <div class="terminal_caption">
 Result:</div>
 <pre class="terminal">$ jstenjin <strong>-SUNX</strong> example1.jshtml
-    1:  var _buf = []; 
+    1:  var _buf = ''; 
 
     3:   var items = ['&lt;foo&gt;', 'bar&amp;bar', '"baz"'];
     4:   for (var i = 0, n = items.length; i &lt; n; i++) {
@@ -535,7 +536,7 @@ Result:</div>
 
    10:   }
 
-   13:  _buf.join('')
+   13:  _buf
 </pre>
 <br>
 
@@ -1043,11 +1044,11 @@ File 'example10.jshtml':</div>
 </p>
 <a name="example10_template_args.result"></a>
 <pre class="terminal">$ jstenjin -s example10.jshtml
-var _buf = [];  _buf.push('&lt;?xml version="1.0"?&gt;\n');
+var _buf = '';  _buf += '&lt;?xml version="1.0"?&gt;\n';
 <strong> var title = _context['title']; var name = _context['name'];</strong>
- _buf.push('&lt;h1&gt;', escapeXml(title), '&lt;/h1&gt;\n\
-&lt;p&gt;Hello ', escapeXml(name), '!&lt;/p&gt;\n');
-_buf.join('')
+ _buf += '&lt;h1&gt;' + escapeXml(title) + '&lt;/h1&gt;\n\
+&lt;p&gt;Hello ' + escapeXml(name) + '!&lt;/p&gt;\n';
+_buf
 </pre>
 <p>If template arguments are specified, other variables passed by context object are not set.
 </p>
@@ -1137,14 +1138,14 @@ In the result, rendering speed becomes to be much faster.
 Translated script code:</div>
 <pre class="terminal">$ jstenjin <strong>--preprocess</strong> -sb example12.jshtml
  var chk = {};  chk[params.state] = ' selected="selected"';
- _buf.push('&lt;select name="state"&gt;\n\
+ _buf += '&lt;select name="state"&gt;\n\
   &lt;option value=""&gt;-&lt;/option&gt;\n\
-  &lt;option value="CA"', chk.CA||'', '&gt;California&lt;/option&gt;\n\
-  &lt;option value="FL"', chk.FL||'', '&gt;Florida&lt;/option&gt;\n\
-  &lt;option value="HI"', chk.HI||'', '&gt;Hawaii&lt;/option&gt;\n\
-  &lt;option value="NY"', chk.NY||'', '&gt;New York&lt;/option&gt;\n\
-  &lt;option value="TX"', chk.TX||'', '&gt;Texas&lt;/option&gt;\n\
-&lt;/select&gt;\n');
+  &lt;option value="CA"' + (chk.CA||'') + '&gt;California&lt;/option&gt;\n\
+  &lt;option value="FL"' + (chk.FL||'') + '&gt;Florida&lt;/option&gt;\n\
+  &lt;option value="HI"' + (chk.HI||'') + '&gt;Hawaii&lt;/option&gt;\n\
+  &lt;option value="NY"' + (chk.NY||'') + '&gt;New York&lt;/option&gt;\n\
+  &lt;option value="TX"' + (chk.TX||'') + '&gt;Texas&lt;/option&gt;\n\
+&lt;/select&gt;\n';
 </pre>
 <p>If you have errors on preprocessing, you should check source script by <code>-Ps</code> option<sup>(<a href="#fnref:1" name="fnlink:1">*1</a>)</sup>.
 </p>
@@ -1174,7 +1175,7 @@ Preprocessed template:</div>
 <div class="terminal_caption">
 Translated script code:</div>
 <pre class="terminal">$ jstenjin <strong>--preprocess</strong> -sb example13.jshtml
- _buf.push('&lt;a href="/items/show/', params["id"], '"&gt;Show ', escapeXml(params["name"]), '&lt;/a&gt;\n');
+ _buf += '&lt;a href="/items/show/' + (params["id"]) + '"&gt;Show ' + escapeXml(params["name"]) + '&lt;/a&gt;\n';
 </pre>
 <p>There are many web-application framework and they provides helper functions.
 These helper functions are divided into two groups.
@@ -1359,13 +1360,13 @@ print(output);
 Result:</div>
 <pre class="terminal">$ js example14.js
 ---- js code ----
-var _buf = [];  _buf.push('&lt;h1&gt;', title, '&lt;/h1&gt;\n\
-&lt;ul&gt;\n');
+var _buf = '';  _buf += '&lt;h1&gt;' + (title) + '&lt;/h1&gt;\n\
+&lt;ul&gt;\n';
  for (var i = 0, n = items.length; i &lt; n; i++) {
- _buf.push(' &lt;li&gt;', escapeXml(items[i]), '&lt;/li&gt;\n');
+ _buf += ' &lt;li&gt;' + escapeXml(items[i]) + '&lt;/li&gt;\n';
  }
- _buf.push('&lt;/ul&gt;\n');
-_buf.join('')
+ _buf += '&lt;/ul&gt;\n';
+_buf
 
 ---- output ----
 &lt;h1&gt;jsTenjin Example&lt;/h1&gt;
@@ -1455,7 +1456,7 @@ startPlaceholder(varname), stopPlaceholder() </b></dt>
 </pre>
     is equivarent to:
 <pre class="terminal">&lt;?js if (typeof(_context['foo']) != 'undefined') { ?&gt;
-&lt;?js     _buf.push(_contet['foo']); ?&gt;
+&lt;?js     _buf += _contet['foo']; ?&gt;
 &lt;?js } else { ?&gt;
   ...
 &lt;?js } ?&gt;
@@ -1637,13 +1638,13 @@ print(output);
 <div class="terminal_caption">
 Result:</div>
 <pre class="terminal">$ js example15.js
-var _buf = [];  _buf.push('&lt;h1&gt;', title, '&lt;/h1&gt;\n\
-&lt;ul&gt;\n');
+var _buf = '';  _buf += '&lt;h1&gt;' + (title) + '&lt;/h1&gt;\n\
+&lt;ul&gt;\n';
  for (var i = 0, n = items.length; i &lt; n; i++) {
- _buf.push(' &lt;li&gt;', <strong>(items[i]).escapeHTML()</strong>, '&lt;/li&gt;\n');
+ _buf += ' &lt;li&gt;' + <strong>(items[i]).escapeHTML()</strong> + '&lt;/li&gt;\n';
  }
- _buf.push('&lt;/ul&gt;\n');
-_buf.join('')
+ _buf += '&lt;/ul&gt;\n';
+_buf
 
 &lt;h1&gt;jsTenjin Example&lt;/h1&gt;
 &lt;ul&gt;
