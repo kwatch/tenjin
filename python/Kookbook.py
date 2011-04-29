@@ -84,6 +84,7 @@ def _py2to3(s):
 @recipe
 @ingreds("lib2/tenjin.py", "lib3/tenjin.py")
 def generate(c):
+    """generate 'lib{2,3}/tenjin.py' from 'lib/tenjin.py'"""
     pass
 
 
