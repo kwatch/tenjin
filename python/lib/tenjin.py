@@ -544,6 +544,7 @@ def _dummy():
 html = create_module('tenjin.html', _dummy, helpers=helpers, _escaped=escaped)
 helpers.escape = html.escape_html
 helpers.html = html   # for backward compatibility
+sys.modules['tenjin.helpers.html'] = html
 
 
 ##
