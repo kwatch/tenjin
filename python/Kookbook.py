@@ -12,7 +12,7 @@ import sys, os, re
 from glob import glob
 from kook.utils import read_file, write_file
 
-release = prop('release', '1.0.1')
+release = prop('release', '1.0.2')
 #package = prop('package', 'pyTenjin')
 package = prop('package', 'Tenjin')
 copyright = prop('copyright', "copyright(c) 2007-2011 kuwata-lab.com all rights reserved.")
@@ -37,7 +37,7 @@ python_binaries = [
     ('2.7', '/usr/local/python/2.7.1/bin/python'),
     ('3.0', '/usr/local/python/3.0.1/bin/python'),
     ('3.1', '/usr/local/python/3.1/bin/python'),
-    ('3.2', '/usr/local/python/3.2rc1/bin/python'),
+    ('3.2', '/usr/local/python/3.2.0/bin/python'),
 ]
 
 
