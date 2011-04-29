@@ -1,7 +1,24 @@
 =======
 CHANGES
 =======
-	
+
+Release 1.0.2 (2011-04-29)
+--------------------------
+
+* [Bugfix]
+
+  * Set 'sys.modules["tenjin.helpers.html"]' for backward compatibility
+
+  * Fix wrong url on document.
+
+
+Release 1.0.1 (2010-02-22)
+--------------------------
+
+* [Bugfix]
+
+  * Add 'new_cycle' into 'tenjin.helpers.__al__'
+
 
 Release 1.0.0 (2010-02-22)
 --------------------------
