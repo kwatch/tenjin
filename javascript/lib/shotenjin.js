@@ -215,3 +215,16 @@ if (typeof(jQuery) !== "undefined") {
 		}
 	});
 }
+
+
+/*
+ *  for node.js
+ */
+if (typeof(exports) == 'object') {  // node.js
+	//(function() {
+	//	for (var k in Shotenjin) {
+	//		exports[k] = Shotenjin[k];
+	//	}
+	//})();
+	exports.Shotenjin = Shotenjin;
+}
