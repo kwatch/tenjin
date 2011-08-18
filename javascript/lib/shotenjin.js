@@ -74,6 +74,7 @@ Shotenjin.Template.prototype = {
 
 	convert: function(input) {
 		this.args = null;
+		input = input.replace(/<!--\?js/g, '<?js').replace(/\?-->/g, '?>');  // for Chrome
 		return this.script = this.preamble + this.parseStatements(input) + this.postamble;
 	},
 
@@ -177,3 +178,40 @@ Shotenjin.render = function(template_str, context) {
 	var output = template.render(context);
 	return output;
 };
+
+
+/*
+ * jQuery plugin
+ *
+ * usage:
+ *    <div id="template" style="display:none">
+ *         <ul>
+ *         <?js for (var i = 0, n = items.length; i < n; i++) { ?>
+ *           <li>${i}: ${items[i]}</li>
+ *         <?js } ?>
+ *         </ul>
+ *    </div>
+ *    <div id="placeholder"></div>
+ *
+ *    <script>
+ *      var context = {
+ *        items: ["A","B","C"]
+ *      };
+ *      var html = $('#template').renderWith(context, true);          // return html string
+ *      $('#template').renderWith(context, '#placeholder');           // replace '#placeholder' content by html
+ *      $('#template').renderWith(context).appendTo('#placeholder');  // append html into into #placeholder
+ *    </script>
+ *
+ */
+if (typeof(jQuery) !== "undefined") {
+	jQuery.fn.extend({
+		renderWith: function renderWith(context, option) {
+			var tmpl = this.html();
+			tmpl = tmpl.replace(/^\s*\<\!\-\-/, '').replace(/\-\-\>\s*$/, '');
+			var html = Shotenjin.render(tmpl, context);
+			if (option === true) return html;
+			if (option) return jQuery(option).html(html);
+			return jQuery(html);
+		}
+	});
+}

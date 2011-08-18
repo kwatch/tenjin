@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script type="text/javascript" src="jquery-1.5.js"></script>
+    <script type="text/javascript" src="../lib/shotenjin.js"></script>
+    <style>
+      dt {
+        font-size: large;
+        color: #9C9;
+      }
+    </style>
+  </head>
+  <body>
+
+    <section>
+      <h1>Shotenjin.render()</h1>
+
+      <dl>
+
+        <dt>template</dt>
+        <dd>
+          <div id="template1" style="display:none">
+            <ul>
+              <?js for (var i = 0, n = items.length; i < n; i++) { ?>
+              <li>#{i+1}: ${items[i]}</li>
+              <?js } ?>
+            </ul>
+          </div>
+        </dd>
+
+        <dt>placeholder</dt>
+        <dd id="placeholder1"></dd>
+
+        <dt>result</dt>
+        <dd id="result1"></dd>
+
+      </dl>
+
+      <script>
+        (function() {    /// render
+          var context = {
+            items: ['Haruhi', 'Mikuru', 'Yuki', null, undefined]
+          };
+          var elem = document.getElementById('template1');
+          var tmpl = elem.innerHTML;
+          var html = Shotenjin.render(tmpl, context);
+          document.getElementById('placeholder1').innerHTML = html;
+        })();
+        (function() {   /// test
+          var html = document.getElementById('placeholder1').innerHTML;
+          var failed = false;
+          var elem = document.getElementById('result1');
+          if (! html.match(/1: Haruhi/)) {
+            elem.innerHTML = 'Failed';
+          }
+          else if (! html.match(/2: Mikuru/)) {
+            elem.innerHTML = 'Failed';
+          }
+          else {
+            elem.innerHTML = 'OK';
+          }
+        })();
+      </script>
+    </section>
+
+    <section>
+      <h1>$().renderWith()</h1>
+
+      <dl>
+
+        <dt>template</dt>
+        <dd>
+          <div id="template2" style="display:none">
+            <ul>
+              <?js for (var i = 0, n = items.length; i < n; i++) { ?>
+              <li>#{i+1}: ${items[i]}</li>
+              <?js } ?>
+            </ul>
+          </div>
+        </dd>
+
+        <dt>placeholder</dt>
+        <dd id="placeholder2"></dd>
+
+        <dt>result</dt>
+        <dd id="result2"></dd>
+
+      </dl>
+
+      <script>
+        (function() {
+          /// context data
+          var context = {
+            items: ['Haruhi', 'Mikuru', 'Yuki', null, undefined]
+          };
+          /// render and return string
+          var html = $('#template2').renderWith(context, true);
+          if      (! html.match(/1: Haruhi/)) { elem.html("<b>Failed: '1: Haruhi' expected.</b>"); return; }
+          else if (! html.match(/2: Mikuru/)) { elem.html("<b>Failed: '2: Mikuru' expected.</b>"); return; }
+          else if (! html.match(/3: Yuki/))   { elem.html("<b>Failed: '3: Yuki' expected.</b>"); return; }
+          /// render and replace content
+          $('#template2').renderWith(context, '#placeholder2');
+          var elem = $('#placeholder2');
+          html = elem.html();
+          if      (! html.match(/1: Haruhi/)) { elem.html("<i>Failed: '1: Haruhi' expected.</i>"); return; }
+          else if (! html.match(/2: Mikuru/)) { elem.html("<i>Failed: '2: Mikuru' expected.</i>"); return; }
+          else if (! html.match(/3: Yuki/))   { elem.html("<i>Failed: '3: Yuki' expected.</i>"); return; }
+          /// render and return jQuery object
+          var obj = $('#template2').renderWith(context);
+          if (typeof(obj) !== 'object') { throw "renderWith() should return jQuery object."; };
+          $('#template2').renderWith(context).appendTo('#placeholder2');
+          html = document.getElementById('placeholder2').innerHTML;
+          var arr = html.match(/1: Haruhi/g);
+          if (arr.length !== 2) { throw "failed to append element." };
+          ///
+          $('#result2').html('<b>OK</b>');
+        })();
+      </script>
+
+    </section>
+
+  </body>
+</html>
