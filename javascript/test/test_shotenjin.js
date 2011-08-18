@@ -1,14 +1,23 @@
-load('../lib/shotenjin.js');
-load('oktest.js');
+if (typeof(require) == 'function' && typeof(require.resolve) == 'function') { // node.js
+	var Shotenjin = require('../lib/shotenjin.js').Shotenjin;
+	var oktest = require('oktest');
+}
+else {
+	load('../lib/shotenjin.js');
+	load('oktest.js');
+}
 
-var target = Oktest.target;
-var ok = Oktest.ok;
+var topic   = oktest.topic,
+    spec    = oktest.spec,
+    ok      = oktest.ok,
+    NG      = oktest.NG,
+    precond = oktest.precond;
 
-target('Shotenjin.Tenjin', function(t) {
+topic('Shotenjin.Tenjin', function(t) {
 
-	target('#convert()', function(t) {
+	topic('#convert()', function(t) {
 
-		t.spec("converts text into JS coode.", function(s) {
+		spec("converts text into JS coode.", function() {
 			var input = [
 				'<table>',
 				'</table>',
@@ -22,7 +31,7 @@ target('Shotenjin.Tenjin', function(t) {
 			ok (actual).eq(expected);
 		});
 
-		t.spec("converts embedded expressions into JS coode.", function(s) {
+		spec("converts embedded expressions into JS coode.", function() {
 			var input = [
 				'<td>#{i}</td>',
 				'<td>${item}</td>',
@@ -36,7 +45,7 @@ target('Shotenjin.Tenjin', function(t) {
 			ok (actual).eq(expected);
 		});
 
-		t.spec("converts embedded statements into JS coode.", function(s) {
+		spec("converts embedded statements into JS coode.", function() {
 			var input = [
 				'<table>',
 				'  <?js for (var i = 0, n = items.length; i < n; ) { ?>',
@@ -64,7 +73,7 @@ target('Shotenjin.Tenjin', function(t) {
 			ok (actual).eq(expected);
 		});
 
-		t.spec("converts //@ARGS into JS code.", function(s) {
+		spec("converts //@ARGS into JS code.", function() {
 			var input = [
 				'<?js //@ARGS x, y ?>',
 				'<p>x: #{x}</p>',
@@ -80,7 +89,7 @@ target('Shotenjin.Tenjin', function(t) {
 			ok (actual).eq(expected);
 		});
 
-		t.spec("converts only first appeared //@ARGS.", function(s) {
+		spec("converts only first appeared //@ARGS.", function() {
 			var input = [
 				'<?js //@ARGS x, y ?>',
 				'<?js //@ARGS z ?>',
@@ -100,9 +109,9 @@ target('Shotenjin.Tenjin', function(t) {
 
 	});
 
-	target('#render()', function(t) {
+	topic('#render()', function(t) {
 
-		t.spec("renders template with context data.", function(s) {
+		spec("renders template with context data.", function() {
 			var input = [
 				'<table>',
 				'  <?js for (var i = 0, n = items.length; i < n; ) { ?>',
@@ -135,7 +144,7 @@ target('Shotenjin.Tenjin', function(t) {
 			ok (actual).eq(expected);
 		});
 
-		t.spec("renders template with arguments.", function(s) {
+		spec("renders template with arguments.", function() {
 			var input = [
 				'<?js //@ARGS x, y ?>',
 				'<?js //@ARGS z ?>',
@@ -151,7 +160,7 @@ target('Shotenjin.Tenjin', function(t) {
 			ok (actual).eq(expected);
 		});
 
-		t.spec("throws error if undeclared variable appeared.", function(s) {
+		spec("throws error if undeclared variable appeared.", function() {
 			var input = [
 				'<?js //@ARGS x, y ?>',
 				'<?js //@ARGS z ?>',
@@ -166,7 +175,7 @@ target('Shotenjin.Tenjin', function(t) {
 			var t = new Shotenjin.Template(input);
 			var context = {x: 'Haruhi', y: 'Sasaki', 'z': 'John'};
 			var fn = function() { t.render(context); };
-			ok (fn).throws();
+			ok (fn).throws(ReferenceError, 'z is not defined');
 		});
 
 	});
@@ -174,11 +183,11 @@ target('Shotenjin.Tenjin', function(t) {
 });
 
 
-target('Shotenjin', function(t) {
+topic('Shotenjin', function(t) {
 
-	target('.render()', function(t) {
+	topic('.render()', function(t) {
 
-		t.spec("renders template string with context data.", function(s) {
+		spec("renders template string with context data.", function() {
 			var input = [
 				'<?js //@ARGS items ?>',
 				'<ul>',
@@ -199,8 +208,15 @@ target('Shotenjin', function(t) {
 		});
 
 	});
-		   
+
 });
 
 
-Oktest.run_all();
+if (typeof(require) == 'function' && typeof(require.resolve) == 'function') { // node.js
+	if (require.main === module) {
+		oktest.main();
+	}
+}
+else {
+	oktest.main();
+}
