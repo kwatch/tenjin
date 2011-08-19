@@ -519,9 +519,9 @@ topic('Tenjin.Engine', function() {
       var original_nodejs = (
         ''
         + 'function (_context) {\n'
-        + '		this.compile(_context);\n'
-        + '		return this.render(_context);\n'
-        + '	}'
+        + '    this.compile(_context);\n'
+        + '    return this.render(_context);\n'
+        + '  }'
       );
       var original = original_nodejs;
       //
