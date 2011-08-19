@@ -1,6 +1,4 @@
-#!/usr/bin/env node --strict_mode
-//#!/usr/bin/env js -s
-//#!/usr/bin/env java -jar /usr/local/java/js.jar -strict
+#!/usr/bin/env node
 
 /*
  * $Copyright$
@@ -25,59 +23,32 @@
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-// $Rev$
-// $Release: 0.0.0 $
+/// $Release: 0.0.0 $
 
+"use strict";
 
-var TENJIN_JS = 'tenjin.js';         // ex. '/usr/local/lib/tenjin.js'
+var Tenjin = require('tenjin');
+var print = require('util').print;
+var TENJIN_JS = 'tenjin.js';
 
-
-/////////////////////////////////
-
-var is_nodejs = typeof(require) == 'function' && typeof(require.resolve) == 'function';
-
-/// load tenjin.js
-if (is_nodejs)
-	TENJIN_JS = process.env.TENJIN_JS || TENJIN_JS;
-else if (typeof(java) == 'object' && typeof(Packages) == 'function') // Rhino
-	TENJIN_JS = String(java.lang.System.getenv('TENJIN_JS') || TENJIN_JS);
-else if (typeof(environment) == 'object')                       // SpiderMonkey
-	TENJIN_JS = environment.TENJIN_JS || TENJIN_JS;
-if (is_nodejs) {
-	var Tenjin = require(TENJIN_JS);
-}
-else {
-	load(TENJIN_JS);  // SpiderMonkey or Rhino
-}
-
-/// compatibility
-if (is_nodejs) {
-	function print(arg) {
-		console.log(arg);
-	}
-	var system = require('system');
-	var arguments = [];
-	for (var i = 1, n = system.args.length; ++i < n; ) {
-		arguments.push(system.args[i]);
-	}
-}
 
 /// main class
 Tenjin.Main = function() {};
 
-Tenjin.Main.main = function(args) {
+Tenjin.Main.main = function(argv) {
+	var args = argv.slice(2);
 	try {
 		(new Tenjin.Main(args)).execute(args);
 		return 0;
 	}
 	catch (ex) {
-		print("*** Error:");
+		print("*** Error:\n");
 		if (typeof(ex) == 'string') {
-			print(ex);
+			print(ex); print("\n");
 		}
 		else {
 			var s = Tenjin.Main.prototype.exceptionToString(ex);
-			print(s);
+			print(s); print("\n");
 		}
 		return -1;
 	}
@@ -114,19 +85,19 @@ Tenjin.Main.prototype.execute = function(args) {
 	var filenames  = tuple[2];
 
 	if (opts['D']) {
-		print("** opts = " + Tenjin.inspect(opts));
-		print("** properties = " + Tenjin.inspect(properties));
-		print("** filenames = " + Tenjin.inspect(filenames));
+		print("** opts = " + Tenjin.inspect(opts) + "\n");
+		print("** properties = " + Tenjin.inspect(properties) + "\n");
+		print("** filenames = " + Tenjin.inspect(filenames) + "\n");
 		return 0;
 	}
 
 	/// help, version
 	if (opts['h'] || properties['help']) {
-		print(this.chomp(this.usage()));
+		print(this.usage());
 		return 0;
 	}
 	if (opts['v'] || properties['version']) {
-		print(this.version);
+		print(this.version + "\n");
 		return 0;
 	}
 
@@ -172,7 +143,7 @@ Tenjin.Main.prototype.execute = function(args) {
 	}
 	if (opts['c']) {
 		var s2 = opts['c'];
-		s2 = s2.match(/^\{.*\}$/) ? s2 : '{' + s2 + '};'
+		s2 = s2.match(/^\{.*\}$/) ? s2 : '{' + s2 + '};';
 		var obj2;
 		eval("obj2 = " + s2 + ";");
 		for (var p2 in obj2) { context[p2] = obj2[p2]; }
@@ -204,8 +175,8 @@ Tenjin.Main.prototype.execute = function(args) {
 		properties['path'] = properties['path'].split(/,/);
 	}
 	if (properties['templateclass']) {
-		classname = properties['templateclass'];
-		klass = eval(classname);
+		var classname = properties['templateclass'];
+		var klass = eval(classname);
 		if (! klass) {
 			throw classname + ": class not found.";
 		}
@@ -249,11 +220,11 @@ Tenjin.Main.prototype.execute = function(args) {
 		}
 		if (output) {
 			output = this.manipulateOutput(output, opts);
-			print(this.chomp(output));
+			print(output);
 		}
 	}
 
-	return 0
+	return 0;
 };
 
 Tenjin.Main.prototype.checkSyntax = function(filename, script, opts, atline) {
@@ -421,4 +392,4 @@ Examples:\n\
 Tenjin.Main.prototype.version = '$Release$';
 
 /// invoke command
-Tenjin.Main.main(arguments);
+Tenjin.Main.main(process.argv);
