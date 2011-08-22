@@ -22,8 +22,9 @@
  */
 
 /*
- * $Rev$
  * $Release: $
+ * $Copyright: copyright(c) 2007-2011 kuwata-lab.com all rights reserved $
+ * $License: MIT License $
  */
 
 "use strict";
