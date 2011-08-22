@@ -21,7 +21,7 @@ var Shotenjin = {
   },
 
   toStr: function(s) {
-    if (s == null) return "";
+    if (s == null) return '';
     return s;
   },
 
@@ -34,8 +34,8 @@ var Shotenjin = {
   // ex. {x: 10, y: 'foo'}
   //       => "var x = _context['x'];\nvar y = _conntext['y'];\n"
   _setlocalvarscode: function(obj) {
-    var sb = "";
-    for (var p in obj) sb += "var " + p + " = _context['" + p + "'];\n";
+    var sb = "", p;
+    for (p in obj) sb += "var " + p + " = _context['" + p + "'];\n";
     return sb;
   }
 
@@ -55,9 +55,8 @@ Shotenjin.Template = function(input, properties) {
     properties = input;
   }
   if (properties) {
-    var p = properties;
-    if (p['tostrfunc'])  this.escapefunc = p['tostrfunc'];
-    if (p['escapefunc']) this.escapefunc = p['escapefunc'];
+    if (properties['tostrfunc'])  this.escapefunc = properties['tostrfunc'];
+    if (properties['escapefunc']) this.escapefunc = properties['escapefunc'];
   }
   if (input) this.convert(input);
 };
@@ -79,14 +78,16 @@ Shotenjin.Template.prototype = {
   },
 
   parseStatements: function(input) {
-    var sb = '', pos = 0;
-    var regexp = /(^[ \t]*)?<\?js(\s(?:.|\n)*?) ?\?>([ \t]*\r?\n)?/mg;
-    var ended_with_nl = true, remained = null;
-    var m;
+    var sb = '',
+        pos = 0,
+        regexp = /(^[ \t]*)?<\?js(\s(?:.|\n)*?) ?\?>([ \t]*\r?\n)?/mg,
+        ended_with_nl = true,
+        remained = null,
+        m, lspace, stmt, rspace, is_bol, text, rest;
     while ((m = regexp.exec(input)) != null) {
-      var lspace = m[1], stmt = m[2], rspace = m[3];
-      var is_bol = lspace || ended_with_nl;
-      var text = input.substring(pos, m.index);
+      lspace = m[1]; stmt = m[2]; rspace = m[3];
+      is_bol = lspace || ended_with_nl;
+      text = input.substring(pos, m.index);
       pos = m.index + m[0].length;
       if (remained) {
         text = remained + text;
@@ -103,7 +104,7 @@ Shotenjin.Template.prototype = {
       stmt = this._parseArgs(stmt);
       sb += stmt;
     }
-    var rest = pos == 0 ? input : input.substring(pos);
+    rest = pos == 0 ? input : input.substring(pos);
     sb += this.parseExpressions(rest);
     return sb;
   },
@@ -111,14 +112,15 @@ Shotenjin.Template.prototype = {
   args: null,
 
   _parseArgs: function(stmt) {
+    var m, sb, arr, args, i, n, arg;
     if (this.args !== null) return stmt;
-    var m = stmt.match(/^(\s*)\/\/@ARGS:?[ \t]+(.*?)(\r?\n)?$/);
+    m = stmt.match(/^(\s*)\/\/@ARGS:?[ \t]+(.*?)(\r?\n)?$/);
     if (! m) return stmt;
-    var sb = m[1];
-    var arr = m[2].split(/,/);
-    var args = [];
-    for (var i = 0, n = arr.length; i < n; i++) {
-      var arg = arr[i].replace(/^\s+/, '').replace(/\s+$/, '');
+    sb = m[1];
+    arr = m[2].split(/,/);
+    args = [];
+    for (i = 0, n = arr.length; i < n; i++) {
+      arg = arr[i].replace(/^\s+/, '').replace(/\s+$/, '');
       args.push(arg);
       sb += " var " + arg + "=_context." + arg + ";";
     }
@@ -128,22 +130,22 @@ Shotenjin.Template.prototype = {
   },
 
   parseExpressions: function(input) {
+    var sb, regexp, pos, m, text, s, indicator, expr, funcname, rest, is_newline;
     if (! input) return '';
-    var sb = " _buf += ";
-    var regexp = /([$#])\{(.*?)\}/g;
-    var pos = 0;
-    var m;
+    sb = " _buf += ";
+    regexp = /([$#])\{(.*?)\}/g;
+    pos = 0;
     while ((m = regexp.exec(input)) != null) {
-      var text = input.substring(pos, m.index);
-      var s = m[0];
+      text = input.substring(pos, m.index);
+      s = m[0];
       pos = m.index + s.length;
-      var indicator = m[1];
-      var expr = m[2];
-      var funcname = indicator == "$" ? this.escapefunc : this.tostrfunc;
+      indicator = m[1];
+      expr = m[2];
+      funcname = indicator == "$" ? this.escapefunc : this.tostrfunc;
       sb += "'" + this._escapeText(text) + "' + " + funcname + "(" + expr + ") + ";
     }
-    var rest = pos == 0 ? input : input.substring(pos);
-    var is_newline = input.charAt(input.length-1) == "\n";
+    rest = pos == 0 ? input : input.substring(pos);
+    is_newline = input.charAt(input.length-1) == "\n";
     sb += "'" + this._escapeText(rest, true) + (is_newline ? "';\n" : "';");
     return sb;
   },
@@ -172,9 +174,10 @@ Shotenjin.Template.prototype = {
  *  convenient function
  */
 Shotenjin.render = function(template_str, context) {
-  var template = new Shotenjin.Template();
+  var template, output;
+  template = new Shotenjin.Template();
   template.convert(template_str);
-  var output = template.render(context);
+  output = template.render(context);
   return output;
 };
 
@@ -205,9 +208,10 @@ Shotenjin.render = function(template_str, context) {
 if (typeof(jQuery) !== "undefined") {
   jQuery.fn.extend({
     renderWith: function renderWith(context, option) {
-      var tmpl = this.html();
+      var tmpl, html;
+      tmpl = this.html();
       tmpl = tmpl.replace(/^\s*\<\!\-\-/, '').replace(/\-\-\>\s*$/, '');
-      var html = Shotenjin.render(tmpl, context);
+      html = Shotenjin.render(tmpl, context);
       if (option === true) return html;
       if (option) return jQuery(option).html(html);
       return jQuery(html);
