@@ -342,6 +342,9 @@ Tenjin.Template = function(filename, properties) {
     else if (! this.preamble)   this.preamble = '';
     if (this.postamble == true) delete(this.postamble);
     else if (! this.postamble)  this.postamble = '';
+    if (properties.tostrfunc) {
+      this.tostrfunc = properties.tostrfunc;
+    }
     if (properties.escapefunc) {
       var funcname = properties.escapefunc;
       if (funcname.charAt(0) == '.') {
@@ -357,6 +360,7 @@ Tenjin.Template = function(filename, properties) {
 };
 
 Tenjin.Template.__props__ = {
+  tostrfunc  : "toStr",
   escapefunc : "escapeXml",
   preamble   : "var _buf = ''; ",
   postamble  : "_buf\n",
@@ -560,7 +564,7 @@ Tenjin.Template.prototype = {
   hookExpression: function(expr, flag_escape) {
     if (this.emptystr) {
       //return flag_escape ? this.escapeExpression(expr) : "[" + expr + "].join()";
-      return flag_escape ? this.escapeExpression(expr) : "toStr(" + expr + ")";
+      return flag_escape ? this.escapeExpression(expr) : this.tostrfunc + "(" + expr + ")";
     }
     else {
       return flag_escape ? this.escapeExpression(expr) : "(" + expr + ")";

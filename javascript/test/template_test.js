@@ -124,6 +124,19 @@ topic('Tenjin.Template', function(t) {
       ok (t2.render(context)).eq(output2);
     });
 
+    spec("allows to change 'toStr()' by 'tostrfunc' option.", function() {
+      var input = "<p>Hello #{name}!</p>\n";
+      var script_expected = (
+        ''
+        + "var _buf = '';  _buf += '<p>Hello ' + String(name) + '!</p>\\n';\n"
+        + "_buf\n"
+      );
+      var fname = 'input.jshtml';
+      this.writeFile(fname, input);
+      var t1 = new Tenjin.Template({tostrfunc: 'String'});
+      ok (t1.convert(input)).eq(script_expected);
+    });
+
   });
 
 
