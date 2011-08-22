@@ -1,7 +1,7 @@
    <tbody>
 <?js
-for (var i = 0, n = list.length; i < n; i++) {
-    var item = list[i];
+for (var i = 0, n = items.length; i < n; i++) {
+    var item = items[i];
  ?>
     <tr class="#{i % 2 == 1 ? 'even' : 'odd'}">
      <td style="text-align: center">#{i+1}</td>
