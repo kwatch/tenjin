@@ -15,13 +15,13 @@ var Shotenjin = {
   _escape_func: function(m) { return Shotenjin._escape_table[m]; },
 
   escapeHtml: function(s) {
-    if (s === null || s === undefined) return '';
+    if (s == null) return '';
     if (typeof(s) != 'string') return s;
     return s.replace(/[&<>"]/g, Shotenjin._escape_func); //"
   },
 
   toStr: function(s) {
-    if (s === null || s === undefined) return "";
+    if (s == null) return "";
     return s;
   },
 
