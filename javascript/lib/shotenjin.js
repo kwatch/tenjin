@@ -186,22 +186,25 @@ Shotenjin.render = function(template_str, context) {
  * jQuery plugin
  *
  * usage:
- *    <div id="template" style="display:none">
+ *    <script src="/js/jquery.js"></script>
+ *    <script src="/js/shotenjin.js"></script>
+ *
+ *    <div id="template1" style="display:none">
  *         <ul>
  *         <?js for (var i = 0, n = items.length; i < n; i++) { ?>
  *           <li>${i}: ${items[i]}</li>
  *         <?js } ?>
  *         </ul>
  *    </div>
- *    <div id="placeholder"></div>
+ *    <div id="placeholder1"></div>
  *
  *    <script>
  *      var context = {
  *        items: ["A","B","C"]
  *      };
- *      var html = $('#template').renderWith(context, true);          // return html string
- *      $('#template').renderWith(context, '#placeholder');           // replace '#placeholder' content by html
- *      $('#template').renderWith(context).appendTo('#placeholder');  // append html into into #placeholder
+ *      var html = $('#template1').renderWith(context, true);          // return html string
+ *      $('#template1').renderWith(context, '#placeholder1');           // replace '#placeholder1' content by html
+ *      $('#template1').renderWith(context).appendTo('#placeholder1');  // append html into into #placeholder1
  *    </script>
  *
  */
