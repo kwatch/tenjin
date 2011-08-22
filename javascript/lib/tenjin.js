@@ -59,6 +59,8 @@ var Tenjin = {
   _unescape_func: function(m) { return Tenjin._unescape_table[m]; },
 
   unescapeXml: function(s) {
+    if (s == null) return "";
+    if (typeof(s) !== 'string') return s;
     return s.replace(/&(lt|gt|amp|quot|#039);/g, Tenjin._unescape_func);
   },
 
