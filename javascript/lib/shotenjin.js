@@ -12,7 +12,7 @@ var Shotenjin = {
 
   _escape_table: { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' },
 
-  _escape_func: function(m) { return Shotenjin._escape_table[m] },
+  _escape_func: function(m) { return Shotenjin._escape_table[m]; },
 
   escapeXml: function(s) {
     if (s === null || s === undefined) return '';
