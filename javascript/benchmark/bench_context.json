@@ -60,7 +60,7 @@
       symbol: "CSCO",
       price: 26.35,
       change: 0.13,
-      ratio: 0.5
+      ratio: 0.50
     },
     {
       name: "Dell",
@@ -122,7 +122,7 @@
       url: "http://www.juniper.net/",
       symbol: "JNPR",
       price: 18.96,
-      change: 0.5,
+      change: 0.50,
       ratio: 2.71
     },
     {
@@ -141,7 +141,7 @@
       symbol: "ORCL",
       price: 17.15,
       change: 0.17,
-      ratio: 1.0
+      ratio: 1.00
     },
     {
       name: "SAP",
@@ -159,7 +159,7 @@
       symbol: "STX",
       price: 27.35,
       change: -0.36,
-      ratio: -1.3
+      ratio: -1.30
     },
     {
       name: "Sun Microsystems",
@@ -177,7 +177,7 @@
       symbol: "YHOO",
       price: 28.04,
       change: -0.17,
-      ratio: -0.6
+      ratio: -0.60
     }
   ]
 }
