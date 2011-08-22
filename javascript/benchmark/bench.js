@@ -1,125 +1,176 @@
 
-var is_nodejs = typeof(require) == 'function' && typeof(require.resolve) == 'function';
-var TENJIN_JS = '../lib/tenjin.js';
-if (is_nodejs) {
-	var Tenjin = require(TENJIN_JS);
-	function print(arg) {
-		console.log(arg);
-	}
-	var system = require('system');
-	var arguments = [];
-	for (var i = 1, n = system.args.length; ++i < n; ) {
-		arguments.push(system.args[i]);
-	}
-} else {
-	load(TENJIN_JS);
+///
+/// $Release: $
+/// $Copyright: copyright(c) 2011 kuwata-lab.com all rights reserved $
+/// $License: MIT License $
+///
+"use strict";
+
+var fs     = require("fs");
+var util   = require("util");
+var assert = require("assert");
+var tenjin = require("tenjin");
+var cmdopt = require("cmdopt");
+var Benchmarker = require("./benchmarker").Benchmarker;
+
+var $loop = 10000;
+var $cycle = 1;
+var $debug = false;
+var $template_filename = 'bench_tenjin.jshtml';
+var $context;
+var $context_filename = 'bench_context.json';
+var $flag_print = false;
+
+
+function println(str) {
+  process.stdout.write(str);
+  process.stdout.write("\n");
 }
 
-function main(arguments) {
+var expecteds = {};
 
-	/// default values
-	//var testnames = ['tenjin-nocache', 'tenjin-cached', 'tenjin-reuse'];
-	var template_filename = 'bench_tenjin.jshtml';
-	var ntimes = 1000;
-	var flag_help = false;
-	var flag_debug = false;
-	var flag_print = false;
-	
-	/// command-line options
-	for (var i = 0, n = arguments.length; i < n; i++) {
-		var argstr = arguments[i];
-		if (argstr.charAt(0) != '-')
-			break;
-		if (false)  { }
-		else if (argstr == '-h') { flag_help = true; }
-		else if (argstr == '-D') { flag_debug = true; }
-		else if (argstr == '-p') { flag_print = true; }
-		else if (argstr == '-n') {
-			i++;
-			if (i >= n) throw "-n: argument required.";
-			ntimes = parseInt(arguments[i]);
-		}
-		else {
-			throw ""+argstr+": unknown option.";
-		}
-	}
-	
-	var testnames = arguments.slice(i);
-	if (flag_debug) {
-		print("*** debug: ntimes="+ntimes);
-		print("*** debug: typeof(ntimes)="+typeof(ntimes));
-		print("*** debug: testnames="+testnames);
-	}
-	
+function verify(name, out) {
+  if ($flag_print) {
+    fs.writeFileSync('output.tenjin', out);
+  }
+  if (! expecteds[name]) {
+    var fpath = "expected/" + name + ".expected";
+    expecteds[name] = fs.readFileSync(fpath, "utf-8");
+  }
+  assert.equal(out, expecteds[name]);
+};
 
-
-	/// help
-	if (flag_help) {
-		print("js bench.js [-h] [-p] [-n N] testname");
-		print("  -h       :  help");
-		print("  -p       :  print result");
-		print("  -n N     :  repeat N times");
-		return;
-	}
-
-
-	/// context data
-	var s = Tenjin.readFile('bench_context.json');
-	var context;
-	eval("context = "+s);
-	//print("*** debug: contet="+Tenjin.inspect(context));
-	
-
-	/// create template file
-	//var header = Tenjin.readFile("templates/_header.html");
-	//var body   = Tenjin.readFile("templates/" + template_filename);
-	//var footer = Tenjin.readFile("templates/_footer.html");
-	//Tenjin.writeFile(template_filename, header+body+footer);
-	
-
-	///// benchmark functions
-	var bench_funcs = {};
-	
-	bench_funcs['tenjin-nocache'] = function(ntimes, context) {
-		var output;
-		for (var i = 0; i < ntimes; i++) {
-			var engine = new Tenjin.Engine({cache:false});
-			output = engine.render(template_filename, context);
-		}
-		return output;
-	};
-	
-	bench_funcs['tenjin-cached'] = function(ntimes, context) {
-		var output;
-		for (var i = 0; i < ntimes; i++) {
-			var engine = new Tenjin.Engine({cache:true});
-			output = engine.render(template_filename, context);
-		}
-		return output;
-	};
-	
-	bench_funcs['tenjin-reuse'] = function(ntimes, context) {
-		var engine = new Tenjin.Engine({cache:true});
-		var output;
-		for (var i = 0; i < ntimes; i++) {
-			output = engine.render(template_filename, context);
-		}
-		return output;
-	};
-	
-	
-	/// main loop
-	for (var i = 0, n = testnames.length; i < n; i++) {
-		var testname = testnames[i];
-		if (flag_debug) print("*** testname: "+testname+", ntimes="+ntimes);
-		var func = bench_funcs[testname] || null;
-		if (! func) {
-			throw ""+testname+": unknown testname.";
-		}
-		var output = func(ntimes, context);
-		if (flag_print) Tenjin.writeFile("output." + testname, output);
-	}
-
+if ($debug) {
+  verify = function(name, out) { return; };
 }
 
-main(arguments);
+function _debug(expr, value) {
+  if ($debug) {
+    //console.log("\x1b[0;31m*** debug: " + expr + "=" + util.inspect(value) + "\x1b[0m");
+    process.stderr.write("\x1b[0;31m*** debug: " + expr + "=" + util.inspect(value) + "\x1b[0m\n");
+  }
+}
+
+
+///
+/// register benchmark tasks
+///
+
+var $bm = new Benchmarker($loop);
+
+
+$bm.emptyTask(function(loop) {
+  var output, template_filename = $template_filename, context = $context;
+  while (loop--) {
+    var x = 0;
+  }
+});
+
+
+$bm.task('tenjin (reuse:yes, cache:yes)', function(loop) {
+  var output, template_filename = $template_filename, context = $context;
+  var engine = new tenjin.Engine({cache:true});
+  while (loop--) {
+    output = engine.render(template_filename, context);
+  }
+  verify('tenjin', output);
+});
+
+
+$bm.task('tenjin (reuse:no, cache:yes)', function(loop) {
+  var output, template_filename = $template_filename, context = $context;
+  while (loop--) {
+    var engine = new tenjin.Engine({cache:true});
+    output = engine.render(template_filename, context);
+  }
+  verify('tenjin', output);
+});
+
+
+$bm.task('tenjin (reuse:no, cache:no)', function(loop) {
+  var output, template_filename = $template_filename, context = $context;
+  while (loop--) {
+    var engine = new tenjin.Engine({cache:false});
+    output = engine.render(template_filename, context);
+  }
+  verify('tenjin', output);
+});
+
+
+///
+/// main application
+///
+
+function MainApp() {
+};
+
+(function(def) {
+
+  def.run = function main(args) {
+    var parser = this._commandOptionParser();
+    if (! args) args = process.argv.slice(2);
+    var opts = parser.parse(args);
+    if (opts.debug) $debug = true;
+    _debug('opts', opts);
+    //
+    if (opts.help) {
+      println('Usage: node bennch.js [options]');
+      println(parser.helpMessage());
+      return;
+    }
+    if (opts.loop)  $loop = parseInt(opts.loop, 10);
+    if (opts.cycle) $cycle = parseInt(opts.cycle, 10);
+    if (opts.print) $flag_print = true;
+    if (args) this._filterTasks(args, $bm._tasks);
+    //
+    $context = this._loadContextData();
+    _debug('$context', $context);
+    this._buildTemplateFile($template_filename);
+    $bm.run($loop, $cycle);
+  };
+
+  def._commandOptionParser = function _commandOptionParser() {
+    /// parse command-line options
+    var parser = new cmdopt.Parser();
+    parser.option('-h')         .name('help')  .desc('help');
+    parser.option('-D')         .name('debug') .desc('debug');
+    parser.option('-p')         .name('print') .desc('print output');
+    parser.option('-n').arg('N').name('loop')  .desc('loop times (default ' + $loop + ')');
+    parser.option('-c').arg('N').name('cycle') .desc('cycle to repeat (default ' + $cycle + ')');
+    return parser;
+  };
+
+  def._filterTasks = function _filterTasks(args, tasks) {
+    for (var i = 0, n = args.length; i < n; i++) {
+      var pat = args[i];
+      var j = tasks.length;
+      while (--j >= 0) {
+        var task = tasks[j];
+        if (! task.title.match(pat)) {
+          tasks.splice(j, 1);
+        }
+      }
+    }
+  };
+
+  def._loadContextData = function _loadContextData(args) {
+    var s = fs.readFileSync($context_filename);
+    var context;
+    eval("context = "+s);
+    return context;
+  };
+
+  def._buildTemplateFile = function _buildTemplateFile(template_filename) {
+    var decl   = "<?js //@ARGS items ?>\n";
+    var header = fs.readFileSync("templates/_header.html");
+    var body   = fs.readFileSync("templates/" + template_filename);
+    var footer = fs.readFileSync("templates/_footer.html");
+    fs.writeFileSync(template_filename, decl + header + body + footer);
+  };
+
+})(MainApp.prototype);
+
+
+if (require.main === module) {
+  new MainApp().run();
+}
