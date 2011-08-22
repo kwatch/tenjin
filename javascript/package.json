@@ -1,0 +1,29 @@
+{
+  "name": "tenjin",
+  "description": "high-performance and full-featured template engine for Node.js",
+  "version": "0.0.0",
+  "tags": ["template-engine", "template"],
+  "homepage": "http://www.kuwata-lab.com/tenjin/",
+  "repository": {
+    "type": "git",
+    "url": "https://github.org/kwatch/tenjin/"
+  },
+  "author": "Makoto Kuwata <kwa@kuwata-lab.com>",
+  "main": "./lib/tenjin.js",
+  "directories": {
+    "lib": "./lib",
+    "test": "./test",
+    "doc": "./doc"
+  },
+  "bin": {
+    "jstenjin": "./bin/jstenjin"
+  },
+  "engines": {
+    "node": "*"
+  },
+  "dependencies": {
+  },
+  "devDependencies": {
+    "oktest": ">= 0.2.0"
+  }
+}
