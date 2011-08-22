@@ -86,7 +86,6 @@ Shotenjin.Template.prototype = {
     while ((m = regexp.exec(input)) != null) {
       var lspace = m[1], stmt = m[2], rspace = m[3];
       var is_bol = lspace || ended_with_nl;
-      var ended_with_nl = !! rspace;
       var text = input.substring(pos, m.index);
       pos = m.index + m[0].length;
       if (remained) {
