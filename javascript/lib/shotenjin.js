@@ -14,7 +14,7 @@ var Shotenjin = {
 
   _escape_func: function(m) { return Shotenjin._escape_table[m]; },
 
-  escapeXml: function(s) {
+  escapeHtml: function(s) {
     if (s === null || s === undefined) return '';
     if (typeof(s) != 'string') return s;
     return s.replace(/[&<>"]/g, Shotenjin._escape_func); //"
@@ -41,8 +41,8 @@ var Shotenjin = {
 
 };
 
-var escapeXml = Shotenjin.escapeXml;
-var toStr     = Shotenjin.toStr;
+var escapeHtml = Shotenjin.escapeHtml;
+var toStr      = Shotenjin.toStr;
 
 
 /**
@@ -65,7 +65,7 @@ Shotenjin.Template = function(input, properties) {
 Shotenjin.Template.prototype = {
 
   tostrfunc: 'toStr',
-  escapefunc: 'escapeXml',
+  escapefunc: 'escapeHtml',
 
   script: null,
 

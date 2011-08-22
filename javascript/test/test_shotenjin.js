@@ -38,7 +38,7 @@ topic('Shotenjin.Tenjin', function(t) {
 			    ''].join("\n");
 			var expected = [
 				'var _buf = \'\';  _buf += \'<td>\' + toStr(i) + \'</td>\\n\\',
-				'<td>\' + escapeXml(item) + \'</td>\\n\';',
+				'<td>\' + escapeHtml(item) + \'</td>\\n\';',
 				'_buf',
 			    ''].join("\n");
 			var actual = new Shotenjin.Template().convert(input);
@@ -63,7 +63,7 @@ topic('Shotenjin.Tenjin', function(t) {
 				'     var item = items[i++];',
 				' _buf += \'  <tr class="\' + toStr(i % 2 == 1 ? \'odd\' : \'even\') + \'">\\n\\',
 				'    <td>\' + toStr(i) + \'</td>\\n\\',
-				'    <td>\' + escapeXml(item) + \'</td>\\n\\',
+				'    <td>\' + escapeHtml(item) + \'</td>\\n\\',
 				'  </tr>\\n\';',
 				'   }',
 				' _buf += \'</table>\\n\';',
