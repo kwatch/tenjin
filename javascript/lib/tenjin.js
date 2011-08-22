@@ -26,6 +26,8 @@
  * $Release: $
  */
 
+"use strict";
+
 
 /*
  *  Tenjin namespace
