@@ -28,6 +28,8 @@
 
 "use strict";
 
+var fs = require("fs");
+
 
 /*
  *  Tenjin namespace
@@ -138,29 +140,25 @@ var Tenjin = {
   nl2br:    function(text) { return text ? text.replace(/\r?\n/g, '<br />$&') : ''; },
   text2html: function(text) { return text ? Tenjin.nl2br(Tenjin.escapeXml(text).replace(/  /g, ' &nbsp;')) : text; },
 
-  _end: undefined  /// dummy property to escape strict warning (not legal in ECMA-262)
+  encoding: 'utf-8'
+
 };
-delete(Tenjin._end);
 
-
-if (typeof(require) == 'function' && typeof(require.resolve) == 'function') { // node.js
-
-  Tenjin._nodejs = { fs: require('fs') };
-  Tenjin.encoding = 'utf-8';
+if (true) {
 
   Tenjin.readFile = function(filename) {
-    return Tenjin._nodejs.fs.readFileSync(filename, Tenjin.encoding);
+    return fs.readFileSync(filename, Tenjin.encoding);
   };
 
   Tenjin.writeFile = function(filename, content) {
-    return Tenjin._nodejs.fs.writeFileSync(filename, content, Tenjin.encoding);
+    return fs.writeFileSync(filename, content, Tenjin.encoding);
   };
 
   Tenjin.separator = '/';
 
   Tenjin.isFile = function(filename) {
     try {
-        return Tenjin._nodejs.fs.statSync(filename).isFile();
+        return fs.statSync(filename).isFile();
     }
     catch (ignore) {
       return false;
@@ -168,146 +166,12 @@ if (typeof(require) == 'function' && typeof(require.resolve) == 'function') { //
   };
 
   Tenjin.isNewer = function(filename, filename2) {
-    var statSync = Tenjin._nodejs.fs.statSync;
+    var statSync = fs.statSync;
     return statSync(filename).mtime > statSync(filename2).mtime;
   };
 
   Tenjin.mtime = function(filename) {
-    return Tenjin._nodejs.fs.statSync(filename).mtime;
-  };
-
-}
-else if (typeof(java) == 'object' && typeof(Packages) == 'function') { // Rhino
-
-  //importPackage(java.io);
-
-  Tenjin.readFile = function(filename) {
-    var reader = new java.io.BufferedReader(new java.io.FileReader(filename));
-    //var buf = Array(512);
-    //reader.read(buf, 0, 512); // Cannot convert org.mozilla.javascript.NativeArray@3c6a22 to char[]
-    var line;
-    var buf = [];
-    while ((line = reader.readLine()) != null) {
-      buf.push(line);
-    }
-    reader.close();
-    buf.push("");
-    return buf.join("\n");
-  };
-  if (typeof(readFile) == 'function')
-    Tenjin.readFile = readFile;
-
-  Tenjin.writeFile = function(filename, content) {
-    //var file = new java.io.File(filename);
-    var writer = new java.io.BufferedWriter(new java.io.FileWriter(filename));
-    writer.write(content);
-    writer.close();
-  };
-
-  Tenjin.separator = java.io.File.separator;
-
-  Tenjin.isFile = function(filename) {
-    return (new java.io.File(filename)).isFile();
-  };
-
-  Tenjin.isNewer = function(filename, filename2) {
-    var File = java.io.File;
-    var mtime1 = (new File(filename)).lastModified();
-    var mtime2 = (new File(filename2)).lastModified();
-    return mtime1 > mtime2;
-  };
-
-  Tenjin.mtime = function(filename) {
-    return (new java.io.File(filename)).lastModified();
-  };
-
-}
-else if (typeof(File) == 'function') {  /// File object is available
-
-  Tenjin._readFile = function(filename) {
-    var f = File(filename);
-    f.open('text,read');
-    var max = 4096;
-    var buf = [], i = 0, s;
-    while ((s = f.read(max)) != undefined) {  /// readfile() will exit if EOF. Why?
-      buf[i++] = s;
-      if (s.length < max)
-        break;
-    }
-    f.close();
-    return i == 1 ? buf[0] : buf.join('');
-  };
-
-  Tenjin._writeFile = function(filename, content) {
-    try {
-      var f = File(filename);
-      f.open('text,write,create,replace');
-      f.write(content);
-      f.close();
-    }
-    catch (ex) {
-      ex.message = filename + ': ' + ex.message;
-      throw ex;
-    }
-  };
-
-  Tenjin._wrapExceptionCatcher = function(func) {
-    return function(filename, arg) {
-      try {
-        return func(filename, arg);
-      }
-      catch (ex) {
-        ex.message = "'" + filename + "': " + ex.message;
-        throw ex;
-      }
-    };
-  };
-
-  Tenjin.readFile = Tenjin._wrapExceptionCatcher(Tenjin._readFile);
-
-  Tenjin.writeFile = Tenjin._wrapExceptionCatcher(Tenjin._writeFile);
-
-  Tenjin.separator = File.separator;
-
-  Tenjin.isFile = function(filename) {
-    //return (new File(filename)).isFile;
-    var f = new File(filename);
-    return f.exists && f.isFile;
-  };
-
-  Tenjin.isNewer = function(filename, filename2) {
-    return Tenjin.mtime(filename) > Tenjin.mtime(filename2);
-  };
-
-  Tenjin.mtime = function(filename) {
-    return new File(filename).lastModified;
-  };
-
-}
-else {  /// dummy function
-
-  Tenjin._files = {};
-
-  Tenjin.readFile = function(filename) {
-    return Tenjin._files[filename];
-  };
-
-  Tenjin.writeFile = function(filename, content) {
-    Tenjin._files[filename] = content;
-  };
-
-  Tenjin.separator = '/';
-
-  Tenjin.isFile = function(filename) {
-    return Tenjin._files[filename] ? true : false;
-  };
-
-  Tenjin.isNewer = function(filename, filename2) {  /// dummy
-    return true;
-  };
-
-  Tenjin.mtime = function(filename) {  /// dummy
-    return 0;
+    return fs.statSync(filename).mtime;
   };
 
 }
@@ -512,8 +376,7 @@ Tenjin.Template.prototype = {
     },
     'stopPlaceholder': function(arg) {
       return "}";
-    },
-    '': undefined  /// dummy property to escape strict warning (not legal in ECMA-262)
+    }
   },
 
   expressionPattern: /([$#])\{((.|\n)*?)\}/g,
@@ -607,11 +470,9 @@ Tenjin.Template.prototype = {
     var s = buf.join('');
     eval(s);
     return this.render;
-  },
+  }
 
-  _end: undefined  /// dummy property to escape strict warning (not legal in ECMA-262)
 };
-delete(Tenjin.Template.prototype._end);
 
 Tenjin.merge(Tenjin.Template.prototype, Tenjin.Template.__props__);
 
@@ -895,11 +756,9 @@ Tenjin.Engine.prototype = {
     context._layout = null;
     //context.capturedAs = Tenjin.Engine._capturedAs;
     return context;
-  },
+  }
 
-  _end: undefined  /// dummy property to escape strict warning (not legal in ECMA-262)
 };
-delete(Tenjin.Engine.prototype._end);
 
 Tenjin.merge(Tenjin.Engine.prototype, Tenjin.Engine.__props__);
 
@@ -950,8 +809,9 @@ Tenjin.inspect = function(value) {
   throw "unreachable: typeof(value)="+typeof(value)+", value="+value;
 };
 
-if (typeof(exports) == 'object') {  // node.js
+
+(function() {
   for (var k in Tenjin) {
     exports[k] = Tenjin[k];
   }
-}
+})();
