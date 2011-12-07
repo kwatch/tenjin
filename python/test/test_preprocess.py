@@ -3,7 +3,7 @@
 ### $Copyright: copyright(c) 2007-2011 kuwata-lab.com all rights reserved. $
 ###
 
-from oktest import ok, not_ok, run
+from oktest import ok, not_ok, run, test
 import sys, os, re, time
 from glob import glob
 
@@ -17,8 +17,7 @@ lvars = "_extend=_buf.extend;_to_str=to_str;_escape=escape; "
 
 class PreprocessTest(object):
 
-    def test_preprocessor_class(self):
-        input = r"""
+    INPUT = r"""
 	<?PY WEEKDAY = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] ?>
 	<select>
 	<?py curr = params.get('wday') ?>
@@ -27,7 +26,7 @@ class PreprocessTest(object):
 	<?PY #endfor ?>
 	</select>
 	"""[1:].replace("\t", "")
-        script = lvars + r"""
+    SCRIPT = lvars + r"""
 	WEEKDAY = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 	_extend(('''<select>
 	<?py curr = params.get(\'wday\') ?>\n''', ));
@@ -36,7 +35,7 @@ class PreprocessTest(object):
 	#endfor
 	_extend(('''</select>\n''', ));
 	"""[1:].replace("\t", "")
-        preprocessed = r"""
+    OUTPUT = r"""
 	<select>
 	<?py curr = params.get('wday') ?>
 	  <option value="0"#{selected(curr==0)}>Sun</option>
@@ -48,12 +47,17 @@ class PreprocessTest(object):
 	  <option value="6"#{selected(curr==6)}>Sat</option>
 	</select>
 	"""[1:].replace("\t", "")
+
+    def test_preprocessor_class(self):
+        input  = self.INPUT
+        script = self.SCRIPT
+        output = self.OUTPUT
         filename = 'test_preprocess1.pyhtml'
         try:
             write_file(filename, input)
             preprocessor = tenjin.Preprocessor(filename)
             ok (preprocessor.script) == script
-            ok (preprocessor.render()) == preprocessed
+            ok (preprocessor.render()) == output
         finally:
             if os.path.exists(filename):
                 os.unlink(filename)
