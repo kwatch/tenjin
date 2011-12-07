@@ -1126,6 +1126,20 @@ class TemplatePreprocessor(object):
         return template.render(context, globals=self.globals)
 
 
+class TrimPreprocessor(object):
+
+    _rexp     = re.compile(r'^[ \t]+<', re.M)
+    _rexp_all = re.compile(r'^[ \t]+',  re.M)
+
+    def __init__(self, all=False):
+        self.all = all
+
+    def __call__(self, input, filename=None, context=None):
+        if self.all:
+            return self._rexp_all.sub('', input)
+        else:
+            return self._rexp.sub('<', input)
+
 
 ##
 ## cache storages

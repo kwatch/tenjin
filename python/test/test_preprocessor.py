@@ -99,6 +99,48 @@ class TemplatePreprocessorTest(object):
         ok (pp(input, "foobar.rhtml", context)) == expected
 
 
+class TrimPreprocessorTest(object):
+
+    INPUT = r"""
+<ul>
+  <?py i = 0 ?>
+  <?py for item in items:
+         i += 1 ?>
+    <li>${item}</li>
+  <?py #endfor ?>
+</ul>
+"""[1:]
+
+    @test("remove spaces before '<' at beginning of line")
+    def _(self):
+        expected = r"""
+<ul>
+<?py i = 0 ?>
+<?py for item in items:
+         i += 1 ?>
+<li>${item}</li>
+<?py #endfor ?>
+</ul>
+"""[1:]
+        input = self.INPUT
+        pp = tenjin.TrimPreprocessor()
+        ok (pp(input, None, None)) == expected
+
+    @test("remove all spaces at beginning of line when argument 'all' is true")
+    def _(self):
+        expected = r"""
+<ul>
+<?py i = 0 ?>
+<?py for item in items:
+i += 1 ?>
+<li>${item}</li>
+<?py #endfor ?>
+</ul>
+"""[1:]
+        input = self.INPUT
+        pp = tenjin.TrimPreprocessor(True)
+        ok (pp(input, None, None)) == expected
+
 
 if __name__ == '__main__':
     run()
