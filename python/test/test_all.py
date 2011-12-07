@@ -14,7 +14,7 @@ def main(verbose):
     basenames = [
         "test_template",
         "test_engine",
-        "test_preprocess",
+        "test_preprocessor",
         "test_safe",
         "test_htmlhelper",
         "test_main",
