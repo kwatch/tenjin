@@ -93,9 +93,9 @@ class EngineTest(object):
     #code = TestCaseHelper.generate_testcode(__file__)
     #exec(code)
     datalist = TestCaseHelper.load_testdata(__file__)
-    testdata = dict([ (d['name'], d) for d in datalist ])
-    _convert_data(testdata, lang='python')
-    data = testdata['basic']
+    _testdata = dict([ (d['name'], d) for d in datalist ])
+    _convert_data(_testdata, lang='python')
+    data = _testdata['basic']
     for d in data['templates']:
         d['filename'] = d['filename'].replace('.xxhtml', '.pyhtml')
     templates = dict([(hash['filename'], hash['content']) for hash in data['templates']])
@@ -105,13 +105,13 @@ class EngineTest(object):
 
     def before(self):
         tenjin.Engine.cache.clear()
-    #    testdata = EngineTest.testdata['basic']
+    #    testdata = EngineTest._testdata['basic']
     #    for hash in testdata['templates']:
     #        write_file(hash['filename'], hash['content'])
 
 
     #def after(self):
-    #    for hash in EngineTest.testdata['basic']['templates']:
+    #    for hash in EngineTest._testdata['basic']['templates']:
     #        filename = hash['filename']
     #        for fname in [filename, filename+'.cache', filename+'.marshal']:
     #            if os.path.exists(fname):
@@ -126,7 +126,7 @@ class EngineTest(object):
 
     def _test_basic(self):
         try:
-            testdata = EngineTest.testdata['basic']
+            testdata = EngineTest._testdata['basic']
             for hash in testdata['templates']:
                 write_file(hash['filename'], hash['content'])
             #
@@ -148,9 +148,9 @@ class EngineTest(object):
                 output = engine.render(tplname, context, layout=False)
             ok (output) == expected
         finally:
-            filenames = [ hash['filename'] for hash in EngineTest.testdata['basic']['templates'] ]
+            filenames = [ hash['filename'] for hash in EngineTest._testdata['basic']['templates'] ]
             _remove_files(filenames)
-            #for hash in EngineTest.testdata['basic']['templates']:
+            #for hash in EngineTest._testdata['basic']['templates']:
             #    filename = hash['filename']
             #    for fname in [filename, filename+'.cache', filename+'.marshal']:
             #        if os.path.exists(fname):
@@ -221,7 +221,7 @@ class EngineTest(object):
 
 
     def test_capture_and_echo(self):
-        hash = EngineTest.testdata['test_capture_and_echo']
+        hash = EngineTest._testdata['test_capture_and_echo']
         layout = hash['layout']
         content = hash['content']
         expected = hash['expected']
@@ -281,7 +281,7 @@ class EngineTest(object):
                 d.__exit__(*sys.exc_info())
 
     def test_captured_as(self):
-        hash = EngineTest.testdata['test_captured_as']
+        hash = EngineTest._testdata['test_captured_as']
         files = ( ('content.pyhtml',      hash['content']),
                   ('customlayout.pyhtml', hash['customlayout']),
                   ('baselayout.pyhtml',   hash['baselayout']),
@@ -299,7 +299,7 @@ class EngineTest(object):
 
 
     def test_local_layout(self):
-        hash = EngineTest.testdata['test_local_layout']
+        hash = EngineTest._testdata['test_local_layout']
         context = hash['context']
         names = ['layout_html', 'layout_xhtml', 'content_html']
         def fname(base):
@@ -334,7 +334,7 @@ class EngineTest(object):
 
 
     def test_cachefile(self):
-        data = EngineTest.testdata['test_cachefile']
+        data = EngineTest._testdata['test_cachefile']
         filenames = { 'layout': 'layout.pyhtml',
                       'page': 'account_create.pyhtml',
                       'form': 'account_form.pyhtml',
@@ -425,7 +425,7 @@ class EngineTest(object):
 
     def test_cachefile_timestamp(self):
         """engine should clear cache not only template is newer but also template is older than cache."""
-        data = EngineTest.testdata['test_cachefile']
+        data = EngineTest._testdata['test_cachefile']
         filenames = { 'layout': 'layout.pyhtml',
                       'page': 'account_create.pyhtml',
                       'form': 'account_form.pyhtml',
@@ -492,7 +492,7 @@ class EngineTest(object):
 
 
     def test_change_layout(self):
-        data = EngineTest.testdata['test_change_layout']
+        data = EngineTest._testdata['test_change_layout']
         ## setup
         tenjin.Engine.cache.clear()
         basenames = ['baselayout', 'customlayout', 'content']
@@ -510,7 +510,7 @@ class EngineTest(object):
 
 
     def test_context_scope(self):
-        data = EngineTest.testdata['test_context_scope']
+        data = EngineTest._testdata['test_context_scope']
         base = data['base']
         part = data['part']
         expected = data['expected']
@@ -528,7 +528,7 @@ class EngineTest(object):
 
 
     def test_template_args(self):
-        data = EngineTest.testdata['test_template_args']
+        data = EngineTest._testdata['test_template_args']
         content = data['content']
         expected = data['expected']
         context = data['context']
@@ -592,7 +592,7 @@ class EngineTest(object):
 
 
     def test_cached_contents(self):
-        data = EngineTest.testdata['test_cached_contents']
+        data = EngineTest._testdata['test_cached_contents']
         def _test(filename, cachename, cachemode, input, expected_script, expected_args):
             if input:
                 write_file(filename, input)
@@ -632,7 +632,7 @@ class EngineTest(object):
 
 
     def _test_template_path(self, keys):
-        data = EngineTest.testdata['test_template_path']
+        data = EngineTest._testdata['test_template_path']
         basedir = 'test_templates'
         try:
             os.mkdir(basedir)
@@ -681,7 +681,7 @@ class EngineTest(object):
 
 
     def test_preprocessor(self):
-        data = EngineTest.testdata['test_preprocessor']
+        data = EngineTest._testdata['test_preprocessor']
         try:
             basenames = ('form', 'create', 'update', 'layout', )
             filenames = []
@@ -725,7 +725,7 @@ class EngineTest(object):
 
 
     def test_include_with_kwargs(self):
-        data = EngineTest.testdata['test_include_with_kwargs']
+        data = EngineTest._testdata['test_include_with_kwargs']
         write_file('index.pyhtml', data['index_html'])
         write_file('sub.pyhtml', data['sub_html'])
         expected = data['expected']
