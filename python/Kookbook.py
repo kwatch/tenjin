@@ -30,14 +30,14 @@ kook_default_product = 'test'
 python_binaries = [
     ('2.4', '/opt/local/bin/python2.4'),
     #('2.5', '/opt/local/bin/python2.5'),
-    ('2.5', '/usr/local/python/2.5.5/bin/python'),
-    #('2.6', '/opt/local/bin/python2.6'),
-    ('2.6', '/usr/local/python/2.6.5/bin/python'),
+    ('2.5', '/opt/lang/python/2.5.5/bin/python'),
+    #('2.5', '/opt/local/bin/python2.6'),
+    ('2.6', '/opt/lang/python/2.6.7/bin/python'),
     #('2.7', '/opt/local/bin/python2.7'),
-    ('2.7', '/usr/local/python/2.7.1/bin/python'),
-    ('3.0', '/usr/local/python/3.0.1/bin/python'),
-    ('3.1', '/usr/local/python/3.1/bin/python'),
-    ('3.2', '/usr/local/python/3.2.0/bin/python'),
+    ('2.7', '/opt/lang/python/2.7.2/bin/python'),
+    ('3.0', '/opt/lang/python/3.0.1/bin/python'),
+    ('3.1', '/opt/lang/python/2.1.4/bin/python'),
+    ('3.2', '/opt/lang/python/3.2.2/bin/python'),
 ]
 
 
@@ -259,33 +259,39 @@ def uninstall(c):
         edit(filename, by=repl)
 
 
-@recipe
-@ingreds("generate")
-@spices('-A: do test with all version of python')
-def test(c, *args, **kwargs):
-    basepath = os.getcwd()
-    env_path = "%s/bin:/bin/:usr/bin" % basepath
-    def _set_env(ver, bin):
+class test(Category):
+
+    def _set_env(ver, bin, basepath):
         os.environ['PYTHONPATH'] = '.:%s/lib%s' % (basepath, ver[0])
-        os.environ['PATH'] = os.path.dirname(bin) + ':' + env_path
+        os.environ['PATH'] = '%s:%s/bin:/bin:/usr/bin' % (os.path.dirname(bin), basepath,)
         print("*** os.environ['PYTHONPATH']=%r" % os.environ['PYTHONPATH'])
         print("*** os.environ['PATH']=%r" % os.environ['PATH'])
-    if kwargs.get('A'):
-        with chdir('test'):
-            for ver, bin in python_binaries:
-                print('************************************************************')
-                print('*** %s (%s)' % (ver, bin))
-                _set_env(ver, bin)
-                print('************************************************************')
-                rm_f("data/**/*.cache")
-                system("%s test_all.py" % bin)
-            rm_f("data/**/*.cache")
-    else:
-        _set_env(sys.version, sys.executable)
+
+    @recipe
+    @ingreds("generate")
+    def default(c, *args, **kwargs):
+        """do test"""
+        basepath = os.getcwd()
+        test._set_env(sys.version, sys.executable, basepath)
         with chdir('test'):
             #system("pykook test")
             rm_f("data/**/*.cache")
             system("python test_all.py")
+            rm_f("data/**/*.cache")
+
+    @recipe
+    @ingreds("generate")
+    def all(c):
+        """do test with all version of python"""
+        basepath = os.getcwd()
+        with chdir('test'):
+            for ver, bin in python_binaries:
+                print('************************************************************')
+                print('*** %s (%s)' % (ver, bin))
+                test._set_env(ver, bin, basepath)
+                print('************************************************************')
+                rm_f("data/**/*.cache")
+                system_f("%s test_all.py" % bin)
             rm_f("data/**/*.cache")
 
 
