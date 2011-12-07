@@ -32,6 +32,8 @@ def main(verbose):
     if python3:
         basenames.remove("test_encoding")
         basenames.remove("test_gae")
+    if python2 and sys.version_info[1] <= 4:
+        basenames.remove("test_gae")
 
     if verbose:
 
