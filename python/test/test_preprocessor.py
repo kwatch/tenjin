@@ -3,11 +3,11 @@
 ### $Copyright: copyright(c) 2007-2011 kuwata-lab.com all rights reserved. $
 ###
 
-from oktest import ok, not_ok, run, test
 import sys, os, re, time
 from glob import glob
+from oktest import ok, not_ok, run, test
+from oktest.dummy import dummy_file
 
-from testcase_helper import *
 import tenjin
 #from tenjin.helpers import escape, to_str
 from tenjin.helpers import *
@@ -15,7 +15,7 @@ from tenjin.helpers import *
 lvars = "_extend=_buf.extend;_to_str=to_str;_escape=escape; "
 
 
-class PreprocessTest(object):
+class PreprocessorTest(object):
 
     INPUT = r"""
 	<?PY WEEKDAY = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] ?>
@@ -53,14 +53,11 @@ class PreprocessTest(object):
         script = self.SCRIPT
         output = self.OUTPUT
         filename = 'test_preprocess1.pyhtml'
-        try:
-            write_file(filename, input)
+        @dummy_file(filename, input)
+        def _():
             preprocessor = tenjin.Preprocessor(filename)
             ok (preprocessor.script) == script
             ok (preprocessor.render()) == output
-        finally:
-            if os.path.exists(filename):
-                os.unlink(filename)
 
 
 if __name__ == '__main__':
