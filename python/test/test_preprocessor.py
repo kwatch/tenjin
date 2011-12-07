@@ -60,5 +60,45 @@ class PreprocessorTest(object):
             ok (preprocessor.render()) == output
 
 
+class TemplatePreprocessorTest(object):
+
+    INPUT = r"""
+<div>
+  <?PY for item in items: ?>
+  <?py for item in items: ?>
+    <i>#{item}</i>
+    <i>${item}</i>
+    <b>#{{item}}</b>
+    <b>${{item}}</b>
+  <?py #endfor ?>
+  <?PY #endfor ?>
+</div>
+"""[1:]
+
+    EXPECTED = r"""
+<div>
+  <?py for item in items: ?>
+    <i>#{item}</i>
+    <i>${item}</i>
+    <b><AAA></b>
+    <b>&lt;AAA&gt;</b>
+  <?py #endfor ?>
+  <?py for item in items: ?>
+    <i>#{item}</i>
+    <i>${item}</i>
+    <b>B&B</b>
+    <b>B&amp;B</b>
+  <?py #endfor ?>
+</div>
+"""[1:]
+
+    def test_call(self):
+        input, expected = self.INPUT, self.EXPECTED
+        context = { 'items': ["<AAA>", "B&B"] }
+        pp = tenjin.TemplatePreprocessor()
+        ok (pp(input, "foobar.rhtml", context)) == expected
+
+
+
 if __name__ == '__main__':
     run()
