@@ -2,6 +2,14 @@
 CHANGES
 =======
 
+
+Release 1.1.0
+--------------------------
+
+* [Enhance] Now supports Jython 2.5.2. (thanks to Lars Hupfeldt Nielsen)
+
+
+
 Release 1.0.2 (2011-04-29)
 --------------------------
 
