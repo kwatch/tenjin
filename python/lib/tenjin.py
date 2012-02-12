@@ -119,7 +119,13 @@ def _ignore_not_found_error(f, default=None):
 
 def create_module(module_name, dummy_func=None, **kwargs):
     """ex. mod = create_module('tenjin.util')"""
-    mod = type(sys)(module_name)
+    try:
+        mod = type(sys)(module_name)
+    except:
+        # The module creation above does not work for Jython 2.5.2
+        import imp
+        mod = imp.new_module(module_name)
+
     mod.__file__ = __file__
     mod.__dict__.update(kwargs)
     sys.modules[module_name] = mod
