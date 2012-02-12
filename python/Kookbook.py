@@ -306,7 +306,7 @@ class test(Category):
 
 @recipe
 def clean(c):
-    rm_rf("**/*.pyc", "**/*.cache", "**/__cache__")
+    rm_rf("**/*.pyc", "**/*.cache", "**/__cache__", "**/*$py.class")
     rm_f("test/test.log", "test/kook.log")
 
 
