@@ -23,7 +23,12 @@ if python3:
 
 
 def _new_module(name, local_vars, util=None):
-    mod = type(sys)(name)
+    try:
+        mod = type(sys)(name)
+    except:
+        # The module creation above does not work for Jython 2.5.2
+        import imp
+        mod = imp.new_module(name)
     sys.modules[name] = mod
     mod.__dict__.update(local_vars)
     if util and getattr(mod, '__all__', None):

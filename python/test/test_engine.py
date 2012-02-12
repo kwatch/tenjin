@@ -17,6 +17,8 @@ from tenjin.helpers import *
 
 lvars = "_extend=_buf.extend;_to_str=to_str;_escape=escape; "
 
+JYTHON = hasattr(sys, 'JYTHON_JAR')
+
 
 def _convert_data(data, lang='python'):
     if isinstance(data, dict):
@@ -353,21 +355,26 @@ class EngineTest(object):
             ok (output) == expected
             for fname in cache_filenames: not_ok (fname).exists()
             ## marshal caching
-            props['cache'] = True
-            engine = tenjin.Engine(**props)
-            output = engine.render(':create', context)
-            ok (output) == expected
-            if   python2:  nullbyte = '\0'
-            elif python3:  nullbyte = '\0'.encode('ascii')
-            for fname in cache_filenames:
-                ok (fname).exists()                         # file created?
-                s = read_file(fname, 'rb')                       # read binary file
-                ok (s.find(nullbyte)) >= 0           # binary file?
-                f = lambda: marshal.load(open(fname, 'rb'))
-                ok (f).not_raise()                           # marshal?
-            engine = tenjin.Engine(**props)
-            output = engine.render(':create', context)
-            ok (output) == expected               # reloadable?
+            if not JYTHON:
+                props['cache'] = True
+                engine = tenjin.Engine(**props)
+                output = engine.render(':create', context)
+                ok (output) == expected
+                if   python2:  nullbyte = '\0'
+                elif python3:  nullbyte = '\0'.encode('ascii')
+                for fname in cache_filenames:
+                    ok (fname).exists()               # file created?
+                    s = read_file(fname, 'rb')        # read binary file
+                    ok (s.find(nullbyte)) >= 0        # binary file?
+                    f = open(fname, 'rb')
+                    fn = lambda: marshal.load(f)
+                    try:
+                        ok (fn).not_raise()           # marshal?
+                    finally:
+                        f.close()
+                engine = tenjin.Engine(**props)
+                output = engine.render(':create', context)
+                ok (output) == expected               # reloadable?
             #
             for fname in glob('*.pyhtml.cache'): os.unlink(fname)
             for fname in cache_filenames:
@@ -386,9 +393,15 @@ class EngineTest(object):
                     ok (s.find(nullbyte)) < 0        # text file? (pickle protocol ver 2)
                 elif python3:
                     ok (s.find(nullbyte)) >= 0       # binary file? (pickle protocol ver 3)
-                f = lambda: Pickle.load(open(fname, 'rb'))
-                ok (f).not_raise(ValueError)
-                pickle.load(open(fname, 'rb'))
+                f = open(fname, 'rb')
+                fn = lambda: Pickle.load(f)
+                try:
+                    ok (fn).not_raise(ValueError)
+                finally:
+                    f.close()
+                f = open(fname, 'rb')
+                pickle.load(f)
+                f.close()
             engine = tenjin.Engine(**props)
             output = engine.render(':create', context)
             ok (output) == expected               # reloadable?
@@ -407,16 +420,22 @@ class EngineTest(object):
                 ok (fname).exists()                  # file created?
                 s = read_file(fname, 'r')            # read text file
                 ok (s.find(nullchar)) < 0            # text file?
-                #f = lambda: marshal.loads(s)
-                f = lambda: marshal.load(open(fname, 'rb'))
-                if python3:
-                    ok (f).raises(ValueError)        # non-marshal?
+                if JYTHON:
+                    continue
+                #fn = lambda: marshal.loads(s)
+                f = open(fname, 'rb')
+                fn = lambda: marshal.load(f)
+                try:
+                  if python3:
+                    ok (fn).raises(ValueError)        # non-marshal?
                     if sys.version_info[1] == 0:     # python 3.0
-                        ok (str(f.exception)) == "bad marshal data"
+                        ok (str(fn.exception)) == "bad marshal data"
                     else:                            # python 3.1 or later
-                        ok (str(f.exception)) == "bad marshal data (unknown type code)"
-                elif python2 and sys.version_info[1] >= 5:
-                    ok (f).raises(EOFError, "EOF read where object expected")  # non-marshal?
+                        ok (str(fn.exception)) == "bad marshal data (unknown type code)"
+                  elif python2 and sys.version_info[1] >= 5:
+                    ok (fn).raises(EOFError, "EOF read where object expected")  # non-marshal?
+                finally:
+                    f.close()
             engine = tenjin.Engine(**props)
             output = engine.render(':create', context)
             ok (output) == expected                  # reloadable?
@@ -473,7 +492,7 @@ class EngineTest(object):
         try:
             input = "<?py x = 10 ?>"
             template_name = "cachefile_delete.pyhtml"
-            open(template_name, 'w').write(input)
+            f = open(template_name, 'w'); f.write(input); f.close()
             storage = tenjin.MarshalCacheStorage()
             engine = tenjin.Engine(cache=storage)
             engine.render(template_name)
@@ -592,6 +611,8 @@ class EngineTest(object):
 
 
     def test_cached_contents(self):
+        if JYTHON:
+            return
         data = EngineTest._testdata['test_cached_contents']
         def _test(filename, cachename, cachemode, input, expected_script, expected_args):
             if input:
@@ -601,9 +622,13 @@ class EngineTest(object):
             ok (t.args) == expected_args
             ok (t.script) == expected_script
             import marshal
-            dct = marshal.load(open(filename + '.cache', 'rb'))
-            ok (dct['args']) == expected_args
-            ok (dct['script']) == expected_script
+            f = open(filename + '.cache', 'rb')
+            try:
+                dct = marshal.load(f)
+                ok (dct['args']) == expected_args
+                ok (dct['script']) == expected_script
+            finally:
+                f.close()
         ##
         try:
             ## args=[x,y,z], cache=1
@@ -865,7 +890,8 @@ class EngineTest(object):
             t._last_checked_at = None
             t.timestamp = os.path.getmtime(fpath)
             ok (e1._get_template_from_cache(cpath, fpath)).is_(t)
-            ok (t._last_checked_at).in_delta(time.time(), 0.001)
+            delta = JYTHON and 0.03 or 0.001
+            ok (t._last_checked_at).in_delta(time.time(), delta)
         if spec("if timestamp of template object is different from file, clear it"):
             t.timestamp = t.timestamp + 1
             t._last_checked_at = None
@@ -922,7 +948,8 @@ class EngineTest(object):
             if spec("set timestamp and filename of template object."):
                 ok (t.timestamp) == os.path.getmtime(filepath)
                 ok (t.filename) == fpath
-                ok (t._last_checked_at).in_delta(time.time(), 0.005)
+                delta = JYTHON and 0.03 or 0.001
+                ok (t._last_checked_at).in_delta(time.time(), delta)
             if spec("save template object into cache."):
                 ok (cpath).exists()
                 ok (len(e1.cache.items)) == 1

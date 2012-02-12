@@ -24,6 +24,8 @@ elif python3:
     def _is_str(val):
         return isinstance(val, (str, bytes))
 
+JYTHON = hasattr(sys, 'JYTHON_JAR')
+
 
 def read_file(filename, mode='rb'):
     f = None
@@ -161,6 +163,9 @@ class TestCaseHelper:
 
     def load_testdata(filename, untabify=True):
         i = filename.rfind('.')
+        if JYTHON:
+            if filename[i-3:i] == '$py':
+                i -= 3
         if filename[i:] != '.yaml' and filename[i:] != '.yml':
             filename = filename[:i] + '.yaml'
         input = read_file(filename)

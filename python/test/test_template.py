@@ -11,6 +11,8 @@ from testcase_helper import *
 import tenjin
 from tenjin.helpers import *
 
+JYTHON = hasattr(sys, 'JYTHON_JAR')
+
 
 class TemplateTest(object):
 
@@ -66,6 +68,10 @@ class TemplateTest(object):
                 if source:
                     source = source.replace("u'''", "'''").replace("u'", "'")
                     input  = input.replace("u'", "'")
+        #
+        if JYTHON:
+            if self._testMethodName == 'test_syntaxerr1':
+                errormsg = r"mismatched input '\n' expecting COLON"
         #
         if exception:
             try:
