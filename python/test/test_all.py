@@ -62,7 +62,8 @@ def main(verbose):
                     if type(klass) == type:
                         test_classes.append(klass)
         import oktest
-        oktest.run(*test_classes)
+        kwd = {'style': 'simple'}
+        oktest.run(*test_classes, **kwd)
 
 
 
