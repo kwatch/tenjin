@@ -5,12 +5,14 @@
 ###
 
 from oktest import ok, not_ok, run
-import os, traceback
+import sys, os, traceback
 import yaml
 
 from testcase_helper import *
 import tenjin
 from tenjin.helpers import escape, to_str
+
+JYTHON = hasattr(sys, 'JYTHON_JAR')
 
 filename = None
 for filename in ['../bin/pytenjin', 'bin/pytenjin']:
@@ -141,6 +143,14 @@ class MainTest(object):
         if python_version < '2.5':
             if expected:
                 expected = expected.replace(': unexpected indent', ': invalid syntax')
+        #
+        if JYTHON:
+            if self._testMethodName == 'test_lint5':
+                expected = (
+                    ".test.pyhtml:5:4: mismatched input 'else' expecting DEDENT\n"
+                    "  5:     else\n"
+                    "        ^\n"
+                    )
         #
         if filename is not False:
             if filename is None:
@@ -307,13 +317,14 @@ class MainTest(object):
         try:
             self._test()
             ok (cachename).exists()
-            import marshal
-            dct = marshal.load(open(cachename, 'rb'))
-            ok (dct.get('args')) == ['title', 'items']
-            if   python2:  expected = "<type 'code'>"
-            elif python3:  expected = "<class 'code'>"
-            ok (str(type(dct.get('bytecode')))) == expected
-            ok (dct.get('script')) == script
+            if not JYTHON:
+                import marshal
+                dct = marshal.load(open(cachename, 'rb'))
+                ok (dct.get('args')) == ['title', 'items']
+                if   python2:  expected = "<type 'code'>"
+                elif python3:  expected = "<class 'code'>"
+                ok (str(type(dct.get('bytecode')))) == expected
+                ok (dct.get('script')) == script
         finally:
             if os.path.exists(cachename):
                 os.unlink(cachename)
@@ -489,6 +500,8 @@ class MainTest(object):
         self._test()
 
     def test_dump(self):  # -d, -a dump
+        if JYTHON:
+            return
         # create cache file
         filename = '_test_dump.pyhtml'
         cachename = filename + '.cache'

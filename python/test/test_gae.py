@@ -12,6 +12,8 @@ from oktest import *
 import tenjin
 from tenjin.helpers import *
 
+JYTHON = hasattr(sys, 'JYTHON_JAR')
+
 lvars = "_extend=_buf.extend;_to_str=to_str;_escape=escape; "
 
 
@@ -34,7 +36,12 @@ else:
     if os.path.isdir(path):
         GAE_HOME = path
 
-if not GAE_HOME:
+
+if JYTHON:
+
+    sys.stderr.write("### skip GAE test (because on Jython)\n")
+
+elif not GAE_HOME:
 
     sys.stderr.write("###\n")
     sys.stderr.write("### WARNING:\n")
