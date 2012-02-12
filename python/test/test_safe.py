@@ -177,7 +177,7 @@ class SafeTemplateTest(object):
         try:
             _tclass = tenjin.Engine.templateclass
             tenjin.Engine.templateclass = tenjin.SafeTemplate
-            open(fname, 'w').write(self.input)
+            f = open(fname, 'w'); f.write(self.input); f.close()
             engine = tenjin.Engine()
             output = engine.render(fname, self.context.copy())
             ok (output) == self.expected
@@ -241,7 +241,7 @@ for item in items:
         try:
             _backup = tenjin.Engine.templateclass
             tenjin.Engine.templateclass = tenjin.SafeTemplate
-            open(fname, 'w').write(self.input)
+            f = open(fname, 'w'); f.write(self.input); f.close()
             engine = tenjin.Engine(preprocess=True, preprocessorclass=tenjin.SafePreprocessor)
             t = engine.get_template(fname)
             ok (t.script) == self.expected_script
