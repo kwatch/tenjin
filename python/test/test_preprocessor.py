@@ -5,7 +5,7 @@
 
 import sys, os, re, time
 from glob import glob
-from oktest import ok, not_ok, run, test
+from oktest import ok, not_ok, run, test, todo
 from oktest.dummy import dummy_file
 
 import tenjin
@@ -140,6 +140,226 @@ i += 1 ?>
         input = self.INPUT
         pp = tenjin.TrimPreprocessor(True)
         ok (pp(input, None, None)) == expected
+
+
+class JavaScriptPreprocessorTest(object):
+
+    INPUT = r"""
+<table>
+  <!-- #JS: render_table(items) -->
+  <tbody>
+    <?js for (var i = 0, n = items.length; i < n; i++) { ?>
+    <tr>
+      <td>#{i+1}</td>
+      <td>${items[i]}</td>
+    </tr>
+    <?js } ?>
+  </tbody>
+  <!-- #/JS -->
+</table>
+<!-- #JS: show_user(username) -->
+  <div>Hello ${username}!</div>
+<!-- #/JS -->
+"""[1:]
+
+    OUTPUT = r"""
+<table>
+  <script>function render_table(items){var _buf='';
+_buf+='  <tbody>\n';
+     for (var i = 0, n = items.length; i < n; i++) {
+_buf+='    <tr>\n\
+      <td>'+_S(i+1)+'</td>\n\
+      <td>'+_E(items[i])+'</td>\n\
+    </tr>\n';
+     }
+_buf+='  </tbody>\n';
+  return _buf;};</script>
+</table>
+<script>function show_user(username){var _buf='';
+_buf+='  <div>Hello '+_E(username)+'!</div>\n';
+return _buf;};</script>
+"""[1:]
+
+    def provide_pp(self):
+        return tenjin.JavaScriptPreprocessor()
+
+    def provide_fname(self):
+        return "_test_pp.rbhtml"
+
+    @test("converts embedded javascript template into client-side template function")
+    def _(self, pp, fname):
+        ok (pp(self.INPUT, fname, None)) == self.OUTPUT
+
+    @test("raises error when extra '#/JS' found")
+    def _(self, pp, fname):
+        def fn(): pp("foo\n<!-- #/JS -->\n", fname, None)
+        ok (fn).raises(tenjin.ParseError, "unexpected '<!-- #/JS -->'. (file: _test_pp.rbhtml, line: 2)")
+
+    @test("raises error when '#JS' doesn't contain function name")
+    def _(self, pp, fname):
+        @todo
+        def func():
+            def fn(): pp("foo\n<!-- #JS -->\n", fname, None)
+            ok (fn).raises(tenjin.ParseError, "'#JS' found but not function name")
+        func()
+
+    @test("raises error when '#JS' is not closed")
+    def _(self, pp, fname):
+        def fn(): pp("foo\n<!-- #JS: render_table(items) -->\nxxx", fname, None)
+        ok (fn).raises(tenjin.ParseError, "render_table(items) is not closed by '<!-- #/JS -->'. (file: %s, line: 2)" % (fname,))
+
+    @test("raises error when '#JS' is nested")
+    def _(self, pp, fname):
+        input = r"""
+<!-- #JS: outer(items) -->
+  <!-- #JS: inner(items) -->
+  <!-- #/JS -->
+<!-- #/JS -->
+"""[1:]
+        def fn(): pp(input, fname, None)
+        ok (fn).raises(tenjin.ParseError, "inner(items) is nested in outer(items). (file: %s, line: 2)" % (fname,))
+
+    @test("raises error when func name on '#/JS' is different from that of '#JS")
+    def _(self, pp, fname):
+        @todo
+        def func():
+            input = r"""
+<!-- #JS: foo(items) -->
+<!-- #/JS: bar() -->
+"""[1:]
+            def fn(): pp(input, fname, None)
+            ok (fn).raises(tenjin.ParseError, "'#/JS: foo()' expected but got '#/JS: bar()'")
+        func()
+
+    @test("JS_FUNC: contains JS functions necessary.")
+    def _(self):
+        ok (tenjin.JS_FUNC).matches('function _E\(.*?\)')
+        ok (tenjin.JS_FUNC).matches('function _S\(.*?\)')
+
+    @test("JS_FUNC: is a EscapedStr.")
+    def _(self):
+        ok (tenjin.JS_FUNC).is_a(tenjin.escaped.EscapedStr)
+
+    @test("#__init__(): can take attrubtes of <script> tag")
+    def _(self, pp, fname):
+        input = self.INPUT
+        expected = self.OUTPUT.replace('<script>', '<script type="text/javascript">')
+        pp = tenjin.JavaScriptPreprocessor(type='text/javascript')
+        actual = pp(input, fname, None)
+        ok (actual) == expected
+
+    @test("#parse(): converts JS template into JS code.")
+    def _(self, pp):
+        input = r"""
+<div>
+  <!-- #JS: render_table(items) -->
+  <table>
+    <?js for (var i = 0, n = items.length; i < n; i++) {
+         var item = items[i]; ?>
+    <span><?js
+      var klass = i % 2 ? 'odd' : 'even'; ?></span>
+    <tr>
+      <td>{=item=}</td>
+    </tr>
+    <?js	} ?>
+  </table>
+  <!-- #/JS -->
+</div>
+"""[1:]
+        expected = r"""
+<div>
+  <script>function render_table(items){var _buf='';
+_buf+='  <table>\n';
+     for (var i = 0, n = items.length; i < n; i++) {
+         var item = items[i];
+_buf+='    <span>';
+      var klass = i % 2 ? 'odd' : 'even';_buf+='</span>\n\
+    <tr>\n\
+      <td>'+_E(item)+'</td>\n\
+    </tr>\n';
+    	}
+_buf+='  </table>\n';
+  return _buf;};</script>
+</div>
+"""[1:]
+        output = pp.parse(input)
+        ok (output) == expected
+
+    @test("#parse(): escapes {=expr=} but not {==expr==}.")
+    def _(self, pp):
+        input = r"""
+<!-- #JS: render() -->
+<b>{=var1=}</b><b>{==var2==}</b>
+<!-- #/JS -->
+"""[1:]
+        expected = r"""
+<script>function render(){var _buf='';
+_buf+='<b>'+_E(var1)+'</b><b>'+_S(var2)+'</b>\n';
+return _buf;};</script>
+"""[1:]
+        output = pp.parse(input)
+        ok (output) == expected
+
+    @test("#parse(): supports both ${expr} and #{expr} in addition to {= =}.")
+    def _(self, pp):
+        input = r"""
+<!-- #JS: render() -->
+<b>${var1}</b><b>#{var2}</b>
+<!-- #/JS -->
+"""[1:]
+        expected = r"""
+<script>function render(){var _buf='';
+_buf+='<b>'+_E(var1)+'</b><b>'+_S(var2)+'</b>\n';
+return _buf;};</script>
+"""[1:]
+        output = pp.parse(input)
+        ok (output) == expected
+
+    @test("#parse(): can parse '${f({x:1})+f({y:2})}'.")
+    def _(self, pp):
+        input = r"""
+<!-- #JS: render() -->
+<p>${f({x:1})+f({y:2})}</p>
+<!-- #/JS -->
+"""[1:]
+        expected = r"""
+<script>function render(){var _buf='';
+_buf+='<p>'+_E(f({x:1})+f({y:2}))+'</p>\n';
+return _buf;};</script>
+"""[1:]
+        output = pp.parse(input)
+        ok (output) == expected
+
+    @test("#parse(): switches to function assignment when function name contains symbol.")
+    def _(self, pp):
+        input = r"""
+<!-- #JS: $jQuery.render_title(title) -->
+<h1>${title}</h1>
+<!-- #/JS -->
+"""[1:]
+        expected = r"""
+<script>$jQuery.render_title=function(title){var _buf='';
+_buf+='<h1>'+_E(title)+'</h1>\n';
+return _buf;};</script>
+"""[1:]
+        output = pp.parse(input)
+        ok (output) == expected
+
+    @test("#parse(): escapes single quotation and backslash.")
+    def _(self, pp):
+        input = r"""
+<!-- #JS: render() -->
+<h1>'Quote' and \Escape\n</h1>
+<!-- #/JS -->
+"""[1:]
+        expected = r"""
+<script>function render(){var _buf='';
+_buf+='<h1>\'Quote\' and \\Escape\\n</h1>\n';
+return _buf;};</script>
+"""[1:]
+        output = pp.parse(input)
+        ok (output) == expected
+
 
 
 if __name__ == '__main__':

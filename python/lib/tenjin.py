@@ -1141,6 +1141,177 @@ class TrimPreprocessor(object):
             return self._rexp.sub('<', input)
 
 
+class ParseError(Exception):
+    pass
+
+
+class JavaScriptPreprocessor(object):
+
+    def __init__(self, **attrs):
+        self._attrs = attrs
+
+    def __call__(self, input, filename=None, context=None):
+        return self.parse(input, filename)
+
+    def parse(self, input, filename=None):
+        buf = []
+        self._parse_chunks(input, buf, filename)
+        return ''.join(buf)
+
+    CHUNK_REXP = re.compile(r'(?:^( *)<|<)!-- *#(?:JS: (\$?\w+(?:\.\w+)*\(.*?\))|/JS:?) *-->([ \t]*\r?\n)?', re.M)
+
+    def _scan_chunks(self, input, filename):
+        rexp = self.CHUNK_REXP
+        pos = 0
+        curr_funcdecl = None
+        for m in rexp.finditer(input):
+            lspace, funcdecl, rspace = m.groups()
+            text = input[pos:m.start()]
+            pos = m.end()
+            if funcdecl:
+                if curr_funcdecl:
+                    raise ParseError("%s is nested in %s. (file: %s, line: %s)" % \
+                                         (funcdecl, curr_funcdecl, filename, _linenum(input, m.start()), ))
+                curr_funcdecl = funcdecl
+            else:
+                if not curr_funcdecl:
+                    raise ParseError("unexpected '<!-- #/JS -->'. (file: %s, line: %s)" % \
+                                         (filename, _linenum(input, m.start()), ))
+                curr_funcdecl = None
+            yield text, lspace, funcdecl, rspace, False
+        if curr_funcdecl:
+            raise ParseError("%s is not closed by '<!-- #/JS -->'. (file: %s, line: %s)" % \
+                                 (curr_funcdecl, filename, _linenum(input, m.start()), ))
+        rest = input[pos:]
+        yield rest, None, None, None, True
+
+    def _parse_chunks(self, input, buf, filename=None):
+        if not input: return
+        stag = '<script'
+        if self._attrs:
+            for k in self._attrs:
+                stag = "".join((stag, ' ', k, '="', self._attrs[k], '"'))
+        stag += '>'
+        etag = '</script>'
+        for text, lspace, funcdecl, rspace, end_p in self._scan_chunks(input, filename):
+            if end_p: break
+            if funcdecl:
+                buf.append(text)
+                if re.match(r'^\$?\w+\(', funcdecl):
+                    buf.extend((lspace or '', stag, 'function ', funcdecl, "{var _buf='';", rspace or ''))
+                else:
+                    m = re.match(r'(.+?)\((.*)\)', funcdecl)
+                    buf.extend((lspace or '', stag, m.group(1), '=function(', m.group(2), "){var _buf='';", rspace or ''))
+            else:
+                self._parse_stmts(text, buf)
+                buf.extend((lspace or '', "return _buf;};", etag, rspace or ''))
+            #
+        buf.append(text)
+
+    STMT_REXP = re.compile(r'(?:^( *)<|<)\?js(\s.*?) ?\?>([ \t]*\r?\n)?', re.M | re.S)
+
+    def _scan_stmts(self, input):
+        rexp = self.STMT_REXP
+        pos = 0
+        for m in rexp.finditer(input):
+            lspace, code, rspace = m.groups()
+            text = input[pos:m.start()]
+            pos = m.end()
+            yield text, lspace, code, rspace, False
+        rest = input[pos:]
+        yield rest, None, None, None, True
+
+    def _parse_stmts(self, input, buf):
+        if not input: return
+        for text, lspace, code, rspace, end_p in self._scan_stmts(input):
+            if end_p: break
+            if lspace is not None and rspace is not None:
+                self._parse_exprs(text, buf)
+                buf.extend((lspace, code, rspace))
+            else:
+                if lspace:
+                    text += lspace
+                self._parse_exprs(text, buf)
+                buf.append(code)
+                if rspace:
+                    self._parse_exprs(rspace, buf)
+        if text:
+            self._parse_exprs(text, buf)
+
+    s = r'(?:\{[^{}]*?\}[^{}]*?)*'
+    EXPR_REXP = re.compile(r'\{=(.*?)=\}|([$#])\{(.*?' + s + r')\}', re.S)
+    del s
+
+    def _get_expr(self, m):
+        code1, ch, code2 = m.groups()
+        if ch:
+            code = code2
+            escape_p = ch == '$'
+        elif code1[0] == code1[-1] == '=':
+            code = code1[1:-1]
+            escape_p = False
+        else:
+            code = code1
+            escape_p = True
+        return code, escape_p
+
+    def _scan_exprs(self, input):
+        rexp = self.EXPR_REXP
+        pos = 0
+        for m in rexp.finditer(input):
+            text = input[pos:m.start()]
+            pos = m.end()
+            code, escape_p = self._get_expr(m)
+            yield text, code, escape_p, False
+        rest = input[pos:]
+        yield rest, None, None, True
+
+    def _parse_exprs(self, input, buf):
+        if not input: return
+        buf.append("_buf+=")
+        extend = buf.extend
+        op = ''
+        for text, code, escape_p, end_p in self._scan_exprs(input):
+            if end_p:
+                break
+            if text:
+                extend((op, self._escape_text(text)))
+                op = '+'
+            if code:
+                extend((op, escape_p and '_E(' or '_S(', code, ')'))
+                op = '+'
+        rest = text
+        if rest:
+            extend((op, self._escape_text(rest)))
+        if input.endswith("\n"):
+            buf.append(";\n")
+        else:
+            buf.append(";")
+
+    def _escape_text(self, text):
+        lines = text.splitlines(True)
+        fn = self._escape_str
+        s = "\\\n".join( fn(line) for line in lines )
+        return "".join(("'", s, "'"))
+
+    def _escape_str(self, string):
+        return string.replace("\\", "\\\\").replace("'", "\\'").replace("\n", r"\n")
+
+
+def _linenum(input, pos):
+    return input[0:pos].count("\n") + 1
+
+
+JS_FUNC = r"""
+function _S(x){return x==null?'':x;}
+function _E(x){return x==null?'':typeof(x)!=='string'?x:x.replace(/[&<>"']/g,_EF);}
+var _ET={'&':"&amp;",'<':"&lt;",'>':"&gt;",'"':"&quot;","'":"&#039;"};
+function _EF(c){return _ET[c];};
+"""[1:-1]
+JS_FUNC = escaped.EscapedStr(JS_FUNC)
+
+
+
 ##
 ## cache storages
 ##
