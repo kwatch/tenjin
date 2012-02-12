@@ -294,6 +294,15 @@ class test(Category):
                 system_f("%s test_all.py" % bin)
             rm_f("data/**/*.cache")
 
+    @recipe
+    def jython(c):
+        """do test on Jython"""
+        os.environ['JYTHONPATH'] = os.environ['PYTHONPATH']
+        with chdir('test'):
+            system("jython test_all.py")
+            rm_r("**/*.cache")
+            rm_r("**/*$py.class")
+
 
 @recipe
 def clean(c):
