@@ -810,7 +810,7 @@ class Template(object):
         #if nl: declares.append(nl)
         buf.append(''.join(declares) + "\n")
 
-    EXPR_PATTERN = (r'#\{(.*?)\}|\$\{(.*?)\}|\{=(?:=(.*?)=|(.*?))=\}', re.S)
+    EXPR_PATTERN = (r'#\{(.*?(?:\{.*?\}.*?)*)\}|\$\{(.*?(?:\{.*?\}.*?)*)\}|\{=(?:=(.*?)=|(.*?))=\}', re.S)
 
     def expr_pattern(self):
         pat = self.EXPR_PATTERN

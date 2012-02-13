@@ -3,7 +3,7 @@
 ### $Copyright: copyright(c) 2007-2011 kuwata-lab.com all rights reserved. $
 ###
 
-from oktest import ok, not_ok, run, spec
+from oktest import ok, not_ok, run, spec, test
 from oktest.tracer import Tracer
 import sys, os, re
 
@@ -534,6 +534,19 @@ escape: ''', (var), '''\n''', ));
         #ok (cycle()).is_a(EscapedStr)
         #ok (cycle()).is_a(EscapedStr)
 
+    @test("'{}' is available in '${}' or '#{}', such as '${foo({'x':1})}'")
+    def _(self):
+        input = """
+<p>${f({'a':1})+g({'b':2})}</p>
+<p>#{f({'c':3})+g({'d':4})}</p>
+"""
+        expected = r"""_extend=_buf.extend;_to_str=to_str;_escape=escape; _extend(('''
+<p>''', _escape(_to_str(f({'a':1})+g({'b':2}))), '''</p>
+<p>''', _to_str(f({'c':3})+g({'d':4})), '''</p>\n''', ));
+"""
+        t = tenjin.Template()
+        script = t.convert(input)
+        ok (script) == expected
 
 
 
