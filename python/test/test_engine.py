@@ -748,6 +748,53 @@ class EngineTest(object):
         finally:
             _remove_files(filenames)
 
+    @_with_dummy_files
+    def test_pp(self):
+        if spec("'pp' paramater should be a list of preprocessor objects."):
+            pp1 = tenjin.TemplatePreprocessor()
+            pp2 = tenjin.TrimPreprocessor()
+            pp3 = tenjin.JavaScriptPreprocessor(type="text/javascript")
+            e = tenjin.Engine(pp=[pp1, pp2, pp3])
+            input = r"""
+<body>
+  <div>
+    <!-- #JS: render_items(items) -->
+    <ul>
+    <?js for (var i = 0; i < items.length; i++) { ?>
+      <li>${i}</li>
+    <?js } ?>
+    </ul>
+    <!-- #/JS -->
+  </div>
+  <script>#{{tenjin.JS_FUNC}}</script>
+</body>
+"""[1:]
+            expected = r"""
+<body>
+<div>
+<script type="text/javascript">function render_items(items){var _buf='';
+_buf+='<ul>\n';
+ for (var i = 0; i < items.length; i++) {
+_buf+='<li>'+_E(i)+'</li>\n';
+ }
+_buf+='</ul>\n';
+return _buf;};</script>
+</div>
+<script>function _S(x){return x==null?'':x;}
+function _E(x){return x==null?'':typeof(x)!=='string'?x:x.replace(/[&<>"']/g,_EF);}
+var _ET={'&':"&amp;",'<':"&lt;",'>':"&gt;",'"':"&quot;","'":"&#039;"};
+function _EF(c){return _ET[c];};</script>
+</body>
+"""[1:]
+            fname = 'tmp_123.pyhtml'
+            f = open(fname, 'w'); f.write(input); f.close()
+            try:
+                t = e.get_template(fname)
+                context = {}
+                output = e.render(fname, context)
+                ok (output) == expected
+            finally:
+                for x in glob(fname + '*'): os.unlink(x)
 
     def test_include_with_kwargs(self):
         data = EngineTest._testdata['test_include_with_kwargs']
@@ -858,7 +905,7 @@ class EngineTest(object):
 
     @_with_dummy_files
     def test__preprocess(self):
-        e1 = tenjin.Engine()
+        e1 = tenjin.Engine(preprocess=True)
         if spec("preprocess template and return result"):
             fpath = '_views/index.pyhtml'
             input, mtime = e1.loader.load(fpath)
@@ -948,7 +995,7 @@ class EngineTest(object):
             if spec("set timestamp and filename of template object."):
                 ok (t.timestamp) == os.path.getmtime(filepath)
                 ok (t.filename) == fpath
-                delta = JYTHON and 0.03 or 0.001
+                delta = JYTHON and 0.03 or 0.003
                 ok (t._last_checked_at).in_delta(time.time(), delta)
             if spec("save template object into cache."):
                 ok (cpath).exists()

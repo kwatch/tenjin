@@ -1792,7 +1792,7 @@ class Engine(object):
     preprocessorclass = Preprocessor
     timestamp_interval = 1  # seconds
 
-    def __init__(self, prefix=None, postfix=None, layout=None, path=None, cache=True, preprocess=None, templateclass=None, preprocessorclass=None, lang=None, loader=None, **kwargs):
+    def __init__(self, prefix=None, postfix=None, layout=None, path=None, cache=True, preprocess=None, templateclass=None, preprocessorclass=None, lang=None, loader=None, pp=None, **kwargs):
         """Initializer of Engine class.
 
            prefix:str (='')
@@ -1815,6 +1815,8 @@ class Engine(object):
            lang:str (=None)
              Language name such as 'en', 'fr', 'ja', and so on. If you specify
              this, cache file path will be 'inex.html.en.cache' for example.
+           pp:list (=None)
+             List of preprocessor object which is callable and manipulates template content.
            kwargs:dict
              Options for Template class constructor.
              See document of Template.__init__() for details.
@@ -1828,6 +1830,14 @@ class Engine(object):
         if lang is not None:  self.lang = lang
         if loader is not None: self.loader = loader
         if preprocess is not None: self.preprocess = preprocess
+        if   pp is None:            pp = []
+        elif isinstance(pp, list):  pass
+        elif isinstance(pp, tuple): pp = list(pp)
+        else:
+            raise TypeError("'pp' expected to be a list but got %r." % (pp,))
+        self.pp = pp
+        if preprocess:
+            self.pp.append(TemplatePreprocessor())
         self.kwargs = kwargs
         self.encoding = kwargs.get('encoding')
         self._filepaths = {}   # template_name => relative path and absolute path
@@ -1883,10 +1893,14 @@ class Engine(object):
         #if _context is None: _context = {}
         #if _globals is None: _globals = sys._getframe(3).f_globals
         #: preprocess template and return result
+        #preprocessor = self.preprocessorclass(filepath, input=input)
+        #return preprocessor.render(_context, globals=_globals)
+        #: preprocesses input with _context and returns result.
         if '_engine' not in _context:
             self.hook_context(_context)
-        preprocessor = self.preprocessorclass(filepath, input=input)
-        return preprocessor.render(_context, globals=_globals)
+        for pp in self.pp:
+            input = pp.__call__(input, filepath, _context, _globals)
+        return input
 
     def add_template(self, template):
         self._added_templates[template.filename] = template
@@ -1947,7 +1961,7 @@ class Engine(object):
             if not ret:
                 raise TemplateNotFoundError("%r: template not found." % filepath)
             input, timestamp = ret
-            if self.preprocess:   ## required for preprocessing
+            if self.pp:   ## required for preprocessing
                 if _context is None: _context = {}
                 if _globals is None: _globals = sys._getframe(1).f_globals
                 input = self._preprocess(input, filepath, _context, _globals)
