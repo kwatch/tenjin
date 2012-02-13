@@ -3,7 +3,7 @@
 ### $Copyright: copyright(c) 2007-2011 kuwata-lab.com all rights reserved. $
 ###
 
-from oktest import ok, not_ok, run, spec
+from oktest import ok, not_ok, run, spec, test
 from oktest.helper import dummy_file
 import sys, os, re, time, marshal, shutil
 from glob import glob
@@ -795,6 +795,19 @@ function _EF(c){return _ET[c];};</script>
                 ok (output) == expected
             finally:
                 for x in glob(fname + '*'): os.unlink(x)
+
+    @test("#__init__(): creates TemplatePreprocessor object when 'preprocess' option is on.")
+    def _(self):
+        e = tenjin.Engine(preprocess=True)
+        ok (e.pp).is_a(list).length(1)
+        ok (e.pp[0]).is_a(tenjin.TemplatePreprocessor)
+
+    @test("#__init__(): creates TemplatePreprocessor object with 'preprocessorclass' class.")
+    def _(self):
+        e = tenjin.Engine(preprocess=True)
+        ok (e.pp[0].factory) == tenjin.Preprocessor
+        e = tenjin.Engine(preprocess=True, preprocessorclass=tenjin.SafePreprocessor)
+        ok (e.pp[0].factory) == tenjin.SafePreprocessor
 
     def test_include_with_kwargs(self):
         data = EngineTest._testdata['test_include_with_kwargs']

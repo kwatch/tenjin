@@ -1839,7 +1839,7 @@ class Engine(object):
             raise TypeError("'pp' expected to be a list but got %r." % (pp,))
         self.pp = pp
         if preprocess:
-            self.pp.append(TemplatePreprocessor())
+            self.pp.append(TemplatePreprocessor(self.preprocessorclass))
         self.kwargs = kwargs
         self.encoding = kwargs.get('encoding')
         self._filepaths = {}   # template_name => relative path and absolute path
