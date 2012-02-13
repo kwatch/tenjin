@@ -59,6 +59,21 @@ class PreprocessorTest(object):
             ok (preprocessor.script) == script
             ok (preprocessor.render()) == output
 
+    @test("'{}' is available in '${{}}' or '#{}}}', such as '${{foo({'x':1})}}'")
+    def _(self):
+        input = """
+<p>${{f({'a':1})+g({'b':2})}}</p>
+<p>#{{f({'c':3})+g({'d':4})}}</p>
+"""
+        expected = r"""_extend=_buf.extend;_to_str=to_str;_escape=escape; _extend(('''
+<p>''', _escape(_to_str(_decode_params(f({'a':1})+g({'b':2})))), '''</p>
+<p>''', _to_str(_decode_params(f({'c':3})+g({'d':4}))), '''</p>\n''', ));
+"""
+        t = tenjin.Preprocessor()
+        script = t.convert(input)
+        ok (script) == expected
+
+
 
 class TemplatePreprocessorTest(object):
 
