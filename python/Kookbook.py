@@ -36,7 +36,7 @@ python_binaries = [
     #('2.7', '/opt/local/bin/python2.7'),
     ('2.7', '/opt/lang/python/2.7.2/bin/python'),
     ('3.0', '/opt/lang/python/3.0.1/bin/python'),
-    ('3.1', '/opt/lang/python/2.1.4/bin/python'),
+    ('3.1', '/opt/lang/python/3.1.4/bin/python'),
     ('3.2', '/opt/lang/python/3.2.2/bin/python'),
 ]
 
