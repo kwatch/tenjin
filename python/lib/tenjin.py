@@ -878,7 +878,9 @@ class Template(object):
         buf.append("));")
 
     def _quote_text(self, text):
-        return re.sub(r"(['\\\\])", r"\\\1", text)
+        text = re.sub(r"(['\\\\])", r"\\\1", text)
+        text = text.replace("\r\n", "\\r\n")
+        return text
 
     def add_text(self, buf, text, encode_newline=False):
         if not text: return

@@ -70,7 +70,7 @@ print(''.join(_buf))
 """
 SOURCE2 = """_buf = []; _extend=_buf.extend;_to_str=to_str;_escape=escape; _extend(('''<ul>\\r\\n''', ));\n\
 for item in ['<a&b>', '["c",'+"'d']"]:\n\
-    _extend(('''  <li>''', _to_str(item), '''\r\n\
+    _extend(('''  <li>''', _to_str(item), '''\\r\n\
       ''', _escape(_to_str(item)), '''</li>\\r\\n''', ));\n\
 #end\n\
 _extend(('''</ul>\\r\\n''', ));\n\

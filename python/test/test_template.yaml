@@ -307,7 +307,7 @@
   source: |6
         _extend=_buf.extend;_to_str=to_str;_escape=escape; 
         for value in range(0,3):
-            _extend((_to_str(value), '''^
+            _extend((_to_str(value), '''\r
         i = ''', _to_str(value), '''\r\n''', ));
         #end
 
@@ -341,7 +341,7 @@
         
         for value in range(0,3):
         
-            _extend(('''i = ''', _to_str(value), '''^
+            _extend(('''i = ''', _to_str(value), '''\r
         ''', _to_str(value), '''\r\n''', ));
         
         #end
