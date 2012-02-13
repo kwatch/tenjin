@@ -1116,13 +1116,15 @@ class Preprocessor(Template):
 
 
 class TemplatePreprocessor(object):
+    factory = Preprocessor
 
-    def __init__(self):
+    def __init__(self, factory=None):
+        if factory is not None: self.factory = factory
         self.globals = sys._getframe(1).f_globals
 
     def __call__(self, input, filename=None, context=None, _globals=None):
         if _globals is None: _globals = self.globals
-        template = Preprocessor()
+        template = self.factory()
         template.convert(input, filename)
         return template.render(context, globals=_globals)
 

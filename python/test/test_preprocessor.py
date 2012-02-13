@@ -98,6 +98,28 @@ class TemplatePreprocessorTest(object):
         pp = tenjin.TemplatePreprocessor()
         ok (pp(input, "foobar.rhtml", context)) == expected
 
+    @test("#__init__(): takes preprocessor class.")
+    def _(self):
+        pp = tenjin.TemplatePreprocessor(tenjin.SafePreprocessor)
+        ok (pp.factory) == tenjin.SafePreprocessor
+
+    @test("#__init__(): default preprocessor class is tenjin.Preprocessor.")
+    def _(self):
+        pp = tenjin.TemplatePreprocessor()
+        ok (pp.factory) == tenjin.Preprocessor
+
+    @test("#__call__(): creates preprocessor object with specified class.")
+    def _(self):
+        input = self.INPUT
+        context = { 'items': ["<AAA>", "B&B"] }
+        def fn(): pp(input, "foobar.pyhtml", context)
+        #
+        pp = tenjin.TemplatePreprocessor(tenjin.Preprocessor)
+        ok (fn).not_raise()
+        #
+        pp = tenjin.TemplatePreprocessor(tenjin.SafePreprocessor)
+        ok (fn).raises(tenjin.TemplateSyntaxError, "#{{item}}: '#{{}}' is not allowed with SafePreprocessor.")
+
 
 class TrimPreprocessorTest(object):
 
