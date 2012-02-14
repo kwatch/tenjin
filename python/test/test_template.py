@@ -11,7 +11,14 @@ from testcase_helper import *
 import tenjin
 from tenjin.helpers import *
 
+PYPY   = hasattr(sys, 'pypy_version_info')
 JYTHON = hasattr(sys, 'JYTHON_JAR')
+
+def _errmsg(errmsg):
+    if PYPY:
+        if re.match(r"^name '.*' is not defined$", errmsg):
+            return "global " + errmsg
+    return errmsg
 
 
 class TemplateTest(object):
@@ -72,6 +79,10 @@ class TemplateTest(object):
         if JYTHON:
             if self._testMethodName == 'test_syntaxerr1':
                 errormsg = r"mismatched input '\n' expecting COLON"
+        #
+        if PYPY:
+            if errormsg:
+                errormsg = _errmsg(errormsg)
         #
         if exception:
             try:
@@ -290,7 +301,7 @@ _extend(('''</ul>\n''', ));
             t = tenjin.Template(None, input=input, tostrfunc='johnsmith')
             def f(): t.render({'name': 'Haruhi'})
             #ok (f).raises(TypeError, "'NoneType' object is not callable")
-            ok (f).raises(NameError, "name 'johnsmith' is not defined")
+            ok (f).raises(NameError, _errmsg("name 'johnsmith' is not defined"))
 
     def test_option_escapefunc(self):
         input = "<p>Hello ${name}!</p>"
@@ -318,8 +329,7 @@ _extend(('''</ul>\n''', ));
             t = tenjin.Template(None, input=input, escapefunc='kyonsmith')
             def f(): t.render({'name': 'Haruhi'})
             #ok (f).raises(TypeError, "'NoneType' object is not callable")
-            ok (f).raises(NameError, "name 'kyonsmith' is not defined")
-
+            ok (f).raises(NameError, _errmsg("name 'kyonsmith' is not defined"))
 
     def test_localvars_assignments_without_args_declaration(self):
         def _convert(input):

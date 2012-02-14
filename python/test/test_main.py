@@ -12,7 +12,14 @@ from testcase_helper import *
 import tenjin
 from tenjin.helpers import escape, to_str
 
+PYPY   = hasattr(sys, 'pypy_version_info')
 JYTHON = hasattr(sys, 'JYTHON_JAR')
+
+def _errmsg(errmsg):
+    if PYPY:
+        if re.match(r"^name '.*' is not defined$", errmsg):
+            return "global " + errmsg
+    return errmsg
 
 filename = None
 for filename in ['../bin/pytenjin', 'bin/pytenjin']:
@@ -148,6 +155,16 @@ class MainTest(object):
             if self._testMethodName == 'test_lint5':
                 expected = (
                     ".test.pyhtml:5:4: mismatched input 'else' expecting DEDENT\n"
+                    "  5:     else\n"
+                    "        ^\n"
+                    )
+        #
+        if PYPY:
+            if errormsg:
+                errormsg = _errmsg(errormsg)
+            if self._testMethodName == 'test_lint5':
+                expected = (
+                    ".test.pyhtml:5:4: invalid syntax\n"
                     "  5:     else\n"
                     "        ^\n"
                     )
