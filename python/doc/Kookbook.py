@@ -189,7 +189,7 @@ def file_test_users_guide_py(c):
 
 
 @recipe
-@product(testdir+'/test_users_guide.py')
+@product(testdir+'/test_users-guide.py')
 @ingreds('users-guide.txt')
 def file_test_users_guide_py(c):
     ##
@@ -233,6 +233,8 @@ from glob import glob
 from oktest import ok, run
 
 python3 = sys.version_info[0] == 3
+PYPY    = hasattr(sys, 'pypy_version_info')
+JYTHON  = hasattr(sys, 'JYTHON_JAR')
 
 try:    # Python 2.6 or later
     from subprocess import Popen, PIPE
@@ -263,6 +265,16 @@ class UsersGuideTest(object):
                     import shutil
                     shutil.copy(fname, 'my_template.py')
                     break
+        if PYPY:
+            if self.__name__ == 'syntaxerr':
+                s = (
+                    "$ pytenjin -z syntaxerr.pyhtml\n"
+                    "syntaxerr.pyhtml:5:8: invalid syntax\n"
+                    "  5:         else\n"
+                    "            ^\n"
+                    )
+                f = open('result.output', 'w'); f.write(s); f.close()
+                del s
 
     def after(self):
         os.chdir(self.CWD)
