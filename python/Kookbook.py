@@ -299,9 +299,20 @@ class test(Category):
         """do test on Jython"""
         os.environ['JYTHONPATH'] = os.environ['PYTHONPATH']
         with chdir('test'):
-            system("jython test_all.py")
-            rm_r("**/*.cache")
-            rm_r("**/*$py.class")
+            try:
+                system("jython test_all.py")
+            finally:
+                rm_rf("**/*.cache")
+                rm_rf("**/*$py.class")
+
+    @recipe
+    def pypy(c):
+        """do test on PyPy"""
+        with chdir('test'):
+            try:
+                system("pypy test_all.py")
+            finally:
+                rm_rf("**/*.cache")
 
 
 @recipe
