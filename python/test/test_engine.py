@@ -1042,6 +1042,18 @@ function _EF(c){return _ET[c];};</script>
         if spec("add include() method into context data."):
             ok (ctx.get('include')) == (e.include)
 
+    @test("get_template(): ignores syntax error when compiling.")
+    def _(self):
+        input = """<p>${{foo}</p>"""
+        fname = "tmp_999.pyhtml"
+        f = open(fname, 'w'); f.write(input); f.close()
+        try:
+            e = tenjin.Engine()
+            def fn(): e.get_template(fname)
+            ok (fn).not_raise(SyntaxError)
+        finally:
+            for x in glob(fname + '*'): os.unlink(x)
+
 
 _DUMMY_VALUE = 'SOS'
 

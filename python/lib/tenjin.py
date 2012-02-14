@@ -1976,7 +1976,10 @@ class Engine(object):
             template._last_checked_at = _time()
             #: save template object into cache.
             if cache:
-                if not template.bytecode: template.compile()
+                if not template.bytecode:
+                    #: ignores syntax error when compiling.
+                    try: template.compile()
+                    except SyntaxError: pass
                 cache.set(cachepath, template)
         #else:
         #    template.compile()
