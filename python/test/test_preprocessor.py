@@ -111,7 +111,7 @@ class TemplatePreprocessorTest(object):
         input, expected = self.INPUT, self.EXPECTED
         context = { 'items': ["<AAA>", "B&B"] }
         pp = tenjin.TemplatePreprocessor()
-        ok (pp(input, "foobar.rhtml", context)) == expected
+        ok (pp(input, filename="foobar.rhtml", context=context)) == expected
 
     @test("#__init__(): takes preprocessor class.")
     def _(self):
@@ -127,7 +127,7 @@ class TemplatePreprocessorTest(object):
     def _(self):
         input = self.INPUT
         context = { 'items': ["<AAA>", "B&B"] }
-        def fn(): pp(input, "foobar.pyhtml", context)
+        def fn(): pp(input, filename="foobar.pyhtml", context=context)
         #
         pp = tenjin.TemplatePreprocessor(tenjin.Preprocessor)
         ok (fn).not_raise()
@@ -161,7 +161,7 @@ class TrimPreprocessorTest(object):
 """[1:]
         input = self.INPUT
         pp = tenjin.TrimPreprocessor()
-        ok (pp(input, None, None)) == expected
+        ok (pp(input)) == expected
 
     @test("remove all spaces at beginning of line when argument 'all' is true")
     def _(self):
@@ -176,7 +176,7 @@ i += 1 ?>
 """[1:]
         input = self.INPUT
         pp = tenjin.TrimPreprocessor(True)
-        ok (pp(input, None, None)) == expected
+        ok (pp(input)) == expected
 
 
 class PrefixedLinePreprocessorTest(object):
@@ -274,24 +274,24 @@ return _buf;};</script>
 
     @test("converts embedded javascript template into client-side template function")
     def _(self, pp, fname):
-        ok (pp(self.INPUT, fname, None)) == self.OUTPUT
+        ok (pp(self.INPUT, filename=fname)) == self.OUTPUT
 
     @test("raises error when extra '#/JS' found")
     def _(self, pp, fname):
-        def fn(): pp("foo\n<!-- #/JS -->\n", fname, None)
+        def fn(): pp("foo\n<!-- #/JS -->\n", filename=fname)
         ok (fn).raises(tenjin.ParseError, "unexpected '<!-- #/JS -->'. (file: _test_pp.rbhtml, line: 2)")
 
     @test("raises error when '#JS' doesn't contain function name")
     def _(self, pp, fname):
         @todo
         def func():
-            def fn(): pp("foo\n<!-- #JS -->\n", fname, None)
+            def fn(): pp("foo\n<!-- #JS -->\n", filename=fname)
             ok (fn).raises(tenjin.ParseError, "'#JS' found but not function name")
         func()
 
     @test("raises error when '#JS' is not closed")
     def _(self, pp, fname):
-        def fn(): pp("foo\n<!-- #JS: render_table(items) -->\nxxx", fname, None)
+        def fn(): pp("foo\n<!-- #JS: render_table(items) -->\nxxx", filename=fname)
         ok (fn).raises(tenjin.ParseError, "render_table(items) is not closed by '<!-- #/JS -->'. (file: %s, line: 2)" % (fname,))
 
     @test("raises error when '#JS' is nested")
@@ -302,7 +302,7 @@ return _buf;};</script>
   <!-- #/JS -->
 <!-- #/JS -->
 """[1:]
-        def fn(): pp(input, fname, None)
+        def fn(): pp(input, filename=fname)
         ok (fn).raises(tenjin.ParseError, "inner(items) is nested in outer(items). (file: %s, line: 2)" % (fname,))
 
     @test("raises error when func name on '#/JS' is different from that of '#JS")
@@ -313,7 +313,7 @@ return _buf;};</script>
 <!-- #JS: foo(items) -->
 <!-- #/JS: bar() -->
 """[1:]
-            def fn(): pp(input, fname, None)
+            def fn(): pp(input, filename=fname)
             ok (fn).raises(tenjin.ParseError, "'#/JS: foo()' expected but got '#/JS: bar()'")
         func()
 
@@ -331,7 +331,7 @@ return _buf;};</script>
         input = self.INPUT
         expected = self.OUTPUT.replace('<script>', '<script type="text/javascript">')
         pp = tenjin.JavaScriptPreprocessor(type='text/javascript')
-        actual = pp(input, fname, None)
+        actual = pp(input, filename=fname)
         ok (actual) == expected
 
     @test("#parse(): converts JS template into JS code.")

@@ -1124,11 +1124,13 @@ class TemplatePreprocessor(object):
         if factory is not None: self.factory = factory
         self.globals = sys._getframe(1).f_globals
 
-    def __call__(self, input, filename=None, context=None, _globals=None):
-        if _globals is None: _globals = self.globals
+    def __call__(self, input, **kwargs):
+        filename = kwargs.get('filename')
+        context  = kwargs.get('context') or {}
+        globals  = kwargs.get('globals') or self.globals
         template = self.factory()
         template.convert(input, filename)
-        return template.render(context, globals=_globals)
+        return template.render(context, globals=globals)
 
 
 class TrimPreprocessor(object):
@@ -1139,7 +1141,7 @@ class TrimPreprocessor(object):
     def __init__(self, all=False):
         self.all = all
 
-    def __call__(self, input, filename=None, context=None, _globals=None):
+    def __call__(self, input, **kwargs):
         if self.all:
             return self._rexp_all.sub('', input)
         else:
@@ -1158,7 +1160,7 @@ class PrefixedLinePreprocessor(object):
 
     STMT_REXP = re.compile(r'<\?py\s.*?\?>', re.S)
 
-    def __call__(self, input, filename=None, context=None, _globals=None):
+    def __call__(self, input, **kwargs):
         buf = []; append = buf.append
         pos = 0
         for m in self.STMT_REXP.finditer(input):
@@ -1181,8 +1183,8 @@ class JavaScriptPreprocessor(object):
     def __init__(self, **attrs):
         self._attrs = attrs
 
-    def __call__(self, input, filename=None, context=None, _globals=None):
-        return self.parse(input, filename)
+    def __call__(self, input, **kwargs):
+        return self.parse(input, kwargs.get('filename'))
 
     def parse(self, input, filename=None):
         buf = []
@@ -1929,7 +1931,7 @@ class Engine(object):
         if '_engine' not in _context:
             self.hook_context(_context)
         for pp in self.pp:
-            input = pp.__call__(input, filepath, _context, _globals)
+            input = pp.__call__(input, filename=filepath, context=_context, globals=_globals)
         return input
 
     def add_template(self, template):
