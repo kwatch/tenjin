@@ -1146,6 +1146,32 @@ class TrimPreprocessor(object):
             return self._rexp.sub('<', input)
 
 
+class PrefixedLinePreprocessor(object):
+
+    def __init__(self, prefix='::(?=[ \t]|$)'):
+        self.prefix = prefix
+        self.regexp = re.compile(r'^([ \t]*)' + prefix + r'(.*)', re.M)
+
+    def convert_prefixed_lines(self, text):
+        fn = lambda m: "%s<?py%s ?>" % (m.group(1), m.group(2))
+        return self.regexp.sub(fn, text)
+
+    STMT_REXP = re.compile(r'<\?py\s.*?\?>', re.S)
+
+    def __call__(self, input, filename=None, context=None, _globals=None):
+        buf = []; append = buf.append
+        pos = 0
+        for m in self.STMT_REXP.finditer(input):
+            text = input[pos:m.start()]
+            stmt = m.group(0)
+            pos = m.end()
+            if text: append(self.convert_prefixed_lines(text))
+            append(stmt)
+        rest = input[pos:]
+        if rest: append(self.convert_prefixed_lines(rest))
+        return "".join(buf)
+
+
 class ParseError(Exception):
     pass
 

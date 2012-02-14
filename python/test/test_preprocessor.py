@@ -179,6 +179,55 @@ i += 1 ?>
         ok (pp(input, None, None)) == expected
 
 
+class PrefixedLinePreprocessorTest(object):
+
+    @test("converts lines which has prefix (':: ') into '<?py ... ?>'.")
+    def _(self):
+        input = r"""
+<ul>
+:: i = 0
+:: for item in items:
+::     i += 1
+  <li>${item}</li>
+:: #endfor
+</ul>
+"""[1:]
+        expected = r"""
+<ul>
+<?py i = 0 ?>
+<?py for item in items: ?>
+<?py     i += 1 ?>
+  <li>${item}</li>
+<?py #endfor ?>
+</ul>
+"""[1:]
+        pp = tenjin.PrefixedLinePreprocessor()
+        ok (pp(input)) == expected
+
+    @test("able to mix '<?py ... ?>' and ':: '.")
+    def _(self):
+        input = r"""
+<ul>
+:: i = 0
+<?py for item in items: ?>
+  ::  i += 1
+  <li>${item}</li>
+<?py #endfor ?>
+</ul>
+"""[1:]
+        expected = r"""
+<ul>
+<?py i = 0 ?>
+<?py for item in items: ?>
+  <?py  i += 1 ?>
+  <li>${item}</li>
+<?py #endfor ?>
+</ul>
+"""[1:]
+        pp = tenjin.PrefixedLinePreprocessor()
+        ok (pp(input)) == expected
+
+
 class JavaScriptPreprocessorTest(object):
 
     INPUT = r"""
