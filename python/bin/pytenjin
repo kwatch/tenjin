@@ -127,6 +127,13 @@ class Main(object):
             raise self.error("--indent: integer value required.")
         if 'f' in options and not os.path.isfile(options['f']):
             raise self.error("-f %s: file not found." % options['f'])
+        pp_classes = []
+        if 'pp' in properties:
+            for x in properties['pp'].split(','):
+                klass = getattr(tenjin, '%sPreprocessor' % x, None)
+                if not klass:
+                    raise self.error("--pp=%s: 'tenjin.%sPreprocessor' not found." % (x, x))
+                pp_classes.append(klass)
 
         ## set action
         action = options.get('a')
@@ -205,6 +212,8 @@ class Main(object):
             properties.setdefault('postamble', True)
         if 'i' in options:
             properties['indent'] = int(options['i'])
+        if 'pp' in properties:
+            properties['pp'] = [ klass() for klass in pp_classes ]
 
         ## set properties for tenjin.Engine
         properties.setdefault('cache', action == 'cache');
@@ -407,14 +416,16 @@ Usage: %(command)s [..options..] [file1 [file2...]]
   --layout=filename   :  layout template name
   --path=dir1,dir2,.. :  template lookup path
   --preprocess        :  activate preprocessing
+  --pp=name1,name2,.. :  preprocessor class (Trim,JavaScript,PrefixedLine)
   --templateclass=name:  template class (default: tenjin.Template)
   --safe              :  use SafeTemplate class instead of Template
 Examples:
  ex1. render template
    $ %(command)s file.pyhtml
  ex2. convert template into python script
-   $ %(command)s -a convert file.pyhtml
-   $ %(command)s -a retrieve -UN file.pyhtml   # for debug
+   $ %(command)s -s file.pyhtml                  # or '-a convert' instead of '-s'
+   $ %(command)s -s --pp=Trim,JavaScript file.pyhtml  # convert with preprocessing
+   $ %(command)s -a retrieve -UN file.pyhtml     # for debug
  ex3. create cache file (*.cache) from template
    $ %(command)s -a cache *.pyhtml
  ex4. render with context data file (*.yaml or *.py)
