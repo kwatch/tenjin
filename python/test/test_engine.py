@@ -356,7 +356,7 @@ class EngineTest(object):
             for fname in cache_filenames: not_ok (fname).exists()
             ## marshal caching
             if not JYTHON:
-                props['cache'] = True
+                props['cache'] = tenjin.MarshalCacheStorage()
                 engine = tenjin.Engine(**props)
                 output = engine.render(':create', context)
                 ok (output) == expected
@@ -571,8 +571,8 @@ class EngineTest(object):
 
 
     def test__set_cache_storage(self):
-        if "default then Engine.cache is MarshalCacheStorage instance":
-            ok (tenjin.Engine.cache).is_a(tenjin.MarshalCacheStorage)
+        if "default then Engine.cache is TextCacheStorage instance":
+            ok (tenjin.Engine.cache).is_a(tenjin.TextCacheStorage)
         if "cache=True specified then use default cache object":
             engine = tenjin.Engine(cache=True)
             ok ('cache' in engine.__dict__) == False
@@ -621,14 +621,14 @@ class EngineTest(object):
             t = engine.get_template(filename)
             ok (t.args) == expected_args
             ok (t.script) == expected_script
-            import marshal
-            f = open(filename + '.cache', 'rb')
-            try:
-                dct = marshal.load(f)
-                ok (dct['args']) == expected_args
-                ok (dct['script']) == expected_script
-            finally:
-                f.close()
+            #import marshal
+            #f = open(filename + '.cache', 'rb')
+            #try:
+            #    dct = marshal.load(f)
+            #    ok (dct['args']) == expected_args
+            #    ok (dct['script']) == expected_script
+            #finally:
+            #    f.close()
         ##
         try:
             ## args=[x,y,z], cache=1

@@ -1817,7 +1817,7 @@ class Engine(object):
     layout     = None
     templateclass = Template
     path       = None
-    cache      = MarshalCacheStorage()  # save converted Python code into file by marshal-format
+    cache      = TextCacheStorage()  # save converted Python code into text file
     lang       = None
     loader     = FileSystemLoader()
     preprocess = False

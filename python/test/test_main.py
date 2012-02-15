@@ -5,7 +5,7 @@
 ###
 
 from oktest import ok, not_ok, run
-import sys, os, traceback
+import sys, os, traceback, time
 import yaml
 
 from testcase_helper import *
@@ -329,19 +329,33 @@ class MainTest(object):
             "#endfor\n"
             "_extend(('''</ul>\\n''', ));\n"
             )
+        expected_cache = r"""
+timestamp: %(timestamp)s
+args: title, items
+
+title = _context.get('title'); items = _context.get('items'); 
+_extend=_buf.extend;_to_str=to_str;_escape=escape; _extend(('''<h1>''', _escape(_to_str(title)), '''</h1>
+<ul>\n''', ));
+for item in items:
+    _extend(('''  <li>''', _escape(_to_str(item)), '''</li>\n''', ));
+#endfor
+_extend(('''</ul>\n''', ));
+"""[1:]  % {'timestamp': '%s.0' % int(time.time())}
         self.filename = 'test_cache1.pyhtml'
         cachename = self.filename + '.cache'
         try:
             self._test()
             ok (cachename).exists()
-            if not JYTHON:
-                import marshal
-                dct = marshal.load(open(cachename, 'rb'))
-                ok (dct.get('args')) == ['title', 'items']
-                if   python2:  expected = "<type 'code'>"
-                elif python3:  expected = "<class 'code'>"
-                ok (str(type(dct.get('bytecode')))) == expected
-                ok (dct.get('script')) == script
+            #if not JYTHON:
+            #    import marshal
+            #    dct = marshal.load(open(cachename, 'rb'))
+            #    ok (dct.get('args')) == ['title', 'items']
+            #    if   python2:  expected = "<type 'code'>"
+            #    elif python3:  expected = "<class 'code'>"
+            #    ok (str(type(dct.get('bytecode')))) == expected
+            #    ok (dct.get('script')) == script
+            f = open(cachename); cached = f.read(); f.close()
+            ok (cached) == expected_cache
         finally:
             if os.path.exists(cachename):
                 os.unlink(cachename)
@@ -519,14 +533,21 @@ class MainTest(object):
     def test_dump(self):  # -d, -a dump
         if JYTHON:
             return
-        # create cache file
+        ## create cache file
+        #filename = '_test_dump.pyhtml'
+        #cachename = filename + '.cache'
+        #self.filename = filename
+        #self.input = INPUT
+        #self.expected = EXECUTED
+        #self.options = '-a render --cache=true'
+        #self._test()
+        #ok (cachename).exists()
+        ## create marshal cache file
         filename = '_test_dump.pyhtml'
         cachename = filename + '.cache'
-        self.filename = filename
-        self.input = INPUT
-        self.expected = EXECUTED
-        self.options = '-a render --cache=true'
-        self._test()
+        f = open(filename, 'w'); f.write(INPUT); f.close()
+        e = tenjin.Engine(cache=tenjin.MarshalCacheStorage())
+        e.get_template(filename)
         ok (cachename).exists()
         # dump test
         try:
