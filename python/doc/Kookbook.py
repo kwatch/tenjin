@@ -298,6 +298,9 @@ class UsersGuideTest(object):
                 actual = re.sub(r'file=.*?/test_logging/', "file='/home/user/", actual)
             else:
                 actual = os.popen(command).read()
+                if self.__name__ == 'm17n':
+                    expected = re.sub(r'timestamp: \d+(\.\d+)?', 'timestamp: 0.0', expected)
+                    actual   = re.sub(r'timestamp: \d+(\.\d+)?', 'timestamp: 0.0', actual)
             if self._testMethodName == 'test_nested':
                 expected = re.sub(r'[ \t]*\#.*', '', expected)
             ok (actual) == expected
