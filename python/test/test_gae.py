@@ -88,7 +88,7 @@ else:
 
         def test_01_init(self):
             import tenjin
-            ok (tenjin.Engine.cache).is_a(tenjin.MarshalCacheStorage)
+            ok (tenjin.Engine.cache).is_a(tenjin.TextCacheStorage)
             ok (tenjin.helpers.fragment_cache.store).is_a(tenjin.MemoryBaseStore)
             import tenjin.gae; tenjin.gae.init()
             if "called then change tenjin.Engine.cache to support GAE":
