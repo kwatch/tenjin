@@ -18,7 +18,6 @@
 
       <div align="left">
         release: $Release$<br>
-        last update: $Date$<br>
       </div>
 
       <div class="note"><span class="caption">NOTE:</span>
@@ -31,7 +30,7 @@
 
       </div>
 
-      <p>Table of Contents:</p>
+      <p>.+TOC:</p>
 
       <ul>
         <li>
@@ -98,6 +97,8 @@
 
             <li><a href="#nested-layout-template">Nested Layout Template</a></li>
 
+            <li><a href="#trace">Trace Templates</a></li>
+
             <li><a href="#capturing">Capturing</a></li>
 
             <li><a href="#templace-cache">Template Cache</a></li>
@@ -108,19 +109,31 @@
 
             <li><a href="#google-appengine">Google App Engine Support</a></li>
 
+            <li><a href="#m17n">M17N Page</a></li>
+          </ul>
+        </li>
+
+        <li>
+          <a href="#preprocessing">Preprocessing</a>
+
+          <ul>
+            <li><a href="#preprocessing-whatis">What is Preprocessing?</a></li>
+
+            <li><a href="#TrimPreprocessor">TrimPreprocessor class</a></li>
+
+            <li><a href="#PrefixedLinePreprocessor">PrefixedLinePreprocessor class</a></li>
+
+            <li><a href="#JavaScriptPreprocessor">JavaScriptPreprocessor class</a></li>
+
             <li>
-              <a href="#preprocessing">Preprocessing</a>
+              <a href="#TemplatePreprocessor">TemplatePreprocessor class</a>
 
               <ul>
-                <li><a href="#preprocessing-basics">Basics of Preprocessing</a></li>
-
                 <li><a href="#preprocessing-loop-expantion">Loop Expantion</a></li>
 
                 <li><a href="#preprocessing-parameters">Parameters</a></li>
               </ul>
             </li>
-
-            <li><a href="#m17n">M17N Page</a></li>
           </ul>
         </li>
 
@@ -128,8 +141,6 @@
           <a href="#tips">Tips</a>
 
           <ul>
-            <li><a href="#tips-trace">Trace Templates</a></li>
-
             <li><a href="#function-names">Specify Function Names of escape() and to_str()</a></li>
 
             <li><a href="#tips-webext">Webext</a></li>
@@ -193,7 +204,9 @@
             <li><a href="#customize-kvstore">Change Fragment Cache Store</a></li>
           </ul>
         </li>
-      </ul><a name="overview" id="overview"></a>
+      </ul>
+
+      <p>.-TOC:</p><a name="overview" id="overview"></a>
 
       <h2 class="section1">Overview</h2>
 
@@ -211,14 +224,14 @@
             <li>About 4 times faster than Cheetah</li>
 
             <li>About 2 times faster than Mako</li>
+
+            <li><a href="#auto-escaping">Auto-escaping</a></li>
           </ul>
         </li>
 
         <li>Full featured
 
           <ul type="circle">
-            <li><a href="#auto-escaping">Auto-escaping</a></li>
-
             <li><a href="#layout-template">Layout template</a></li>
 
             <li><a href="#partial-template">Partial template</a></li>
@@ -228,6 +241,8 @@
             <li><a href="#capturing">Capturing</a></li>
 
             <li><a href="#preprocessing">Preprocessing</a></li>
+
+            <li><a href="#m17n">M17N Support</a></li>
           </ul>
         </li>
 
@@ -383,6 +398,20 @@ jinja2-create                    129.1300    0.7200  129.8500  130.6778
         <li>Security: you may take a mistake to write <code>#{...}</code> instead of <code>${...}</code> easily because they are similar, but you will not confuse between <code>{=...=}</code> and <code>{==...==}</code> because the latter is MUCH longer then the former!</li>
       </ul>
 
+      </div>
+
+      <div class="note"><span class="caption">NOTE:</span>
+
+      <p>Since version 1.1.0, <code>${...}</code> and <code>#{...}</code> can contain pair of '<code>{</code>' and '<code>}</code>' limitedly. See the following example::</p>
+      <pre class="program">
+## OK
+${foo({'x':1})}
+${foo({'x':1}) + bar({'y':2})}
+${foo({}, {}, {})}
+## NG
+${foo({'x': {'y': {}}})}
+</pre>
+
       </div><a name="test_010/views/page.pyhtml"></a>
 
       <div class="program_caption">
@@ -477,7 +506,7 @@ context = {
     'items': ['&lt;AAA&gt;', 'B&amp;B', '"CCC"'],
 }
 
-## cleate engine object
+## create engine object
 <strong>engine = tenjin.Engine(path=['views'])</strong>
 
 ## render template with context data
@@ -682,7 +711,7 @@ engine.render('page.pyhtml', context, <strong>layout=False</strong>)
 &lt;?py i = 0 ?&gt;
 &lt;?py for item in items: ?&gt;
 &lt;?py     i += 1 ?&gt;
-&lt;?py     klass = i % 2 and 'odd' or 'even' ?&gt; 
+&lt;?py     klass = i % 2 and 'odd' or 'even' ?&gt;
   &lt;tr class="#{klass}"&gt;
     &lt;td&gt;${item}&lt;/td&gt;
   &lt;/tr&gt;
@@ -821,7 +850,9 @@ username = <strong>_context.get('username', 'World')</strong>
         <dt class="dt1">include(<em>template-name</em>, <em>**kwargs</em>)</dt>
 
         <dd class="dd1">Include other template. <em>template-name</em> can be file name or template short name. <em>kwargs</em> is passed to template as local variables.</dd>
-      </dl><a name="test_060/views/_layout.pyhtml"></a>
+      </dl>
+
+      <p>In the following example, layout template includes header and footer templates into it.</p><a name="test_060/views/_layout.pyhtml"></a>
 
       <div class="program_caption">
         views/_layout.pyhtml
@@ -860,7 +891,9 @@ username = <strong>_context.get('username', 'World')</strong>
 <strong>&lt;address&gt;</strong>
   <strong>copyright(c) 2010 kuwata-lab.com all rights reserved</strong>
 <strong>&lt;/address&gt;</strong>
-</pre><a name="test_060/result.output"></a>
+</pre>
+
+      <p>Output result shows that header and footer templates are included as you expect.</p><a name="test_060/result.output"></a>
 
       <div class="terminal_caption">
         Result
@@ -901,7 +934,7 @@ $ python main.py
 
       <h3 class="section2">Template Short Name</h3>
 
-      <p>If you set template postfix, you can specify template by short name such as '<code>:views/page</code>' instead of '<code>views/page.pyhtml</code>'. Notice that template short name should start with '<code>:</code>'.</p><a name="test_070/main.py"></a>
+      <p>If you set template postfix, you can specify template by short name such as '<code>:page</code>' instead of '<code>page.pyhtml</code>'. Notice that template short name should start with '<code>:</code>'.</p><a name="test_070/main.py"></a>
 
       <div class="program_caption">
         main.py
@@ -1433,7 +1466,7 @@ print(template.render(context))
       <ul type="disc">
         <li><code>SafeTemplate</code> and <code>SafeEngine</code> classes uses <code>to_escaped()</code> instead of <code>escape()</code> to escape value.</li>
 
-        <li>Normal string (= <code>"&lt;b&gt;SOS&lt;/b&gt;"</code>) is escaped automatically, but the other string which is marked as escaped (= <code>as_escaped("&lt;b&gt;SOS&lt;/b&gt;"</code>) is not escaped. This means that you can controll escape by data type, not embedded notation.</li>
+        <li>Normal string (= <code>"&lt;b&gt;SOS&lt;/b&gt;"</code>) is escaped automatically, but the other string which is marked as escaped (= <code>as_escaped("&lt;b&gt;SOS&lt;/b&gt;")</code>) is not escaped. This means that you can controll escape by data type, not embedded notation.</li>
       </ul>
 
       <div class="terminal_caption">
@@ -1545,21 +1578,68 @@ print(html)
       </div>
       <pre class="terminal">
 $ python main.py
+&lt;html&gt;                        # by _layout.pyhtml
+  &lt;body&gt;                      #       :
+&lt;h2&gt;Blog Post Test&lt;/h2&gt;       #   by _blog_layout.pyhtml
+&lt;!-- content --&gt;              #         :
+&lt;div class="article"&gt;         #     by blog_post.pyhtml
+Foo&lt;br /&gt;                     #           :
+Bar&lt;br /&gt;                     #           :
+Baz                           #           :
+&lt;/div&gt;                        #           :
+                              #           :
+&lt;!-- /content --&gt;             #   by _blog_layout.pyhtml
+                              #         :
+  &lt;/body&gt;                     # by _layout.pyhtml
+&lt;/html&gt;                       #       :
+
+</pre><br>
+      <a name="trace" id="trace"></a>
+
+      <h3 class="section2">Trace Templates</h3>
+
+      <p>If you pass '<code>trace=True</code>' to tenjin.Template class or tenjin.Engine class, Template class will print template file name at the beginning and end of output.</p>
+
+      <p>For example:</p><a name="test_trace/trace-example.py"></a>
+
+      <div class="program_caption">
+        trace-example.py
+      </div>
+      <pre class="program">
+import tenjin
+from tenjin.helpers import *
+engine = tenjin.Engine(layout='layout.pyhtml', <strong>trace=True</strong>)
+output = engine.render('main.pyhtml', {'items': ['A','B','C']})
+print(output)
+</pre>
+
+      <p>Will print:</p><a name="test_trace/result.output"></a>
+      <pre class="terminal">
+$ python trace-example.py
+<strong>&lt;!-- ***** begin: layout.pyhtml ***** --&gt;</strong>
 &lt;html&gt;
   &lt;body&gt;
-&lt;h2&gt;Blog Post Test&lt;/h2&gt;
-&lt;!-- content --&gt;
-&lt;div class="article"&gt;
-Foo&lt;br /&gt;
-Bar&lt;br /&gt;
-Baz
-&lt;/div&gt;
-
-&lt;!-- /content --&gt;
-
+    &lt;div class="content"&gt;
+<strong>&lt;!-- ***** begin: main.pyhtml ***** --&gt;</strong>
+&lt;ul&gt;
+  &lt;li&gt;A&lt;/li&gt;
+  &lt;li&gt;B&lt;/li&gt;
+  &lt;li&gt;C&lt;/li&gt;
+&lt;/ul&gt;
+<strong>&lt;!-- ***** end: main.pyhtml ***** --&gt;</strong>
+    &lt;/div&gt;
   &lt;/body&gt;
 &lt;/html&gt;
+<strong>&lt;!-- ***** end: layout.pyhtml ***** --&gt;</strong>
 
+</pre>
+
+      <p>This feature is very useful when debugging to detect template file name from HTML output.</p>
+
+      <p>If you like it, you can make it always enabled.</p>
+      <pre class="program">
+## trace is always enabled
+tenjin.Engine.trace = True
 </pre><br>
       <a name="capturing" id="capturing"></a>
 
@@ -1568,7 +1648,7 @@ Baz
       <p>It is able to capture parital of output. You can use this feature as an alternative of Django's template-inheritance.</p><a name="test_capturing/views/blog-post.pyhtml"></a>
 
       <div class="program_caption">
-        views/blog-post.pyhtml
+        views/blog-post.pyhtml : one partial capture ('sidebar')
       </div>
       <pre class="program">
 &lt;?py from __future__ import with_statement ?&gt;
@@ -1595,7 +1675,7 @@ Baz
       </div><a name="test_capturing/views/_layout.pyhtml"></a>
 
       <div class="program_caption">
-        views/_layout.pyhtml
+        views/_layout.pyhtml : two placeholders ('header' and 'sidebar')
       </div>
       <pre class="program">
 &lt;html&gt;
@@ -1657,7 +1737,7 @@ print(html)
       <p>The result shows that captured string (with name 'sidebar') overwrites layout template content.</p><a name="test_capturing/result.output"></a>
 
       <div class="program_caption">
-        Result
+        Result : only 'sidebar' placeholder is overwritten by capturing.
       </div>
       <pre class="program">
 $ python main.py
@@ -1804,7 +1884,7 @@ $ cat cache.d/items/1
 
       <h3 class="section2">Logging</h3>
 
-      <p>If you set logging object to <code>tenjin.logger</code>, Tenjin will report loading template files.</p>
+      <p>If you set logging object to <code>tenjin.logger</code>, pyTenjin will report loading template files.</p>
 
       <p>For example:</p><a name="test_logging/ex-logger.py"></a>
 
@@ -1873,193 +1953,24 @@ fragcache.prefix   = 'fragment.'
       <p>Google App Engine shares memcache in any version. In other words, Google App Engine doesn't allow to separate memcache for each version. This means that <strong>memcache data can be conflict between old and new version application in Google App Engine</strong>. Tenjin avoids this confliction by using version id as namespace.</p>
 
       </div><br>
-      <a name="preprocessing" id="preprocessing"></a>
-
-      <h3 class="section2">Preprocessing</h3>
-
-      <p>Tenjin supports preprocessing of template. Preprocessing executes some logics when templates are loaded and that logics are not executed when rendering. Preprocessing makes your application much faster.</p><a name="preprocessing-basics" id="preprocessing-basics"></a>
-
-      <h4 class="section3">Basics of Preprocessing</h4>
-
-      <p>Notation of preprocessing:</p>
-
-      <dl class="dl1">
-        <dt class="dt1"><code>&lt;?PY ... ?&gt;</code></dt>
-
-        <dd class="dd1">Preprocessing statement.</dd>
-
-        <dt class="dt1"><code>${{...}}</code> or <code>{#=...=#}</code></dt>
-
-        <dd class="dd1">Preprocessing expression (with HTML escape)</dd>
-
-        <dt class="dt1"><code>#{{...}}</code> or <code>{#==...==#}</code></dt>
-
-        <dd class="dd1">Preprocessing expression (without HTML escape)</dd>
-      </dl>
-
-      <p>The following shows difference between <code>${...}</code> and <code>${{...}}</code>.</p><a name="test_preprocessing/views/pp-example1.pyhtml"></a>
-
-      <div class="program_caption">
-        views/pp-example1.pyhtml
-      </div>
-      <pre class="program">
-## normal expression
-value = <strong>${value}</strong>
-## with preprocessing
-value = <strong>${{value}}</strong>
-</pre><a name="test_preprocessing/pp-example1.py"></a>
-
-      <div class="program_caption">
-        pp-example1.py
-      </div>
-      <pre class="program">
-value = 'My Great Example'
-
-## create engine object with preprocessing enabled
-import tenjin
-from tenjin.helpers import *
-engine = tenjin.Engine(path=['views'], <strong>preprocess=True</strong>)
-
-## print Python script code
-print("------ converted script ------")
-print(engine.get_template('pp-example1.pyhtml').script)
-
-## render html
-html = engine.render('pp-example1.pyhtml', {})
-print("------ rendered html ------")
-print(html)
-</pre><a name="test_preprocessing/result1a.output"></a>
-
-      <div class="terminal_caption">
-        Result: notice that <code>${{...}}</code> is evaluated at template converting stage.
-      </div>
-      <pre class="terminal">
-$ python pp-example1.py
------- converted script ------
-_extend=_buf.extend;_to_str=to_str;_escape=escape; _extend(('''## normal expression
-value = ''', <strong>_escape(_to_str(value))</strong>, '''
-## with preprocessing
-value = <strong>My Great Example</strong>\n''', ));
-
------- rendered html ------
-## normal expression
-value = My Great Example
-## with preprocessing
-value = My Great Example
-
-</pre>
-
-      <p>You can confirm preprocessed template by '<code>pytenjin -P</code>' command.</p><a name="test_preprocessing/result1b.output"></a>
-
-      <div class="terminal_caption">
-        Preprocessed template
-      </div>
-      <pre class="terminal">
-$ pytenjin <strong>-P</strong> -c 'value="My Great Example"' views/pp-example1.pyhtml
-## normal expression
-value = ${value}
-## with preprocessing
-value = My Great Example
-</pre>
-
-      <p>If you want to see preprocessing script (not preprocessed script), use '<code>pytenjin -sP</code>' command.</p><a name="test_preprocessing/result1c.output"></a>
-      <pre class="terminal">
-$ pytenjin <strong>-sP</strong> -c 'value="My Great Example"' views/pp-example1.pyhtml
-_buf = []; _extend=_buf.extend;_to_str=to_str;_escape=escape; _extend(('''## normal expression
-value = ${value}
-## with preprocessing
-value = ''', _escape(_to_str(_decode_params(value))), '''\n''', ));
-print(''.join(_buf))
-</pre><br>
-      <a name="preprocessing-loop-expantion" id="preprocessing-loop-expantion"></a>
-
-      <h4 class="section3">Loop Expantion</h4>
-
-      <p>It is possible to evaluate some logics by '<code>&lt;?PY ... ?&gt;</code>' when convert template into Python script code. For example, you can expand loop in advance to improve performance.</p><a name="test_preprocessing/views/pp-example2.pyhtml"></a>
-
-      <div class="program_caption">
-        views/pp-example2.pyhtml
-      </div>
-      <pre class="program">
-<strong>&lt;?PY states = { "CA": "California", ?&gt;</strong>
-<strong>&lt;?PY            "NY": "New York", ?&gt;</strong>
-<strong>&lt;?PY            "FL": "Florida",  ?&gt;</strong>
-<strong>&lt;?PY            "TX": "Texas",  ?&gt;</strong>
-<strong>&lt;?PY            "HI": "Hawaii", } ?&gt;</strong>
-<strong>&lt;?PY # ?&gt;</strong>
-&lt;?py chk = { params['state']: ' selected="selected"' } ?&gt;
-<strong>&lt;?PY codes = list(states.keys()) ?&gt;</strong>
-<strong>&lt;?PY codes.sort() ?&gt;</strong>
-&lt;select name="state"&gt;
-  &lt;option value=""&gt;-&lt;/option&gt;
-  <strong>&lt;?PY for code in codes: ?&gt;</strong>
-  &lt;option value="<strong>#{{code}}</strong>"#{chk.get('<strong>#{{code}}</strong>', '')}&gt;<strong>${{states[code]}}</strong>&lt;/option&gt;
-  <strong>&lt;?PY #endfor ?&gt;</strong>
-&lt;/select&gt;
-</pre>
-
-      <p>Preprocessed script code shows that loop is expanded in advance. It means that loop is not executed when rendering template.</p><a name="test_preprocessing/result2a.output"></a>
-
-      <div class="terminal_caption">
-        Preprocessed template
-      </div>
-      <pre class="terminal">
-$ pytenjin -P views/pp-example2.pyhtml
-&lt;?py chk = { params['state']: ' selected="selected"' } ?&gt;
-&lt;select name="state"&gt;
-  &lt;option value=""&gt;-&lt;/option&gt;
-  &lt;option value="CA"#{chk.get('CA', '')}&gt;California&lt;/option&gt;
-  &lt;option value="FL"#{chk.get('FL', '')}&gt;Florida&lt;/option&gt;
-  &lt;option value="HI"#{chk.get('HI', '')}&gt;Hawaii&lt;/option&gt;
-  &lt;option value="NY"#{chk.get('NY', '')}&gt;New York&lt;/option&gt;
-  &lt;option value="TX"#{chk.get('TX', '')}&gt;Texas&lt;/option&gt;
-&lt;/select&gt;
-</pre><br>
-      <a name="preprocessing-parameters" id="preprocessing-parameters"></a>
-
-      <h4 class="section3">Parameters</h4>
-
-      <p>Assume that link_to() is a helper method which takes label and url and generate &lt;a&gt;&lt;/a&gt; tag. In this case, label and url can be parameterized by <code>_p("...")</code> and <code>_P("...")</code>. The former is converted into #{...} and the latter converted into ${...} by preprocessor.</p><a name="test_preprocessing/views/pp-example3.pyhtml"></a>
-
-      <div class="program_caption">
-        views/pp-example3.pyhtml
-      </div>
-      <pre class="program">
-&lt;?PY ## ex. link_to('Show', '/show/1')  =&gt; &lt;a href="/show/1"&gt;Show&lt;/a&gt; ?&gt;
-&lt;?PY def link_to(label, url): ?&gt;
-&lt;?PY     try:    from urllib.parse import quote ?&gt;
-&lt;?PY     except: from urllib import quote ?&gt;
-&lt;?PY     return '&lt;a href="%s"&gt;%s&lt;/a&gt;' % (quote(url), label) ?&gt;
-&lt;?PY #enddef ?&gt;
-#{{link_to('Show '+<strong>_P(</strong>'params["name"]'<strong>)</strong>, '/items/show/'+<strong>_p(</strong>'params["id"]'<strong>)</strong>)}}
-</pre>
-
-      <p>The following shows that <code>_P('...')</code> and <code>_p('...')</code> are converted into <code>${...}</code> and <code>#{...}</code> respectively.</p><a name="test_preprocessing/result3a.output"></a>
-
-      <div class="terminal_caption">
-        Preprocessed template:
-      </div>
-      <pre class="terminal">
-$ pytenjin -P views/pp-example3.pyhtml
-&lt;a href="/items/show/<strong>#{</strong>params["id"]<strong>}</strong>"&gt;Show <strong>${</strong>params["name"]<strong>}</strong>&lt;/a&gt;
-</pre>
-
-      <p>There are many web-application framework and they provides helper functions. These helper functions are divided into two groups. link_to() or _() (function for M17N) return the same result when the same arguments are passed. These functions can be expanded by preprocessor. Some functions return the different result even if the same arguments are passed. These functions can't be expaned by preprocessor.</p>
-
-      <p>Preprocessor has the power to make view-layer much faster, but it may make the debugging difficult. You should use it carefully.</p><br>
-      <br>
       <a name="m17n" id="m17n"></a>
 
       <h3 class="section2">M17N Page</h3>
 
       <p>If you have M17N site, you can make your site faster by Tenjin.</p>
 
-      <p>In M17N-ed site, message translation function (such as <code>_('message-key')</code>) is called many times. Therefore if you can eliminate calling that function, your site can be faster. And Tenjin can do it by preprocessing.</p>
+      <p>In M17N-ed site, message translation function (such as <code>_('message-key')</code>) is called many times. Therefore if you can eliminate calling that function, your site can be faster.</p>
 
-      <p>The point is:</p>
+      <div class="note"><span class="caption">NOTE:</span>
+
+      <p>This feature is implemented with preprocessing feature. See <a href="#preprocessing">this section</a> for details about preprocessing.</p>
+
+      </div>
+
+      <p>The points are:</p>
 
       <ul type="disc">
-        <li>Change cache filename according to language. For example, create cache file 'file.pyhtml.en.cache', 'file.pyhtml.fr.cache', 'file.pyhtml.it.cache', and so on from a template file 'file.pyhtml'. This is done by Tenjin automatically if you pass '<code>lang=en</code>' or '<code>lang=fr</code>' option to Engine class.</li>
+        <li>Change cache filename according to language. For example, create cache file 'file.pyhtml.en.cache', 'file.pyhtml.fr.cache', 'file.pyhtml.it.cache', and so on from a template file 'file.pyhtml'. This is done by Tenjin automatically if you pass '<code>lang="en"</code>' or '<code>lang="fr"</code>' option to Engine class.</li>
 
         <li>Create Engine object for each language and pass <code>lang</code> option respectively.</li>
 
@@ -2181,56 +2092,523 @@ _extend=_buf.extend;_to_str=to_str;_escape=escape; _extend(('''&lt;div&gt;
 &lt;/div&gt;\n''', ));
 </pre><br>
       <br>
-      <a name="tips" id="tips"></a>
+      <a name="preprocessing" id="preprocessing"></a>
 
-      <h2 class="section1">Tips</h2><a name="tips-trace" id="tips-trace"></a>
+      <h2 class="section1">Preprocessing</h2>
 
-      <h3 class="section2">Trace Templates</h3>
+      <p>Tenjin supports template preprocessing.</p><a name="preprocessing-whatis" id="preprocessing-whatis"></a>
 
-      <p>If you pass '<code>trace=True</code>' to tenjin.Template class or tenjin.Engine class, Template class will print template file name at the beginning and end of output.</p>
+      <h3 class="section2">What is Preprocessing?</h3>
 
-      <p>For example:</p><a name="test_trace/trace-example.py"></a>
+      <p>Preprocessing is a mechanism to manipulate template content when loading template file.</p>
+
+      <p>For example, Tenjin provides TrimPreprocessor class which trims spaces in HTML templates. Using it, you can elminiate size of html output.</p>
 
       <div class="program_caption">
-        trace-example.py
+        Preprocessing example by TrimPreprocessor
+      </div>
+      <pre class="program">
+## Original html template
+&lt;div&gt;
+  &lt;ul&gt;
+    &lt;?py for item in items: ?&gt;
+    &lt;li&gt;${item}&lt;/li&gt;
+    &lt;?py #endfor ?&gt;
+  &lt;/ul&gt;
+&lt;/div&gt;
+
+## Preprocessed template when loading
+&lt;div&gt;
+&lt;ul&gt;
+&lt;?py for item in items: ?&gt;
+&lt;li&gt;${item}&lt;/li&gt;
+&lt;?py #endfor ?&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+
+## Output example
+&lt;div&gt;
+&lt;ul&gt;
+&lt;li&gt;Foo&lt;/li&gt;
+&lt;li&gt;Bar&lt;/li&gt;
+&lt;li&gt;Baz&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+</pre>
+
+      <p>Tenjin provides the following preprocessor classses. See the succeeding sections for details about these classes.</p>
+
+      <dl class="dl1">
+        <dt class="dt1">TemplatePreprocessor</dt>
+
+        <dd class="dd1">Execute any logic or code in advance. Same as 'preprocess' option.</dd>
+      </dl>
+
+      <dl class="dl1">
+        <dt class="dt1">TrimPreprocessor</dt>
+
+        <dd class="dd1">Trims spaces at the beginning of lines.</dd>
+      </dl>
+
+      <dl class="dl1">
+        <dt class="dt1">PrefixedLinePreprocessor</dt>
+
+        <dd class="dd1">Converts '<code>:: ...</code>' lines into '<code>&lt;?py ... ?&gt;</code>'.</dd>
+      </dl>
+
+      <dl class="dl1">
+        <dt class="dt1">JavaScriptPreprocessor</dt>
+
+        <dd class="dd1">Generates client-side template code.</dd>
+      </dl>
+
+      <p>If you want preprocessing, pass instance objects of these classes to engine object.</p><a name="test_pp/preprocess-example1.rb"></a>
+
+      <div class="program_caption">
+        How to use preprocessors
       </div>
       <pre class="program">
 import tenjin
-from tenjin.helpers import *
-engine = tenjin.Engine(layout='layout.pyhtml', <strong>trace=True</strong>)
-output = engine.render('main.pyhtml', {'items': ['A','B','C']})
-print(output)
+<strong>pp = [</strong>
+<strong>  tenjin.TemplatePreprocessor(),</strong>      # same as preprocess=True
+<strong>  tenjin.TrimPreprocessor(),</strong>          # trim spaces before tags
+<strong>  tenjin.PrefixedLinesPreprocessor(),</strong> # convert ':: ...' into '&lt;?py ... ?&gt;'
+<strong>  tenjin.JavaScriptPreprocessor(),</strong>    # allow to embed client-side template
+<strong>]</strong>
+engine = tenjin.Engine(<strong>pp=pp</strong>)
+html = engine.render('example.rbhtml', context)
+</pre><br>
+      <a name="TrimPreprocessor" id="TrimPreprocessor"></a>
+
+      <h3 class="section2">TrimPreprocessor class</h3>
+
+      <p>TrimPreprocessor trims spaces before tags in order to eliminate size of output.</p>
+
+      <p>For examle, the follwoing template file:</p><a name="test_pp_trim/example.pyhtml"></a>
+      <pre class="program">
+&lt;div&gt;
+  &lt;ul&gt;
+    &lt;?py for item in items: ?&gt;
+    &lt;li&gt;${item}&lt;/li&gt;
+    &lt;?py #endfor ?&gt;
+  &lt;/ul&gt;
+&lt;/div&gt;
 </pre>
 
-      <p>Will print:</p><a name="test_trace/result.output"></a>
-      <pre class="terminal">
-$ python trace-example.py
-<strong>&lt;!-- ***** begin: layout.pyhtml ***** --&gt;</strong>
+      <p>will generate the following output:</p><a name="test_pp_trim/result.output"></a>
+      <pre class="program">
+&lt;div&gt;
+&lt;ul&gt;
+&lt;li&gt;Haruhi&lt;/li&gt;
+&lt;li&gt;Mikuru&lt;/li&gt;
+&lt;li&gt;Yuki&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+
+</pre>
+
+      <p>with the following code:</p><a name="test_pp_trim/pp-trim.py"></a>
+      <pre class="program">
+import tenjin
+<strong>pp = [ tenjin.TrimPreprocessor() ]</strong>
+engine = tenjin.Engine(<strong>pp=pp</strong>)
+context = { 'items': ["Haruhi", "Mikuru", "Yuki"] }
+html = engine.render('example.pyhtml', context)
+print(html)
+</pre>
+
+      <div class="note"><span class="caption">NOTE:</span>
+
+      <p>The default of TrimPreprocessor trims spaces on lines which starts with '&lt;'.</p>
+      <pre class="program">
+&lt;div&gt;
+  &lt;pre&gt;       ## spaces will be trimmed
+    x = 10    ## spaces will NOT be trimmed
+  &lt;/pre&gt;      ## spaces will be trimmed
+&lt;/pre&gt;
+</pre>
+
+      <p>If you want to trim all spaces, try <code>TrimPreprocessor(True)</code>.</p>
+
+      </div><br>
+      <a name="PrefixedLinePreprocessor" id="PrefixedLinePreprocessor"></a>
+
+      <h3 class="section2">PrefixedLinePreprocessor class</h3>
+
+      <p>PrefixedLinePreprocessor converts '<code>:: ...</code>' into '<code>&lt;?py ... ?&gt;</code>'.</p>
+
+      <p>For examle, the follwoing template file:</p><a name="test_pp_prefixed/example.pyhtml"></a>
+      <pre class="program">
+&lt;div&gt;
+  &lt;ul&gt;
+    <strong>::</strong> for item in items:
+    &lt;li&gt;${item}&lt;/li&gt;
+    <strong>::</strong> #endfor
+  &lt;/ul&gt;
+&lt;/div&gt;
+</pre>
+
+      <p>is converted into:</p><a name="test_pp_prefixed/example.pyhtml"></a>
+      <pre class="program">
+&lt;div&gt;
+  &lt;ul&gt;
+    <strong>&lt;?py</strong> for item in items: <strong>?&gt;</strong>
+    &lt;li&gt;${item}&lt;/li&gt;
+    <strong>&lt;?py</strong> #endfor <strong>?&gt;</strong>
+  &lt;/ul&gt;
+&lt;/div&gt;
+</pre>
+
+      <p>and will generate the following output:</p><a name="test_pp_trim/result.output"></a>
+      <pre class="program">
+&lt;div&gt;
+  &lt;ul&gt;
+    &lt;li&gt;Haruhi&lt;/li&gt;
+    &lt;li&gt;Mikuru&lt;/li&gt;
+    &lt;li&gt;Yuki&lt;/li&gt;
+  &lt;/ul&gt;
+&lt;/div&gt;
+
+</pre>
+
+      <p>with the following code:</p><a name="test_pp_trim/pp-trim.py"></a>
+      <pre class="program">
+import tenjin
+<strong>pp = [ tenjin.PrefixedLinePreprocessor() ]</strong>
+engine = tenjin.Engine(<strong>pp=pp</strong>)
+context = { 'items': ["Haruhi", "Mikuru", "Yuki"] }
+html = engine.render('example.pyhtml', context)
+print(html)
+</pre>
+
+      <div class="note"><span class="caption">NOTE:</span>
+
+      <p>Notice that space after '::' is necessary!</p>
+      <pre class="program">
+:: x = 10    # OK
+::x = 10     # NG
+</pre>
+
+      </div><br>
+      <a name="JavaScriptPreprocessor" id="JavaScriptPreprocessor"></a>
+
+      <h3 class="section2">JavaScriptPreprocessor class</h3>
+
+      <p>JavaScriptPreprocessor class enables you to embed client-side template code in your template file.</p><a name="test_pp_javascript/example.rbhtml"></a>
+
+      <div class="program_caption">
+        example.rbhtml
+      </div>
+      <pre class="program">
 &lt;html&gt;
   &lt;body&gt;
-    &lt;div class="content"&gt;
-<strong>&lt;!-- ***** begin: main.pyhtml ***** --&gt;</strong>
-&lt;ul&gt;
-  &lt;li&gt;A&lt;/li&gt;
-  &lt;li&gt;B&lt;/li&gt;
-  &lt;li&gt;C&lt;/li&gt;
-&lt;/ul&gt;
-<strong>&lt;!-- ***** end: main.pyhtml ***** --&gt;</strong>
+    &lt;div id="placeholder"&gt;
+      <strong>&lt;!-- #JS: render_table(items) --&gt;</strong>
+      &lt;table&gt;
+        &lt;tbody&gt;
+          <strong>&lt;?js for (var i = 0, n = items.length; i &lt; n; i++) { ?&gt;</strong>
+          <strong>&lt;?js     var klass = i % 2 ? 'even' : 'odd'; ?&gt;</strong>
+          &lt;tr class="<strong>#{klass}</strong>"&gt;
+            &lt;td&gt;<strong>${items[i]}</strong>&lt;/td&gt;
+          &lt;/tr&gt;
+          <strong>&lt;?js } ?&gt;</strong>
+        &lt;/tbody&gt;
+      &lt;/table&gt;
+      <strong>&lt;!-- #/JS --&gt;</strong>
     &lt;/div&gt;
+    &lt;script&gt;<strong>#{Tenjin::JS_FUNC}</strong>&lt;/script&gt;
+    &lt;script&gt;
+/// example code to render table
+(function() {
+   var items = ["Haruhi", "Mikuru", "Yuki"];
+   var e = document.getElementById('placeholder');
+   e.innerHTML = <strong>render_table(items)</strong>;
+ })();
+    &lt;/script&gt;
   &lt;/body&gt;
 &lt;/html&gt;
-<strong>&lt;!-- ***** end: layout.pyhtml ***** --&gt;</strong>
+</pre><a name="test_pp_javascript/pp-javascript.rb"></a>
+
+      <div class="program_caption">
+        Example (pp-javascript.rb)
+      </div>
+      <pre class="program">
+import tenjin
+<strong>pp = [ tenjin.JavaScriptPreprocessor() ]</strong>
+<strong>## or pp = [ tenjin.JavaScriptPreprocessor(type='text/javascript') ]</strong>
+engine = tenjin.Engine(<strong>pp=pp</strong>)
+context = { 'items': ["Haruhi", "Mikuru", "Yuki"] }
+html = engine.render('example.rbhtml', context)
+print(html)
+</pre><a name="test_pp_javascript/result.output"></a>
+
+      <div class="terminal_caption">
+        Output example
+      </div>
+      <pre class="terminal">
+$ ruby pp-javascript.rb
+&lt;html&gt;
+  &lt;body&gt;
+    &lt;div&gt;
+      <strong>&lt;script&gt;function render_table(items){var _buf='';</strong>
+ <strong>_buf += '      &lt;table&gt;\n\</strong>
+        <strong>&lt;tbody&gt;\n';</strong>
+          <strong>for (var i = 0, n = items.length; i &lt; n; i++) {</strong>
+              <strong>var klass = i % 2 ? 'even' : 'odd';</strong>
+ <strong>_buf += '          &lt;tr class="'; _buf += _S(klass); _buf += '"&gt;\n\</strong>
+            <strong>&lt;td&gt;'; _buf += _E(items[i]); _buf += '&lt;/td&gt;\n\</strong>
+          <strong>&lt;/tr&gt;\n';</strong>
+          <strong>}</strong>
+ <strong>_buf += '        &lt;/tbody&gt;\n\</strong>
+      <strong>&lt;/table&gt;\n';</strong>
+      <strong>return _buf;}&lt;/script&gt;</strong>
+    &lt;/div&gt;
+    &lt;script&gt;<strong>function _S(x){return x==null?'':x;}</strong>
+<strong>function _E(x){return x==null?'':typeof(x)!=='string'?x:x.replace(/[&amp;&lt;&gt;"']/g,_EF);}</strong>
+<strong>var _ET={'&amp;':"&amp;amp;",'&lt;':"&amp;lt;",'&gt;':"&amp;gt;",'"':"&amp;quot;","'":"&amp;#039;"};</strong>
+<strong>function _EF(c){return _ET[c];};</strong>&lt;/script&gt;
+    &lt;script&gt;
+/// example code to render table
+(function() {
+   var items = ["Haruhi", "Mikuru", "Yuki"];
+   var e = document.getElementById('placeholder');
+   e.innerHTML = <strong>render_table(items)</strong>;
+ })();
+    &lt;/script&gt;
+  &lt;/body&gt;
+&lt;/html&gt;
 
 </pre>
 
-      <p>This feature is very useful to specify template file from HTML output.</p>
-
-      <p>If you like it, you can make it always enabled.</p>
+      <p>According to HTML syntax, <code>&lt;script&gt;</code> tag can be appeared in limited place. But client-side template code will work well even in the case that <code>&lt;script&gt;</code> is appeared in non-valid place.</p>
       <pre class="program">
-## trace is always enabled
-tenjin.Engine.trace = True
+### OK (valid as HTML)
+&lt;div&gt;
+  <strong>&lt;script&gt;</strong>function render_table(items){var _buf='';
+ _buf += '  <strong>&lt;table&gt;</strong>\n\
+    <strong>&lt;tbody&gt;</strong>\n';
+    ....
+ _buf += '    <strong>&lt;/tbody&gt;</strong>\n\
+  <strong>&lt;/table&gt;</strong>\n';
+  return _buf;<strong>&lt;/script&gt;</strong>
+&lt;/div&gt;
+
+### NG (not valid as HTML because &lt;script&gt; tag can't be appreared
+### in &lt;table&gt; or &lt;tbody&gt; tag, but this code works well in browser)
+&lt;div&gt;
+  <strong>&lt;table&gt;</strong>
+    <strong>&lt;tbody&gt;</strong>
+      <strong>&lt;script&gt;</strong>function render_table(items) {var _buf='';
+    ....
+  return _buf;<strong>&lt;/script&gt;</strong>
+    <strong>&lt;/tbody&gt;</strong>
+  <strong>&lt;/table&gt;</strong>
+&lt;/div&gt;
+</pre>
+
+      <p>In this moment it is not possible to nest client-side template code.</p>
+      <pre class="program">
+## NOT AVAILABLE!!
+<strong>&lt;!-- #JS: render_table(items) --&gt;</strong>
+&lt;table&gt;
+  &lt;tbody&gt;
+    &lt;?js for (var i = 0, n = items.length; i &lt; n; i++) { ?&gt;
+    <strong>&lt;!-- #JS: render_raw(item) --&gt;</strong>
+    &lt;tr&gt;
+      &lt;td&gt;${item}&lt;/td&gt;
+    &lt;/tr&gt;
+    <strong>&lt;!-- #/JS --&gt;</strong>
+    &lt;?js } ?&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+<strong>&lt;!-- #/JS --&gt;</strong>
 </pre><br>
-      <a name="function-names" id="function-names"></a>
+      <a name="TemplatePreprocessor" id="TemplatePreprocessor"></a>
+
+      <h3 class="section2">TemplatePreprocessor class</h3>
+
+      <p><code>TemplatePreprocessor</code> class allows you to execute some logics when templates are compiled into script, and these logics are not executed when rendering.</p>
+
+      <div class="note"><span class="caption">NOTE:</span>
+
+      <p><code>preprocess</code> option for Engine class is still available for backward compatibility.</p>
+
+      </div>
+
+      <p><code>TemplatePreprocessor</code> class makes your application faster, because some logics are executed on compiling stage, not on rendering stage.</p>
+
+      <p>Notation of preprocessing with <code>TemplatePreprocessor</code> class:</p>
+
+      <dl class="dl1">
+        <dt class="dt1"><code>&lt;?PY ... ?&gt;</code></dt>
+
+        <dd class="dd1">Preprocessing statement.</dd>
+
+        <dt class="dt1"><code>${{...}}</code> or <code>{#=...=#}</code></dt>
+
+        <dd class="dd1">Preprocessing expression (with HTML escape)</dd>
+
+        <dt class="dt1"><code>#{{...}}</code> or <code>{#==...==#}</code></dt>
+
+        <dd class="dd1">Preprocessing expression (without HTML escape)</dd>
+      </dl>
+
+      <p>The following shows difference between <code>${...}</code> and <code>${{...}}</code>.</p><a name="test_preprocessing/views/pp-example1.pyhtml"></a>
+
+      <div class="program_caption">
+        views/pp-example1.pyhtml
+      </div>
+      <pre class="program">
+## normal expression
+value = <strong>${value}</strong>
+## with preprocessing
+value = <strong>${{value}}</strong>
+</pre><a name="test_preprocessing/pp-example1.py"></a>
+
+      <div class="program_caption">
+        pp-example1.py
+      </div>
+      <pre class="program">
+value = 'My Great Example'
+
+## create engine object with preprocessing enabled
+import tenjin
+from tenjin.helpers import *
+engine = tenjin.Engine(path=['views'], <strong>preprocess=True</strong>)
+
+## print Python script code
+print("------ converted script ------")
+print(engine.get_template('pp-example1.pyhtml').script)
+
+## render html
+html = engine.render('pp-example1.pyhtml', {})
+print("------ rendered html ------")
+print(html)
+</pre><a name="test_preprocessing/result1a.output"></a>
+
+      <div class="terminal_caption">
+        Result: notice that <code>${{...}}</code> is evaluated at template converting stage.
+      </div>
+      <pre class="terminal">
+$ python pp-example1.py
+------ converted script ------
+_extend=_buf.extend;_to_str=to_str;_escape=escape; _extend(('''## normal expression
+value = ''', <strong>_escape(_to_str(value))</strong>, '''
+## with preprocessing
+value = <strong>My Great Example</strong>\n''', ));
+
+------ rendered html ------
+## normal expression
+value = My Great Example
+## with preprocessing
+value = My Great Example
+
+</pre>
+
+      <p>You can confirm preprocessed template by '<code>pytenjin -P</code>' command.</p><a name="test_preprocessing/result1b.output"></a>
+
+      <div class="terminal_caption">
+        Preprocessed template
+      </div>
+      <pre class="terminal">
+$ pytenjin <strong>-P</strong> -c 'value="My Great Example"' views/pp-example1.pyhtml
+## normal expression
+value = ${value}
+## with preprocessing
+value = My Great Example
+</pre>
+
+      <p>If you want to see preprocessing script (not preprocessed script), use '<code>pytenjin -sP</code>' command.</p><a name="test_preprocessing/result1c.output"></a>
+      <pre class="terminal">
+$ pytenjin <strong>-sP</strong> -c 'value="My Great Example"' views/pp-example1.pyhtml
+_buf = []; _extend=_buf.extend;_to_str=to_str;_escape=escape; _extend(('''## normal expression
+value = ${value}
+## with preprocessing
+value = ''', _escape(_to_str(_decode_params(value))), '''\n''', ));
+print(''.join(_buf))
+</pre><a name="preprocessing-loop-expantion" id="preprocessing-loop-expantion"></a>
+
+      <h4 class="section3">Loop Expantion</h4>
+
+      <p>It is possible to evaluate some logics by '<code>&lt;?PY ... ?&gt;</code>' when convert template into Python script code. For example, you can expand loop in advance to improve performance.</p><a name="test_preprocessing/views/pp-example2.pyhtml"></a>
+
+      <div class="program_caption">
+        views/pp-example2.pyhtml
+      </div>
+      <pre class="program">
+<strong>&lt;?PY states = { "CA": "California", ?&gt;</strong>
+<strong>&lt;?PY            "NY": "New York", ?&gt;</strong>
+<strong>&lt;?PY            "FL": "Florida",  ?&gt;</strong>
+<strong>&lt;?PY            "TX": "Texas",  ?&gt;</strong>
+<strong>&lt;?PY            "HI": "Hawaii", } ?&gt;</strong>
+<strong>&lt;?PY # ?&gt;</strong>
+&lt;?py chk = { params['state']: ' selected="selected"' } ?&gt;
+<strong>&lt;?PY codes = list(states.keys()) ?&gt;</strong>
+<strong>&lt;?PY codes.sort() ?&gt;</strong>
+&lt;select name="state"&gt;
+  &lt;option value=""&gt;-&lt;/option&gt;
+  <strong>&lt;?PY for code in codes: ?&gt;</strong>
+  &lt;option value="<strong>#{{code}}</strong>"#{chk.get('<strong>#{{code}}</strong>', '')}&gt;<strong>${{states[code]}}</strong>&lt;/option&gt;
+  <strong>&lt;?PY #endfor ?&gt;</strong>
+&lt;/select&gt;
+</pre>
+
+      <p>Preprocessed script code shows that loop is expanded in advance. It means that loop is not executed when rendering template.</p><a name="test_preprocessing/result2a.output"></a>
+
+      <div class="terminal_caption">
+        Preprocessed template
+      </div>
+      <pre class="terminal">
+$ pytenjin -P views/pp-example2.pyhtml
+&lt;?py chk = { params['state']: ' selected="selected"' } ?&gt;
+&lt;select name="state"&gt;
+  &lt;option value=""&gt;-&lt;/option&gt;
+  &lt;option value="CA"#{chk.get('CA', '')}&gt;California&lt;/option&gt;
+  &lt;option value="FL"#{chk.get('FL', '')}&gt;Florida&lt;/option&gt;
+  &lt;option value="HI"#{chk.get('HI', '')}&gt;Hawaii&lt;/option&gt;
+  &lt;option value="NY"#{chk.get('NY', '')}&gt;New York&lt;/option&gt;
+  &lt;option value="TX"#{chk.get('TX', '')}&gt;Texas&lt;/option&gt;
+&lt;/select&gt;
+</pre><br>
+      <a name="preprocessing-parameters" id="preprocessing-parameters"></a>
+
+      <h4 class="section3">Parameters</h4>
+
+      <p>Assume that link_to() is a helper method which takes label and url and generate &lt;a&gt;&lt;/a&gt; tag. In this case, label and url can be parameterized by <code>_p("...")</code> and <code>_P("...")</code>. The former is converted into #{...} and the latter converted into ${...} by preprocessor.</p><a name="test_preprocessing/views/pp-example3.pyhtml"></a>
+
+      <div class="program_caption">
+        views/pp-example3.pyhtml
+      </div>
+      <pre class="program">
+<strong>&lt;?PY</strong>
+## ex. link_to('Show', '/show/1')  =&gt; &lt;a href="/show/1"&gt;Show&lt;/a&gt;
+def link_to(label, url):
+    try:    from urllib.parse import quote
+    except: from urllib import quote
+    return '&lt;a href="%s"&gt;%s&lt;/a&gt;' % (quote(url), label)
+#enddef
+<strong>?&gt;</strong>
+<strong>#{{</strong>link_to('Show '+<strong>_P(</strong>'params["name"]'<strong>)</strong>, '/items/show/'+<strong>_p(</strong>'params["id"]'<strong>)</strong>)<strong>}}</strong>
+</pre>
+
+      <p>The following shows that <code>_P('...')</code> and <code>_p('...')</code> are converted into <code>${...}</code> and <code>#{...}</code> respectively.</p><a name="test_preprocessing/result3a.output"></a>
+
+      <div class="terminal_caption">
+        Preprocessed template:
+      </div>
+      <pre class="terminal">
+$ pytenjin -P views/pp-example3.pyhtml
+&lt;a href="/items/show/<strong>#{</strong>params["id"]<strong>}</strong>"&gt;Show <strong>${</strong>params["name"]<strong>}</strong>&lt;/a&gt;
+</pre>
+
+      <p>There are many web-application framework and they provides helper functions. These helper functions are divided into two groups. link_to() or _() (function for M17N) return the same result when the same arguments are passed. These functions can be expanded by preprocessor. Some functions return the different result even if the same arguments are passed. These functions can't be expaned by preprocessor.</p>
+
+      <p>Preprocessor has the power to make view-layer much faster, but it may make the debugging difficult. You should use it carefully.</p><br>
+      <br>
+      <br>
+      <a name="tips" id="tips"></a>
+
+      <h2 class="section1">Tips</h2><a name="function-names" id="function-names"></a>
 
       <h3 class="section2">Specify Function Names of escape() and to_str()</h3>
 
@@ -2372,7 +2750,7 @@ example.pyhtml:4:1: '#endfor' expected but got '#endif'.
 
       <p>Error message is the same format as gcc compiler or java compiler. Error jump in Emacs or other editor is available.</p>
 
-      <p>Command-line option '-q' (quiet-mode) prints nothing if it has no errors.</p><br>
+      <p>Command-line option '-q' (quiet-mode) prints nothing if there are no syntax errors.</p><br>
       <a name="command-convert-script" id="command-convert-script"></a>
 
       <h3 class="section2">Convert Template into Python Script</h3>

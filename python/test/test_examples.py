@@ -25,7 +25,8 @@ class ExamplesTest(object):
     CWD = os.getcwd()
 
     def before(self):
-        sys.stdout.write('\n** test_%s: (' % self.__name__)
+        #sys.stdout.write('\n** test_%s: (' % self.__name__)
+        sys.stdout.write(' (')
         os.chdir(self.DIR + '/' + self.__name__)
         for x in glob('views/*.cache'):
             os.unlink(x)

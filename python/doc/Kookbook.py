@@ -254,7 +254,8 @@ class UsersGuideTest(object):
     CWD = os.getcwd()
 
     def before(self):
-        sys.stdout.write('\n** test_%s: (' % self.__name__)
+        #sys.stdout.write('\n** test_%s: (' % self.__name__)
+        sys.stdout.write(' (')
         os.chdir(self.DIR + '/test_' + self.__name__)
         for x in glob('*.cache') + glob('views/*.cache'):
             os.unlink(x)
@@ -280,7 +281,8 @@ class UsersGuideTest(object):
         os.chdir(self.CWD)
 
     def _test(self):
-        for fname in glob('result*.output'):
+        result_files = glob('result*.output')
+        for fname in result_files:
             sys.stdout.write(' %s' % fname)
             result = open(fname).read()
             command, expected = re.split(r'\n', result, 1)
@@ -296,6 +298,15 @@ class UsersGuideTest(object):
                 actual = re.sub(r'file=.*?/test_logging/', "file='/home/user/", actual)
             else:
                 actual = os.popen(command).read()
+            if self._testMethodName == 'test_nested':
+                expected = re.sub(r'[ \t]*\#.*', '', expected)
+            ok (actual) == expected
+        if not result_files:
+            fname = glob('*main*.py')[0]
+            command = sys.executable + " " + fname
+            actual = os.popen(command).read()
+            fname = glob('*.expected')[0]
+            f = open(fname); expected = f.read(); f.close()
             ok (actual) == expected
         sys.stdout.write(' )')
 """)
@@ -350,7 +361,8 @@ class ExamplesTest(object):
     CWD = os.getcwd()
 
     def before(self):
-        sys.stdout.write('\n** test_%s: (' % self.__name__)
+        #sys.stdout.write('\n** test_%s: (' % self.__name__)
+        sys.stdout.write(' (')
         os.chdir(self.DIR + '/' + self.__name__)
         for x in glob('views/*.cache'):
             os.unlink(x)
