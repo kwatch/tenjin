@@ -882,6 +882,47 @@ class MainTest(object):
         finally:
             tenjin.Engine.templateclass = _backup
 
+    def test_pp(self):  # --pp=name,name2,...
+        input = r"""
+<div id="placeholder">
+  <!-- #JS: render_table(items) -->
+  <table>
+    <?js for (var i = 0; i < items.length; i++) { ?>
+    <tr>
+      <td>${item}</td>
+    </tr>
+    <?js } ?>
+  </table>
+  <!-- #/JS -->
+</div>
+<script>#{tenjin.JS_FUNC}</script>
+"""[1:]
+        output = r"""
+<div id="placeholder">
+<script>function render_table(items){var _buf='';
+_buf+='<table>\n';
+ for (var i = 0; i < items.length; i++) {
+_buf+='<tr>\n\
+<td>'+_E(item)+'</td>\n\
+</tr>\n';
+ }
+_buf+='</table>\n';
+return _buf;};</script>
+</div>
+<script>function _S(x){return x==null?'':x;}
+function _E(x){return x==null?'':typeof(x)!=='string'?x:x.replace(/[&<>"']/g,_EF);}
+var _ET={'&':"&amp;",'<':"&lt;",'>':"&gt;",'"':"&quot;","'":"&#039;"};
+function _EF(c){return _ET[c];};</script>
+"""[1:]
+        try:
+            self.options  = "--pp=Trim,PrefixedLine,JavaScript"
+            self.input = input
+            self.expected = output
+            self._test()
+        finally:
+            pass
+
+
 
 if __name__ == '__main__':
     run()
