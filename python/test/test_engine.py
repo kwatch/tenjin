@@ -611,8 +611,6 @@ class EngineTest(object):
 
 
     def test_cached_contents(self):
-        if JYTHON:
-            return
         data = EngineTest._testdata['test_cached_contents']
         def _test(filename, cachename, cachemode, input, expected_script, expected_args):
             if input:
