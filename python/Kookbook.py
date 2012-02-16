@@ -15,7 +15,7 @@ from kook.utils import read_file, write_file
 release = prop('release', '1.0.2')
 #package = prop('package', 'pyTenjin')
 package = prop('package', 'Tenjin')
-copyright = prop('copyright', "copyright(c) 2007-2011 kuwata-lab.com all rights reserved.")
+copyright = prop('copyright', "copyright(c) 2007-2012 kuwata-lab.com all rights reserved.")
 
 license         = "MIT License"
 #python_basepath = "/Library/Frameworks/Python.framework/Versions/2.4"
@@ -94,7 +94,8 @@ def task_edit(c):
     filenames = read_file('MANIFEST').splitlines()
     excludes = ('test/data', 'examples',
                 'benchmark/templates', 'benchmark/gae/templates',)
-    filenames = [ x for x in filenames if not x.startswith(excludes) ]
+    filenames = [ x for x in filenames
+                    if not x.startswith(excludes) and not x.startswith('#') ]
     filenames.remove('Kookbook.py')
     filenames.remove('test/oktest.py')
     edit(filenames, by=replacer())

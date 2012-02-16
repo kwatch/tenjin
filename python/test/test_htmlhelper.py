@@ -2,7 +2,7 @@
 
 ###
 ### $Release: $
-### $Copyright: copyright(c) 2007-2011 kuwata-lab.com all rights reserved. $
+### $Copyright: copyright(c) 2007-2012 kuwata-lab.com all rights reserved. $
 ###
 
 from oktest import ok, not_ok, run

@@ -3,7 +3,7 @@ README
 ======
 
 :Release:	$Release$
-:Copyright:	$Copyright: copyright(c) 2007-2011 kuwata-lab.com all rights reserved. $
+:Copyright:	$Copyright: copyright(c) 2007-2012 kuwata-lab.com all rights reserved. $
 :URL:		http://www.kuwata-lab.com/tenjin/
 
 

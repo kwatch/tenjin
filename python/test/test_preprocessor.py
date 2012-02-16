@@ -1,6 +1,6 @@
 ###
 ### $Release: $
-### $Copyright: copyright(c) 2007-2011 kuwata-lab.com all rights reserved. $
+### $Copyright: copyright(c) 2007-2012 kuwata-lab.com all rights reserved. $
 ###
 
 import sys, os, re, time
