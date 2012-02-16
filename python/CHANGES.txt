@@ -3,7 +3,7 @@ CHANGES
 =======
 
 
-Release 1.1.0
+Release 1.1.0 (2012-02-16)
 --------------------------
 
 * [Change] !! IMPORTANT!! Default cache file format is changed from
