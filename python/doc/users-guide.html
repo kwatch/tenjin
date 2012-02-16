@@ -146,6 +146,8 @@
             <li><a href="#tips-webext">Webext</a></li>
 
             <li><a href="#tips-template-inheritance">Template Inheritance</a></li>
+
+            <li><a href="#tips-template-file-suffix">Template File Suffix</a></li>
           </ul>
         </li>
 
@@ -539,7 +541,7 @@ $ python main.py
 
       <h3 class="section2">Show Converted Source Code</h3>
 
-      <p>pyTenjin converts template files into Python script and executes it. Compiled Python script is saved into cache file automatically in Python's marshal format (= bytecode format).</p>
+      <p>pyTenjin converts template files into Python script and executes it. Compiled Python script is saved into cache file automatically in text format.</p>
 
       <div class="terminal_caption">
         Show cached file
@@ -548,7 +550,7 @@ $ python main.py
 $ ls views/page.pyhtml*
 views/page.pyhtml       views/page.pyhtml.cache
 $ file views/page.pyhtml.cache
-views/page.pyhtml.cache: data
+views/page.pyhtml.cache: text
 </pre>
 
       <p>You can get converted script by '<code>pytenjin -s</code>'.</p><a name="test_020/result.output"></a>
@@ -1467,7 +1469,7 @@ print(template.render(context))
         <li><code>SafeTemplate</code> and <code>SafeEngine</code> classes uses <code>to_escaped()</code> instead of <code>escape()</code> to escape value.</li>
 
         <li>Normal string (= <code>"&lt;b&gt;SOS&lt;/b&gt;"</code>) is escaped automatically, but the other string which is marked as escaped (= <code>as_escaped("&lt;b&gt;SOS&lt;/b&gt;")</code>) is not escaped. This means that you can controll escape by data type, not embedded notation.</li>
-      </ul>
+      </ul><a name="test_safe/result.output"></a>
 
       <div class="terminal_caption">
         Output example
@@ -1909,13 +1911,13 @@ html = engine.render('example.pyhtml', context)
       <p>If you run it first time, Tenjin will report that template object is stored into cache file.</p><a name="test_logging/result1.output"></a>
       <pre class="terminal">
 $ python ex-logger.py
-INFO:root:[tenjin.MarshalCacheStorage] <strong>store cache (file='/home/user/example.pyhtml.cache')</strong>
+INFO:root:[tenjin.TextCacheStorage] <strong>store cache (file='/home/user/example.pyhtml.cache')</strong>
 </pre>
 
       <p>And if you run it again, Tenjin will report that template object is loaded from cache file.</p><a name="test_logging/result2.output"></a>
       <pre class="terminal">
 $ python ex-logger.py
-INFO:root:[tenjin.MarshalCacheStorage] <strong>load cache (file='/home/user/example.pyhtml.cache')</strong>
+INFO:root:[tenjin.TextCacheStorage] <strong>load cache (file='/home/user/example.pyhtml.cache')</strong>
 </pre><br>
       <a name="google-appengine" id="google-appengine"></a>
 
@@ -2076,7 +2078,9 @@ m17n.pyhtml    m17n.pyhtml.<strong>en</strong>.cache    m17n.pyhtml.<strong>fr</
         <code>_('Hello')</code> is translated into "Hello" in Engilish cache file
       </div>
       <pre class="terminal">
-$ pytenjin -a dump m17n.pyhtml.en.cache
+$ cat m17n.pyhtml.en.cache
+timestamp: 1329291933.0
+
 _extend=_buf.extend;_to_str=to_str;_escape=escape; _extend(('''&lt;div&gt;
  &lt;p&gt;<strong>Hello</strong> ''', _escape(_to_str(username)), '''!&lt;/p&gt;
 &lt;/div&gt;\n''', ));
@@ -2086,7 +2090,9 @@ _extend=_buf.extend;_to_str=to_str;_escape=escape; _extend(('''&lt;div&gt;
         <code>_('Hello')</code> is translated into "Bonjour" in French cache file
       </div>
       <pre class="terminal">
-$ pytenjin -a dump m17n.pyhtml.fr.cache
+$ cat m17n.pyhtml.fr.cache
+timestamp: 1329291933.0
+
 _extend=_buf.extend;_to_str=to_str;_escape=escape; _extend(('''&lt;div&gt;
  &lt;p&gt;<strong>Bonjour</strong> ''', _escape(_to_str(username)), '''!&lt;/p&gt;
 &lt;/div&gt;\n''', ));
@@ -2102,7 +2108,7 @@ _extend=_buf.extend;_to_str=to_str;_escape=escape; _extend(('''&lt;div&gt;
 
       <p>Preprocessing is a mechanism to manipulate template content when loading template file.</p>
 
-      <p>For example, Tenjin provides TrimPreprocessor class which trims spaces in HTML templates. Using it, you can elminiate size of html output.</p>
+      <p>For example, Tenjin provides TrimPreprocessor class which trims spaces in HTML templates. Using it, you can elminiate size of html output.</p><a name="test_pp/example.pyhtml"></a>
 
       <div class="program_caption">
         Preprocessing example by TrimPreprocessor
@@ -2138,45 +2144,55 @@ _extend=_buf.extend;_to_str=to_str;_escape=escape; _extend(('''&lt;div&gt;
 
       <p>Tenjin provides the following preprocessor classses. See the succeeding sections for details about these classes.</p>
 
-      <dl class="dl1">
-        <dt class="dt1">TemplatePreprocessor</dt>
+      <dl class="dl2">
+        <dt class="dt2">TemplatePreprocessor</dt>
 
-        <dd class="dd1">Execute any logic or code in advance. Same as 'preprocess' option.</dd>
+        <dd class="dd2">
+          <p>Execute any logic or code in advance. Same as 'preprocess' option.</p>
+        </dd>
       </dl>
 
-      <dl class="dl1">
-        <dt class="dt1">TrimPreprocessor</dt>
+      <dl class="dl2">
+        <dt class="dt2">TrimPreprocessor</dt>
 
-        <dd class="dd1">Trims spaces at the beginning of lines.</dd>
+        <dd class="dd2">
+          <p>Trims spaces at the beginning of lines.</p>
+        </dd>
       </dl>
 
-      <dl class="dl1">
-        <dt class="dt1">PrefixedLinePreprocessor</dt>
+      <dl class="dl2">
+        <dt class="dt2">PrefixedLinePreprocessor</dt>
 
-        <dd class="dd1">Converts '<code>:: ...</code>' lines into '<code>&lt;?py ... ?&gt;</code>'.</dd>
+        <dd class="dd2">
+          <p>Converts '<code>:: ...</code>' lines into '<code>&lt;?py ... ?&gt;</code>'.</p>
+        </dd>
       </dl>
 
-      <dl class="dl1">
-        <dt class="dt1">JavaScriptPreprocessor</dt>
+      <dl class="dl2">
+        <dt class="dt2">JavaScriptPreprocessor</dt>
 
-        <dd class="dd1">Generates client-side template code.</dd>
+        <dd class="dd2">
+          <p>Generates client-side template code.</p>
+        </dd>
       </dl>
 
-      <p>If you want preprocessing, pass instance objects of these classes to engine object.</p><a name="test_pp/preprocess-example1.rb"></a>
+      <p>If you want preprocessing, pass instance objects of these classes to engine object.</p><a name="test_pp/preprocess-example1.py"></a>
 
       <div class="program_caption">
         How to use preprocessors
       </div>
       <pre class="program">
 import tenjin
+from tenjin.helpers import *
 <strong>pp = [</strong>
 <strong>  tenjin.TemplatePreprocessor(),</strong>      # same as preprocess=True
 <strong>  tenjin.TrimPreprocessor(),</strong>          # trim spaces before tags
-<strong>  tenjin.PrefixedLinesPreprocessor(),</strong> # convert ':: ...' into '&lt;?py ... ?&gt;'
+<strong>  tenjin.PrefixedLinePreprocessor(),</strong>  # convert ':: ...' into '&lt;?py ... ?&gt;'
 <strong>  tenjin.JavaScriptPreprocessor(),</strong>    # allow to embed client-side template
 <strong>]</strong>
 engine = tenjin.Engine(<strong>pp=pp</strong>)
-html = engine.render('example.rbhtml', context)
+context = {'items': ["Haruhi", "Mikuru", "Yuki"]}
+html = engine.render('example.pyhtml', context)
 </pre><br>
       <a name="TrimPreprocessor" id="TrimPreprocessor"></a>
 
@@ -2195,7 +2211,7 @@ html = engine.render('example.rbhtml', context)
 &lt;/div&gt;
 </pre>
 
-      <p>will generate the following output:</p><a name="test_pp_trim/result.output"></a>
+      <p>will generate the following output:</p><a name="test_pp_trim/result.expected"></a>
       <pre class="program">
 &lt;div&gt;
 &lt;ul&gt;
@@ -2207,9 +2223,10 @@ html = engine.render('example.rbhtml', context)
 
 </pre>
 
-      <p>with the following code:</p><a name="test_pp_trim/pp-trim.py"></a>
+      <p>with the following code:</p><a name="test_pp_trim/pp-trim-main.py"></a>
       <pre class="program">
 import tenjin
+from tenjin.helpers import *
 <strong>pp = [ tenjin.TrimPreprocessor() ]</strong>
 engine = tenjin.Engine(<strong>pp=pp</strong>)
 context = { 'items': ["Haruhi", "Mikuru", "Yuki"] }
@@ -2259,7 +2276,7 @@ print(html)
 &lt;/div&gt;
 </pre>
 
-      <p>and will generate the following output:</p><a name="test_pp_trim/result.output"></a>
+      <p>and will generate the following output:</p><a name="test_pp_prefixed/result.expected"></a>
       <pre class="program">
 &lt;div&gt;
   &lt;ul&gt;
@@ -2271,9 +2288,10 @@ print(html)
 
 </pre>
 
-      <p>with the following code:</p><a name="test_pp_trim/pp-trim.py"></a>
+      <p>with the following code:</p><a name="test_pp_prefixed/pp-prefixed-main.py"></a>
       <pre class="program">
 import tenjin
+from tenjin.helpers import *
 <strong>pp = [ tenjin.PrefixedLinePreprocessor() ]</strong>
 engine = tenjin.Engine(<strong>pp=pp</strong>)
 context = { 'items': ["Haruhi", "Mikuru", "Yuki"] }
@@ -2294,10 +2312,10 @@ print(html)
 
       <h3 class="section2">JavaScriptPreprocessor class</h3>
 
-      <p>JavaScriptPreprocessor class enables you to embed client-side template code in your template file.</p><a name="test_pp_javascript/example.rbhtml"></a>
+      <p>JavaScriptPreprocessor class enables you to embed client-side template code in your template file.</p><a name="test_pp_javascript/example.pyhtml"></a>
 
       <div class="program_caption">
-        example.rbhtml
+        example.pyhtml
       </div>
       <pre class="program">
 &lt;html&gt;
@@ -2316,7 +2334,7 @@ print(html)
       &lt;/table&gt;
       <strong>&lt;!-- #/JS --&gt;</strong>
     &lt;/div&gt;
-    &lt;script&gt;<strong>#{Tenjin::JS_FUNC}</strong>&lt;/script&gt;
+    &lt;script&gt;<strong>#{tenjin.JS_FUNC}</strong>&lt;/script&gt;
     &lt;script&gt;
 /// example code to render table
 (function() {
@@ -2327,18 +2345,19 @@ print(html)
     &lt;/script&gt;
   &lt;/body&gt;
 &lt;/html&gt;
-</pre><a name="test_pp_javascript/pp-javascript.rb"></a>
+</pre><a name="test_pp_javascript/pp-javascript.py"></a>
 
       <div class="program_caption">
-        Example (pp-javascript.rb)
+        Example (pp-javascript.py)
       </div>
       <pre class="program">
 import tenjin
+from tenjin.helpers import *
 <strong>pp = [ tenjin.JavaScriptPreprocessor() ]</strong>
 <strong>## or pp = [ tenjin.JavaScriptPreprocessor(type='text/javascript') ]</strong>
 engine = tenjin.Engine(<strong>pp=pp</strong>)
 context = { 'items': ["Haruhi", "Mikuru", "Yuki"] }
-html = engine.render('example.rbhtml', context)
+html = engine.render('example.pyhtml', context)
 print(html)
 </pre><a name="test_pp_javascript/result.output"></a>
 
@@ -2346,22 +2365,22 @@ print(html)
         Output example
       </div>
       <pre class="terminal">
-$ ruby pp-javascript.rb
+$ python pp-javascript.py
 &lt;html&gt;
   &lt;body&gt;
-    &lt;div&gt;
+    &lt;div id="placeholder"&gt;
       <strong>&lt;script&gt;function render_table(items){var _buf='';</strong>
- <strong>_buf += '      &lt;table&gt;\n\</strong>
+<strong>_buf+='      &lt;table&gt;\n\</strong>
         <strong>&lt;tbody&gt;\n';</strong>
-          <strong>for (var i = 0, n = items.length; i &lt; n; i++) {</strong>
-              <strong>var klass = i % 2 ? 'even' : 'odd';</strong>
- <strong>_buf += '          &lt;tr class="'; _buf += _S(klass); _buf += '"&gt;\n\</strong>
-            <strong>&lt;td&gt;'; _buf += _E(items[i]); _buf += '&lt;/td&gt;\n\</strong>
+           <strong>for (var i = 0, n = items.length; i &lt; n; i++) {</strong>
+               <strong>var klass = i % 2 ? 'even' : 'odd';</strong>
+<strong>_buf+='          &lt;tr class="'+_S(klass)+'"&gt;\n\</strong>
+            <strong>&lt;td&gt;'+_E(items[i])+'&lt;/td&gt;\n\</strong>
           <strong>&lt;/tr&gt;\n';</strong>
-          <strong>}</strong>
- <strong>_buf += '        &lt;/tbody&gt;\n\</strong>
+           <strong>}</strong>
+<strong>_buf+='        &lt;/tbody&gt;\n\</strong>
       <strong>&lt;/table&gt;\n';</strong>
-      <strong>return _buf;}&lt;/script&gt;</strong>
+      <strong>return _buf;};&lt;/script&gt;</strong>
     &lt;/div&gt;
     &lt;script&gt;<strong>function _S(x){return x==null?'':x;}</strong>
 <strong>function _E(x){return x==null?'':typeof(x)!=='string'?x:x.replace(/[&amp;&lt;&gt;"']/g,_EF);}</strong>
@@ -2716,6 +2735,26 @@ tenjin-webext                      2.9700    0.0400    3.0100    3.0079
           <dd>Notice that capturing is useful but not so powerful than template inheritance.</dd>
         </dl>
       </div><br>
+      <a name="tips-template-file-suffix" id="tips-template-file-suffix"></a>
+
+      <h3 class="section2">Template File Suffix</h3>
+
+      <p>If you want to change template suffix rule, override Engine#to_filename().</p>
+      <pre class="program">
+def to_filename(self, template_name):
+    ### original
+    #if template_name[0] == ':' :
+    #    return self.prefix + template_name[1:] + self.postfix
+    #return template_name
+    ### customize suffix rule:
+    ### - ':foo'     =&gt; 'foo.html.tjn'
+    ### - 'foo.json' =&gt; 'foo.json.tjn'
+    if template_name[0] == ':':
+        return template_name + '.html.tjn'
+    return template_name + '.tjn'
+
+tenjin.Engine = to_filename
+</pre><br>
       <br>
       <a name="command" id="command"></a>
 

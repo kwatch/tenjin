@@ -419,14 +419,15 @@ See {{<Template Encoding|#template-encoding>}} section for details.
 .$$ Show Converted Source Code	| source-code
 
 pyTenjin converts template files into Python script and executes it.
-Compiled Python script is saved into cache file automatically in Python's marshal format (= bytecode format).
+.#Compiled Python script is saved into cache file automatically in Python's marshal format (= bytecode format).
+Compiled Python script is saved into cache file automatically in text format.
 
 .? Show cached file
 .====================
 $ ls views/page.pyhtml*
 views/page.pyhtml       views/page.pyhtml.cache
 $ file views/page.pyhtml.cache
-views/page.pyhtml.cache: data
+views/page.pyhtml.cache: text
 .====================
 
 You can get converted script by '{{,pytenjin -s,}}'.
@@ -1764,14 +1765,14 @@ If you run it first time, Tenjin will report that template object is stored into
 
 .==================== test_logging/result1.output
 $ python ex-logger.py
-INFO:root:[tenjin.MarshalCacheStorage] {{*store cache (file='/home/user/example.pyhtml.cache')*}}
+INFO:root:[tenjin.TextCacheStorage] {{*store cache (file='/home/user/example.pyhtml.cache')*}}
 .====================
 
 And if you run it again, Tenjin will report that template object is loaded from cache file.
 
 .==================== test_logging/result2.output
 $ python ex-logger.py
-INFO:root:[tenjin.MarshalCacheStorage] {{*load cache (file='/home/user/example.pyhtml.cache')*}}
+INFO:root:[tenjin.TextCacheStorage] {{*load cache (file='/home/user/example.pyhtml.cache')*}}
 .====================
 
 .#+++
@@ -1941,7 +1942,10 @@ And each cache files have different content.
 
 .? {{,_('Hello'),}} is translated into "Hello" in Engilish cache file
 .==================== test_m17n/result_en.output
-$ pytenjin -a dump m17n.pyhtml.en.cache
+.#$ pytenjin -a dump m17n.pyhtml.en.cache
+$ cat m17n.pyhtml.en.cache
+timestamp: 1329291933.0
+
 _extend=_buf.extend;_to_str=to_str;_escape=escape; _extend(('''<div>
  <p>{{*Hello*}} ''', _escape(_to_str(username)), '''!</p>
 </div>\n''', ));
@@ -1949,7 +1953,10 @@ _extend=_buf.extend;_to_str=to_str;_escape=escape; _extend(('''<div>
 
 .? {{,_('Hello'),}} is translated into "Bonjour" in French cache file
 .==================== test_m17n/result_fr.output
-$ pytenjin -a dump m17n.pyhtml.fr.cache
+.#$ pytenjin -a dump m17n.pyhtml.fr.cache
+$ cat m17n.pyhtml.fr.cache
+timestamp: 1329291933.0
+
 _extend=_buf.extend;_to_str=to_str;_escape=escape; _extend(('''<div>
  <p>{{*Bonjour*}} ''', _escape(_to_str(username)), '''!</p>
 </div>\n''', ));
@@ -2670,6 +2677,27 @@ See {{<this section|#capturing>}} for details.
 .#tenjin.Engine.prefer_fullpath = True
 .#.--------------------
 
+
+
+.$$ Template File Suffix	| tips-template-file-suffix
+
+If you want to change template suffix rule, override Engine#to_filename().
+
+.--------------------
+def to_filename(self, template_name):
+    ### original
+    #if template_name[0] == ':' :
+    #    return self.prefix + template_name[1:] + self.postfix
+    #return template_name
+    ### customize suffix rule:
+    ### - ':foo'     => 'foo.html.tjn'
+    ### - 'foo.json' => 'foo.json.tjn'
+    if template_name[0] == ':':
+        return template_name + '.html.tjn'
+    return template_name + '.tjn'
+
+tenjin.Engine = to_filename
+.--------------------
 
 
 
