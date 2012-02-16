@@ -6,7 +6,168 @@ CHANGES
 Release 1.1.0
 --------------------------
 
+* [Change] !! IMPORTANT!! Default cache file format is changed from
+  marshal format to text format.
+  You should remove all cache files to use this release.
+
+      $ find . -name '*.cache' | xargs rm
+
+  There are some reason about this change:
+
+  * User can see converted Python code very easily with text format,
+    but not easy with marshal format.
+  * Benefit of marshal format is that loading speed is a little faster
+    than text format. But this benefit is very little, especially
+    persistent process or Google App Engine.
+  * Marshal format is not compatible between different version of Python.
+  * Jython can't load marshal format.
+
+  If you prefer marshal format rather than text format, please specify
+  MarshalCacheStorage object to 'cache' option of Engine class.
+
+      engine = tenjin.Engine(cache=tenjin.MarshalCacheStorage())
+      ### or
+      tenjin.Engine.cache = tenjin.MarshalCacheStorage()
+
+* [Enhance] Embedded pattern '${}' and '#{}' can contain pair of '{' and '}'. ::
+
+      <p>${foo({'x':1})}</p>          # OK
+      <p>${foo({}+{}+{})}</p>         # OK
+      <p>${foo({'x':{'y':1}})}</p>    # NG
+
+* [Enhance] New preprocessing mechanism. You can specify your own preprocessor
+  class by 'pp' parameter. ::
+
+      require 'tenjin'
+      pp = [
+        tenjin.TemplatePreprocessor(),      # preprocessing
+        tenjin.TrimPreprocessor(),          # remove spaces at beginning of lines
+        tenjin.PrefixedLinePreprocessor(),  # converts ':: ...' to '<?py ... ?>'
+      ]
+      engine = tenjin.Engine(pp=pp)         # pass preprocessors
+
+  This release keeps backward compatibilidy. You can still use 'preprocess=True' option.
+
+* [Enhance] Add 'TrimPreprocessor' which removes spaces ad the beginning of lines.
+  You can reduce size of output by it.
+  For example::
+
+      <div>
+        <ul>
+        <?py for item in items: ?>
+          <li>${item}</li>
+        <?py #endfor ?>
+        </ul>
+      </div>
+
+  will be converted into:
+
+      <div>
+      <ul>
+      <?py for item in items: ?>
+      <li>${item}</li>
+      <?py #endfor ?>
+      </ul>
+      </div>
+
+  by TrimPreprocessor and passed into tenjin.Engine object.
+
+  How to use it::
+
+      require 'tenjin'
+      pp = [ tenjin.TrimPreprocessor() ]
+      engine = tenjin.Engine(pp=pp)
+      context = { 'items': ["Haruhi", "Mikuru", "Yuki"] }
+      output = engine.render('example.pyhtml', context)
+      print(html)
+
+* [Enhance] Add 'PrefixedLinePreprocessor' which converts ':: ...' into '<?py ... ?>'.
+  You may like ':: ...' because it is simpler than '<?py ... ?>'.
+  For example::
+
+      <div>
+        <ul>
+        :: for item in items:
+          <li>${item}</li>
+        :: #endfor
+        </ul>
+      </div>
+
+  will be converted into::
+
+      <div>
+        <ul>
+        <?py for item in items: ?>
+        <li>${item}</li>
+        <?py #endfor ?>
+        </ul>
+      </div>
+
+  by PrefixedLinePreprocessor and passed to tenjin.Engine.
+
+  How to use it::
+
+      pp = [ tenjin.PrefixedLinePreprocessor() ]
+      engine = tenjin.Engine(pp=pp)
+      context = { 'items': ["Haruhi", "Mikuru", "Yuki"] }
+      output = engine.render('example.pyhtml', context)
+      print(html)
+
+* [Enhance] Add 'JavaScriptPreprocessor' class which enables you to embed
+  client-side javascript template code into server-side template.
+  For example::
+
+      <div id="placeholder">
+        <!-- #JS: render_table(items) -->
+        <table>
+          <?js for (var i = 0, n = items.length; i < n; i++) { ?>
+          <tr>
+            <td>#{i}</td>
+            <td>${items[i]}</td>
+          </tr>
+          <?js } ?>
+        </table>
+        <!-- #/JS -->
+      </div>
+      <script>#{tenjin.JS_FUNC}</script>
+      <script>
+        var html = render_table(["Haruhi", "Mikuru", "Yuki"]);
+        document.getElementById('placehodler').innerHTML = html;
+      </script>
+
+  will be converted into::
+
+      <div id="placeholder">
+        <script>function render_table(items){var _buf='';
+      _buf+='  <table>\n';
+           for (var i = 0, n = items.length; i < n; i++) {
+      _buf+='    <tr>\n\
+            <td>'+_S(i)+'</td>\n\
+            <td>'+_E(items[i])+'</td>\n\
+          </tr>\n';
+           }
+      _buf+='  </table>\n';
+        return _buf;};</script>
+      </div>
+      <script>#{tenjin.JS_FUNC}</script>
+      <script>
+        var html = render_table(["Haruhi", "Mikuru", "Yuki"]);
+        document.getElementById('placehodler').innerHTML = html;
+      </script>
+
+  by JavaScriptPreprocessor.
+  Notice that you should embed 'tenjin.JS_FUNC' to run client-side code.
+
+  How to use it::
+
+      pp = [ tenjin.JavaScriptPreprocessor() ]
+      engine = tenjin.Engine(pp=pp)
+      output = engine.render('example.pyhtml', {})
+      print(html)
+
 * [Enhance] Now supports Jython 2.5.2. (thanks to Lars Hupfeldt Nielsen)
+
+* [Enhance] Now supports PyPy 1.7 or later officially.
 
 * [Change] Template#convert() now converts "\r\n" into "\\r\n".
   This is necessary to follow change of language specification on
