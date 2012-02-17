@@ -26,11 +26,13 @@
         <li>pyTenjin now supports indent-free syntax since version 1.0.0. See <a href="#render-template">this section</a> for details.</li>
 
         <li>New embedded notation (<code>{=...=}</code> and <code>{==...==}</code>) is available since version 1.0.0. See <a href="#render-template">this section</a> for details.</li>
+
+        <li>Since 1.1.0, it is possible to include pair of '<code>{</code>' and '<code>}</code>' inside of '<code>${...}</code>' or '<code>#{...}</code>'. See <a href="#template-syntax">this section</a>.</li>
       </ul>
 
       </div>
 
-      <p>.+TOC:</p>
+      <div class="toc"><span class="caption">Table of Contents:</span>
 
       <ul>
         <li>
@@ -208,7 +210,7 @@
         </li>
       </ul>
 
-      <p>.-TOC:</p><a name="overview" id="overview"></a>
+      </div><a name="overview" id="overview"></a>
 
       <h2 class="section1">Overview</h2>
 
@@ -395,7 +397,7 @@ jinja2-create                    129.1300    0.7200  129.8500  130.6778
       <p>Since version 1.0.0, pyTenjin provides <code>{=...=}</code> and <code>{==...==}</code> for embedded expression as well as <code>${...}</code> and <code>#{...}</code>. This is for:</p>
 
       <ul type="disc">
-        <li>Conveniency: <code>${_('Hello {}!').format(name)}</code> is NG (because '}' appears in <code>${...}</code>) but <code>{=_('Hello {}!').format(name)=}</code> is OK.</li>
+        <li><s>Conveniency: <code>${_('Hello {}!').format(name)}</code> is NG (because '}' appears in <code>${...}</code>) but <code>{=_('Hello {}!').format(name)=}</code> is OK.</s> Since pyTenjin 1.1.0, it is possible to include pair of '<code>{</code>' and '<code>}</code>' inside of '<code>${...}</code>' or '<code>#{...}</code>'.</li>
 
         <li>Security: you may take a mistake to write <code>#{...}</code> instead of <code>${...}</code> easily because they are similar, but you will not confuse between <code>{=...=}</code> and <code>{==...==}</code> because the latter is MUCH longer then the former!</li>
       </ul>
@@ -2753,7 +2755,7 @@ def to_filename(self, template_name):
         return template_name + '.html.tjn'
     return template_name + '.tjn'
 
-tenjin.Engine = to_filename
+tenjin.Engine.to_filename = to_filename
 </pre><br>
       <br>
       <a name="command" id="command"></a>

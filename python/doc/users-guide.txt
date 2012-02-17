@@ -11,6 +11,8 @@
    See {{<this section|#render-template>}} for details.
 .* New embedded notation ({{,{=...=},}} and {{,{==...==},}}) is available since version 1.0.0.
    See {{<this section|#render-template>}} for details.
+.* Since 1.1.0, it is possible to include pair of '{{,{,}}' and '{{,},}}' inside of '{{,${...},}}' or '{{,#{...},}}'.
+   See {{<this section|#template-syntax>}}.
 .#.* It is planned for pyTenjin to be unicode-based templates in the next release.
 .#   See {{<Template Encoding|#template-encoding>}} section for related information.
 
@@ -279,7 +281,8 @@ Notation:
 Since version 1.0.0, pyTenjin provides {{,{=...=},}} and {{,{==...==},}} for embedded expression as well as {{,${...},}} and {{,#{...},}}.
 This is for:
 
-.* Conveniency: {{,${_('Hello {}!').format(name)},}} is NG (because '}' appears in {{,${...},}}) but {{,{=_('Hello {}!').format(name)=},}} is OK.
+.* {{=Conveniency: {{,${_('Hello {}!').format(name)},}} is NG (because '}' appears in {{,${...},}}) but {{,{=_('Hello {}!').format(name)=},}} is OK.=}}
+   Since pyTenjin 1.1.0, it is possible to include pair of '{{,{,}}' and '{{,},}}' inside of '{{,${...},}}' or '{{,#{...},}}'.
 .* Security: you may take a mistake to write {{,#{...},}} instead of {{,${...},}} easily because they are similar, but you will not confuse between {{,{=...=},}} and {{,{==...==},}} because the latter is MUCH longer then the former!
 
 .-NOTE:
@@ -2696,7 +2699,7 @@ def to_filename(self, template_name):
         return template_name + '.html.tjn'
     return template_name + '.tjn'
 
-tenjin.Engine = to_filename
+tenjin.Engine.to_filename = to_filename
 .--------------------
 
 

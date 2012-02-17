@@ -107,6 +107,8 @@ def file_html(c):
       (r'<p>\.\-NOTE:</p>', '</div>'),
       (r'<p>\.\+TIPS:</p>', '<div class="tips"><span class="caption">TIPS:</span>'),
       (r'<p>\.\-TIPS:</p>', '</div>'),
+      (r'<p>\.\+TOC:<\/p>',  r'<div class="toc"><span class="caption">Table of Contents:</span>'),
+      (r'<p>\.\-TOC:<\/p>',  r'</div>'),
     )
     edit(c.product, by=repl)
 
