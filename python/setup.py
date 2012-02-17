@@ -75,9 +75,10 @@ Features
 * Supports Google App Engine
 
 
-See `User's Guide`_ for details.
+See `User's Guide`_ and `Changes`_ for details.
 
 .. _`User's Guide`:  http://www.kuwata-lab.com/tenjin/pytenjin-users-guide.html
+.. _`Changes`:  http://www.kuwata-lab.com/tenjin/pytenjin-CHANGES.txt
 
 
 Install
