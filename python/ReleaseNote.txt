@@ -1,4 +1,128 @@
 .######################################################################
+.$ ANN: pyTenjin 1.1.0 - a high-speed and full-featured template engine
+
+I released pyTenjin 1.1.0.
+http://pypi.python.org/pypi/Tenjin/
+http://www.kuwata-lab.com/tenjin/
+
+
+Overview of pyTenjin
+--------------------
+
+* Very fast: about 10 times faster than Django template engine
+* Easy to learn: no need to learn template-original language
+* Full-featured: nestable layout template, partial template, preprocessing, etc.
+* Lightweight: only 2000 lines of code and very fast to import.
+* Google App Engine supported
+
+
+Documents
+---------
+
+* User's Guide
+  http://www.kuwata-lab.com/tenjin/pytenjin-users-guide.html
+* Examples
+  http://www.kuwata-lab.com/tenjin/pytenjin-examples.html
+* CHANGES
+  http://www.kuwata-lab.com/tenjin/pytenjin-CHANGES.txt
+
+
+Install
+-------
+
+    $ sudo easy_install Tenjin
+
+Or:
+
+    $ wget http://pypi.python.org/packages/source/T/Tenjin/Tenjin-1.1.0.tar.gz
+    $ tar xzf Tenjin-1.1.0.tar.gz
+    $ cd Tenjin-1.1.0/
+    $ sudo python setup.py install
+
+
+Example
+-------
+
+    ## views/example.pyhtml
+    <?py #@ARGS title, items ?>
+    <h2>${title}</h2>
+    <table>
+      <?py cycle = new_cycle('odd', 'even') ?>
+      <?py for item in items: ?>
+      <tr class="${cycle()}">
+        <td>${item}</td>
+      </tr>
+      <?py #endfor ?>
+    </table>
+
+    ## main.py
+    import tenjin
+    #tenjin.set_template_encoding('utf-8')  # optional (default 'utf-8')
+    from tenjin.helpers import *
+    from tenjin.html import *
+    engine = tenjin.Engine(path=['views'])
+    context = {'title': 'Example', 'items': ['Haruhi', 'Mikuru', 'Yuki'] }
+    output = engine.render('example.pyhtml', context)
+    print(output)
+
+    ## output
+    $ python main.py
+    <h2>Example</h2>
+    <table>
+      <tr class="odd">
+        <td>Haruhi</td>
+      </tr>
+      <tr class="even">
+        <td>Mikuru</td>
+      </tr>
+      <tr class="odd">
+        <td>Yuki</td>
+      </tr>
+    </table>
+
+
+Enhancements and Changes in this release
+----------------------------------------
+
+(See http://www.kuwata-lab.com/tenjin/pytenjin-CHANGES.txt for details.)
+
+* [Change] !! IMPORTANT!! Default cache file format is changed from
+  marshal format to text format.
+  You should remove all cache files to use this release.
+
+* [Enhance] Embedded pattern '${}' and '#{}' can contain pair of '{' and '}'. ::
+
+      <p>${foo({'x':1})}</p>          # OK
+      <p>${foo({}+{}+{})}</p>         # OK
+      <p>${foo({'x':{'y':1}})}</p>    # NG
+
+* [Enhance] New preprocessing mechanism. You can specify your own preprocessor
+  class by 'pp' parameter.
+
+* [Enhance] Add 'TrimPreprocessor' which removes spaces ad the beginning of lines.
+  You can reduce size of output by it.
+
+* [Enhance] Add 'PrefixedLinePreprocessor' which converts ':: ...' into '<?py ... ?>'.
+  You may like ':: ...' because it is simpler than '<?py ... ?>'.
+
+* [Enhance] Add 'JavaScriptPreprocessor' class which enables you to embed
+  client-side javascript template code into server-side template.
+
+* [Enhance] Now supports Jython 2.5.2. (thanks to Lars Hupfeldt Nielsen)
+
+* [Enhance] Now supports PyPy 1.7 or later officially.
+
+* [Change] Template#convert() now converts "\r\n" into "\\r\n".
+  This is necessary to follow change of language specification on
+  Python 2.7 and 3.2.
+
+
+Have fun!
+--
+
+
+
+.######################################################################
 .$ ANN: pyTenjin 1.0.0 - a high-speed and full-featured template engine
 
 I released pyTenjin 1.0.0.
