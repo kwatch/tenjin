@@ -108,6 +108,56 @@ Enhancements and Changes in this release
 * [Enhance] Add 'JavaScriptPreprocessor' class which enables you to embed
   client-side javascript template code into server-side template.
 
+  For example::
+
+      <div id="placeholder">
+        <!-- #JS: render_table(items) -->
+        <table>
+          <?js for (var i = 0, n = items.length; i < n; i++) { ?>
+          <tr>
+            <td>#{i}</td>
+            <td>${items[i]}</td>
+          </tr>
+          <?js } ?>
+        </table>
+        <!-- #/JS -->
+      </div>
+      <script>#{tenjin.JS_FUNC}</script>
+      <script>
+        var html = render_table(["Haruhi", "Mikuru", "Yuki"]);
+        document.getElementById('placehodler').innerHTML = html;
+      </script>
+
+  will be converted into::
+
+      <div id="placeholder">
+        <script>function render_table(items){var _buf='';
+      _buf+='  <table>\n';
+           for (var i = 0, n = items.length; i < n; i++) {
+      _buf+='    <tr>\n\
+            <td>'+_S(i)+'</td>\n\
+            <td>'+_E(items[i])+'</td>\n\
+          </tr>\n';
+           }
+      _buf+='  </table>\n';
+        return _buf;};</script>
+      </div>
+      <script>#{tenjin.JS_FUNC}</script>
+      <script>
+        var html = render_table(["Haruhi", "Mikuru", "Yuki"]);
+        document.getElementById('placehodler').innerHTML = html;
+      </script>
+
+  by JavaScriptPreprocessor.
+  Notice that you should embed 'tenjin.JS_FUNC' to run client-side code.
+
+  How to use it::
+
+      pp = [ tenjin.JavaScriptPreprocessor() ]
+      engine = tenjin.Engine(pp=pp)
+      output = engine.render('example.pyhtml', {})
+      print(html)
+
 * [Enhance] Now supports Jython 2.5.2. (thanks to Lars Hupfeldt Nielsen)
 
 * [Enhance] Now supports PyPy 1.7 or later officially.
@@ -119,6 +169,7 @@ Enhancements and Changes in this release
 
 Have fun!
 --
+makoto kuwata
 
 
 
