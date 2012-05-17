@@ -61,7 +61,7 @@ class Entry(object):
         if filename is None: filename = self.template_filename
         filenames = ['_header.html', filename, '_footer.html']
         dir = template_dir
-        content = ''.join([ open(dir+'/'+fname).read() for fname in filenames ])
+        content = ''.join([ read_file(dir+'/'+fname) for fname in filenames ])
         ## encoding
         if lang == 'ja' and encoding:
             s = content.decode(encoding)
@@ -294,7 +294,7 @@ class DjangoEntry(Entry):
     def _execute_create(self, context, ntimes):
         filename = self.template_filename
         for i in xrange(ntimes):
-            s = open(filename).read()
+            s = read_file(filename)
             #if encoding:
             #    s = s.decode(encoding).encode('utf-8')
             t = django.template.Template(s)
@@ -306,7 +306,7 @@ class DjangoEntry(Entry):
 
     def _execute(self, context, ntimes):
         filename = self.template_filename
-        s = open(filename).read()
+        s = read_file(filename)
         #if encoding:
         #    s = s.decode(encoding).encode('utf-8')
         t = django.template.Template(s)
@@ -421,7 +421,7 @@ Entry.register(CheetahEntry)
 #        _encoding = self.encoding or sys.getdefaultencoding()
 #        for i in xrange(ntimes):
 #            interpreter = myghty.interp.Interpreter(component_root='.', output_encoding=_encoding)
-#            component = interpreter.make_component(open(filename).read())
+#            component = interpreter.make_component(read_file(filename))
 #            buf = StringIO()
 #            interpreter.execute(component, request_args=context, out_buffer=buf)
 #            output = buf.getvalue()
@@ -432,7 +432,7 @@ Entry.register(CheetahEntry)
 #        filename = self.template_filename
 #        _encoding = self.encoding or sys.getdefaultencoding()
 #        interpreter = myghty.interp.Interpreter(component_root='.', output_encoding=_encoding)
-#        component = interpreter.make_component(open(filename).read())
+#        component = interpreter.make_component(read_file(filename))
 #        for i in xrange(ntimes):
 #            buf = StringIO()
 #            interpreter.execute(component, request_args=context, out_buffer=buf)
@@ -482,7 +482,7 @@ class KidEntry(Entry):
         encoding = self.encoding
         for i in xrange(ntimes):
             if encoding:
-                s = open(filename).read().decode(encoding).encode('utf-8')
+                s = read_file(filename).decode(encoding).encode('utf-8')
                 template = kid.Template(source=s, encoding=encoding)
             else:
                 template = kid.Template(file=filename)
@@ -497,7 +497,7 @@ class KidEntry(Entry):
         filename = self.template_filename
         encoding = self.encoding
         if encoding:
-            s = open(filename).read().decode(encoding).encode('utf-8')
+            s = read_file(filename).decode(encoding).encode('utf-8')
             template = kid.Template(source=s, encoding=encoding)
         else:
             template = kid.Template(file=filename)
@@ -945,10 +945,10 @@ def load_context_data(datafile):
     #    elif mode == 'class':  datafile = 'bench_context.py'
     #    else: assert False, "** unreachable"
     #if datafile.endswith('.py'):
-    #    exec(open(datafile).read(), globals(), context)
+    #    exec(read_file(datafile), globals(), context)
     #elif datafile.endswith('.yaml') or datafile.endswith('.yml'):
     #    import yaml
-    #    s = open(datafile).read()
+    #    s = read_file(datafile)
     #    if encoding:
     #        s = s.decode(encoding)
     #    context = yaml.load(s)
@@ -1044,7 +1044,7 @@ def execute_benchmark(entries, context, ntimes, print_output):
         if print_output:
             if isinstance(output, basestring):
                 fname = '%s.result' % entry.name
-                open(fname, 'w').write(output)
+                write_file(fname, output)
                 msg('*** output created: %s\n' % fname)
 
 
