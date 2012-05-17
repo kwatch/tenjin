@@ -78,7 +78,7 @@ class Entry(object):
         if mode == 'class':
             content = re.sub(r"(\w+)\['(\w+)'\]", r"\1.\2", content)
         ## write template file
-        open(filename, 'w').write(content)
+        write_file(filename, content)
         return content
 
     def convert_template(self, content):
