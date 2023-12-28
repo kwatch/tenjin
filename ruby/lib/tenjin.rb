@@ -707,7 +707,7 @@ module Tenjin
 
     ## create proc object
     def _render()   # :nodoc:
-      return eval("proc { |_context| self._buf = _buf = #{init_buf_expr()}; #{@script}; _buf.to_s }".untaint, nil, @filename || '(tenjin)')
+      return eval("proc { |_context| self._buf = _buf = #{init_buf_expr()}; #{@script}; _buf.to_s }", nil, @filename || '(tenjin)')
     end
 
     public
@@ -839,7 +839,7 @@ module Tenjin
     private
 
     def _render()   # :nodoc:
-      return eval("proc { |_context| self._buf = _buf = #{init_buf_expr()}; #{@script}; _buf.join }".untaint, nil, @filename || '(tenjin)')
+      return eval("proc { |_context| self._buf = _buf = #{init_buf_expr()}; #{@script}; _buf.join }", nil, @filename || '(tenjin)')
     end
 
     #--
@@ -1329,10 +1329,10 @@ module Tenjin
     def cachename(filepath)
       #: if lang is provided then add it to cache filename.
       if @lang
-        return "#{filepath}.#{@lang}.cache".untaint
+        return "#{filepath}.#{@lang}.cache"
       #: return cache file name which is untainted.
       else
-        return "#{filepath}.cache".untaint
+        return "#{filepath}.cache"
       end
     end
 
